@@ -15,7 +15,7 @@
 
 (defparameter *to-json-indent-increase* 2)
 
-(defgeneric to-json (object &key indent)
+(defgeneric to-json (object &key indent first-indent)
   (:documentation "Conversion of OBJECT to JSON"))
 
 (defun gen-indent (nb-chars)
@@ -23,15 +23,15 @@
 
 (gen-indent 10)
 
-(defmethod to-json ((object t) &key (indent 0))
+(defmethod to-json ((object t) &key (indent 0) (first-indent nil))
   (concatenate 'string
-               (gen-indent indent) (format nil "null"))) ;; empty by default
+               (gen-indent (or first-indent indent)) (format nil "null")))
 
 
-(defmethod to-json ((object header) &key (indent 0))
+(defmethod to-json ((object header) &key (indent 0) (first-indent nil))
   (with-slots (msg-id username session msg-type version) object
     (concatenate 'string     
-                 (gen-indent indent) (format nil "{~%")
+                 (gen-indent (or first-indent indent)) (format nil "{~%")
                  (gen-indent indent) (format nil "  \"msg_id\": ~W;~%" msg-id)
                  (gen-indent indent) (format nil "  \"username\": ~W;~%" username)
                  (gen-indent indent) (format nil "  \"session\": ~W;~%" session)
@@ -51,9 +51,6 @@
 (babel:string-to-octets
  (to-json *header1*) :encoding :utf-8)
 
-(print (babel:string-to-octets (format nil "~A" *uuid1*) :encoding :utf-8))
-
-
 (defclass message ()
   ((header :initarg :header :accessor message-header :type header)
    (parent-header :initarg :parent-header :initform nil :accessor message-parent-header :type header)
@@ -62,13 +59,13 @@
   (:documentation "Representation of IPython messages"))
 
 
-(defmethod to-json ((object message) &key (indent 0))
+(defmethod to-json ((object message) &key (indent 0) (first-indent nil))
   (with-slots (header parent-header metadata content) object
     (concatenate
      'string
-     (gen-indent indent) (format nil "{~%")
+     (gen-indent (or first-indent indent)) (format nil "{~%")
      (gen-indent indent) (format nil "  \"header\": ~A~%"
-                                 (to-json header :indent (+ indent *to-json-indent-increase*)))
+                                 (to-json header :indent (+ indent *to-json-indent-increase*) :first-indent 0))
      (gen-indent indent) (format nil "  \"parent_header\": ~A~%"
                                  (to-json parent-header :indent (+ indent *to-json-indent-increase*)))
      (gen-indent indent)(format nil "  \"metadata\": ~A~%"
