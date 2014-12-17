@@ -5,6 +5,7 @@
   (:export *example-enabled*
            *example-equal-predicate*
            example
+           example-progn
            *logg-enabled*
            *logg-level*
            logg

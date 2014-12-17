@@ -1,13 +1,35 @@
 
 (in-package #:uncommonshell)
 
+#|
+
+# Representation and manipulation of kernel messages #
+
+|#
+
+#|
+
+## Message header ## 
+
+|#
+
 (defclass header ()
   ((msg-id :initarg :msg-id :reader header-msg-id :type string)
-   (username :initarg :username :reader header-usename :type string)
+   (username :initarg :username :reader header-username :type string)
    (session :initarg :session :reader header-session :type string)
    (msg-type :initarg :msg-type :reader header-msg-type :type string)
    (version :initarg :version :initform "5.0" :reader header-version :type string))
   (:documentation "Header representation for IPython messages"))
+
+#|
+
+### JSon encoding ###
+
+The encoding to *JSon* is performed manually (because `cl-json` is a little bit
+ too inflexible in the encoding part, especially the CamelCase conversion which is not
+ what is not the Python convention.
+
+|#
 
 (defgeneric to-json (object &key indent first-indent newlines)
   (:documentation "Conversion of OBJECT to JSON"))
@@ -17,7 +39,8 @@
       (make-string nb-chars :initial-element #\Space)
       ""))
 
-(gen-indent 10)
+(example (gen-indent 10)
+         => "          ")
 
 (defmacro to-json-line (indent newlines &rest fmt)
   `(concatenate 'string
@@ -26,14 +49,18 @@
                     "")
                 (format nil ,@fmt) (if ,newlines (format nil "~%") "")))
 
-(let ((toto '(me toto)))
-  (to-json-line 4 t "blabla ~A" toto))
+(example 
+ (let ((toto '(me toto)))
+   (to-json-line 4 t "blabla ~A" toto))
+ => "    blabla (ME TOTO)
+")
 
 (defmethod to-json ((object t) &key (indent nil) (first-indent nil) (newlines nil))
   (declare (ignore indent))
   (to-json-line first-indent newlines "{}"))
 
-(to-json "help" :first-indent 4 :newlines nil)
+(example (to-json "help" :first-indent 4 :newlines nil)
+         => "    {}")
 
 (defmethod to-json ((object header) &key (indent nil) (first-indent nil) (newlines nil))
   (with-slots (msg-id username session msg-type version) object
@@ -46,18 +73,51 @@
                  (to-json-line indent newlines "\"version\": ~W" version)
                  (to-json-line first-indent nil "}"))))
 
-(defparameter *header1* (make-instance 'header
-                                 :msg-id (format nil "~A" (uuid:make-v4-uuid))
-                                 :username "fredokun"
-                                 :session (format nil "~A" (uuid:make-v4-uuid))
-                                 :msg-type "execute_request"))
+(example-progn
+  (defparameter *header1* (make-instance 'header
+                                         :msg-id "XXX-YYY-ZZZ-TTT"
+                                         :username "fredokun"
+                                         :session "AAA-BBB-CCC-DDD"
+                                         :msg-type "execute_request")))
 
-(princ (to-json *header1* :first-indent 0 :indent 2 :newlines t))
-(princ (to-json *header1* :first-indent 2 :indent 4 :newlines t))
+(example
+ (to-json *header1* :first-indent 0 :indent 2 :newlines t)
+ => "{
+  \"msg_id\": \"XXX-YYY-ZZZ-TTT\",
+  \"username\": \"fredokun\",
+  \"session\": \"AAA-BBB-CCC-DDD\",
+  \"msg_type\": \"execute_request\",
+  \"version\": \"5.0\"
+}")
 
-(princ (to-json *header1*))
 
-(json:decode-json-from-string (to-json *header1*))
+(example
+ (to-json *header1* :first-indent 2 :indent 4 :newlines t)
+ =>"  {
+    \"msg_id\": \"XXX-YYY-ZZZ-TTT\",
+    \"username\": \"fredokun\",
+    \"session\": \"AAA-BBB-CCC-DDD\",
+    \"msg_type\": \"execute_request\",
+    \"version\": \"5.0\"
+  }")
+
+(example
+ (to-json *header1*)
+ => "{\"msg_id\": \"XXX-YYY-ZZZ-TTT\",\"username\": \"fredokun\",\"session\": \"AAA-BBB-CCC-DDD\",\"msg_type\": \"execute_request\",\"version\": \"5.0\"}")
+
+#|
+
+### JSon decoding ###
+
+For *JSon* decoding *cl-json* works perfectly, only we do not use the direct CLOS decoding to avoid
+ going deeper in the API.
+
+|#
+
+(example (json:decode-json-from-string (to-json *header1*))
+         => '((:MSG--ID . "XXX-YYY-ZZZ-TTT") (:USERNAME . "fredokun")
+              (:SESSION . "AAA-BBB-CCC-DDD") (:MSG--TYPE . "execute_request")
+              (:VERSION . "5.0")))
 
 (defun fetch-json-component (comp alist)
   (let ((binding (assoc comp alist)))
@@ -65,10 +125,33 @@
         (cdr binding)
         (error "Deserialize error: no such component: ~A" comp))))
 
-(fetch-json-component :msg--id (json:decode-json-from-string (to-json *header1*)))
-(fetch-json-component :username (json:decode-json-from-string (to-json *header1*)))
-(fetch-json-component :session (json:decode-json-from-string (to-json *header1*)))
-(fetch-json-component :msg--type (json:decode-json-from-string (to-json *header1*)))
+(example
+ (fetch-json-component :msg--id (json:decode-json-from-string (to-json *header1*)))
+ => "XXX-YYY-ZZZ-TTT")
+
+(example
+ (fetch-json-component :username (json:decode-json-from-string (to-json *header1*)))
+ => "fredokun")
+
+(example
+ (fetch-json-component :session (json:decode-json-from-string (to-json *header1*)))
+ => "AAA-BBB-CCC-DDD")
+
+(example
+ (fetch-json-component :msg--type (json:decode-json-from-string (to-json *header1*)))
+ => "execute_request")
+
+(example
+ (fetch-json-component :version (json:decode-json-from-string (to-json *header1*)))
+ => "5.0")
+
+#|
+
+### Wire-deserialization ###
+
+The deserialization of a message header from a JSon string is then trivial.
+
+|#
 
 (defun wire-deserialize-header (hdr)
   (let ((json-list (json:decode-json-from-string hdr)))
@@ -80,19 +163,37 @@
                        :msg-type (fetch-json-component :msg--type json-list))
         nil)))
 
-(defparameter *header2* (wire-deserialize-header (to-json *header1*)))
+(example-progn
+  (defparameter *header2* (wire-deserialize-header (to-json *header1*))))
 
-(inspect *header2*)
+
+(example (header-username *header2*)
+         => "fredokun")
+
+#|
+
+## IPython messages ##
+
+|#
 
 (defclass message ()
-  ((header :initarg :header :accessor message-header :type header)
-   (parent-header :initarg :parent-header :initform nil :accessor message-parent-header :type header)
+  ((header :initarg :header :accessor message-header)
+   (parent-header :initarg :parent-header :initform nil :accessor message-parent-header)
    (metadata :initarg :metadata :initform nil :accessor message-metadata)
    (content :initarg :content :initform nil :accessor message-content))
   (:documentation "Representation of IPython messages"))
 
+(example-progn
+  (defparameter *msg1* (make-instance 'message :header *header1*)))
 
-(defparameter *msg1* (make-instance 'message :header *header1*))
+
+#|
+
+## Wire-serialization ##
+
+The wire-serialization of IPython kernel messages uses multi-parts ZMQ messages.
+
+|#
 
 (defconstant +WIRE-IDS-MSG-DELIMITER+ "<IDS|MSG>")
 
@@ -106,30 +207,40 @@
                     (to-json metadata)
                     (to-json content)))))
 
-(defparameter *wire1* (wire-serialize *msg1* :identities `(,(format nil "~A" (uuid:make-v4-uuid)) ,(format nil "~A" (uuid:make-v4-uuid)))))
+(example-progn
+  (defparameter *wire1* (wire-serialize *msg1* :identities '("XXX-YYY-ZZZ-TTT" "AAA-BBB-CCC-DDD"))))
 
-*wire1*
 
-(position +WIRE-IDS-MSG-DELIMITER+ *wire1*)
+#|
 
-(nth (position +WIRE-IDS-MSG-DELIMITER+ *wire1*) *wire1*)
+## Wire-deserialization ##
 
-(subseq *wire1* 0 (position +WIRE-IDS-MSG-DELIMITER+ *wire1*))
+The wire-deserialization part follows.
 
-(subseq *wire1* (+ 6 (position +WIRE-IDS-MSG-DELIMITER+ *wire1*)))
+|#
 
-(let ((delim-index (position +WIRE-IDS-MSG-DELIMITER+ *wire1*)))
-  (subseq *wire1* (+ 2 delim-index) (+ 6 delim-index)))
 
-(let ((delim-index (position +WIRE-IDS-MSG-DELIMITER+ *wire1*)))
-  (destructuring-bind (header parent-header metadata content)
-      (subseq *wire1* (+ 2 delim-index) (+ 6 delim-index))
-    (format t "header = ~A~%" header)
-    (format t "parent-header = ~A~%" parent-header)
-    (format t "metadata = ~A~%" metadata)
-    (format t "content = ~A~%" content)))
-  
-    
+(example (position +WIRE-IDS-MSG-DELIMITER+ *wire1*)
+         => 2)
+
+(example (nth (position +WIRE-IDS-MSG-DELIMITER+ *wire1*) *wire1*)
+         => +WIRE-IDS-MSG-DELIMITER+)
+
+(example
+ (subseq *wire1* 0 (position +WIRE-IDS-MSG-DELIMITER+ *wire1*))
+ => '("XXX-YYY-ZZZ-TTT" "AAA-BBB-CCC-DDD"))
+
+(example
+ (subseq *wire1* (+ 6 (position +WIRE-IDS-MSG-DELIMITER+ *wire1*)))
+ => nil)
+         
+(example
+ (let ((delim-index (position +WIRE-IDS-MSG-DELIMITER+ *wire1*)))
+   (subseq *wire1* (+ 2 delim-index) (+ 6 delim-index)))
+ => '("{\"msg_id\": \"XXX-YYY-ZZZ-TTT\",\"username\": \"fredokun\",\"session\": \"AAA-BBB-CCC-DDD\",\"msg_type\": \"execute_request\",\"version\": \"5.0\"}"
+      "{}" "{}" "{}"))
+
+
 (defun wire-deserialize (parts)
   (let ((delim-index (position +WIRE-IDS-MSG-DELIMITER+ parts)))
     (when (not delim-index)
@@ -148,15 +259,22 @@
                 msg
                 (subseq parts (+ 6 delim-index)))))))
 
-                       
-(setq *dewire-1* (multiple-value-bind (ids sig msg raw)
-                     (wire-deserialize *wire1*)
-                   (list ids sig msg raw)))
 
-*dewire-1*
+(example-progn
+  (defparameter *dewire-1* (multiple-value-bind (ids sig msg raw)
+                               (wire-deserialize *wire1*)
+                             (list ids sig msg raw))))
 
-(inspect (third *dewire-1*))
-          
+(example
+ (header-username (message-header (third *dewire-1*)))
+ => "fredokun")
+
+#|
+
+### Sending and receiving messages ###
+
+|#
+
 (defun message-send (socket msg &key (identities nil))
   (let ((wire-parts (wire-serialize msg :identities identities)))
     (dolist (identity identities)
@@ -176,6 +294,5 @@
 (defun message-recv (socket)
   (let ((parts (zmq-recv-list socket)))
     (wire-deserialize parts)))
-
 
      

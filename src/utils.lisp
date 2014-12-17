@@ -55,16 +55,11 @@
                           ,expr-str ,expected-var ,result-var)))))))
 
 
-;; To activate the inline examples
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (defparameter *logg-enabled* t)
-
-  (defparameter *logg-level* 1)
-
-  (defparameter *logg-out-stream* t)  ;; t  for default output string (using format)
-
-  )
-
+(defmacro example-progn (&body body)
+  "The toplevel forms of BODY are evaluated only if examples are enabled"
+  (if *example-enabled*
+      `(progn ,@body)
+      (values)))
 
 (defmacro logg (level fmt &rest args)
   "Log the passed ARGS using the format string FMT and its

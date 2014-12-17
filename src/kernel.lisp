@@ -5,7 +5,7 @@
    (shell :initarg :shell :reader kernel-shell)))
 
 
-(defun (make-kernel shell-endpoint)
+(defun make-kernel (shell-endpoint)
     (let ((ctx (pzmq:ctx-new)))
       (make-instance 'kernel
                      :ctx ctx
