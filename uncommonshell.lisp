@@ -7,7 +7,7 @@
 
 (ql:quickload "uncommonshell")
 
-(in-package #:uncommon-shell)
+(in-package #:uncommonshell)
 
-;; TODO : start main loop
-
+;; start main loop
+(kernel-start)

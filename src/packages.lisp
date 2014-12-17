@@ -9,10 +9,11 @@
            *logg-enabled*
            *logg-level*
            logg
-           vbinds))
+           vbinds
+           afetch))
 
 (defpackage #:uncommonshell
   (:use #:cl #:cl-utilities)
-  (:export))
+  (:export kernel-start))
 
 (in-package #:uncommonshell)

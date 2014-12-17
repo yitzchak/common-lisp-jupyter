@@ -119,30 +119,24 @@ For *JSon* decoding *cl-json* works perfectly, only we do not use the direct CLO
               (:SESSION . "AAA-BBB-CCC-DDD") (:MSG--TYPE . "execute_request")
               (:VERSION . "5.0")))
 
-(defun fetch-json-component (comp alist)
-  (let ((binding (assoc comp alist)))
-    (if binding
-        (cdr binding)
-        (error "Deserialize error: no such component: ~A" comp))))
-
 (example
- (fetch-json-component :msg--id (json:decode-json-from-string (to-json *header1*)))
+ (afetch :msg--id (json:decode-json-from-string (to-json *header1*)))
  => "XXX-YYY-ZZZ-TTT")
 
 (example
- (fetch-json-component :username (json:decode-json-from-string (to-json *header1*)))
+ (afetch :username (json:decode-json-from-string (to-json *header1*)))
  => "fredokun")
 
 (example
- (fetch-json-component :session (json:decode-json-from-string (to-json *header1*)))
+ (afetch :session (json:decode-json-from-string (to-json *header1*)))
  => "AAA-BBB-CCC-DDD")
 
 (example
- (fetch-json-component :msg--type (json:decode-json-from-string (to-json *header1*)))
+ (afetch :msg--type (json:decode-json-from-string (to-json *header1*)))
  => "execute_request")
 
 (example
- (fetch-json-component :version (json:decode-json-from-string (to-json *header1*)))
+ (afetch :version (json:decode-json-from-string (to-json *header1*)))
  => "5.0")
 
 #|
@@ -157,10 +151,10 @@ The deserialization of a message header from a JSon string is then trivial.
   (let ((json-list (json:decode-json-from-string hdr)))
     (if json-list
         (make-instance 'header
-                       :msg-id (fetch-json-component :msg--id json-list)
-                       :username (fetch-json-component :username json-list)
-                       :session (fetch-json-component :session json-list)
-                       :msg-type (fetch-json-component :msg--type json-list))
+                       :msg-id (afetch :msg--id json-list)
+                       :username (afetch :username json-list)
+                       :session (afetch :session json-list)
+                       :msg-type (afetch :msg--type json-list))
         nil)))
 
 (example-progn

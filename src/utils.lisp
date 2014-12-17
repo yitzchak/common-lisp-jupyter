@@ -99,5 +99,8 @@
          => '(1 . 3)) ;; without a warning
 
 
-
-
+(defun afetch (comp alist)
+  (let ((binding (assoc comp alist)))
+    (if binding
+        (cdr binding)
+        (error "No such key: ~A" comp))))
