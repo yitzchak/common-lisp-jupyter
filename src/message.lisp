@@ -1,9 +1,5 @@
 
-(ql:quickload "cl-json")
-(ql:quickload "babel")
-(ql:quickload "uuid")
-(ql:quickload "bordeaux-threads")
-(ql:quickload "ironclad")
+(in-package #:uncommonshell)
 
 (defclass header ()
   ((msg-id :initarg :msg-id :reader header-msg-id :type string)
@@ -50,7 +46,7 @@
                  (to-json-line indent newlines "\"version\": ~W" version)
                  (to-json-line first-indent nil "}"))))
 
-(defvar *header1* (make-instance 'header
+(defparameter *header1* (make-instance 'header
                                  :msg-id (format nil "~A" (uuid:make-v4-uuid))
                                  :username "fredokun"
                                  :session (format nil "~A" (uuid:make-v4-uuid))
@@ -76,13 +72,15 @@
 
 (defun wire-deserialize-header (hdr)
   (let ((json-list (json:decode-json-from-string hdr)))
-    (make-instance 'header
-                   :msg-id (fetch-json-component :msg--id json-list)
-                   :username (fetch-json-component :username json-list)
-                   :session (fetch-json-component :session json-list)
-                   :msg-type (fetch-json-component :msg--type json-list))))
+    (if json-list
+        (make-instance 'header
+                       :msg-id (fetch-json-component :msg--id json-list)
+                       :username (fetch-json-component :username json-list)
+                       :session (fetch-json-component :session json-list)
+                       :msg-type (fetch-json-component :msg--type json-list))
+        nil)))
 
-(defvar *header2* (wire-deserialize-header (to-json *header1*)))
+(defparameter *header2* (wire-deserialize-header (to-json *header1*)))
 
 (inspect *header2*)
 
@@ -94,7 +92,7 @@
   (:documentation "Representation of IPython messages"))
 
 
-(defvar *msg1* (make-instance 'message :header *header1*))
+(defparameter *msg1* (make-instance 'message :header *header1*))
 
 (defconstant +WIRE-IDS-MSG-DELIMITER+ "<IDS|MSG>")
 
@@ -108,7 +106,7 @@
                     (to-json metadata)
                     (to-json content)))))
 
-(defvar *wire1* (wire-serialize *msg1* :identities `(,(format nil "~A" (uuid:make-v4-uuid)) ,(format nil "~A" (uuid:make-v4-uuid)))))
+(defparameter *wire1* (wire-serialize *msg1* :identities `(,(format nil "~A" (uuid:make-v4-uuid)) ,(format nil "~A" (uuid:make-v4-uuid)))))
 
 *wire1*
 
@@ -142,7 +140,7 @@
                      (subseq parts (+ 2 delim-index) (+ 6 delim-index))
                    (make-instance 'message
                                   :header (wire-deserialize-header header)
-                                  :parent-header parent-header
+                                  :parent-header (wire-deserialize-header parent-header)
                                   :metadata metadata
                                   :content content))))
         (values identities
@@ -151,13 +149,33 @@
                 (subseq parts (+ 6 delim-index)))))))
 
                        
-(defvar *dewire-1* (multiple-value-bind (ids sig msg raw)
-                       (wire-deserialize *wire1*)
-                     (list ids sig msg raw)))
+(setq *dewire-1* (multiple-value-bind (ids sig msg raw)
+                     (wire-deserialize *wire1*)
+                   (list ids sig msg raw)))
 
 *dewire-1*
 
 (inspect (third *dewire-1*))
-      
-
           
+(defun message-send (socket msg &key (identities nil))
+  (let ((wire-parts (wire-serialize msg :identities identities)))
+    (dolist (identity identities)
+      (pzmq:send socket identity :sndmore t))
+    (pzmq:send socket +WIRE-IDS-MSG-DELIMITER+ :sndmore t)
+    (dolist (part wire-parts)
+      (pzmq:send socket part :sndmore t))
+    (pzmq:send socket nil)))
+
+(defun zmq-recv-list (socket &optional (parts nil))
+  (multiple-value-bind (part more)
+      (pzmq:recv-string socket)
+    (if more
+        (zmq-recv-list socket (cons part parts))
+        (reverse (cons part parts)))))
+
+(defun message-recv (socket)
+  (let ((parts (zmq-recv-list socket)))
+    (wire-deserialize parts)))
+
+
+     

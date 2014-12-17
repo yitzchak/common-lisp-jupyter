@@ -1,6 +1,4 @@
-
-(ql:quickload "pzmq")
-
+(in-package #:uncommonshell)
 
 (defclass shell-channel ()
   ((ctx :initarg :ctx :reader shell-channel-ctx)
