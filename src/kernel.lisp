@@ -1,5 +1,8 @@
 (in-package #:uncommonshell)
 
+(defparameter +KERNEL-IMPLEMENTATION-NAME+ "UncommonShell")
+(defparameter +KERNEL-IMPLEMENTATION-VERSION+ "0.1")
+
 (defclass kernel ()
   ((config :initarg :config :reader kerner-config)
    (ctx :initarg :ctx :reader kernel-ctx)
@@ -89,7 +92,7 @@
 
 (defun kernel-start ()
   (let ((cmd-args (get-argv)))
-    (princ (banner))
+    ;(princ (banner))
     (write-line "")
     (format t "UncommonShell: a Common Lisp Ipython-compatible kernel~%")
     (format t "--> (C) 2014 Frederic Peschanski (cf.  LICENSE)~%")
@@ -107,10 +110,10 @@
                             :hb-port (afetch :hb--port config-alist)
                             :signature-scheme (afetch :signature--scheme config-alist)
                             :key (afetch :key config-alist))))
-        (inspect config)
+        ;;(inspect config)
         (let* ((kernel (make-kernel config))
                (shell (make-shell-channel kernel)))
-          (format t "Entering mainloop ...")
+          (format t "Entering mainloop ...~%")
           (shell-loop shell))))))
 
 

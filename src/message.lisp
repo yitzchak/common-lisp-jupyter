@@ -272,9 +272,7 @@ The wire-deserialization part follows.
 
 (defun message-send (socket msg &key (identities nil))
   (let ((wire-parts (wire-serialize msg :identities identities)))
-    (dolist (identity identities)
-      (pzmq:send socket identity :sndmore t))
-    (pzmq:send socket +WIRE-IDS-MSG-DELIMITER+ :sndmore t)
+    ;;(format t "[Send] wire parts: ~W~%" wire-parts)
     (dolist (part wire-parts)
       (pzmq:send socket part :sndmore t))
     (pzmq:send socket nil)))
@@ -291,4 +289,13 @@ The wire-deserialization part follows.
     ;;(format t "[Shell]: received parts: ~A~%" (mapcar (lambda (part) (format nil "~W::~A" part (type-of part))) parts))
     (wire-deserialize parts)))
 
+#|
      
+## Message content ##
+
+|#
+
+(defclass message-content ()
+  ()
+  (:documentation "The base class of message contents."))
+
