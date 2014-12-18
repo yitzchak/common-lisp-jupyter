@@ -1,16 +1,16 @@
 (in-package #:uncommonshell)
 
 (defclass kernel ()
-  ((ctx :initarg :ctx :reader kernel-ctx)
-   (shell :initarg :shell :reader kernel-shell)))
+  ((config :initarg :config :reader kerner-config)
+   (ctx :initarg :ctx :reader kernel-ctx)
+   (shell :initarg :shell :initform nil :reader kernel-shell))
+  (:documentation "Kernel state representation."))
 
-
-(defun make-kernel (shell-endpoint)
-    (let ((ctx (pzmq:ctx-new)))
-      (make-instance 'kernel
-                     :ctx ctx
-                     :shell (make-shell-channel ctx shell-endpoint))))
-
+(defun make-kernel (config)
+  (let ((ctx (pzmq:ctx-new)))
+    (make-instance 'kernel
+                   :config config
+                   :ctx ctx)))
 
 (defun get-argv ()
   ;; Borrowed from apply-argv, command-line-arguments.  Temporary solution (?)
@@ -97,16 +97,21 @@
     (unless (stringp (cadr cmd-args))
       (error "Missing connection file argument"))
     (let ((config-alist (json:decode-json-from-string (concat-all 'string "" (read-file-lines (cadr cmd-args))))))
-      (let ((config (make-instance 'kernel-config
-                                   :transport (afetch :transport config-alist)
-                                   :ip (afetch :ip config-alist)
-                                   :shell-port (afetch :shell--port config-alist)
-                                   :iopub-port (afetch :iopub--port config-alist)
-                                   :control-port (afetch :control--port config-alist)
-                                   :hb-port (afetch :hb--port config-alist)
-                                   :signature-scheme (afetch :signature--scheme config-alist)
-                                   :key (afetch :key config-alist))))
-        (inspect config)))))
+      (let ((config
+             (make-instance 'kernel-config
+                            :transport (afetch :transport config-alist)
+                            :ip (afetch :ip config-alist)
+                            :shell-port (afetch :shell--port config-alist)
+                            :iopub-port (afetch :iopub--port config-alist)
+                            :control-port (afetch :control--port config-alist)
+                            :hb-port (afetch :hb--port config-alist)
+                            :signature-scheme (afetch :signature--scheme config-alist)
+                            :key (afetch :key config-alist))))
+        (inspect config)
+        (let* ((kernel (make-kernel config))
+               (shell (make-shell-channel kernel)))
+          (format t "Entering mainloop ...")
+          (shell-loop shell))))))
 
 
 

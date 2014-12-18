@@ -189,7 +189,8 @@ The wire-serialization of IPython kernel messages uses multi-parts ZMQ messages.
 
 |#
 
-(defconstant +WIRE-IDS-MSG-DELIMITER+ "<IDS|MSG>")
+;; strange issue with defconstant...
+(defvar +WIRE-IDS-MSG-DELIMITER+ "<IDS|MSG>")
 
 (defmethod wire-serialize ((msg message) &key (identities nil))
   (with-slots (header parent-header metadata content) msg
@@ -236,7 +237,7 @@ The wire-deserialization part follows.
 
 
 (defun wire-deserialize (parts)
-  (let ((delim-index (position +WIRE-IDS-MSG-DELIMITER+ parts)))
+  (let ((delim-index (position +WIRE-IDS-MSG-DELIMITER+ parts :test  #'equal)))
     (when (not delim-index)
       (error "no <IDS|MSG> delimiter found in message parts"))
     (let ((identities (subseq parts 0 delim-index))
@@ -278,15 +279,16 @@ The wire-deserialization part follows.
       (pzmq:send socket part :sndmore t))
     (pzmq:send socket nil)))
 
-(defun zmq-recv-list (socket &optional (parts nil))
-  (multiple-value-bind (part more)
-      (pzmq:recv-string socket)
+(defun zmq-recv-list (socket &optional (parts nil) (part-num 1))
+  (multiple-value-bind (part more) (pzmq:recv-string socket)
+    ;;(format t "[Shell]: received message part #~A: ~W (more? ~A)~%" part-num part more)
     (if more
-        (zmq-recv-list socket (cons part parts))
+        (zmq-recv-list socket (cons part parts) (+ part-num 1))
         (reverse (cons part parts)))))
 
 (defun message-recv (socket)
   (let ((parts (zmq-recv-list socket)))
+    ;;(format t "[Shell]: received parts: ~A~%" (mapcar (lambda (part) (format nil "~W::~A" part (type-of part))) parts))
     (wire-deserialize parts)))
 
      

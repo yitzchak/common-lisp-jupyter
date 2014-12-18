@@ -1,12 +1,48 @@
 (in-package #:uncommonshell)
 
 (defclass shell-channel ()
-  ((ctx :initarg :ctx :reader shell-channel-ctx)
-   (port :initarg :port :reader shell-channel-port)
-   (socket :initform nil :accessor shell-channel-socket)))
+  ((kernel :initarg :kernel :reader shell-kernel)
+   (socket :initarg :socket :initform nil :accessor shell-socket)))
 
 
-(defparameter *ctx1* (pzmq:ctx-new))
-                      
+(defun make-shell-channel (kernel)
+  (let ((socket (pzmq:socket (kernel-ctx kernel) :router)))  
+    (let ((shell (make-instance 'shell-channel
+                                :kernel kernel
+                                :socket socket)))
+      (let ((config (slot-value kernel 'config)))
+        (let ((endpoint (format nil "~A://~A:~A"
+                                  (config-transport config)
+                                  (config-ip config)
+                                  (config-shell-port config))))
+          (format t "shell endpoint is: ~A~%" endpoint)
+          (pzmq:bind socket endpoint)
+          shell)))))
 
-(defvar *shell1* (make-instance 'shell-channel :ctx *ctx1*))
+(defmacro while (condition &body body)
+  (let ((eval-cond-var (gensym "eval-cond-"))
+        (body-val-var (gensym "body-val-")))
+    `(flet ((,eval-cond-var () ,`,condition))
+       (do ((,body-val-var nil (progn ,@body)))
+           ((not (,eval-cond-var))
+            ,body-val-var)))))
+
+(example (let ((count 0))
+           (while (< count 10)
+             (format t "~A " count)
+             (incf count)
+             count))
+         => 10)
+      
+(defun shell-loop (shell)
+  (let ((active t))
+    (while active
+      (vbinds (ids sig msg raw)  (message-recv (shell-socket shell))
+        (format t "Shell Received: ~A~%" (to-json(message-header msg)))))))
+
+
+                    
+    
+      
+                              
+  
