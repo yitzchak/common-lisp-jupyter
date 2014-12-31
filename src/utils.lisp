@@ -104,3 +104,19 @@
     (if binding
         (cdr binding)
         (error "No such key: ~A" comp))))
+
+
+(defmacro while (condition &body body)
+  (let ((eval-cond-var (gensym "eval-cond-"))
+        (body-val-var (gensym "body-val-")))
+    `(flet ((,eval-cond-var () ,`,condition))
+       (do ((,body-val-var nil (progn ,@body)))
+           ((not (,eval-cond-var))
+            ,body-val-var)))))
+
+(example (let ((count 0))
+           (while (< count 10)
+             ;;(format t "~A " count)
+             (incf count)
+             count))
+         => 10)

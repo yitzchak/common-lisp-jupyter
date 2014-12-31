@@ -192,7 +192,7 @@ The wire-serialization of IPython kernel messages uses multi-parts ZMQ messages.
 ;; strange issue with defconstant...
 (defvar +WIRE-IDS-MSG-DELIMITER+ "<IDS|MSG>")
 
-(defmethod wire-serialize ((msg message) &key (identities nil))
+(defmethod wire-serialize ((msg message) &key (identities nil) (raw-content nil))
   (with-slots (header parent-header metadata content) msg
       (append identities
               (list +WIRE-IDS-MSG-DELIMITER+
@@ -200,7 +200,9 @@ The wire-serialization of IPython kernel messages uses multi-parts ZMQ messages.
                     (to-json header)
                     (to-json parent-header)
                     (to-json metadata)
-                    (to-json content)))))
+                    (if raw-content
+			content
+			(to-json content))))))
 
 (example-progn
   (defparameter *wire1* (wire-serialize *msg1* :identities '("XXX-YYY-ZZZ-TTT" "AAA-BBB-CCC-DDD"))))
@@ -270,9 +272,9 @@ The wire-deserialization part follows.
 
 |#
 
-(defun message-send (socket msg &key (identities nil))
-  (let ((wire-parts (wire-serialize msg :identities identities)))
-    ;;(format t "[Send] wire parts: ~W~%" wire-parts)
+(defun message-send (socket msg &key (identities nil) (raw-content nil))
+  (let ((wire-parts (wire-serialize msg :identities identities :raw-content raw-content)))
+    ;;(format t "~%[Send] wire parts: ~W~%" wire-parts)
     (dolist (part wire-parts)
       (pzmq:send socket part :sndmore t))
     (pzmq:send socket nil)))

@@ -24,21 +24,6 @@
           ;; (format t "shell endpoint is: ~A~%" endpoint)
           (pzmq:bind socket endpoint)
           shell)))))
-
-(defmacro while (condition &body body)
-  (let ((eval-cond-var (gensym "eval-cond-"))
-        (body-val-var (gensym "body-val-")))
-    `(flet ((,eval-cond-var () ,`,condition))
-       (do ((,body-val-var nil (progn ,@body)))
-           ((not (,eval-cond-var))
-            ,body-val-var)))))
-
-(example (let ((count 0))
-           (while (< count 10)
-             ;;(format t "~A " count)
-             (incf count)
-             count))
-         => 10)
       
 (defun shell-loop (shell)
   (let ((active t))
@@ -105,8 +90,13 @@
                  (to-json-line indent newlines"\"help_links\": ~A" (help-links-to-json help-links))
                  (to-json-line first-indent nil "}"))))
 
+(defvar *status-starting-sent* nil)
+
 (defun handle-kernel-info-request (shell ids msg sig raw)
   ;; (format t "[Shell] handling 'kernel-info-request'~%")
+  (when (not *status-starting-sent*)
+    (setf *status-starting-sent* t)
+    (send-status-update (kernel-iopub (shell-kernel shell)) (message-header msg) ids sig :starting))
   (let ((hdr (message-header msg)))
     (let ((reply (make-instance 
 		  'message
@@ -143,12 +133,9 @@
 
 (defun handle-execute-request (shell ids msg sig raw)
   (format t "[Shell] handling 'execute_request'~%")
+  (send-status-update (kernel-iopub (shell-kernel shell)) (message-header msg) ids sig :busy)
   (let ((hdr (message-header msg)))
     (let ((content (json:decode-json-from-string (message-content msg))))
       (format t "  ==> Message content = ~W~%" content)
       (let ((code (afetch :code content)))
 	(evaluate-code (kernel-evaluator (shell-kernel shell)) code)))))
-
-
-
-

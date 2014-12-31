@@ -10,7 +10,8 @@
            *logg-level*
            logg
            vbinds
-           afetch))
+           afetch
+	   while))
 
 (defpackage #:uncommonshell
   (:use #:cl #:cl-utilities)

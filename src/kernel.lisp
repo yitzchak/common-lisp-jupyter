@@ -7,6 +7,7 @@
   ((config :initarg :config :reader kerner-config)
    (ctx :initarg :ctx :reader kernel-ctx)
    (shell :initarg :shell :initform nil :reader kernel-shell)
+   (iopub :initarg :iopub :initform nil :reader kernel-iopub)
    (evaluator :initarg :evaluator :initform nil :reader kernel-evaluator))
   (:documentation "Kernel state representation."))
 
@@ -114,14 +115,8 @@
         ;;(inspect config)
         (let* ((kernel (make-kernel config))
 	       (evaluator (make-evaluator kernel))
-               (shell (make-shell-channel kernel)))
+               (shell (make-shell-channel kernel))
+	       (iopub (make-iopub-channel kernel)))
           (format t "[Kernel] Entering mainloop ...~%")
           (shell-loop shell))))))
 
-
-
-
-
-     
-                                 
-                      
