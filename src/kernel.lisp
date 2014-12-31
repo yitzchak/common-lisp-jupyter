@@ -1,7 +1,7 @@
 (in-package #:uncommonshell)
 
 (defparameter +KERNEL-IMPLEMENTATION-NAME+ "UncommonShell")
-(defparameter +KERNEL-IMPLEMENTATION-VERSION+ "0.1")
+(defparameter +KERNEL-IMPLEMENTATION-VERSION+ "0.2")
 
 (defclass kernel ()
   ((config :initarg :config :reader kerner-config)
