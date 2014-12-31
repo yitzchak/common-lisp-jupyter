@@ -52,6 +52,8 @@
 	(let ((msg-type (header-msg-type (message-header msg))))
 	  (cond ((equal msg-type "kernel_info_request")
 		 (handle-kernel-info-request shell ids msg sig raw))
+		((equal msg-type "execute_request")
+		 (handle-execute-request shell ids msg sig raw))
 		(t (warn "[Shell] message type '~A' not (yet ?) supported, skipping..." msg-type))))))))
 
 
@@ -61,7 +63,7 @@
 
 |#
   
-(defclass content-kernel-info-request (message-content)
+(defclass content-kernel-info-reply (message-content)
   ((protocol-version :initarg :protocol-version :type string)
    (implementation :initarg :implementation :type string)
    (implementation-version :initarg :implementation-version :type string)
@@ -82,7 +84,7 @@
 					     help-links)))
 	       "]"))
 
-(defmethod to-json ((object content-kernel-info-request) &key (indent nil) (first-indent nil) (newlines nil))
+(defmethod to-json ((object content-kernel-info-reply) &key (indent nil) (first-indent nil) (newlines nil))
   (with-slots (protocol-version implementation implementation-version 
 				language language-version language-info-mimetype
 				language-info-pygments-lexer language-info-codemirror-mode
@@ -118,7 +120,7 @@
 		  :parent-header hdr
 		  :metadata ""
 		  :content (make-instance
-			    'content-kernel-info-request
+			    'content-kernel-info-reply
 			    :protocol-version (header-version hdr)
 			    :implementation +KERNEL-IMPLEMENTATION-NAME+
 			    :implementation-version +KERNEL-IMPLEMENTATION-VERSION+
@@ -131,4 +133,22 @@
 			    :help-links '(("Common Lisp Hyperspec" . "http://www.lispworks.com/documentation/HyperSpec/Front/index.htm"))))))
       (message-send (shell-socket shell) reply :identities ids))))
 						      
+
+#|
+
+### Message type: execute_request ###
+
+|#
+  
+
+(defun handle-execute-request (shell ids msg sig raw)
+  (format t "[Shell] handling 'execute_request'~%")
+  (let ((hdr (message-header msg)))
+    (let ((content (json:decode-json-from-string (message-content msg))))
+      (format t "  ==> Message content = ~W~%" content)
+      (let ((code (afetch :code content)))
+	(evaluate-code (kernel-evaluator (shell-kernel shell)) code)))))
+
+
+
 

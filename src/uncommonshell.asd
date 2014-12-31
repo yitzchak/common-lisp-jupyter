@@ -14,6 +14,7 @@
                (:file "utils")
                (:file "message")
                (:file "shell")
+	       (:file "evaluator")
                (:file "kernel")))
 
 

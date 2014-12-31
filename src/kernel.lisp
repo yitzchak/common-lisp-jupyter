@@ -6,7 +6,8 @@
 (defclass kernel ()
   ((config :initarg :config :reader kerner-config)
    (ctx :initarg :ctx :reader kernel-ctx)
-   (shell :initarg :shell :initform nil :reader kernel-shell))
+   (shell :initarg :shell :initform nil :reader kernel-shell)
+   (evaluator :initarg :evaluator :initform nil :reader kernel-evaluator))
   (:documentation "Kernel state representation."))
 
 (defun make-kernel (config)
@@ -112,8 +113,9 @@
                             :key (afetch :key config-alist))))
         ;;(inspect config)
         (let* ((kernel (make-kernel config))
+	       (evaluator (make-evaluator kernel))
                (shell (make-shell-channel kernel)))
-          (format t "Entering mainloop ...~%")
+          (format t "[Kernel] Entering mainloop ...~%")
           (shell-loop shell))))))
 
 
