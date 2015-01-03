@@ -96,7 +96,7 @@
   ;; (format t "[Shell] handling 'kernel-info-request'~%")
   (when (not *status-starting-sent*)
     (setf *status-starting-sent* t)
-    (send-status-update (kernel-iopub (shell-kernel shell)) (message-header msg) ids sig :starting))
+    (send-status-update (kernel-iopub (shell-kernel shell)) (message-header msg) sig :starting))
   (let ((hdr (message-header msg)))
     (let ((reply (make-instance 
 		  'message
@@ -132,15 +132,17 @@
   
 
 (defun handle-execute-request (shell ids msg sig raw)
-  (format t "[Shell] handling 'execute_request'~%")
+  ;;(format t "[Shell] handling 'execute_request'~%")
   (let ((hdr (message-header msg)))
-    (send-status-update (kernel-iopub (shell-kernel shell)) hdr ids sig :busy)
+    (send-status-update (kernel-iopub (shell-kernel shell)) hdr sig :busy)
     (let ((content (json:decode-json-from-string (message-content msg))))
-      (format t "  ==> Message content = ~W~%" content)
+      ;;(format t "  ==> Message content = ~W~%" content)
       (let ((code (afetch :code content)))
 	(vbinds (execution-count results)
 	    (evaluate-code (kernel-evaluator (shell-kernel shell)) code)
-	  (send-status-update (kernel-iopub (shell-kernel shell)) hdr ids sig :idle)
+	  ;; status back to idle
+	  (send-status-update (kernel-iopub (shell-kernel shell)) hdr sig :idle)
+	  ;; send reply (control)
 	  (let ((reply (make-instance 
 			'message
 			:header (make-instance 
@@ -156,5 +158,10 @@
 				  `((:status . "ok")
 				    (:execution--count . ,execution-count)
 				    (:payload . ,(vector)))))))
-	    (message-send (shell-socket shell) reply :identities ids :raw-content t)))))))
+	    (message-send (shell-socket shell) reply :identities ids :raw-content t))
+	  ;; send the first result
+	  (send-execute-result (kernel-iopub (shell-kernel shell)) 
+			       hdr sig execution-count (car results)))))))
+
+	  
 

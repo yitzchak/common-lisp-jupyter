@@ -29,9 +29,9 @@ The history of evaluations is also saved by the evaluator.
   (vector-push code (evaluator-history-in evaluator))
   (let ((execution-count (length (evaluator-history-in evaluator))))
     (let ((code-to-eval (read-from-string code)))
-      (format t "[Evaluator] evaluating: ~A~%" code-to-eval)
+      ;;(format t "[Evaluator] evaluating: ~A~%" code-to-eval)
       (let ((results (multiple-value-list (eval code-to-eval))))
-	(format t "[Evaluator] : results = ~W~%" results)
+	;;(format t "[Evaluator] : results = ~W~%" results)
 	(vector-push results (evaluator-history-out evaluator))
 	(values execution-count results)))))
 
