@@ -74,12 +74,6 @@
 (banner)
 
 
-(defun read-file-lines (filename)
-  (with-open-file (input filename)
-    (loop
-       for line = (read-line input nil 'eof)
-       until (eq line 'eof)
-       collect line)))
 
 (defclass kernel-config ()
   ((transport :initarg :transport :reader config-transport :type string)

@@ -120,3 +120,10 @@
              (incf count)
              count))
          => 10)
+
+(defun read-file-lines (filename)
+  (with-open-file (input filename)
+    (loop
+       for line = (read-line input nil 'eof)
+       until (eq line 'eof)
+       collect line)))

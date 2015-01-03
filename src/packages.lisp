@@ -11,7 +11,8 @@
            logg
            vbinds
            afetch
-	   while))
+	   while
+	   read-file-lines))
 
 (defpackage #:uncommonshell
   (:use #:cl #:cl-utilities)
