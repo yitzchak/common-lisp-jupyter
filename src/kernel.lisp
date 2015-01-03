@@ -118,5 +118,26 @@
                (shell (make-shell-channel kernel))
 	       (iopub (make-iopub-channel kernel)))
           (format t "[Kernel] Entering mainloop ...~%")
+	  (start-heartbeat kernel)
           (shell-loop shell))))))
 
+
+(defun start-heartbeat (kernel)
+  (let ((socket (pzmq:socket (kernel-ctx kernel) :rep)))  
+    (let ((config (slot-value kernel 'config)))
+      (let ((endpoint (format nil "~A://~A:~A"
+			      (config-transport config)
+			      (config-ip config)
+			      (config-hb-port config))))
+          ;;(format t "heartbeat endpoint is: ~A~%" endpoint)
+          (pzmq:bind socket endpoint)
+          (bordeaux-threads:make-thread 
+	   (lambda ()
+	     (format t "[Heartbeat] thread started~%")
+	     (loop
+		(pzmq:with-message msg
+		  (pzmq:msg-recv msg socket)
+		  ;(format t "Heartbeat Received:~%")
+		  (pzmq:msg-send msg socket)
+		  ;(format t "  | message: ~A~%" msg)
+		  ))))))))
