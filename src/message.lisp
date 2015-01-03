@@ -274,7 +274,7 @@ The wire-deserialization part follows.
 
 (defun message-send (socket msg &key (identities nil) (raw-content nil))
   (let ((wire-parts (wire-serialize msg :identities identities :raw-content raw-content)))
-    (format t "~%[Send] wire parts: ~W~%" wire-parts)
+    ;; (format t "~%[Send] wire parts: ~W~%" wire-parts)
     (dolist (part wire-parts)
       (pzmq:send socket part :sndmore t))
     (pzmq:send socket nil)))

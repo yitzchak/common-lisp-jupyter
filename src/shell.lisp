@@ -140,6 +140,9 @@
       (let ((code (afetch :code content)))
 	(vbinds (execution-count results)
 	    (evaluate-code (kernel-evaluator (shell-kernel shell)) code)
+	  ;; send the first result
+	  (send-execute-result (kernel-iopub (shell-kernel shell)) 
+			       hdr sig execution-count (car results))
 	  ;; status back to idle
 	  (send-status-update (kernel-iopub (shell-kernel shell)) hdr sig :idle)
 	  ;; send reply (control)
@@ -158,10 +161,7 @@
 				  `((:status . "ok")
 				    (:execution--count . ,execution-count)
 				    (:payload . ,(vector)))))))
-	    (message-send (shell-socket shell) reply :identities ids :raw-content t))
-	  ;; send the first result
-	  (send-execute-result (kernel-iopub (shell-kernel shell)) 
-			       hdr sig execution-count (car results)))))))
+	    (message-send (shell-socket shell) reply :identities ids :raw-content t)))))))
 
 	  
 
