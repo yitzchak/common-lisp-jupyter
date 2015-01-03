@@ -14,9 +14,10 @@ The history of evaluations is also saved by the evaluator.
 
 (defclass evaluator ()
   ((kernel :initarg :kernel :reader evaluator-kernel)
-   (execution-count :initform 0 :reader evaluator-execution-count :type integer)
-   (history :initform (make-array 64 :fill-pointer 0 :adjustable t)
-	    :reader evaluator-history)))
+   (history-in :initform (make-array 64 :fill-pointer 0 :adjustable t)
+	       :reader evaluator-history-in)
+   (history-out :initform (make-array 64 :fill-pointer 0 :adjustable t)
+		:reader evaluator-history-out)))
 
 (defun make-evaluator (kernel)
   (let ((evaluator (make-instance 'evaluator
@@ -25,8 +26,12 @@ The history of evaluations is also saved by the evaluator.
     evaluator))
 
 (defun evaluate-code (evaluator code)
-  (let ((code-to-eval (read-from-string code)))
-    (format t "[Evaluator] evaluating: ~A~%" code-to-eval)
-    (let ((results (multiple-value-list (eval code-to-eval))))
-      (format t "[Evaluator] : results = ~W~%" results))))
+  (vector-push code (evaluator-history-in evaluator))
+  (let ((execution-count (length (evaluator-history-in evaluator))))
+    (let ((code-to-eval (read-from-string code)))
+      (format t "[Evaluator] evaluating: ~A~%" code-to-eval)
+      (let ((results (multiple-value-list (eval code-to-eval))))
+	(format t "[Evaluator] : results = ~W~%" results)
+	(vector-push results (evaluator-history-out evaluator))
+	(values execution-count results)))))
 

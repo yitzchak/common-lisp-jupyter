@@ -133,9 +133,28 @@
 
 (defun handle-execute-request (shell ids msg sig raw)
   (format t "[Shell] handling 'execute_request'~%")
-  (send-status-update (kernel-iopub (shell-kernel shell)) (message-header msg) ids sig :busy)
   (let ((hdr (message-header msg)))
+    (send-status-update (kernel-iopub (shell-kernel shell)) hdr ids sig :busy)
     (let ((content (json:decode-json-from-string (message-content msg))))
       (format t "  ==> Message content = ~W~%" content)
       (let ((code (afetch :code content)))
-	(evaluate-code (kernel-evaluator (shell-kernel shell)) code)))))
+	(vbinds (execution-count results)
+	    (evaluate-code (kernel-evaluator (shell-kernel shell)) code)
+	  (send-status-update (kernel-iopub (shell-kernel shell)) hdr ids sig :idle)
+	  (let ((reply (make-instance 
+			'message
+			:header (make-instance 
+				 'header
+				 :msg-id (format nil "~W" (uuid:make-v4-uuid))
+				 :username (header-username hdr)
+				 :session (header-session hdr)
+				 :msg-type "execute_reply"
+				 :version (header-version hdr))
+			:parent-header hdr
+			:metadata ""
+			:content (json:encode-json-to-string
+				  `((:status . "ok")
+				    (:execution--count . ,execution-count)
+				    (:payload . ,(vector)))))))
+	    (message-send (shell-socket shell) reply :identities ids :raw-content t)))))))
+

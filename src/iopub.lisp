@@ -44,4 +44,4 @@
 		       :content (json:encode-json-to-string status-content))))
       (message-send (iopub-socket iopub) status-msg :identities ids :raw-content t))))
 
-(json:encode-json-to-string '((:execution--state . :busy)))
+;; (json:encode-json-to-string '((:execution--state . :busy)))
