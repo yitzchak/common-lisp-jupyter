@@ -248,7 +248,7 @@ The wire-deserialization part follows.
 
 (defun message-recv (socket)
   (let ((parts (zmq-recv-list socket)))
-    ;;(format t "[Shell]: received parts: ~A~%" (mapcar (lambda (part) (format nil "~W::~A" part (type-of part))) parts))
+    ;;(format t "[Recv]: parts: ~A~%" (mapcar (lambda (part) (format nil "~W" part)) parts))
     (wire-deserialize parts)))
 
 #|

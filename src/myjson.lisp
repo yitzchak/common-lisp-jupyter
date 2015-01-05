@@ -51,6 +51,11 @@ There are several libraries available for json encoding and decoding,
   (loop 
      (let ((char (read-char input nil :eof)))
        (cond ((eql char :eof) (error 'json-parse-error :message "Unexpected end of file"))
+	     ((char= char #\\) ; c-style escape chars
+	      (let ((char (read-char input nil :eof)))
+		(cond ((eql char :eof) (error 'json-parse-error :message "Unexpected end of file (after '\'"))
+		      ((char= char #\n) (return #\Newline))
+		      (t (return char)))))
 	     ((not (char-whitespace-p char)) (return char))))))
 
 (example (with-input-from-string (s "   {   ]")
@@ -109,16 +114,26 @@ There are several libraries available for json encoding and decoding,
   (let ((str (make-array 32 :fill-pointer 0 :adjustable t :element-type 'character)))
     (loop
        (let ((char (read-char input nil :eof)))
+	 ;(format t "char = ~A~%" char)
 	 (cond ((eql char :eof) (error 'json-parse-error :message "Unexpected end of file"))
 	       ((char= char #\\)
-		(vector-push-extend char str)
-		(vector-push-extend (read-next-char input) str))
+		(let ((escape-char (read-char input nil :eof)))
+		  ;(format t "escape char = ~A~%" escape-char)
+		  (cond ((eql escape-char :eof) (error 'json-parse-error :message "Unexpected end of file (after '\')"))
+			((char= escape-char #\n) (vector-push-extend #\Newline str))
+			(t 
+			 (vector-push-extend char str)
+			 (vector-push-extend escape-char str)))))
 	       ((char= char #\") (return str))
 	       (t (vector-push-extend char str)))))))
 
 (example (with-input-from-string (s "this is a \\\"string\" and the rest")
 	   (parse-json-string s))
 	 => "this is a \\\"string")
+
+
+(with-input-from-string (s "this is a \\\"string with a \\n newline\" and the rest")
+	   (parse-json-string s))
 
 (defun parse-json-object (input)
   (let ((obj (list)))
@@ -391,6 +406,20 @@ The INDENT can be given for beautiful/debugging output (default is NIL
     (format stream "~%"))
   (json-fmt stream indent nil "}"))
 
+(defmethod encode-json (stream (thing null) &key (indent nil) (first-line nil))
+  (json-fmt stream (if first-line nil indent) (if indent t nil) "{}"))
+
+(defmethod encode-json (stream (thing array) &key (indent nil) (first-line nil))
+  (json-fmt stream (if first-line nil indent) (if indent t nil) "[")
+  (let ((sepstr (if indent (format nil ",~%") ",")))
+    (loop 
+       for val across thing
+       for sep = "" then sepstr
+       do (progn (json-fmt stream nil nil sep)
+		 (encode-json stream val :indent (if indent (+ 1 indent) nil) :first-line t))))
+  (when (and thing indent)
+    (format stream "~%"))
+  (json-fmt stream indent nil "]"))
 
 (defmethod encode-json (stream (thing string) &key (indent nil) (first-line nil))
   (json-fmt stream (if first-line nil indent) nil "~W" thing))
@@ -456,3 +485,7 @@ The INDENT can be given for beautiful/debugging output (default is NIL
   \"socks\": null
 }")
 
+(example
+ (encode-json-to-string '(("name" . "frederic")
+			  ("parent" . #("dany" "robi" "krim" "claude"))))
+ => "{\"name\": \"frederic\",\"parent\": [\"dany\",\"robi\",\"krim\",\"claude\"]}")

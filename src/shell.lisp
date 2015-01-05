@@ -95,7 +95,7 @@
 	      "\"codemirror_mode\": ~W" language-info-codemirror-mode)
     (json-fmt stream (if indent (1+ indent) nil) (if indent t nil) "},")
     (json-fmt stream (if indent (1+ indent) nil) (if indent t nil) 
-              "\"banner\": ~A," banner)
+              "\"banner\": \"\",") ;; ~W," banner)
     (json-fmt stream (if indent (1+ indent) nil) (if indent t nil) 
 	      "\"help_links\": ~A" (help-links-to-json help-links))
     (json-fmt stream indent nil "}")))
