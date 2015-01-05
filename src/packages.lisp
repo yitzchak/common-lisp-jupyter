@@ -22,8 +22,8 @@
 	   encode-json
 	   encode-json-to-string))
 
-(defpackage #:uncommonshell
+(defpackage #:fishbowl
   (:use #:cl #:fredo-utils #:myjson)
   (:export kernel-start))
 
-(in-package #:uncommonshell)
+(in-package #:fishbowl)

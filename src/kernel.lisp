@@ -1,7 +1,4 @@
-(in-package #:uncommonshell)
-
-(defparameter +KERNEL-IMPLEMENTATION-NAME+ "UncommonShell")
-(defparameter +KERNEL-IMPLEMENTATION-VERSION+ "0.2")
+(in-package #:fishbowl)
 
 (defclass kernel ()
   ((config :initarg :config :reader kerner-config)
@@ -57,7 +54,7 @@
            "     .-----------------.       /_________/ |      "
            "    /                 / |      |         | |      "
            "   /+================+\\ |      | |====|  | |      "
-           "   ||uncommon shell  || |      |         | |      "
+           "   ||Fishbowl        || |      |         | |      "
            "   ||                || |      | |====|  | |      "
            "   ||* (fact 5)      || |      |         | |      "
            "   ||120             || |      |   ___   | |      "

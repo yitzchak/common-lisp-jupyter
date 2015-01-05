@@ -1,5 +1,5 @@
 
-(in-package #:uncommonshell)
+(in-package #:fishbowl)
 
 #|
 
@@ -18,7 +18,7 @@
    (username :initarg :username :reader header-username :type string)
    (session :initarg :session :reader header-session :type string)
    (msg-type :initarg :msg-type :reader header-msg-type :type string)
-   (version :initarg :version :initform "5.0" :reader header-version :type string))
+   (version :initarg :version :initform +KERNEL-PROTOCOL-VERSION+ :reader header-version :type string))
   (:documentation "Header representation for IPython messages"))
 
 #|
@@ -52,13 +52,13 @@
   \"username\": \"fredokun\",
   \"session\": \"AAA-BBB-CCC-DDD\",
   \"msg_type\": \"execute_request\",
-  \"version\": \"5.0\"
+  \"version\": \"4.1\"
 }")
 
 
 (example
  (encode-json-to-string *header1*)
- => "{\"msg_id\": \"XXX-YYY-ZZZ-TTT\",\"username\": \"fredokun\",\"session\": \"AAA-BBB-CCC-DDD\",\"msg_type\": \"execute_request\",\"version\": \"5.0\"}")
+ => "{\"msg_id\": \"XXX-YYY-ZZZ-TTT\",\"username\": \"fredokun\",\"session\": \"AAA-BBB-CCC-DDD\",\"msg_type\": \"execute_request\",\"version\": \"4.1\"}")
 
 #|
 
@@ -69,7 +69,7 @@
 (example (parse-json-from-string (encode-json-to-string *header1*))
          => '(("msg_id" . "XXX-YYY-ZZZ-TTT") ("username" . "fredokun")
 	      ("session" . "AAA-BBB-CCC-DDD") ("msg_type" . "execute_request")
-	      ("version" . "5.0")))
+	      ("version" . "4.1")))
 
 (example
  (afetch "msg_id" (parse-json-from-string (encode-json-to-string *header1*)) :test #'equal)
@@ -194,7 +194,7 @@ The wire-deserialization part follows.
 (example
  (let ((delim-index (position +WIRE-IDS-MSG-DELIMITER+ *wire1*)))
    (subseq *wire1* (+ 2 delim-index) (+ 6 delim-index)))
- => '("{\"msg_id\": \"XXX-YYY-ZZZ-TTT\",\"username\": \"fredokun\",\"session\": \"AAA-BBB-CCC-DDD\",\"msg_type\": \"execute_request\",\"version\": \"5.0\"}"
+ => '("{\"msg_id\": \"XXX-YYY-ZZZ-TTT\",\"username\": \"fredokun\",\"session\": \"AAA-BBB-CCC-DDD\",\"msg_type\": \"execute_request\",\"version\": \"4.1\"}"
       "{}" "{}" "{}"))
 
 

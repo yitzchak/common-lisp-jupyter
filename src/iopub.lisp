@@ -1,5 +1,5 @@
 
-(in-package #:uncommonshell)
+(in-package #:fishbowl)
 
 #|
 
