@@ -85,10 +85,11 @@ There are several libraries available for json encoding and decoding,
 	  (t (error 'json-parse-error :message (format nil "Unexpected character: ~A" char))))))
 
 (defun parse-json-literal (input first literal)
-  (loop for expect across literal
-     (let ((char (read-char input nil :eof)))
-       (cond ((eql char :eof)  (error 'json-parse-error :message (format nil "Unexpected end of file while parsing literal: ~A~A" first literal)))
-	     ((not (char= char expect)) (error 'json-parse-error :message (format nil "While parsing literal, expecting '~A' instead of: ~A (literal ~A~A)" expect char first literal))))))
+  (loop 
+     for expect across literal
+     do (let ((char (read-char input nil :eof)))
+	  (cond ((eql char :eof)  (error 'json-parse-error :message (format nil "Unexpected end of file while parsing literal: ~A~A" first literal)))
+		((not (char= char expect)) (error 'json-parse-error :message (format nil "While parsing literal, expecting '~A' instead of: ~A (literal ~A~A)" expect char first literal))))))
   t)
 
 (defun parse-json-literal-true (input)
@@ -278,7 +279,8 @@ There are several libraries available for json encoding and decoding,
 	 => "0.212E+42")
 
 
-(example (with-input-from-string (s "{
+(example (afetch "isAlive" 
+		 (with-input-from-string (s "{
   \"firstName\": \"John\",
   \"lastName\": \"Smith\",
   \"isAlive\": true,
@@ -303,4 +305,7 @@ There are several libraries available for json encoding and decoding,
   \"children\": [ \"alfi\", \"alfo\", \"alfa\" ],
   \"spouse\": null
 }")
-	   (parse-json s))
+	   (parse-json s)) :test #'equal)
+	 => :true)
+
+

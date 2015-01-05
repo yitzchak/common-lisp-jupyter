@@ -99,12 +99,11 @@
          => '(1 . 3)) ;; without a warning
 
 
-(defun afetch (comp alist)
-  (let ((binding (assoc comp alist)))
+(defun afetch (comp alist &key (test #'eql))
+  (let ((binding (assoc comp alist :test test)))
     (if binding
         (cdr binding)
         (error "No such key: ~A" comp))))
-
 
 (defmacro while (condition &body body)
   (let ((eval-cond-var (gensym "eval-cond-"))
