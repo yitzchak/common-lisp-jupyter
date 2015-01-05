@@ -1,5 +1,4 @@
+Fishbowl
+=======
 
-Uncommon Shell
-==============
-
-A Ipython kernel for Common Lisp.
+An Interactive Shell for Common Lisp  (based on IPython)
