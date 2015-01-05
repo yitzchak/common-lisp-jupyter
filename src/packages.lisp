@@ -16,7 +16,8 @@
 
 (defpackage #:myjson
   (:use #:cl #:fredo-utils)
-  (:export))
+  (:export parse-json
+	   parse-json-from-string))
 
 (defpackage #:uncommonshell
   (:use #:cl #:fredo-utils)

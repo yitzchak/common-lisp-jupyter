@@ -72,6 +72,7 @@ There are several libraries available for json encoding and decoding,
 
 
 (defun parse-json (input)
+  (:documentation "Parse a JSon document from stream INPUT.")
   (let ((char (read-next-char input)))
     (cond ((char= char #\{) (parse-json-object input))
 	  ((char= char #\[) (parse-json-array input))
@@ -309,3 +310,126 @@ There are several libraries available for json encoding and decoding,
 	 => :true)
 
 
+(defun parse-json-from-string (str)
+  (:documentation "Parse a JSon document encoded in the string STR.")
+  (with-input-from-string (s str)
+    (parse-json s)))
+
+#|
+
+## JSon encoding ##
+
+|#
+
+
+(defparameter *json-encoder-indent-level* 2
+  "Indentation level (number of space(s) per indent) for the
+ JSon encoder (default is 2).")
+
+(defgeneric encode-json (stream thing &key indent)
+  (:documentation "Encode on STREAM a JSon representation of THING. 
+The INDENT can be given for beautiful/debugging output (default is NIL
+ for deactivating the indentation)."))
+
+(defun encode-json-to-string (thing &key indent)
+  "Encode as a string a JSon representation of THING. 
+The INDENT can be given for beautiful/debugging output (default is NIL
+ for deactivating the indentation)."
+  (with-output-to-string (stream)
+    (encode-json stream thing :indent indent)))
+
+(defun gen-indent (level)
+  (if level
+      (make-string (* level *json-encoder-indent-level*) :initial-element #\Space)
+      ""))
+
+(example (gen-indent 5)
+         => "          ")
+
+(defmacro json-fmt (stream indent with-newline &rest fmt)
+  `(progn (when ,indent
+	    (write-string (gen-indent ,indent) ,stream))
+	  (format ,stream ,@fmt)
+	  (when ,with-newline
+	    (format ,stream "~%"))))
+
+(example (with-output-to-string (stream)
+	   (let ((toto '(me toto)))
+	     (json-fmt stream 2 t "blabla ~A" toto)))
+	   => "    blabla (ME TOTO)
+")
+
+(example (with-output-to-string (stream)
+	   (let ((toto '(me toto)))
+	     (json-fmt stream 2 nil "blabla ~A" toto)))
+	   => "    blabla (ME TOTO)")
+
+(example (with-output-to-string (stream)
+	   (let ((toto '(me toto)))
+	     (json-fmt stream nil nil "blabla ~A" toto)))
+	   => "blabla (ME TOTO)")
+
+(defmethod encode-json (stream (thing cons) &key (indent nil) (first-line nil))
+  (json-fmt stream (if first-line nil indent) t "{")
+  (let ((sepstr (format nil ",~%")))
+    (loop 
+       for (key . val) in thing
+       for sep = "" then sepstr
+       do (progn (json-fmt stream nil nil sep)
+		 (json-fmt stream indent nil "~W: " key)
+		 (encode-json stream val :indent (if indent (1+ indent) nil) :first-line t))))
+  (if thing
+      (format stream "~%")
+      (json-fmt stream indent nil "}")))
+
+
+(defmethod encode-json (stream (thing string) &key (indent nil) (first-line nil))
+  (json-fmt stream (if first-line nil indent) nil "~W" thing))
+
+(example 
+ (encode-json-to-string "help me \"man\" yeah !")
+ => "\"help me \\\"man\\\" yeah !\"")
+
+(defmethod encode-json (stream (thing integer) &key (indent nil) (first-line nil))
+  (json-fmt stream (if first-line nil indent) nil "~A" thing))
+
+(example 
+ (encode-json-to-string 123)
+ => "123")
+
+
+(defmethod encode-json (stream (thing float) &key (indent nil) (first-line nil))
+  (json-fmt stream (if first-line nil indent) nil "~A" thing))
+
+(example 
+ (encode-json-to-string -3.242e-12)
+ => "-3.242e-12")
+
+(defmethod encode-json (stream (thing (eql :true)) &key (indent nil) (first-line nil))
+  (json-fmt stream (if first-line nil indent) nil "true"))
+
+(example 
+ (encode-json-to-string :true)
+ => "true")
+
+(defmethod encode-json (stream (thing (eql :false)) &key (indent nil) (first-line nil))
+  (json-fmt stream (if first-line nil indent) nil "false"))
+
+(example 
+ (encode-json-to-string :false)
+ => "false")
+
+(defmethod encode-json (stream (thing (eql :null)) &key (indent nil) (first-line nil))
+  (json-fmt stream (if first-line nil indent) nil "null"))
+
+(example 
+ (encode-json-to-string :null)
+ => "null")
+
+
+
+(example
+ (encode-json-to-string '(("name" . "frederic")
+			  ("age" . 41)
+			  ("geek" . :true)
+			  ("socks" . :null)))
