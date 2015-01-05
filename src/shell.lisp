@@ -163,5 +163,5 @@
 				    (:payload . ,(vector)))))))
 	    (message-send (shell-socket shell) reply :identities ids :raw-content t)))))))
 
-	  
+
 

@@ -1,5 +1,5 @@
 
-(in-package #:common-lisp-utilities)
+(in-package #:fredokun-utilities)
 
 #|
 

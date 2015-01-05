@@ -1,6 +1,6 @@
 
-(defpackage #:common-lisp-utilities
-  (:nicknames #:cl-utilities #:cl-utils)
+(defpackage #:fredokun-utilities
+  (:nicknames #:fredo-utils)
   (:use #:cl)
   (:export *example-enabled*
            *example-equal-predicate*
@@ -14,8 +14,12 @@
 	   while
 	   read-file-lines))
 
+(defpackage #:myjson
+  (:use #:cl #:fredo-utils)
+  (:export))
+
 (defpackage #:uncommonshell
-  (:use #:cl #:cl-utilities)
+  (:use #:cl #:fredo-utils)
   (:export kernel-start))
 
 (in-package #:uncommonshell)
