@@ -72,7 +72,7 @@ There are several libraries available for json encoding and decoding,
 
 
 (defun parse-json (input)
-  (:documentation "Parse a JSon document from stream INPUT.")
+  "Parse a JSon document from stream INPUT."
   (let ((char (read-next-char input)))
     (cond ((char= char #\{) (parse-json-object input))
 	  ((char= char #\[) (parse-json-array input))
@@ -311,7 +311,7 @@ There are several libraries available for json encoding and decoding,
 
 
 (defun parse-json-from-string (str)
-  (:documentation "Parse a JSon document encoded in the string STR.")
+  "Parse a JSon document encoded in the string STR."
   (with-input-from-string (s str)
     (parse-json s)))
 
@@ -370,17 +370,17 @@ The INDENT can be given for beautiful/debugging output (default is NIL
 	   => "blabla (ME TOTO)")
 
 (defmethod encode-json (stream (thing cons) &key (indent nil) (first-line nil))
-  (json-fmt stream (if first-line nil indent) t "{")
-  (let ((sepstr (format nil ",~%")))
+  (json-fmt stream (if first-line nil indent) (if indent t nil) "{")
+  (let ((sepstr (if indent (format nil ",~%") ",")))
     (loop 
        for (key . val) in thing
        for sep = "" then sepstr
        do (progn (json-fmt stream nil nil sep)
-		 (json-fmt stream indent nil "~W: " key)
-		 (encode-json stream val :indent (if indent (1+ indent) nil) :first-line t))))
-  (if thing
-      (format stream "~%")
-      (json-fmt stream indent nil "}")))
+		 (json-fmt stream (if indent (1+ indent) nil) nil "~W: " key)
+		 (encode-json stream val :indent (if indent (+ 2 indent) nil) :first-line t))))
+  (when (and thing indent)
+    (format stream "~%"))
+  (json-fmt stream indent nil "}"))
 
 
 (defmethod encode-json (stream (thing string) &key (indent nil) (first-line nil))
@@ -433,3 +433,17 @@ The INDENT can be given for beautiful/debugging output (default is NIL
 			  ("age" . 41)
 			  ("geek" . :true)
 			  ("socks" . :null)))
+ => "{\"name\": \"frederic\",\"age\": 41,\"geek\": true,\"socks\": null}")
+
+(example
+ (encode-json-to-string '(("name" . "frederic")
+			  ("age" . 41)
+			  ("geek" . :true)
+			  ("socks" . :null)) :indent 0)
+ => "{
+  \"name\": \"frederic\",
+  \"age\": 41,
+  \"geek\": true,
+  \"socks\": null
+}")
+
