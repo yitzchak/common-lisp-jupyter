@@ -18,11 +18,12 @@
   (:use #:cl #:fredo-utils)
   (:export parse-json
 	   parse-json-from-string
+	   json-fmt
 	   encode-json
 	   encode-json-to-string))
 
 (defpackage #:uncommonshell
-  (:use #:cl #:fredo-utils)
+  (:use #:cl #:fredo-utils #:myjson)
   (:export kernel-start))
 
 (in-package #:uncommonshell)

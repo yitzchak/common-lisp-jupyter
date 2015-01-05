@@ -4,8 +4,7 @@
   :version "0.2"
   :author "Frederic Peschanski (format nil \"<frederic~Apeschanski~Awork~Agmail~Acom>\" \".\" \".\" \"@\" \".\")" 
   :license "BSD 2-Clause. See LICENSE."
-  :depends-on (:cl-json
-               :pzmq
+  :depends-on (:pzmq
                :bordeaux-threads
                :uuid
                :ironclad)
@@ -18,8 +17,3 @@
 	       (:file "iopub")
 	       (:file "evaluator")
                (:file "kernel")))
-
-
-
-  
-

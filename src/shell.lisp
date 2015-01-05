@@ -69,26 +69,36 @@
 					     help-links)))
 	       "]"))
 
-(defmethod to-json ((object content-kernel-info-reply) &key (indent nil) (first-indent nil) (newlines nil))
+(defmethod encode-json (stream (object content-kernel-info-reply) &key (indent nil) (first-line nil))
   (with-slots (protocol-version implementation implementation-version 
 				language language-version language-info-mimetype
 				language-info-pygments-lexer language-info-codemirror-mode
 				banner help-links) object
-    (concatenate 'string
-                 (to-json-line first-indent newlines "{")
-                 (to-json-line indent newlines "\"protocol_version\": ~W," protocol-version)
-                 (to-json-line indent newlines "\"implementation\": ~W," implementation)
-                 (to-json-line indent newlines"\"implementation_version\": ~W," implementation-version)
-                 (to-json-line indent newlines"\"language\": ~W," language)
-                 (to-json-line indent newlines"\"language_version\": ~W," language-version)
-                 (to-json-line indent newlines"\"language_info\": {")
-                 (to-json-line indent newlines "  \"mimetype\": ~W," language-info-mimetype)
-                 (to-json-line indent newlines "  \"pygments_lexer\": ~W," language-info-pygments-lexer)
-                 (to-json-line indent newlines "  \"codemirror_mode\": ~W" language-info-codemirror-mode)
-                 (to-json-line indent newlines "},")
-                 (to-json-line indent newlines"\"banner\": ~W," (json:encode-json-to-string banner))
-                 (to-json-line indent newlines"\"help_links\": ~A" (help-links-to-json help-links))
-                 (to-json-line first-indent nil "}"))))
+    (json-fmt stream (if first-line nil indent) (if indent t nil) "{")
+    (json-fmt stream (if indent (1+ indent) nil) (if indent t nil) 
+	      "\"protocol_version\": ~W," protocol-version)
+    (json-fmt stream (if indent (1+ indent) nil) (if indent t nil) 
+	      "\"implementation\": ~W," implementation)
+    (json-fmt stream (if indent (1+ indent) nil) (if indent t nil) 
+	      "\"implementation_version\": ~W," implementation-version)
+    (json-fmt stream (if indent (1+ indent) nil) (if indent t nil) 
+	      "\"language\": ~W," language)
+    (json-fmt stream (if indent (1+ indent) nil) (if indent t nil) 
+	      "\"language_version\": ~W," language-version)
+    (json-fmt stream (if indent (1+ indent) nil) (if indent t nil) 
+              "\"language_info\": {")
+    (json-fmt stream (if indent (+ 2 indent) nil) (if indent t nil) 
+	      "\"mimetype\": ~W," language-info-mimetype)
+    (json-fmt stream (if indent (+ 2 indent) nil) (if indent t nil) 
+	      "\"pygments_lexer\": ~W," language-info-pygments-lexer)
+    (json-fmt stream (if indent (+ 2 indent) nil) (if indent t nil) 
+	      "\"codemirror_mode\": ~W" language-info-codemirror-mode)
+    (json-fmt stream (if indent (1+ indent) nil) (if indent t nil) "},")
+    (json-fmt stream (if indent (1+ indent) nil) (if indent t nil) 
+              "\"banner\": ~A," banner)
+    (json-fmt stream (if indent (1+ indent) nil) (if indent t nil) 
+	      "\"help_links\": ~A" (help-links-to-json help-links))
+    (json-fmt stream indent nil "}")))
 
 (defvar *status-starting-sent* nil)
 
@@ -96,33 +106,21 @@
   ;; (format t "[Shell] handling 'kernel-info-request'~%")
   (when (not *status-starting-sent*)
     (setf *status-starting-sent* t)
-    (send-status-update (kernel-iopub (shell-kernel shell)) (message-header msg) sig :starting))
-  (let ((hdr (message-header msg)))
-    (let ((reply (make-instance 
-		  'message
-		  :header (make-instance 
-			   'header
-			   :msg-id (format nil "~W" (uuid:make-v4-uuid))
-			   :username (header-username hdr)
-			   :session (header-session hdr)
-			   :msg-type "kernel_info_reply"
-			   :version (header-version hdr))
-		  :parent-header hdr
-		  :metadata ""
-		  :content (make-instance
-			    'content-kernel-info-reply
-			    :protocol-version (header-version hdr)
-			    :implementation +KERNEL-IMPLEMENTATION-NAME+
-			    :implementation-version +KERNEL-IMPLEMENTATION-VERSION+
-			    :language "common-lisp"
-			    :language-version "X3J13"
-			    :language-info-mimetype "text/x-common-lisp"
-			    :language-info-pygments-lexer "common-lisp"
-			    :language-info-codemirror-mode "text/x-common-lisp"
-			    :banner (banner)
-			    :help-links '(("Common Lisp Hyperspec" . "http://www.lispworks.com/documentation/HyperSpec/Front/index.htm"))))))
-      (message-send (shell-socket shell) reply :identities ids))))
-						      
+    (send-status-update (kernel-iopub (shell-kernel shell)) msg sig "starting"))
+  (let ((reply (make-message-from-parent msg "kernel_info_reply" nil 
+					 (make-instance
+					  'content-kernel-info-reply
+					  :protocol-version (header-version (message-header msg))
+					  :implementation +KERNEL-IMPLEMENTATION-NAME+
+					  :implementation-version +KERNEL-IMPLEMENTATION-VERSION+
+					  :language "common-lisp"
+					  :language-version "X3J13"
+					  :language-info-mimetype "text/x-common-lisp"
+					  :language-info-pygments-lexer "common-lisp"
+					  :language-info-codemirror-mode "text/x-common-lisp"
+					  :banner (banner)
+					  :help-links '(("Common Lisp Hyperspec" . "http://www.lispworks.com/documentation/HyperSpec/Front/index.htm"))))))
+    (message-send (shell-socket shell) reply :identities ids)))						      
 
 #|
 
@@ -133,35 +131,20 @@
 
 (defun handle-execute-request (shell ids msg sig raw)
   ;;(format t "[Shell] handling 'execute_request'~%")
-  (let ((hdr (message-header msg)))
-    (send-status-update (kernel-iopub (shell-kernel shell)) hdr sig :busy)
-    (let ((content (json:decode-json-from-string (message-content msg))))
-      ;;(format t "  ==> Message content = ~W~%" content)
-      (let ((code (afetch :code content)))
-	(vbinds (execution-count results)
-	    (evaluate-code (kernel-evaluator (shell-kernel shell)) code)
-	  ;; send the first result
-	  (send-execute-result (kernel-iopub (shell-kernel shell)) 
-			       hdr sig execution-count (car results))
-	  ;; status back to idle
-	  (send-status-update (kernel-iopub (shell-kernel shell)) hdr sig :idle)
-	  ;; send reply (control)
-	  (let ((reply (make-instance 
-			'message
-			:header (make-instance 
-				 'header
-				 :msg-id (format nil "~W" (uuid:make-v4-uuid))
-				 :username (header-username hdr)
-				 :session (header-session hdr)
-				 :msg-type "execute_reply"
-				 :version (header-version hdr))
-			:parent-header hdr
-			:metadata ""
-			:content (json:encode-json-to-string
-				  `((:status . "ok")
-				    (:execution--count . ,execution-count)
-				    (:payload . ,(vector)))))))
-	    (message-send (shell-socket shell) reply :identities ids :raw-content t)))))))
-
-
-
+  (send-status-update (kernel-iopub (shell-kernel shell)) msg sig "busy")
+  (let ((content (parse-json-from-string (message-content msg))))
+    ;;(format t "  ==> Message content = ~W~%" content)
+    (let ((code (afetch "code" content :test #'equal)))
+      (vbinds (execution-count results)
+	  (evaluate-code (kernel-evaluator (shell-kernel shell)) code)
+	;; send the first result
+	(send-execute-result (kernel-iopub (shell-kernel shell)) 
+			     msg sig execution-count (car results))
+	;; status back to idle
+	(send-status-update (kernel-iopub (shell-kernel shell)) msg sig "idle")
+	;; send reply (control)
+	(let ((reply (make-message-from-parent msg "execute_reply" nil
+					       `(("status" . "ok")
+						 ("execution_count" . ,execution-count)
+						 ("payload" . ,(vector))))))
+	  (message-send (shell-socket shell) reply :identities ids))))))
