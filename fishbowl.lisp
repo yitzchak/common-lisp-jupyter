@@ -5,9 +5,9 @@
 ;; activate debugging
 (declaim (optimize (speed 0) (space 0) (debug 3) (safety 3)))
 
-(ql:quickload "uncommonshell")
+(ql:quickload "fishbowl")
 
-(in-package #:uncommonshell)
+(in-package #:fishbowl)
 
 ;; start main loop
 (kernel-start)
