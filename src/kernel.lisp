@@ -105,7 +105,7 @@
                             :control-port (afetch "control_port" config-alist :test #'equal)
                             :hb-port (afetch "hb_port" config-alist :test #'equal)
                             :signature-scheme (afetch "signature_scheme" config-alist :test #'equal)
-                            :key (afetch "key" config-alist))) :test #'equal)
+                            :key (afetch "key" config-alist :test #'equal))))
         ;;(inspect config)
         (let* ((kernel (make-kernel config))
 	       (evaluator (make-evaluator kernel))

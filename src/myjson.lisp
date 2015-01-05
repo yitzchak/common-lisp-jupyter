@@ -223,17 +223,23 @@ There are several libraries available for json encoding and decoding,
 	  ;; (format t "Exponent = ~A ~%" exppart)
 	  (setf number (concatenate 'string number exppart)))))
       ;; return the resulting number
-      number))
+      (read-from-string number)))
 	      
 (defun parse-json-number-fractional-part (init input)
-  (if (char= init #\0)
-      ""
-      (concatenate 'string 
-		   (format nil "~A" (parse-json-digit input :min #\1))
-		   (parse-json-digits input))))
+  (cond ((char= init #\0) "")
+	((and (char>= init #\1)
+	      (char<= init #\9)) (parse-json-digits input))
+	(t
+	 (concatenate 'string 
+		      (format nil "~A" (parse-json-digit input :min #\1))
+		      (parse-json-digits input)))))
 
 (example (with-input-from-string (s "132402")
 	   (parse-json-number-fractional-part #\- s))
+	 => "132402")
+
+(example (with-input-from-string (s "132402")
+	   (parse-json-number-fractional-part #\4 s))
 	 => "132402")
 
 (example (with-input-from-string (s "toto")
@@ -269,15 +275,15 @@ There are several libraries available for json encoding and decoding,
 
 (example (with-input-from-string (s "34.212e-42")
 	   (parse-json-number #\- s))
-	 => "-34.212e-42")
+	 => -3.42113e-41)
 
 (example (with-input-from-string (s "34.212e-42")
 	   (parse-json-number #\1 s))
-	 => "134.212e-42")
+	 => 1.3421076e-40)
 
-(example (with-input-from-string (s ".212E+42")
+(example (with-input-from-string (s ".212E+32")
 	   (parse-json-number #\0 s))
-	 => "0.212E+42")
+	 => 2.12e31)
 
 
 (example (afetch "isAlive" 
@@ -314,6 +320,9 @@ There are several libraries available for json encoding and decoding,
   "Parse a JSon document encoded in the string STR."
   (with-input-from-string (s str)
     (parse-json s)))
+
+(example (parse-json-from-string "40350")
+	 => 40350)
 
 #|
 
