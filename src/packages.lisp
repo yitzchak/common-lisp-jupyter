@@ -18,7 +18,6 @@
   (:use #:cl #:fredo-utils)
   (:export parse-json
 	   parse-json-from-string
-	   json-fmt
 	   encode-json
 	   encode-json-to-string))
 

@@ -29,15 +29,13 @@
 
 (defmethod encode-json (stream (object header) &key (indent nil) (first-line nil))
   (with-slots (msg-id username session msg-type version) object
-    (json-fmt stream (if first-line nil indent) (if indent t nil) "{")
-    (json-fmt stream (if indent (1+ indent) nil) (if indent t nil) "\"msg_id\": ~W," msg-id)
-    (json-fmt stream (if indent (1+ indent) nil) (if indent t nil) "\"username\": ~W," username)
-    (json-fmt stream (if indent (1+ indent) nil) (if indent t nil) "\"session\": ~W," session)
-    (json-fmt stream (if indent (1+ indent) nil) (if indent t nil) "\"msg_type\": ~W," msg-type)
-    (json-fmt stream (if indent (1+ indent) nil) (if indent t nil) "\"version\": ~W" version)
-    (json-fmt stream indent nil "}")))
-
-
+    (encode-json stream `(("msg_id" . ,msg-id)
+                          ("username" . ,username)
+                          ("session" . ,session)
+                          ("msg_type" . ,msg-type)
+                          ("version" . ,version))
+                 :indent indent :first-line first-line)))
+    
 (example-progn
   (defparameter *header1* (make-instance 'header
                                          :msg-id "XXX-YYY-ZZZ-TTT"

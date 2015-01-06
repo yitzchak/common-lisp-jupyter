@@ -296,7 +296,7 @@ There are several libraries available for json encoding and decoding,
 
 (example (with-input-from-string (s "34.212e-42")
 	   (parse-json-number #\1 s))
-	 => 1.3421076e-40)
+	 => 1.3421076e-40 :warn-only t)
 
 (example (with-input-from-string (s ".212E+32")
 	   (parse-json-number #\0 s))
@@ -372,58 +372,6 @@ The INDENT can be given for beautiful/debugging output (default is NIL
 (example (gen-indent 5)
          => "          ")
 
-(defmacro json-fmt (stream indent with-newline &rest fmt)
-  `(progn (when ,indent
-	    (write-string (gen-indent ,indent) ,stream))
-	  (format ,stream ,@fmt)
-	  (when ,with-newline
-	    (format ,stream "~%"))))
-
-(example (with-output-to-string (stream)
-	   (let ((toto '(me toto)))
-	     (json-fmt stream 2 t "blabla ~A" toto)))
-	   => "    blabla (ME TOTO)
-")
-
-(example (with-output-to-string (stream)
-	   (let ((toto '(me toto)))
-	     (json-fmt stream 2 nil "blabla ~A" toto)))
-	   => "    blabla (ME TOTO)")
-
-(example (with-output-to-string (stream)
-	   (let ((toto '(me toto)))
-	     (json-fmt stream nil nil "blabla ~A" toto)))
-	   => "blabla (ME TOTO)")
-
-(defmethod encode-json (stream (thing cons) &key (indent nil) (first-line nil))
-  (json-fmt stream (if first-line nil indent) (if indent t nil) "{")
-  (let ((sepstr (if indent (format nil ",~%") ",")))
-    (loop 
-       for (key . val) in thing
-       for sep = "" then sepstr
-       do (progn (json-fmt stream nil nil sep)
-		 (json-fmt stream (if indent (1+ indent) nil) nil "~W: " key)
-		 (encode-json stream val :indent (if indent (+ 2 indent) nil) :first-line t))))
-  (when (and thing indent)
-    (format stream "~%"))
-  (json-fmt stream indent nil "}"))
-
-(defmethod encode-json (stream (thing null) &key (indent nil) (first-line nil))
-  (json-fmt stream (if first-line nil indent) (if indent t nil) "{}"))
-
-(defmethod encode-json (stream (thing array) &key (indent nil) (first-line nil))
-  (json-fmt stream (if first-line nil indent) (if indent t nil) "[")
-  (let ((sepstr (if indent (format nil ",~%") ",")))
-    (loop 
-       for val across thing
-       for sep = "" then sepstr
-       do (progn (json-fmt stream nil nil sep)
-		 (encode-json stream val :indent (if indent (+ 1 indent) nil) :first-line t))))
-  (when (and thing indent)
-    (format stream "~%"))
-  (json-fmt stream indent nil "]"))
-
-
 (defun string-to-json-string (str)
   (let ((jstr (make-array (length str) :fill-pointer 0 :adjustable t :element-type 'character)))               
     (loop
@@ -443,8 +391,59 @@ with a new line")
  (string-to-json-string "(format t \"hello~%\")")
  => "(format t \"hello~%\")")
 
+(defun json-write (stream indent with-newline str)
+  (when indent
+    (write-string (gen-indent indent) stream))
+  (write-string str stream)
+  (when with-newline
+    (terpri stream))) 
+
+(example (with-output-to-string (stream)
+	   (let ((toto '(me toto)))
+	     (json-write stream 2 t (format nil "blabla ~A" toto))))
+	   => "    blabla (ME TOTO)
+")
+
+(example (with-output-to-string (stream)
+	   (let ((toto '(me toto)))
+	     (json-write stream 2 nil (format nil "blabla ~A" toto))))
+	   => "    blabla (ME TOTO)")
+
+(example (with-output-to-string (stream)
+	   (let ((toto '(me toto)))
+	     (json-write stream nil nil (format nil "blabla ~A" toto))))
+	   => "blabla (ME TOTO)")
+
+(defmethod encode-json (stream (thing cons) &key (indent nil) (first-line nil))
+  (json-write stream (if first-line nil indent) (if indent t nil) "{")
+  (let ((sepstr (if indent (format nil ",~%") ",")))
+    (loop 
+       for (key . val) in thing
+       for sep = "" then sepstr
+       do (progn (json-write stream nil nil sep)
+		 (json-write stream (if indent (1+ indent) nil) nil (format nil "~W: " key))
+		 (encode-json stream val :indent (if indent (+ 2 indent) nil) :first-line t))))
+  (when (and thing indent)
+    (format stream "~%"))
+  (json-write stream indent nil "}"))
+
+(defmethod encode-json (stream (thing null) &key (indent nil) (first-line nil))
+  (json-write stream (if first-line nil indent) (if indent t nil) "{}"))
+
+(defmethod encode-json (stream (thing array) &key (indent nil) (first-line nil))
+  (json-write stream (if first-line nil indent) (if indent t nil) "[")
+  (let ((sepstr (if indent (format nil ",~%") ",")))
+    (loop 
+       for val across thing
+       for sep = "" then sepstr
+       do (progn (json-write stream nil nil sep)
+		 (encode-json stream val :indent (if indent (+ 1 indent) nil) :first-line t))))
+  (when (and thing indent)
+    (format stream "~%"))
+  (json-write stream indent nil "]"))
+
 (defmethod encode-json (stream (thing string) &key (indent nil) (first-line nil))
-  (json-fmt stream (if first-line nil indent) nil (format nil "~S" (string-to-json-string thing))))
+  (json-write stream (if first-line nil indent) nil (string-to-json-string (with-output-to-string (str) (prin1 thing str)))))
 
 (example 
  (encode-json-to-string "help me \"man\" yeah !")
@@ -457,11 +456,11 @@ yeah !")
 
 (example 
  (encode-json-to-string "(format t \"hello~%\")")
- => "\"help me \\\"man\\\"\\nyeah !\"")
+ => "\"(format t \\\"hello~%\\\")\"")
 
 
 (defmethod encode-json (stream (thing integer) &key (indent nil) (first-line nil))
-  (json-fmt stream (if first-line nil indent) nil "~A" thing))
+  (json-write stream (if first-line nil indent) nil (format nil "~A" thing)))
 
 (example 
  (encode-json-to-string 123)
@@ -469,28 +468,28 @@ yeah !")
 
 
 (defmethod encode-json (stream (thing float) &key (indent nil) (first-line nil))
-  (json-fmt stream (if first-line nil indent) nil "~A" thing))
+  (json-write stream (if first-line nil indent) nil (format nil "~A" thing)))
 
 (example 
- (encode-json-to-string -3.242e-12)
- => "-3.242e-12")
+ (encode-json-to-string -3.242E-12)
+ => "-3.242E-12")
 
 (defmethod encode-json (stream (thing (eql :true)) &key (indent nil) (first-line nil))
-  (json-fmt stream (if first-line nil indent) nil "true"))
+  (json-write stream (if first-line nil indent) nil "true"))
 
 (example 
  (encode-json-to-string :true)
  => "true")
 
 (defmethod encode-json (stream (thing (eql :false)) &key (indent nil) (first-line nil))
-  (json-fmt stream (if first-line nil indent) nil "false"))
+  (json-write stream (if first-line nil indent) nil "false"))
 
 (example 
  (encode-json-to-string :false)
  => "false")
 
 (defmethod encode-json (stream (thing (eql :null)) &key (indent nil) (first-line nil))
-  (json-fmt stream (if first-line nil indent) nil "null"))
+  (json-write stream (if first-line nil indent) nil "null"))
 
 (example 
  (encode-json-to-string :null)
