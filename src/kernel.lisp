@@ -28,7 +28,6 @@
   #-(or sbcl clozure gcl ecl cmu allegro lispworks clisp)
   (error "get-argv not supported for your implementation"))
 
-
 (defun join (e l)
   (cond ((endp l) (list))
         ((endp (cdr l)) l)
@@ -68,7 +67,7 @@
            "   ------------------                             "
            ""))))
 
-(banner)
+;; (format t (banner))
 
 
 
