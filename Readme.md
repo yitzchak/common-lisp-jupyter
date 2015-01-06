@@ -3,7 +3,7 @@ Fishbowl
 
 An enhanced interactive Shell for Common Lisp  (based on IPython)
 
-{{{
+```
  Fishbowl: an enhanced interactive Common Lisp Shell
 (Version 0.3 - Ipython protocol v.4.1)
 --> (C) 2014-2015 Frederic Peschanski (cf. LICENSE)
@@ -24,7 +24,7 @@ An enhanced interactive Shell for Common Lisp  (based on IPython)
     /oooooooooooooooo//      ///                  
    /................//      /_/                   
    ------------------                          
-}}}
+```
 
 **Important** : this is alpha version non-officially released software... barely (but still) running.
 
@@ -44,12 +44,12 @@ try to run :
 
     sh run-fishbowl.sh
 
-{{{
+```
 In [1]: (* 2 21)
 Out[1]: 42
 
 In [2]: 
-}}}
+```
 
 
 (Not yet really much to) ... have fun !
