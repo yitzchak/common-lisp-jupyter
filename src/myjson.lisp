@@ -122,19 +122,19 @@ There are several libraries available for json encoding and decoding,
 		  (cond ((eql escape-char :eof) (error 'json-parse-error :message "Unexpected end of file (after '\')"))
 			((char= escape-char #\n) (vector-push-extend #\Newline str))
 			(t 
-			 (vector-push-extend char str)
+			 ;;(vector-push-extend char str) ;; XXX: escaping is performed on the lisp side
 			 (vector-push-extend escape-char str)))))
 	       ((char= char #\") (return str))
 	       (t (vector-push-extend char str)))))))
 
 (example (with-input-from-string (s "this is a \\\"string\" and the rest")
 	   (parse-json-string s))
-	 => "this is a \\\"string")
+	 => "this is a \"string")
 
 
 (example (with-input-from-string (s "this is a \\\"string with a \\n newline\" and the rest")
           (parse-json-string s))
-         => "this is a \\\"string with a 
+         => "this is a \"string with a 
  newline")
 
 (defun parse-json-object (input)
@@ -512,3 +512,6 @@ yeah !")
  (encode-json-to-string '(("name" . "frederic")
 			  ("parent" . #("dany" "robi" "krim" "claude"))))
  => "{\"name\": \"frederic\",\"parent\": [\"dany\",\"robi\",\"krim\",\"claude\"]}")
+
+
+
