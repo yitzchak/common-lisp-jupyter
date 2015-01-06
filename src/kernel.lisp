@@ -87,8 +87,11 @@
   (let ((cmd-args (get-argv)))
     ;(princ (banner))
     (write-line "")
-    (format t "UncommonShell: a Common Lisp Ipython-compatible kernel~%")
-    (format t "--> (C) 2014 Frederic Peschanski (cf.  LICENSE)~%")
+    (format t "~A: an enhanced interactive Common Lisp Shell~%" +KERNEL-IMPLEMENTATION-NAME+)
+    (format t "(Version ~A - Ipython protocol v.~A)~%"
+            +KERNEL-IMPLEMENTATION-VERSION+
+            +KERNEL-PROTOCOL-VERSION+)
+    (format t "--> (C) 2014-2015 Frederic Peschanski (cf. LICENSE)~%")
     (write-line "")
     (unless (stringp (cadr cmd-args))
       (error "Missing connection file argument"))
