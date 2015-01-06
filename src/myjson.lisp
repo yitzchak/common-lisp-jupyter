@@ -132,8 +132,10 @@ There are several libraries available for json encoding and decoding,
 	 => "this is a \\\"string")
 
 
-(with-input-from-string (s "this is a \\\"string with a \\n newline\" and the rest")
-	   (parse-json-string s))
+(example (with-input-from-string (s "this is a \\\"string with a \\n newline\" and the rest")
+          (parse-json-string s))
+         => "this is a \\\"string with a 
+ newline")
 
 (defun parse-json-object (input)
   (let ((obj (list)))
@@ -421,12 +423,33 @@ The INDENT can be given for beautiful/debugging output (default is NIL
     (format stream "~%"))
   (json-fmt stream indent nil "]"))
 
+
+(defun string-to-json-string (str)
+  (let ((jstr (make-array (length str) :fill-pointer 0 :adjustable t :element-type 'character)))               
+    (loop
+       for char across str
+       do (cond ((char= char #\Newline)
+                 (vector-push-extend #\\ jstr)
+                 (vector-push-extend #\n jstr))
+                (t (vector-push-extend char jstr))))
+    jstr))
+
+(example
+ (string-to-json-string "this is a string  
+with a new line")
+ => "this is a string  \\nwith a new line")
+
 (defmethod encode-json (stream (thing string) &key (indent nil) (first-line nil))
-  (json-fmt stream (if first-line nil indent) nil "~W" thing))
+  (json-fmt stream (if first-line nil indent) nil (string-to-json-string (format nil "~W" thing))))
 
 (example 
  (encode-json-to-string "help me \"man\" yeah !")
  => "\"help me \\\"man\\\" yeah !\"")
+
+(example 
+ (encode-json-to-string "help me \"man\"
+yeah !")
+ => "\"help me \\\"man\\\"\\nyeah !\"")
 
 (defmethod encode-json (stream (thing integer) &key (indent nil) (first-line nil))
   (json-fmt stream (if first-line nil indent) nil "~A" thing))

@@ -35,10 +35,19 @@
 
 ;; (json:encode-json-to-string '((:execution--state . :busy) (:text--plain . "toto")))
 
+(defun send-execute-code (iopub parent-msg sig execution-count code)
+  (let ((code-msg (make-message-from-parent parent-msg "pyin" nil
+                                            `(("code" . ,code)
+                                              ("execution_count" . ,execution-count)))))
+    ;; (message-send (iopub-socket iopub) result-msg :identities '("pyin") :raw-content t))))
+    (message-send (iopub-socket iopub) code-msg)))
+
+                                             
+                                              
 (defun send-execute-result (iopub parent-msg sig execution-count result)
   (let ((result-msg (make-message-from-parent parent-msg "pyout" nil
 					      `(("execution_count" . ,execution-count)
 						("data" . (("text/plain" . ,(format nil "~A" result))))
 						("metadata" . ())))))
-    ;; (message-send (iopub-socket iopub) result-msg :identities '("execute_result") :raw-content t))))
+    ;; (message-send (iopub-socket iopub) result-msg :identities '("pyout") :raw-content t))))
     (message-send (iopub-socket iopub) result-msg)))

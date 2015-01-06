@@ -136,7 +136,9 @@
     ;;(format t "  ==> Message content = ~W~%" content)
     (let ((code (afetch "code" content :test #'equal)))
       (vbinds (execution-count results)
-	  (evaluate-code (kernel-evaluator (shell-kernel shell)) code)
+          (evaluate-code (kernel-evaluator (shell-kernel shell)) code)
+        ;; broadcast the code to connected frontends
+        (send-execute-code (kernel-iopub (shell-kernel shell)) msg sig execution-count code)
 	;; send the first result
 	(send-execute-result (kernel-iopub (shell-kernel shell)) 
 			     msg sig execution-count (car results))
