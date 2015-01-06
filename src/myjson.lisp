@@ -292,7 +292,7 @@ There are several libraries available for json encoding and decoding,
 
 (example (with-input-from-string (s "34.212e-42")
 	   (parse-json-number #\- s))
-	 => -3.42113e-41)
+	 => -3.42113e-41 :warn-only t)
 
 (example (with-input-from-string (s "34.212e-42")
 	   (parse-json-number #\1 s))
@@ -300,7 +300,7 @@ There are several libraries available for json encoding and decoding,
 
 (example (with-input-from-string (s ".212E+32")
 	   (parse-json-number #\0 s))
-	 => 2.12e31)
+	 => 2.12e31 :warn-only t)
 
 
 (example (afetch "isAlive" 
@@ -472,7 +472,7 @@ yeah !")
 
 (example 
  (encode-json-to-string -3.242E-12)
- => "-3.242E-12")
+ => "-3.242E-12" :warn-only t)
 
 (defmethod encode-json (stream (thing (eql :true)) &key (indent nil) (first-line nil))
   (json-write stream (if first-line nil indent) nil "true"))
