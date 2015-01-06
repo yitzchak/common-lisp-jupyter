@@ -138,10 +138,10 @@
       (format t "  ===> Code to execute = ~W~%" code)
       (vbinds (execution-count results stdout stderr)
           (evaluate-code (kernel-evaluator (shell-kernel shell)) code)
-        (format t "Execution count = ~A~%" execution-count)
-        (format t "results = ~A~%" results)
-        (format t "STDOUT = ~A~%" stdout)
-        (format t "STDERR = ~A~%" stderr)
+        ;(format t "Execution count = ~A~%" execution-count)
+        ;(format t "results = ~A~%" results)
+        ;(format t "STDOUT = ~A~%" stdout)
+        ;(format t "STDERR = ~A~%" stderr)
         ;; broadcast the code to connected frontends
         (send-execute-code (kernel-iopub (shell-kernel shell)) msg sig execution-count code)
 	;; send the first result
