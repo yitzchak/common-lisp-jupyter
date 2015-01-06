@@ -26,7 +26,7 @@ An enhanced interactive Shell for Common Lisp  (based on IPython)
    ------------------                          
 ```
 
-**Important** : this is alpha version non-officially released software... barely (but still) running.
+**Important** : this is alpha version non-officially released software... barely (but still) running. **(Don't) use it at your own risk and peril !**
 
 ## Requirements ##
 
