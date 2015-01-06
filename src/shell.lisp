@@ -144,6 +144,12 @@
         ;(format t "STDERR = ~A~%" stderr)
         ;; broadcast the code to connected frontends
         (send-execute-code (kernel-iopub (shell-kernel shell)) msg sig execution-count code)
+        ;; send the stdout
+        (when stdout
+          (send-stream (kernel-iopub (shell-kernel shell)) msg sig "stdout" stdout))
+        ;; send the stderr
+        (when stderr
+          (send-stream (kernel-iopub (shell-kernel shell)) msg sig "stderr" stderr))
 	;; send the first result
 	(send-execute-result (kernel-iopub (shell-kernel shell)) 
 			     msg sig execution-count (car results))

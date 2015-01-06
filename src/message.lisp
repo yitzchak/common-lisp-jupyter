@@ -234,7 +234,7 @@ The wire-deserialization part follows.
 
 (defun message-send (socket msg &key (identities nil))
   (let ((wire-parts (wire-serialize msg :identities identities)))
-    ;; (format t "~%[Send] wire parts: ~W~%" wire-parts)
+    ;;(format t "~%[Send] wire parts: ~W~%" wire-parts)
     (dolist (part wire-parts)
       (pzmq:send socket part :sndmore t))
     (pzmq:send socket nil)))
@@ -248,7 +248,7 @@ The wire-deserialization part follows.
 
 (defun message-recv (socket)
   (let ((parts (zmq-recv-list socket)))
-    ;; (format t "[Recv]: parts: ~A~%" (mapcar (lambda (part) (format nil "~W" part)) parts))
+    ;;(format t "[Recv]: parts: ~A~%" (mapcar (lambda (part) (format nil "~W" part)) parts))
     (wire-deserialize parts)))
 
 #|
