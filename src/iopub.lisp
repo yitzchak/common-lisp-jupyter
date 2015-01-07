@@ -39,7 +39,7 @@
   (let ((code-msg (make-message-from-parent parent-msg "pyin" nil
                                             `(("code" . ,code)
                                               ("execution_count" . ,execution-count)))))
-    (format t "content to send = ~W~%" (encode-json-to-string (message-content code-msg)))
+    ;;(format t "content to send = ~W~%" (encode-json-to-string (message-content code-msg)))
     ;; (message-send (iopub-socket iopub) result-msg :identities '("pyin") :raw-content t))))
     (message-send (iopub-socket iopub) code-msg)))
 
