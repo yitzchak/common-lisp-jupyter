@@ -9,7 +9,7 @@
 
 ;; To activate the inline examples
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (defparameter *example-enabled* t)
+  (defparameter *example-enabled* t) ;; nil in production
 
   (defparameter *example-equal-predicate* #'equal)
 
