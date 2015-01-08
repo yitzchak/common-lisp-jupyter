@@ -10,7 +10,8 @@
 
 (ql:quickload "fishbowl")
 
-(in-package #:fishbowl)
+(in-package #:fishbowl-user)
 
 ;; start main loop
-(kernel-start)
+(fishbowl:kernel-start)
+

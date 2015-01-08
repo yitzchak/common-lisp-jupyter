@@ -17,4 +17,5 @@
                (:file "shell")
 	       (:file "iopub")
 	       (:file "evaluator")
+               (:file "user")
                (:file "kernel")))

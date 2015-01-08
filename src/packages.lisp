@@ -25,4 +25,8 @@
   (:use #:cl #:fredo-utils #:myjson)
   (:export kernel-start))
 
+(defpackage #:fishbowl-user
+  (:use #:cl #:common-lisp-user)
+  (:export quit))
+
 (in-package #:fishbowl)

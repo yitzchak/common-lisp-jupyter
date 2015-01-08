@@ -25,6 +25,19 @@ The history of evaluations is also saved by the evaluator.
     (setf (slot-value kernel 'evaluator) evaluator)
     evaluator))
 
+;;; macro taken from: http://www.cliki.net/REPL
+(defmacro handling-errors (&body body)
+  `(handler-case (progn ,@body)
+     (simple-condition (err) 
+       (format *error-output* "~&~A: ~%" (class-name (class-of err)))
+       (apply (function format) *error-output*
+              (simple-condition-format-control   err)
+              (simple-condition-format-arguments err))
+       (format *error-output* "~&"))
+     (condition (err) 
+       (format *error-output* "~&~A: ~%  ~S~%"
+               (class-name (class-of err)) err))))
+
 (defun evaluate-code (evaluator code)
   ;;(format t "[Evaluator] Code to evaluate: ~W~%" code)
   (vector-push code (evaluator-history-in evaluator))
@@ -36,7 +49,8 @@ The history of evaluations is also saved by the evaluator.
                          (with-output-to-string (stderr stderr-str)
                            (let ((*standard-output* stdout)
                                  (*error-output* stderr))
-                             (multiple-value-list (eval code-to-eval)))))))
+                             (handling-errors
+                              (multiple-value-list (eval code-to-eval))))))))
           ;;(format t "[Evaluator] : results = ~W~%" results)
           (vector-push results (evaluator-history-out evaluator))
           (values execution-count results stdout-str stderr-str))))))
