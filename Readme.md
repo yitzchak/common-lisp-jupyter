@@ -40,9 +40,9 @@ To try Fishbowl you need :
 
 ## Quick launch ##
 
-try to run :
+For simple interactions on the console, just type:
 
-    sh run-fishbowl.sh
+    sh run-fishbowl.sh console
 
 ```
 In [1]: (* 2 21)
@@ -51,6 +51,16 @@ Out[1]: 42
 In [2]: 
 ```
 
+## Notebooks ##
+
+The real interest of Fishbowl is its use conjointly
+ with the IPython notebook frontend. For a try, type:
+
+    sh run-fishbowl.sh notebook
+
+and ... well ... see for yourself.
+
+----
 
 (Not yet really much to) ... have fun !
 
