@@ -131,10 +131,10 @@
         ;; broadcast the code to connected frontends
         (send-execute-code (kernel-iopub (shell-kernel shell)) msg sig execution-count code)
         ;; send the stdout
-        (when stdout
+        (when (and stdout (> (length stdout) 0))
           (send-stream (kernel-iopub (shell-kernel shell)) msg sig "stdout" stdout))
         ;; send the stderr
-        (when stderr
+        (when (and stderr (> (length stderr) 0))
           (send-stream (kernel-iopub (shell-kernel shell)) msg sig "stderr" stderr))
 	;; send the first result
 	(send-execute-result (kernel-iopub (shell-kernel shell)) 
