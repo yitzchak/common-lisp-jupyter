@@ -47,19 +47,26 @@
 ### Message type: kernel_info_reply ###
 
 |#
-  
+
+;; for protocol version 5  
+;; (defclass content-kernel-info-reply (message-content)
+;;   ((protocol-version :initarg :protocol-version :type string)
+;;    (implementation :initarg :implementation :type string)
+;;    (implementation-version :initarg :implementation-version :type string)
+;;    (language :initarg :language :type string)
+;;    (language-version :initarg :language-version :type string)
+;;    (language-info-mimetype :initarg :language-info-mimetype :type string)
+;;    (language-info-pygments-lexer :initarg :language-info-pygments-lexer :type string)
+;;    (language-info-codemirror-mode :initarg :language-info-codemirror-mode :type string)
+;;    (banner :initarg :banner :type string)
+;;    ;; help links: (text . url) a-list
+;;    (help-links :initarg :help-links)))
+
+;; for protocol version 4.1
 (defclass content-kernel-info-reply (message-content)
-  ((protocol-version :initarg :protocol-version :type string)
-   (implementation :initarg :implementation :type string)
-   (implementation-version :initarg :implementation-version :type string)
-   (language :initarg :language :type string)
-   (language-version :initarg :language-version :type string)
-   (language-info-mimetype :initarg :language-info-mimetype :type string)
-   (language-info-pygments-lexer :initarg :language-info-pygments-lexer :type string)
-   (language-info-codemirror-mode :initarg :language-info-codemirror-mode :type string)
-   (banner :initarg :banner :type string)
-   ;; help links: (text . url) a-list
-   (help-links :initarg :help-links)))
+  ((protocol-version :initarg :protocol-version)
+   (language-version :initarg :language-version)
+   (language :initarg :language :type string)))
 
 (defun help-links-to-json (help-links)
   (concatenate 'string "["
@@ -69,21 +76,30 @@
 					     help-links)))
 	       "]"))
 
+;; for protocol version 5
+;; (defmethod encode-json (stream (object content-kernel-info-reply) &key (indent nil) (first-line nil))
+;;   (with-slots (protocol-version implementation implementation-version 
+;; 				language language-version language-info-mimetype
+;; 				language-info-pygments-lexer language-info-codemirror-mode
+;; 				banner help-links) object
+;;     (encode-json stream `(("protocol_version" . ,protocol-version)
+;;                           ("implementation" . ,implementation)
+;;                           ("implementation_version" . ,implementation-version)
+;;                           ("language" . ,language)
+;;                           ("language_version" . ,language-version)
+;;                           ("language_info" . (("mimetype" . ,language-info-mimetype)
+;;                                               ("pygments_lexer" . ,language-info-pygments-lexer)
+;;                                               ("codemirror_mode" . ,language-info-codemirror-mode)
+;;                                               ("banner" . ,banner)
+;;                                               ("help_links" . ,(help-links-to-json help-links)))))
+;;                  :indent indent :first-line first-line)))
+
+;; for protocol version 4.1
 (defmethod encode-json (stream (object content-kernel-info-reply) &key (indent nil) (first-line nil))
-  (with-slots (protocol-version implementation implementation-version 
-				language language-version language-info-mimetype
-				language-info-pygments-lexer language-info-codemirror-mode
-				banner help-links) object
+  (with-slots (protocol-version ipython-version language-version language) object
     (encode-json stream `(("protocol_version" . ,protocol-version)
-                          ("implementation" . ,implementation)
-                          ("implementation_version" . ,implementation-version)
-                          ("language" . ,language)
                           ("language_version" . ,language-version)
-                          ("language_info" . (("mimetype" . ,language-info-mimetype)
-                                              ("pygments_lexer" . ,language-info-pygments-lexer)
-                                              ("codemirror_mode" . ,language-info-codemirror-mode)
-                                              ("banner" . ,banner)
-                                              ("help_links" . ,(help-links-to-json help-links)))))
+                          ("language" . ,language))
                  :indent indent :first-line first-line)))
 
 (defvar *status-starting-sent* nil)
@@ -93,20 +109,28 @@
   (when (not *status-starting-sent*)
     (setf *status-starting-sent* t)
     (send-status-update (kernel-iopub (shell-kernel shell)) msg sig "starting"))
+  ;; for protocol version 5
+  ;; (let ((reply (make-message-from-parent msg "kernel_info_reply" nil 
+  ;; 					 (make-instance
+  ;; 					  'content-kernel-info-reply
+  ;; 					  :protocol-version (header-version (message-header msg))
+  ;; 					  :implementation +KERNEL-IMPLEMENTATION-NAME+
+  ;; 					  :implementation-version +KERNEL-IMPLEMENTATION-VERSION+
+  ;; 					  :language "common-lisp"
+  ;; 					  :language-version "X3J13"
+  ;; 					  :language-info-mimetype "text/x-common-lisp"
+  ;; 					  :language-info-pygments-lexer "common-lisp"
+  ;; 					  :language-info-codemirror-mode "text/x-common-lisp"
+  ;; 					  :banner (banner)
+  ;; 					  :help-links '(("Common Lisp Hyperspec" . "http://www.lispworks.com/documentation/HyperSpec/Front/index.htm"))))))
+  ;; for protocol version 4.1
   (let ((reply (make-message-from-parent msg "kernel_info_reply" nil 
 					 (make-instance
 					  'content-kernel-info-reply
-					  :protocol-version (header-version (message-header msg))
-					  :implementation +KERNEL-IMPLEMENTATION-NAME+
-					  :implementation-version +KERNEL-IMPLEMENTATION-VERSION+
-					  :language "common-lisp"
-					  :language-version "X3J13"
-					  :language-info-mimetype "text/x-common-lisp"
-					  :language-info-pygments-lexer "common-lisp"
-					  :language-info-codemirror-mode "text/x-common-lisp"
-					  :banner (banner)
-					  :help-links '(("Common Lisp Hyperspec" . "http://www.lispworks.com/documentation/HyperSpec/Front/index.htm"))))))
-    (message-send (shell-socket shell) reply :identities ids)))						      
+					  :protocol-version #(4 1)
+					  :language-version #(1 2 7)  ;; XXX: impl. dependent but really cares ?
+					  :language "common-lisp"))))
+    (message-send (shell-socket shell) reply :identities ids)))					      
 
 #|
 
