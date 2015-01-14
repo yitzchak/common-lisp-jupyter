@@ -40,8 +40,10 @@ if ipython_version_major != 2:
 class Config:
     def __init__(self):
         self.ipython_profile_name = "fishbowl"
-        self.ipython_profile_dir = None
+        self.ipython_dir = IPython.utils.path.get_ipython_dir()
+        self.ipython_profile_dir = self.ipython_dir + "/profile_default"  # default is ipython dir
         self.lisp_implementation = "sbcl" # TODO: ccl support (others ? requires threading)
+        self.ipython_command = "console"
 
 def process_command_line(argv):
     config = Config()
@@ -50,10 +52,35 @@ def process_command_line(argv):
     import os
     import os.path
     config.fishbowl_startup_def_dir = os.path.dirname(os.path.realpath(inspect.getsourcefile(Config)))
-    print("Fishbowl startup def dir = {}".format(config.fishbowl_startup_def_dir))
+    #print("Fishbowl startup def dir = {}".format(config.fishbowl_startup_def_dir))
 
     config.fishbowl_startup_run_dir = os.path.realpath(os.getcwd())
-    print("Fishbowl startup run dir = {}".format(config.fishbowl_startup_run_dir))
+    #print("Fishbowl startup run dir = {}".format(config.fishbowl_startup_run_dir))
+
+    config.fishbowl_startup_script = os.path.realpath(argv[0])
+    #print("Fishbowl startup script = {}".format(config.fishbowl_startup_script))
+
+    i = 1
+    if len(argv) > 1 and not (argv[i].startswith('-')):  # first argument should be the ipython command
+        config.ipython_command = argv[i]
+        i += 1
+    # print("IPython command = {}".format(config.ipython_command))
+    # default is "console"
+
+    profile_dir_set = False
+
+    while i < len(argv):
+        print("cmd line option #{}: {}".format(i, argv[i]))
+
+        if argv[i].startswith("--profile_dir"):
+            if profile_dir_set:
+                halt("Error: --profile_dir option set twice")
+            config.ipython_profile_dir = argv[i][14:]
+            profile_dir_set = True
+
+        i += 1
+
+    print("IPython profile directory = {}".format(config.ipython_profile_dir))
 
     return config
 
