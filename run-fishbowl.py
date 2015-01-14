@@ -70,9 +70,10 @@ def process_command_line(argv):
 
     profile_dir_set = False
     profile_set = False
+    lisp_set = False
 
     while i < len(argv):
-        print("cmd line option #{}: {}".format(i, argv[i]))
+        #print("cmd line option #{}: {}".format(i, argv[i]))
 
         if argv[i].startswith("--profile_dir="):
             if profile_dir_set:
@@ -84,11 +85,19 @@ def process_command_line(argv):
                 halt("Error: --profile option set twice")
             config.ipython_profile = argv[i][10:]
             profile_set = True
+        elif argv[i].startswith("--lisp="):
+            if lisp_set:
+                halt("Error: --lisp option set twice")
+            config.lisp_implementation = argv[i][7:]
+            lisp_set = True
+        else:
+            halt("Error: unexpected option '{}'".format(argv[i]))
 
         i += 1
 
     #print("IPython profile directory = {}".format(config.ipython_profile_dir))
     #print("IPython profile = {}".format(config.ipython_profile))
+    print("Lisp implementation = {}".format(config.lisp_implementation))
 
     return config
 
