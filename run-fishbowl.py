@@ -54,8 +54,7 @@ print("... Frontend: using IPython v{}.{}".format(ipython_version_major, ipython
 class Config:
     def __init__(self):
         self.ipython_dir = IPython.utils.path.get_ipython_dir()
-        self.ipython_profile_dir = self.ipython_dir  # default is ipython dir
-        self.ipython_profile_name = "fishbowl"
+        self.ipython_profile_dir = self.ipython_dir + "/profile_fishbowl"
         self.lisp_implementation = "sbcl" # TODO: ccl support (others ? requires threading)
         import shutil
         self.ipython_executable = shutil.which("ipython3")
@@ -80,8 +79,12 @@ def process_command_line(argv):
     if len(argv) > 1 and not (argv[i].startswith('-')):  # first argument should be the ipython command
         config.ipython_command = argv[i]
         i += 1
+
     # print("IPython command = {}".format(config.ipython_command))
     # default is "console"
+
+    if config.ipython_command not in { "console", "notebook" }:
+        halt("Error: command '{}' not available\n  ==> choose 'console' (default) or 'notebook'".format(config.ipython_command))
 
     profile_dir_set = False
     profile_set = False
@@ -92,14 +95,14 @@ def process_command_line(argv):
         #print("cmd line option #{}: {}".format(i, argv[i]))
 
         if argv[i].startswith("--profile-dir="):
-            if profile_dir_set:
-                halt("Error: --profile-dir option set twice")
+            if profile_dir_set or profile_set:
+                halt("Error: unexpected '--profile-dir' option, profile already set")
             config.ipython_profile_dir = argv[i][14:]
             profile_dir_set = True
         elif argv[i].startswith("--profile="):
-            if profile_set:
-                halt("Error: --profile option set twice")
-            config.ipython_profile_name = argv[i][10:]
+            if profile_set or profile_dir_set:
+                halt("Error: unexpected '--profile' option, profile already set")
+            config.ipython_profile_dir = config.ipython_dir + "/profile_" + argv[i][10:]
             profile_set = True
         elif argv[i].startswith("--lisp="):
             if lisp_set:
@@ -118,7 +121,6 @@ def process_command_line(argv):
         i += 1
 
     #print("IPython profile directory = {}".format(config.ipython_profile_dir))
-    #print("IPython profile = {}".format(config.ipython_profile_name))
     #print("Lisp implementation = {}".format(config.lisp_implementation))
     #print("IPython executable = {}".format(config.ipython_executable))
 
@@ -171,6 +173,7 @@ if config.lisp_implementation == "sbcl":
     #print("sbcl version = {}".format(config.sbcl_version))
     if config.sbcl_version[0] < 1 or config.sbcl_version[1] < 2:
         halt("Error: require SBCL v1.2.x or above")
+
 elif config.lisp_implementation == "ccl":
     halt("Error: Clozure Common Lisp not (yet) supported")
 elif config.lisp_implementation == "ecl":
@@ -188,19 +191,34 @@ print("... Kernel: using {}".format(sbcl_version_string))
 ## Installation of profile  ##
 ##############################
 
-profile = None
+custom_js_file = None
 
-if not profile:
+nb_try = 0
+while not custom_js_file:
     try:
-        print("file = {}".format(config.ipython_profile_dir + "/profile_" + config.ipython_profile_name))
-        profile = open(config.ipython_profile_dir + "/profile_" + config.ipython_profile_name, "r")
+        custom_js_file = open(config.ipython_profile_dir + "/static/custom/custom.js", "r")
     except FileNotFoundError:
         # profile creation
-        print("... create profile '{}'".format(config.ipython_profile_name))
-        IPython.start_ipython([config.ipython_executable, 
-                               "profile", "create", config.ipython_profile_name, 
-                               "--profile-dir={}".format(config.ipython_profile_dir)])
+        print("... create profile '{}'".format(config.ipython_profile_dir))
+        ### XXX: Issue when running ipython for different commands multiple times
+        ### (MultipleInstanceError) ... So run in a subprocess
+        #IPython.start_ipython([config.ipython_executable, 
+        #                       "profile", "create",  
+        #                       "--profile-dir={}".format(config.ipython_profile_dir)])
 
+        try:
+            suprocess.check_call([config.ipython_executable,
+                                  'profile', 'create',
+                                  "--profile-dir={}".format(config.ipython_profile_dir)])
+        except FileNotFoundError:
+            halt("Error: '{}' executable not found".format(config.ipython_executable))
+        except subprocess.CalledProcessError as e:
+            halt("Error: {} from IPython".format(e))
+
+
+    nb_try += 1
+    if nb_try > 2:
+        halt("Error: could not create profile (please report)")
 
 # Taken from:
 # https://github.com/minad/iruby/blob/master/lib/iruby/static/custom/custom.js
@@ -225,4 +243,64 @@ CUSTOM_JS_CODEMIRROR_CONFIG_HEAD = r"""//<<<FISHBOWL_CUSTOM_JS_CODEMIRROR_CONFIG
 
 CUSTOM_JS_CODEMIRROR_CONFIG_FOOT = r"""//<<<FISHBOWL_CUSTOM_JS_CODEMIRROR_CONFIG_FOOT>>>
 """
+
+custom_js_content = ""
+
+looking_for_foot = False
+found_custom = False
+for line in custom_js_file:
+    if line == CUSTOM_JS_CODEMIRROR_CONFIG_HEAD:
+        if looking_for_foot or found_custom:
+            halt("Error: wrong 'custom.js' file -- HEAD marker (please delete corrupted profile)")
+        found_custom = True
+        looking_for_foot = True
+        custom_js_content += line
+        custom_js_content += CUSTOM_JS_CODEMIRROR_CONFIG
+    elif line == CUSTOM_JS_CODEMIRROR_CONFIG_FOOT:
+        if (not looking_for_foot) or (not found_custom):
+            halt("Error: wrong 'custom.js' file -- FOOT marker (please delete corrupted profile)")
+        looking_for_foot = False
+        custom_js_content += line
+    else:
+        if looking_for_foot:
+            pass # skip this line
+        else:
+            custom_js_content += line
+
+if not found_custom:
+    custom_js_content += '\n' + CUSTOM_JS_CODEMIRROR_CONFIG_HEAD \
+                         + CUSTOM_JS_CODEMIRROR_CONFIG \
+                         + CUSTOM_JS_CODEMIRROR_CONFIG_FOOT
+
+custom_js_file.close()
+
+custom_js_file = open(config.ipython_profile_dir + "/static/custom/custom.js", "w")
+custom_js_file.write(custom_js_content)
+custom_js_file.close()
+
+print("... profile customization done.")
+
+
+##############################
+## Run the IPython command  ##
+##############################
+
+### XXX: strange MultipleInstanceError error raise, use subprocess
+# IPython.start_ipython([config.ipython_executable, config.ipython_command,  
+#                        "--profile-dir={}".format(config.ipython_profile_dir),
+#                        "--Session.key=b''",
+#                        "--KernelManager.kernel_cmd=['sbcl', '--non-interactive', '--load', '{}/fishbowl.lisp', '{{connection_file}}']".format(config.fishbowl_startup_def_dir)])
+
+try:
+    subprocess.check_call([config.ipython_executable,
+                           config.ipython_command,
+                           "--profile-dir={}".format(config.ipython_profile_dir),
+                           "--Session.key=b''",
+                           "--KernelManager.kernel_cmd=['sbcl', '--non-interactive', '--load', '{}/fishbowl.lisp', '{{connection_file}}']".format(config.fishbowl_startup_def_dir)],
+                          stdout=sys.stdout, stdin=sys.stdin, stderr=sys.stderr)
+except FileNotFoundError:
+    halt("Error: '{}' executable not found".format(config.ipython_executable))
+except subprocess.CalledProcessError as e:
+    halt("Error: {} from IPython".format(e))
+
 
