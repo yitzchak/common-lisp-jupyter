@@ -225,15 +225,29 @@ while not custom_js_file:
 CUSTOM_JS_CODEMIRROR_CONFIG = r"""
 $([IPython.events]).on('notebook_loaded.Notebook', function(){
     // add here logic that should be run once per **notebook load**
-    IPython.notebook.metadata.language = 'lisp' ;
+    // alert(IPython.notebook.metadata.language)
+    IPython.notebook.metadata.language = 'commonlisp' ;
 });
 $([IPython.events]).on('app_initialized.NotebookApp', function(){
     // add here logic that shoudl be run once per **page load**
-    CodeMirror.requireMode('lisp', function(){
+    CodeMirror.requireMode('commonlisp', function(){
         console.log('Lisp mode should now be available in codemirror.');
     })
-   IPython.CodeCell.options_default['cm_config']['mode'] = 'lisp';
+   IPython.CodeCell.options_default['cm_config']['mode'] = 'commonlisp';
    IPython.CodeCell.options_default['cm_config']['indentUnit'] = 4;
+
+   var cells = IPython.notebook.get_cells();
+   for(var i in cells){
+       var c = cells[i];
+       if (c.cell_type === 'code') {
+            // Force the mode to be Haskell
+            // This is necessary, otherwise sometimes highlighting just doesn't happen.
+            // This may be an IPython bug.
+            c.code_mirror.setOption('mode', 'commonlisp');
+            c.auto_highlight()
+        }
+   }
+
 });
 document.title = document.title.replace('IPython', 'Fishbowl');
 """
