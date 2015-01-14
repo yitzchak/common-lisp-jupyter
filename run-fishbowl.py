@@ -292,12 +292,14 @@ print("... profile customization done.")
 #                        "--KernelManager.kernel_cmd=['sbcl', '--non-interactive', '--load', '{}/fishbowl.lisp', '{{connection_file}}']".format(config.fishbowl_startup_def_dir)])
 
 try:
+    import signal
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
     subprocess.check_call([config.ipython_executable,
                            config.ipython_command,
                            "--profile-dir={}".format(config.ipython_profile_dir),
                            "--Session.key=b''",
                            "--KernelManager.kernel_cmd=['sbcl', '--non-interactive', '--load', '{}/fishbowl.lisp', '{{connection_file}}']".format(config.fishbowl_startup_def_dir)],
-                          stdout=sys.stdout, stdin=sys.stdin, stderr=sys.stderr)
+                          stdout=sys.stdout, stdin=sys.stdin, stderr=sys.stderr, shell=False)
 except FileNotFoundError:
     halt("Error: '{}' executable not found".format(config.ipython_executable))
 except subprocess.CalledProcessError as e:
