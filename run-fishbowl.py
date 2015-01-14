@@ -41,7 +41,8 @@ class Config:
     def __init__(self):
         self.ipython_profile_name = "fishbowl"
         self.ipython_dir = IPython.utils.path.get_ipython_dir()
-        self.ipython_profile_dir = self.ipython_dir + "/profile_default"  # default is ipython dir
+        self.ipython_profile_dir = self.ipython_dir  # default is ipython dir
+        self.ipython_profile = "profile_default"  # default is ipython dir
         self.lisp_implementation = "sbcl" # TODO: ccl support (others ? requires threading)
         self.ipython_command = "console"
 
@@ -68,19 +69,26 @@ def process_command_line(argv):
     # default is "console"
 
     profile_dir_set = False
+    profile_set = False
 
     while i < len(argv):
         print("cmd line option #{}: {}".format(i, argv[i]))
 
-        if argv[i].startswith("--profile_dir"):
+        if argv[i].startswith("--profile_dir="):
             if profile_dir_set:
                 halt("Error: --profile_dir option set twice")
             config.ipython_profile_dir = argv[i][14:]
             profile_dir_set = True
+        elif argv[i].startswith("--profile="):
+            if profile_set:
+                halt("Error: --profile option set twice")
+            config.ipython_profile = argv[i][10:]
+            profile_set = True
 
         i += 1
 
-    print("IPython profile directory = {}".format(config.ipython_profile_dir))
+    #print("IPython profile directory = {}".format(config.ipython_profile_dir))
+    #print("IPython profile = {}".format(config.ipython_profile))
 
     return config
 
