@@ -207,7 +207,7 @@ while not custom_js_file:
         #                       "--profile-dir={}".format(config.ipython_profile_dir)])
 
         try:
-            suprocess.check_call([config.ipython_executable,
+            subprocess.check_call([config.ipython_executable,
                                   'profile', 'create',
                                   "--profile-dir={}".format(config.ipython_profile_dir)])
         except FileNotFoundError:
