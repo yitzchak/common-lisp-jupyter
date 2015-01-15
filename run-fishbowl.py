@@ -3,7 +3,7 @@
 ## Fishbowl startup script
 
 ## As a distributed program, the startup phase of
-## Fishbowl is non-trivial, and requires access to
+## Fishbowl/IPython is non-trivial, and requires access to
 ## the filesystem.   Since Python (3.x) is a requirement
 ## for Fishbowl, the startup script is also written in
 ## Python
@@ -164,7 +164,7 @@ if config.lisp_implementation == "sbcl":
     #print("sbcl version string = {}".format(sbcl_version_string))
 
     import re
-    m = re.match(r".*([0-9]\.[0-9]\.[0-9])", sbcl_version_string)
+    m = re.match(r".*([0-9]+\.[0-9]+\.[0-9]+)", sbcl_version_string)
     if not m:
         halt("Error: issue with sbcl version string (please report)")
     
@@ -173,8 +173,31 @@ if config.lisp_implementation == "sbcl":
     if config.sbcl_version[0] < 1 or config.sbcl_version[1] < 2:
         halt("Error: require SBCL v1.2.x or above")
 
+    print("... Kernel: using {}".format(sbcl_version_string))
+        
 elif config.lisp_implementation == "ccl":
-    halt("Error: Clozure Common Lisp not (yet) supported")
+    try:
+        ccl_version_string = subprocess.check_output(["ccl", "-V"]).decode()
+    except FileNotFoundError:
+        halt("Error: 'ccl' executable not in PATH")
+    except subprocess.CalledProcessError as e:
+        halt("Error: {} from CCL".format(e))
+
+    #print("ccl version string = {}".format(ccl_version_string))
+
+    
+    import re
+    m = re.match(r".*([0-9]+\.[0-9]+)", ccl_version_string)
+    if not m:
+        halt("Error: issue with ccl version string (please report)")
+    
+    config.ccl_version = tuple([int(d) for d in m.group(1).split(".")])
+    print("ccl version = {}".format(config.ccl_version))
+    if config.ccl_version[0] < 1 or config.ccl_version[1] < 10:
+        halt("Error: require CCL v1.10 or above")
+
+    print("... Kernel: using {}".format(ccl_version_string))
+        
 elif config.lisp_implementation == "ecl":
     halt("Error: ECL not (yet) supported")
 elif config.lisp_implementation == "cmucl":
@@ -184,7 +207,6 @@ elif config.lisp_implementation == "clisp":
 else:
     halt("Error: Common Lisp implementation '{}' not supported".format(config.lisp_implementation))
 
-print("... Kernel: using {}".format(sbcl_version_string))
 
 ##############################
 ## Installation of profile  ##
@@ -244,14 +266,20 @@ print("... launch frontend")
 #                        "--Session.key=b''",
 #                        "--KernelManager.kernel_cmd=['sbcl', '--non-interactive', '--load', '{}/fishbowl.lisp', '{{connection_file}}']".format(config.fishbowl_startup_def_dir)])
 
+if config.lisp_implementation == "sbcl":
+    KERNEL_CMD = "--KernelManager.kernel_cmd=['sbcl', '--non-interactive', '--load', '{}/fishbowl.lisp', '{{connection_file}}']".format(config.fishbowl_startup_def_dir)
+elif config.lisp_implementation == "ccl":
+    KERNEL_CMD = "--KernelManager.kernel_cmd=['ccl', '--quiet', '--batch', '--load', '{}/fishbowl.lisp', '--', '{{connection_file}}']".format(config.fishbowl_startup_def_dir)
+else:
+    halt("Error: unsupported lisp implementation '{}'".format(lisp_implementation))
+    
 try:
     import signal
     signal.signal(signal.SIGINT, signal.SIG_IGN)
     subprocess.check_call([config.ipython_executable,
                            config.ipython_command,
                            "--profile-dir={}".format(config.ipython_profile_dir),
-                           "--Session.key=b''",
-                           "--KernelManager.kernel_cmd=['sbcl', '--non-interactive', '--load', '{}/fishbowl.lisp', '{{connection_file}}']".format(config.fishbowl_startup_def_dir)],
+                           "--Session.key=b''", KERNEL_CMD],
                           stdout=sys.stdout, stdin=sys.stdin, stderr=sys.stderr, shell=False)
 except FileNotFoundError:
     halt("Error: '{}' executable not found".format(config.ipython_executable))

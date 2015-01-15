@@ -18,7 +18,7 @@
   ;; Borrowed from apply-argv, command-line-arguments.  Temporary solution (?)
   ;; This is not PvE's code.
   #+sbcl sb-ext:*posix-argv*
-  #+clozure (ccl::command-line-arguments)
+  #+clozure CCL:*UNPROCESSED-COMMAND-LINE-ARGUMENTS*  ;(ccl::command-line-arguments)
   #+gcl si:*command-args*
   #+ecl (loop for i from 0 below (si:argc) collect (si:argv i))
   #+cmu extensions:*command-line-strings*
@@ -92,27 +92,32 @@
             +KERNEL-PROTOCOL-VERSION+)
     (format t "--> (C) 2014-2015 Frederic Peschanski (cf. LICENSE)~%")
     (write-line "")
-    (unless (stringp (cadr cmd-args))
-      (error "Missing connection file argument"))
-    (let ((config-alist (parse-json-from-string (concat-all 'string "" (read-file-lines (cadr cmd-args))))))
-      (let ((config
-             (make-instance 'kernel-config
-                            :transport (afetch "transport" config-alist :test #'equal)
-                            :ip (afetch "ip" config-alist :test #'equal)
-                            :shell-port (afetch "shell_port" config-alist :test #'equal)
-                            :iopub-port (afetch "iopub_port" config-alist :test #'equal)
-                            :control-port (afetch "control_port" config-alist :test #'equal)
-                            :hb-port (afetch "hb_port" config-alist :test #'equal)
-                            :signature-scheme (afetch "signature_scheme" config-alist :test #'equal)
-                            :key (afetch "key" config-alist :test #'equal))))
-        ;;(inspect config)
-        (let* ((kernel (make-kernel config))
-	       (evaluator (make-evaluator kernel))
-               (shell (make-shell-channel kernel))
-	       (iopub (make-iopub-channel kernel)))
-          (format t "[Kernel] Entering mainloop ...~%")
-	  (start-heartbeat kernel)
-          (shell-loop shell))))))
+    (let ((connection-file-name #+sbcl (cadr cmd-args)
+                                #+clozure (car cmd-args)
+                                #-(or sbcl clozure)
+                                (error "at this point only sbcl and clozure cl are supported")))
+      ;; (format t "connection file = ~A~%" connection-file-name)
+      (unless (stringp connection-file-name)
+        (error "Wrong connection file argument (expecting a string)"))
+      (let ((config-alist (parse-json-from-string (concat-all 'string "" (read-file-lines connection-file-name)))))
+        (let ((config
+               (make-instance 'kernel-config
+                              :transport (afetch "transport" config-alist :test #'equal)
+                              :ip (afetch "ip" config-alist :test #'equal)
+                              :shell-port (afetch "shell_port" config-alist :test #'equal)
+                              :iopub-port (afetch "iopub_port" config-alist :test #'equal)
+                              :control-port (afetch "control_port" config-alist :test #'equal)
+                              :hb-port (afetch "hb_port" config-alist :test #'equal)
+                              :signature-scheme (afetch "signature_scheme" config-alist :test #'equal)
+                              :key (afetch "key" config-alist :test #'equal))))
+          ;;(inspect config)
+          (let* ((kernel (make-kernel config))
+                 (evaluator (make-evaluator kernel))
+                 (shell (make-shell-channel kernel))
+                 (iopub (make-iopub-channel kernel)))
+            (format t "[Kernel] Entering mainloop ...~%")
+            (start-heartbeat kernel)
+            (shell-loop shell)))))))
 
 
 (defun start-heartbeat (kernel)

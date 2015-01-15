@@ -5,7 +5,7 @@ An enhanced interactive Shell for Common Lisp  (based on IPython)
 
 ```
  Fishbowl: an enhanced interactive Common Lisp Shell
-(Version 0.4 - Ipython protocol v.4.1)
+(Version 0.5 - Ipython protocol v.4.1)
 --> (C) 2014-2015 Frederic Peschanski (cf. LICENSE)
                                  __________       
                                 /         /.      
@@ -32,7 +32,13 @@ An enhanced interactive Shell for Common Lisp  (based on IPython)
 
 To try Fishbowl you need :
 
- - a Common lisp implementation: at the moment only SBCL 1.2.x (with native threads) is supported, more to come ...
+ - a Common lisp implementation, for now
+
+   - either SBCL 1.2.x or above (with native threads enabled)
+
+   - or Clozure CL 1.10 or aboce (with native threads enabled) ...
+
+   - ECL is planned, for other implementations please fill an issue.
 
  - Quicklisp (cf. http://www.quicklisp.org/)
 
@@ -53,12 +59,28 @@ Out[1]: 42
 In [2]: 
 ```
 
+By default, Fishbowl assumes SBCL as the default lisp implementation. Using CCL instead requires
+the following command line:
+
+    python3 ./run-fishbowl.py  --lisp=ccl
+
+
+**Note**: Fishbowl seems to work better with CCL on MacOS  (but on Linux everything's fine with SBCL).
+
 ## Notebooks ##
 
 The real interest of Fishbowl is its use conjointly
  with the IPython notebook frontend. For a try, type:
 
     python3 ./run-fishbowl.py notebook
+
+(for SBCL)
+
+or
+
+    python3 ./run-fishbowl.py notebook  --lisp=ccl
+
+(for CCL)
 
 The file `AboutFishbowl.ipynb` is an example of a Lisp-based notebook.
 
