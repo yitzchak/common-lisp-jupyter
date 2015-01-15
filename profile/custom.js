@@ -55,6 +55,9 @@ $([IPython.events]).on('notebook_loaded.Notebook', function(){
 });
 $([IPython.events]).on('app_initialized.NotebookApp', function(){
     // add here logic that shoudl be run once per **page load**
+
+     $.getScript('/static/components/codemirror/mode/commonlisp/commonlisp.js');
+
     CodeMirror.requireMode('commonlisp', function(){
         console.log('Lisp mode should now be available in codemirror.');
     })
