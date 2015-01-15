@@ -10,6 +10,8 @@
 
 import subprocess
 import sys
+import shutil
+import os
 
 def halt(msg):
     print(msg, file=sys.stderr)
@@ -56,7 +58,6 @@ class Config:
         self.ipython_dir = IPython.utils.path.get_ipython_dir()
         self.ipython_profile_dir = self.ipython_dir + "/profile_fishbowl"
         self.lisp_implementation = "sbcl" # TODO: ccl support (others ? requires threading)
-        import shutil
         self.ipython_executable = shutil.which("ipython3")
         self.ipython_command = "console"
 
@@ -64,7 +65,6 @@ def process_command_line(argv):
     config = Config()
     
     import inspect
-    import os
     import os.path
     config.fishbowl_startup_def_dir = os.path.dirname(os.path.realpath(inspect.getsourcefile(Config)))
     #print("Fishbowl startup def dir = {}".format(config.fishbowl_startup_def_dir))
@@ -112,7 +112,6 @@ def process_command_line(argv):
         elif argv[i].startswith("--ipython-exec"):
             if ipython_exec_set:
                 halt("Error: --ipython-exec option set twice")
-            import shutil
             config.ipython_executable = shutil.which(argv[i][15:])
             ipython_exec_set = True
         else:
@@ -191,6 +190,8 @@ print("... Kernel: using {}".format(sbcl_version_string))
 ## Installation of profile  ##
 ##############################
 
+print("... profile customization")
+
 custom_js_file = None
 
 nb_try = 0
@@ -220,84 +221,22 @@ while not custom_js_file:
     if nb_try > 2:
         halt("Error: could not create profile (please report)")
 
-# Taken from:
-# https://github.com/minad/iruby/blob/master/lib/iruby/static/custom/custom.js
-CUSTOM_JS_CODEMIRROR_CONFIG = r"""
-$([IPython.events]).on('notebook_loaded.Notebook', function(){
-    // add here logic that should be run once per **notebook load**
-    // alert(IPython.notebook.metadata.language)
-    IPython.notebook.metadata.language = 'commonlisp' ;
-});
-$([IPython.events]).on('app_initialized.NotebookApp', function(){
-    // add here logic that shoudl be run once per **page load**
-    CodeMirror.requireMode('commonlisp', function(){
-        console.log('Lisp mode should now be available in codemirror.');
-    })
-   IPython.CodeCell.options_default['cm_config']['mode'] = 'commonlisp';
-   IPython.CodeCell.options_default['cm_config']['indentUnit'] = 4;
+## copy the custom js file
 
-   var cells = IPython.notebook.get_cells();
-   for(var i in cells){
-       var c = cells[i];
-       if (c.cell_type === 'code') {
-            // Force the mode to be Haskell
-            // This is necessary, otherwise sometimes highlighting just doesn't happen.
-            // This may be an IPython bug.
-            c.code_mirror.setOption('mode', 'commonlisp');
-            c.auto_highlight()
-        }
-   }
+shutil.copy(config.fishbowl_startup_def_dir + "/profile/custom.js",
+            config.ipython_profile_dir + "/static/custom/custom.js")
 
-});
-document.title = document.title.replace('IPython', 'Fishbowl');
-"""
+os.makedirs(config.ipython_profile_dir + "/static/components/codemirror/mode/commonlisp/", exist_ok=True)
+shutil.copy(config.fishbowl_startup_def_dir + "/profile/commonlisp.js",
+            config.ipython_profile_dir + "/static/components/codemirror/mode/commonlisp/commonlisp.js")
 
-CUSTOM_JS_CODEMIRROR_CONFIG_HEAD = r"""//<<<FISHBOWL_CUSTOM_JS_CODEMIRROR_CONFIG_HEAD>>>
-"""
-
-CUSTOM_JS_CODEMIRROR_CONFIG_FOOT = r"""//<<<FISHBOWL_CUSTOM_JS_CODEMIRROR_CONFIG_FOOT>>>
-"""
-
-custom_js_content = ""
-
-looking_for_foot = False
-found_custom = False
-for line in custom_js_file:
-    if line == CUSTOM_JS_CODEMIRROR_CONFIG_HEAD:
-        if looking_for_foot or found_custom:
-            halt("Error: wrong 'custom.js' file -- HEAD marker (please delete corrupted profile)")
-        found_custom = True
-        looking_for_foot = True
-        custom_js_content += line
-        custom_js_content += CUSTOM_JS_CODEMIRROR_CONFIG
-    elif line == CUSTOM_JS_CODEMIRROR_CONFIG_FOOT:
-        if (not looking_for_foot) or (not found_custom):
-            halt("Error: wrong 'custom.js' file -- FOOT marker (please delete corrupted profile)")
-        looking_for_foot = False
-        custom_js_content += line
-    else:
-        if looking_for_foot:
-            pass # skip this line
-        else:
-            custom_js_content += line
-
-if not found_custom:
-    custom_js_content += '\n' + CUSTOM_JS_CODEMIRROR_CONFIG_HEAD \
-                         + CUSTOM_JS_CODEMIRROR_CONFIG \
-                         + CUSTOM_JS_CODEMIRROR_CONFIG_FOOT
-
-custom_js_file.close()
-
-custom_js_file = open(config.ipython_profile_dir + "/static/custom/custom.js", "w")
-custom_js_file.write(custom_js_content)
-custom_js_file.close()
-
-print("... profile customization done.")
 
 
 ##############################
 ## Run the IPython command  ##
 ##############################
+
+print("... launch frontend")
 
 ### XXX: strange MultipleInstanceError error raise, use subprocess
 # IPython.start_ipython([config.ipython_executable, config.ipython_command,  
