@@ -126,3 +126,10 @@
        for line = (read-line input nil 'eof)
        until (eq line 'eof)
        collect line)))
+
+
+(defun read-binary-file (filename)
+  (with-open-file (stream filename)
+    (let ((bytes (make-array (file-length stream) :element-type '(unsigned-byte 8))))
+      (read-sequence bytes stream)
+      bytes)))

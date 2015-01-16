@@ -51,8 +51,6 @@ display of user objects.
 
 |#
 
-(defgeneric render-plain (value)
-  (:documentation "RENDER a value as plain text (default rendering)."))
 
 #|
 
@@ -62,32 +60,84 @@ Lisp printer. In most cases this is enough but specializations are
 
 |#
 
+(defgeneric render-plain (value)
+  (:documentation "Render the VALUE as plain text (default rendering)."))
+
+
 (defmethod render-plain ((value t))
+  ;; Lisp printer by default
   (format nil "~A" value))
 
 (example (render-plain '(1 2 3))
 			  => "(1 2 3)")
 
 
-
-(defun make-display-object (value data)
-  (make-instance 'display-object
-		 :value value
-		 :data (or data
-			   (render-plain value))))
-
 (defgeneric render-html (value)
-  (:documentation "RENDER a value as HTML."))
+  (:documentation "Render the VALUE as an HTML document (represented as a sting)."))
 
 (defmethod render-html ((value t))
-  nil) ; by default no rendering
+  ;; no rendering by default
+  nil)
 
 (defgeneric render-markdown (value)
-  (:documentation "RENDER a value as MARDOWN."))
+  (:documentation "Render the VALUE as MARDOWN text."))
 
 (defmethod render-markdown ((value t))
-  nil) ; by default no rendering
+  ;; no rendering by default
+  nil)
 
+
+(defgeneric render-latex (value)
+  (:documentation "Render the VALUE as a LATEX document."))
+
+(defmethod render-latex ((value t))
+  ;; no rendering by default
+  nil)
+
+(defgeneric render-png (value)
+  (:documentation "Render the VALUE as a PNG image. The expected
+ encoding is a Base64-encoded string."))
+
+(defmethod render-png ((value t))
+  ;; no rendering by default
+  nil)
+
+(defgeneric render-jpeg (value)
+  (:documentation "Render the VALUE as a JPEG image. The expected
+ encoding is a Base64-encoded string."))
+
+(defmethod render-jpeg ((value t))
+  ;; no rendering by default
+  nil)
+
+(defgeneric render-svg (value)
+  (:documentation "Render the VALUE as a SVG image (XML format represented as a string)."))
+
+(defmethod render-svg ((value t))
+  ;; no rendering by default
+  nil)
+
+(defgeneric render-json (value)
+  (:documentation "Render the VALUE as a JSON document. This uses the MYJSON encoding
+ (alist with string keys)"))
+
+(defmethod render-json ((value t))
+  ;; no rendering by default
+  nil)
+
+(defgeneric render-javascript (value)
+  (:documentation "Render the VALUE as a JAVASCRIPT source (represented as a string)."))
+
+(defmethod render-javascript ((value t))
+  ;; no rendering by default
+  nil)
+
+
+#|
+
+ ## Display methods ##
+
+|#
 
 (defun combine-render (pairs)
   (loop 
@@ -101,36 +151,61 @@ Lisp printer. In most cases this is enough but specializations are
 	 => '(("hello" . "world") 
 	      ("griacias" . (1 2 3))))
 
+(defun display-dispatch (value render-alist)
+  (if (typep value 'display-object)
+      value ; already displayed
+      ;; otherwise needs to display
+      (let ((data (combine-render render-alist)))
+	(make-instance 'display-object :value value :data (or data
+							      ;; at least a plain text representation
+							      (render-plain value))))))
 
 (defun display (value)
   "Display VALUE in all supported representations."
-  (if (typep value 'display-object)
-      value ; already displayed
-      ;; otherwise needs to display
-      (let ((data (combine-render 
-		   `(("text/plain" . ,(render-plain value))
-		     ("text/html" . ,(render-html value))
-		     ("text/markdown" . ,(render-markdown value))
-		     ("text/latex" . ,(render-latex value))
-		     ("image/png" . ,(render-png value))
-		     ("image/jpeg" . ,(render-jpeg value))
-		     ("image/svg+xml" . ,(render-svg value))
-		     ("application/json" . ,(render-json value))
-		     ("application/javascript" . ,(render-javascript value))))))
-	(make-instance 'display-object :value value :data data))))
+  (display-dispatch value  `(("text/plain" . ,(render-plain value))
+			     ("text/html" . ,(render-html value))
+			     ("text/markdown" . ,(render-markdown value))
+			     ("text/latex" . ,(render-latex value))
+			     ("image/png" . ,(render-png value))
+			     ("image/jpeg" . ,(render-jpeg value))
+			     ("image/svg+xml" . ,(render-svg value))
+			     ("application/json" . ,(render-json value))
+			     ("application/javascript" . ,(render-javascript value)))))
 
 (defun display-plain (value)
-  "Display VALUE in plain text."
-  (if (typep value 'display-object)
-      value ; already displayed
-      ;; otherwise needs to display
-      (let ((data `(("text/plain" . ,(render-text value)))))
-	(make-instance 'display-object :value value :data data))))
+  "Display VALUE as plain text."
+  (display-dispatch value  `(("text/plain" . ,(render-plain value)))))
+  
+(defun display-html (value)
+  "Display VALUE as HTML."
+  (display-dispatch value `(("text/html" . ,(render-html value)))))
+
+(defun display-markdown (value)
+  "Display VALUE as MARDOWN text."
+  (display-dispatch value `(("text/markdown" . ,(render-markdown value)))))
+
+(defun display-latex (value)
+  "Display VALUE as a LATEX document."
+  (display-dispatch value `(("text/latex" . ,(render-latex value)))))
 
 (defun display-png (value)
-  "Display VALUE as a base64 string encoded PNG image."
-  (if (typep value 'display-object)
-      value ; already displayed
-      ;; otherwise needs to display
-      (let ((data `(("image/png" . ,(render-png value)))))
-	(make-instance 'display-object :value value :data data))))
+  "Display VALUE as a PNG image."
+  (display-dispatch value `(("image/png" . ,(render-png value)))))
+
+(defun display-jpeg (value)
+  "Display VALUE as a JPEG image."
+  (display-dispatch value `(("image/jpeg" . ,(render-jpeg value)))))
+
+(defun display-svg (value)
+  "Display VALUE as a SVG image."
+  (display-dispatch value `(("image/svg+xml" . ,(render-svg value)))))
+
+(defun display-json (value)
+  "Display VALUE as a JSON document."
+  (display-dispatch value `(("application/json" . ,(render-json value)))))
+
+(defun display-javascript (value)
+  "Display VALUE as embedded JAVASCRIPT."
+  (display-dispatch value `(("application/javascript" . ,(render-javascript value)))))
+
+

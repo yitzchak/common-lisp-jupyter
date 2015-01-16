@@ -9,3 +9,21 @@
   #+ccl (ccl:quit)
   #+allegro (excl:exit))
 
+
+
+#|
+
+  ## Basic PNG support ## 
+
+|#
+
+(defclass png-bytes ()
+  ((bytes :initarg :bytes :reader png-bytes)))
+
+(defmethod render-jpg ((img png-bytes))
+  (cl-base64:usb8-array-to-base64-string bytes))
+
+(defun png-from-file (filename)
+  (let ((bytes (read-binary-file filename)))
+    (display-png (make-instance 'png-bytes :bytes bytes))))
+

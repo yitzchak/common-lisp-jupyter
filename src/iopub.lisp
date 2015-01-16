@@ -47,7 +47,7 @@
 (defun send-execute-result (iopub parent-msg sig execution-count result)
   (let ((result-msg (make-message-from-parent parent-msg "pyout" nil
 					      `(("execution_count" . ,execution-count)
-						("data" . (("text/plain" . ,(format nil "~A" result))))
+						("data" . (display result))
 						("metadata" . ())))))
     ;; (message-send (iopub-socket iopub) result-msg :identities '("pyout") :raw-content t))))
     (message-send (iopub-socket iopub) result-msg)))

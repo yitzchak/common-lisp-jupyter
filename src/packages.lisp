@@ -12,7 +12,8 @@
            vbinds
            afetch
 	   while
-	   read-file-lines))
+	   read-file-lines
+	   read-binary-file))
 
 (defpackage #:myjson
   (:use #:cl #:fredo-utils)
@@ -23,10 +24,33 @@
 
 (defpackage #:fishbowl
   (:use #:cl #:fredo-utils #:myjson)
-  (:export kernel-start))
+  (:export 
+   display
+   display-plain render-plain
+   display-html render-html
+   display-markdown render-markdown
+   display-latex render-latex
+   display-png render-png
+   display-jpeg render-jpeg
+   display-svg render-svg
+   display-json render-json
+   display-javascript render-javascript
+   kernel-start))
 
 (defpackage #:fishbowl-user
-  (:use #:cl #:common-lisp-user)
-  (:export quit))
+  (:use #:cl #:fredo-utils #:common-lisp-user)
+  (:export 
+   display
+   display-plain render-plain
+   display-html render-html
+   display-markdown render-markdown
+   display-latex render-latex
+   display-png render-png
+   display-jpeg render-jpeg
+   display-svg render-svg
+   display-json render-json
+   display-javascript render-javascript
+   png-from-file
+   quit))
 
 (in-package #:fishbowl)

@@ -7,7 +7,8 @@
   :depends-on (:pzmq
                :bordeaux-threads
                :uuid
-               :ironclad)
+	       ;; :ironclad  (for signed messages)
+	       :base64)
   :serial t
   :components ((:file "packages")
                (:file "utils")
