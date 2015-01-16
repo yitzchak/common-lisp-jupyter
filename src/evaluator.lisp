@@ -54,3 +54,4 @@ The history of evaluations is also saved by the evaluator.
           ;;(format t "[Evaluator] : results = ~W~%" results)
           (vector-push results (evaluator-history-out evaluator))
           (values execution-count results stdout-str stderr-str))))))
+
