@@ -16,6 +16,7 @@
                (:file "message")
                (:file "shell")
 	       (:file "iopub")
+	       (:file "display")
 	       (:file "evaluator")
                (:file "user")
                (:file "kernel")))
