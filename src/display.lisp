@@ -155,15 +155,14 @@ Lisp printer. In most cases this is enough but specializations are
   (if (typep value 'display-object)
       value ; already displayed
       ;; otherwise needs to display
-      (let ((data (combine-render render-alist)))
-	(make-instance 'display-object :value value :data (or data
-							      ;; at least a plain text representation
-							      (render-plain value))))))
+      (let ((data (combine-render (cons `("text/plain" . ,(render-plain value)) ; at least text/plain encoding is required
+					render-alist))))
+	(make-instance 'display-object :value value :data data))))
+
 
 (defun display (value)
   "Display VALUE in all supported representations."
-  (display-dispatch value  `(("text/plain" . ,(render-plain value))
-			     ("text/html" . ,(render-html value))
+  (display-dispatch value  `(("text/html" . ,(render-html value))
 			     ("text/markdown" . ,(render-markdown value))
 			     ("text/latex" . ,(render-latex value))
 			     ("image/png" . ,(render-png value))
@@ -172,10 +171,6 @@ Lisp printer. In most cases this is enough but specializations are
 			     ("application/json" . ,(render-json value))
 			     ("application/javascript" . ,(render-javascript value)))))
 
-(defun display-plain (value)
-  "Display VALUE as plain text."
-  (display-dispatch value  `(("text/plain" . ,(render-plain value)))))
-  
 (defun display-html (value)
   "Display VALUE as HTML."
   (display-dispatch value `(("text/html" . ,(render-html value)))))

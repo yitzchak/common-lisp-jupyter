@@ -127,9 +127,14 @@
        until (eq line 'eof)
        collect line)))
 
-
 (defun read-binary-file (filename)
-  (with-open-file (stream filename)
+  (with-open-file (stream filename :element-type '(unsigned-byte 8))
     (let ((bytes (make-array (file-length stream) :element-type '(unsigned-byte 8))))
       (read-sequence bytes stream)
       bytes)))
+
+(defun read-string-file (filename)
+  (with-open-file (stream filename)
+    (let ((str (make-array (file-length stream) :element-type 'character :fill-pointer t)))
+      (setf (fill-pointer str) (read-sequence str stream))
+      str)))

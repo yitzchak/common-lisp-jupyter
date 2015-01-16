@@ -13,6 +13,7 @@
            afetch
 	   while
 	   read-file-lines
+	   read-string-file
 	   read-binary-file))
 
 (defpackage #:myjson
@@ -38,7 +39,7 @@
    kernel-start))
 
 (defpackage #:fishbowl-user
-  (:use #:cl #:fredo-utils #:common-lisp-user)
+  (:use #:cl #:fredo-utils #:fishbowl #:common-lisp-user)
   (:export 
    display
    display-plain render-plain
@@ -51,6 +52,7 @@
    display-json render-json
    display-javascript render-javascript
    png-from-file
+   svg-from-file
    quit))
 
 (in-package #:fishbowl)
