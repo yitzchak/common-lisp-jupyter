@@ -192,7 +192,7 @@ elif config.lisp_implementation == "ccl":
         halt("Error: issue with ccl version string (please report)")
     
     config.ccl_version = tuple([int(d) for d in m.group(1).split(".")])
-    print("ccl version = {}".format(config.ccl_version))
+    #print("ccl version = {}".format(config.ccl_version))
     if config.ccl_version[0] < 1 or config.ccl_version[1] < 10:
         halt("Error: require CCL v1.10 or above")
 
@@ -267,9 +267,11 @@ print("... launch frontend")
 #                        "--KernelManager.kernel_cmd=['sbcl', '--non-interactive', '--load', '{}/fishbowl.lisp', '{{connection_file}}']".format(config.fishbowl_startup_def_dir)])
 
 if config.lisp_implementation == "sbcl":
-    KERNEL_CMD = "--KernelManager.kernel_cmd=['sbcl', '--non-interactive', '--load', '{}/fishbowl.lisp', '{{connection_file}}']".format(config.fishbowl_startup_def_dir)
+    KERNEL_CMD = "--KernelManager.kernel_cmd=['sbcl', '--non-interactive', '--load', '{0}/fishbowl.lisp', '{0}/src', '{1}', '{{connection_file}}']".format(config.fishbowl_startup_def_dir, config.fishbowl_startup_run_dir)
+
 elif config.lisp_implementation == "ccl":
-    KERNEL_CMD = "--KernelManager.kernel_cmd=['ccl', '--quiet', '--batch', '--load', '{}/fishbowl.lisp', '--', '{{connection_file}}']".format(config.fishbowl_startup_def_dir)
+    KERNEL_CMD = "--KernelManager.kernel_cmd=['ccl', '--batch', '--load', '{0}/fishbowl.lisp', '--', '{0}/src', '{1}', '{{connection_file}}']".format(config.fishbowl_startup_def_dir, config.fishbowl_startup_run_dir)
+
 else:
     halt("Error: unsupported lisp implementation '{}'".format(lisp_implementation))
     
