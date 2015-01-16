@@ -8,7 +8,7 @@
                :bordeaux-threads
                :uuid
 	       ;; :ironclad  (for signed messages)
-	       :base64)
+	       :cl-base64)
   :serial t
   :components ((:file "packages")
                (:file "utils")

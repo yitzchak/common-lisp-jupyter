@@ -45,12 +45,13 @@
 
                                                                     
 (defun send-execute-result (iopub parent-msg sig execution-count result)
-  (let ((result-msg (make-message-from-parent parent-msg "pyout" nil
-					      `(("execution_count" . ,execution-count)
-						("data" . (display result))
-						("metadata" . ())))))
+  (let ((display-obj (display result)))
+    (let ((result-msg (make-message-from-parent parent-msg "pyout" nil
+						`(("execution_count" . ,execution-count)
+						  ("data" . ,(display-object-data display-obj))
+						  ("metadata" . ())))))
     ;; (message-send (iopub-socket iopub) result-msg :identities '("pyout") :raw-content t))))
-    (message-send (iopub-socket iopub) result-msg)))
+      (message-send (iopub-socket iopub) result-msg))))
 
 (defun send-stream (iopub parent-msg sig stream-name data)
   (let ((stream-msg (make-message-from-parent parent-msg "stream" nil
