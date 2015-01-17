@@ -66,7 +66,7 @@ Lisp printer. In most cases this is enough but specializations are
 
 (defmethod render-plain ((value t))
   ;; Lisp printer by default
-  (format nil "~A" value))
+  (format nil "~S" value))
 
 (example (render-plain '(1 2 3))
 			  => "(1 2 3)")
