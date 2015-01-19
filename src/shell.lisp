@@ -38,7 +38,7 @@
 	  (cond ((equal msg-type "kernel_info_request")
 		 (handle-kernel-info-request shell ids msg sig raw))
 		((equal msg-type "execute_request")
-		 (handle-execute-request shell ids msg sig raw))
+		 (setf active (handle-execute-request shell ids msg sig raw)))
 		(t (warn "[Shell] message type '~A' not (yet ?) supported, skipping..." msg-type))))))))
 
 
@@ -154,6 +154,15 @@
         ;(format t "STDERR = ~A~%" stderr)
         ;; broadcast the code to connected frontends
         (send-execute-code (kernel-iopub (shell-kernel shell)) msg sig execution-count code)
+	(when (and (consp results) (typep (car results) 'fishbowl-user::fishbowl-quit-obj))
+	  ;; ----- ** request for shutdown ** -----
+	  (let ((reply (make-message-from-parent msg "execute_reply" nil
+						 `(("status" . "abort")
+						   ("execution_count" . ,execution-count)
+						   ("payload" . ,(vector))))))
+	    (message-send (shell-socket shell) reply :identities ids))
+	  (return-from handle-execute-request nil))
+	;; ----- ** normal request ** -----
         ;; send the stdout
         (when (and stdout (> (length stdout) 0))
           (send-stream (kernel-iopub (shell-kernel shell)) msg sig "stdout" stdout))
@@ -170,4 +179,5 @@
 					       `(("status" . "ok")
 						 ("execution_count" . ,execution-count)
 						 ("payload" . ,(vector))))))
-	  (message-send (shell-socket shell) reply :identities ids))))))
+	  (message-send (shell-socket shell) reply :identities ids)
+	  t)))))
