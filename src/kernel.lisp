@@ -115,7 +115,6 @@
             (start-heartbeat kernel)
             (shell-loop shell)))))))
 
-
 (defun start-heartbeat (kernel)
   (let ((socket (pzmq:socket (kernel-ctx kernel) :rep)))  
     (let ((config (slot-value kernel 'config)))
