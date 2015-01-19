@@ -111,26 +111,36 @@
                  (evaluator (make-evaluator kernel))
                  (shell (make-shell-channel kernel))
                  (iopub (make-iopub-channel kernel)))
-            ;;(format t "[Kernel] Entering mainloop ...~%")
-            (start-heartbeat kernel)
-            (shell-loop shell)))))))
-
-(defun start-heartbeat (kernel)
-  (let ((socket (pzmq:socket (kernel-ctx kernel) :rep)))  
-    (let ((config (slot-value kernel 'config)))
-      (let ((endpoint (format nil "~A://~A:~A"
-			      (config-transport config)
-			      (config-ip config)
-			      (config-hb-port config))))
-          ;;(format t "heartbeat endpoint is: ~A~%" endpoint)
-          (pzmq:bind socket endpoint)
-          (bordeaux-threads:make-thread 
-	   (lambda ()
-	     ;;(format t "[Heartbeat] thread started~%")
-	     (loop
-		(pzmq:with-message msg
-		  (pzmq:msg-recv msg socket)
-		  ;(format t "Heartbeat Received:~%")
-		  (pzmq:msg-send msg socket)
-		  ;(format t "  | message: ~A~%" msg)
-		  ))))))))
+	    ;; Launch the hearbeat thread
+	    (let ((hb-socket (pzmq:socket (kernel-ctx kernel) :rep)))  
+	      (let ((hb-endpoint (format nil "~A://~A:~A"
+					 (config-transport config)
+					 (config-ip config)
+					 (config-hb-port config))))
+		;;(format t "heartbeat endpoint is: ~A~%" endpoint)
+		(pzmq:bind hb-socket hb-endpoint)
+		(let ((heartbeat-thread-id (start-heartbeat hb-socket)))
+		  ;; main loop
+		  (unwind-protect 
+		       ;;(format t "[Kernel] Entering mainloop ...~%")
+		       (shell-loop shell)
+		    ;; clean up when exiting
+		    (bordeaux-threads:destroy-thread heartbeat-thread-id)
+		    (pzmq:close hb-socket)
+		    (pzmq:close (iopub-socket iopub))
+		    (pzmq:close (shell-socket shell))
+		    (pzmq:ctx-destroy (kernel-ctx kernel))
+		    (format t "Bye bye.~%")))))))))))
+				
+(defun start-heartbeat (socket)
+  (let ((thread-id (bordeaux-threads:make-thread 
+		    (lambda ()
+		      ;;(format t "[Heartbeat] thread started~%")
+		      (loop
+			 (pzmq:with-message msg
+			   (pzmq:msg-recv msg socket)
+					;(format t "Heartbeat Received:~%")
+			   (pzmq:msg-send msg socket)
+					;(format t "  | message: ~A~%" msg)
+			   ))))))
+    thread-id))
