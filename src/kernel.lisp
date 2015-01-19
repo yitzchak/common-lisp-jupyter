@@ -16,8 +16,7 @@
 
 (defun get-argv ()
   ;; Borrowed from apply-argv, command-line-arguments.  Temporary solution (?)
-  ;; This is not PvE's code.
-  #+sbcl sb-ext:*posix-argv*
+  #+sbcl (cdr sb-ext:*posix-argv*)
   #+clozure CCL:*UNPROCESSED-COMMAND-LINE-ARGUMENTS*  ;(ccl::command-line-arguments)
   #+gcl si:*command-args*
   #+ecl (loop for i from 0 below (si:argc) collect (si:argv i))
@@ -92,10 +91,7 @@
             +KERNEL-PROTOCOL-VERSION+)
     (format t "--> (C) 2014-2015 Frederic Peschanski (cf. LICENSE)~%")
     (write-line "")
-    (let ((connection-file-name #+sbcl (cadddr cmd-args)
-                                #+clozure (caddr cmd-args)
-                                #-(or sbcl clozure)
-                                (error "at this point only sbcl and clozure cl are supported")))
+    (let ((connection-file-name(caddr cmd-args)))
       ;; (format t "connection file = ~A~%" connection-file-name)
       (unless (stringp connection-file-name)
         (error "Wrong connection file argument (expecting a string)"))
@@ -115,7 +111,7 @@
                  (evaluator (make-evaluator kernel))
                  (shell (make-shell-channel kernel))
                  (iopub (make-iopub-channel kernel)))
-            (format t "[Kernel] Entering mainloop ...~%")
+            ;;(format t "[Kernel] Entering mainloop ...~%")
             (start-heartbeat kernel)
             (shell-loop shell)))))))
 
@@ -131,7 +127,7 @@
           (pzmq:bind socket endpoint)
           (bordeaux-threads:make-thread 
 	   (lambda ()
-	     (format t "[Heartbeat] thread started~%")
+	     ;;(format t "[Heartbeat] thread started~%")
 	     (loop
 		(pzmq:with-message msg
 		  (pzmq:msg-recv msg socket)

@@ -2,7 +2,7 @@
 (let ((cmd-args
        ;; Borrowed from apply-argv, command-line-arguments.  Temporary solution (?)
        ;; This is not PvE's code.
-       #+sbcl sb-ext:*posix-argv*
+       #+sbcl (cdr sb-ext:*posix-argv*) ; remove the program argument
        #+clozure CCL:*UNPROCESSED-COMMAND-LINE-ARGUMENTS*  ;(ccl::command-line-arguments)
        #+gcl si:*command-args*
        #+ecl (loop for i from 0 below (si:argc) collect (si:argv i))
@@ -12,25 +12,12 @@
        #+clisp ext:*args*
        #-(or sbcl clozure gcl ecl cmu allegro lispworks clisp)
        (error "get-argv not supported for your implementation")))
-  (when (not (= (length cmd-args)
-              #+sbcl 4
-              #+clozure 3 
-              #-(or sbcl clozure)
-              (error "at this point only sbcl and clozure cl are supported")))
-    (error "Wrong number of arguments (given ~A, expecting ~A)" (length cmd-args)
-           #+sbcl 4
-           #+clozure 3))
-  (let ((def-dir (truename #+sbcl (cadr cmd-args)
-                           #+clozure (car cmd-args)
-                           #-(or sbcl clozure)
-                           (error "at this point only sbcl and clozure cl are supported"))))
-        ;;(run-dir (truename #+sbcl (caddr cmd-args)
-        ;;                   #+clozure (cadr cmd-args)
-        ;;                   #-(or sbcl clozure)
-        ;;                   (error "at this point only sbcl and clozure cl are supported"))))
-
+  (when (not (= (length cmd-args) 3))
+    (error "Wrong number of arguments (given ~A, expecting 3)" (length cmd-args)))
+  (let ((def-dir (truename (car cmd-args))))
+        ;;(run-dir (truename (cadr cmd-args))))
     ;; add the source directory to the ASDF registry
-    (push def-dir asdf:*central-registry*)))    
+    (push def-dir asdf:*central-registry*)))
 
 ;; activate debugging
 (declaim (optimize (speed 0) (space 0) (debug 3) (safety 3)))
