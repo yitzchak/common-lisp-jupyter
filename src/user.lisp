@@ -36,11 +36,15 @@
   ((text :initarg :text :reader latex-text)))
 
 (defmethod render-latex ((doc latex-text))
-  (latex-text doc))
+  (with-output-to-string (str)
+    (format str "~A" (latex-text doc))))
 
 (defun latex (text)
   (display-latex (make-instance 'latex-text :text text)))
 
+(example (fishbowl::display-object-data (latex "$\\frac{1}{2}$"))
+         => '(("text/plain" . "#<LATEX-TEXT #x302001F9E74D>")
+              ("text/latex" . "$\\frac{1}{2}$")) :warn-only t)
 
 
 
