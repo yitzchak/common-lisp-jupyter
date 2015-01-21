@@ -47,6 +47,28 @@
               ("text/latex" . "$\\frac{1}{2}$")) :warn-only t)
 
 
+#|
+
+  ## Basic HTML support ##
+
+|#
+
+(defclass html-text ()
+  ((text :initarg :text :reader html-text)))
+
+(defmethod render-html ((doc html-text))
+  (html-text doc))
+  ;(with-output-to-string (str)
+  ;  (format str "~A" (html-text doc))))
+
+(defun html (text)
+  (display-html (make-instance 'html-text :text text)))
+
+(example (fishbowl::display-object-data 
+	  (html "<p bgcolor=\"lightblue\"><strong>Fishbowl<strong> is <tt>cool</tt> !</p>"))
+         => '(("text/plain" . "#<HTML-TEXT {1005721623}>")
+	      ("text/html"
+	       . "<p bgcolor=\"lightblue\"><strong>Fishbowl<strong> is <tt>cool</tt> !</p>")) :warn-only t)
 
 #|
 
