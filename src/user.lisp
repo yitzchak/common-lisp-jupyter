@@ -99,6 +99,9 @@
 (defmethod render-svg ((img svg-str))
   (svg-str img))
 
+(defun svg (desc)
+  (display-svg (make-instance 'svg-str :str desc)))
+
 (defun svg-from-file (filename)
   (let ((str (read-string-file filename)))
     (display-svg (make-instance 'svg-str :str str))))

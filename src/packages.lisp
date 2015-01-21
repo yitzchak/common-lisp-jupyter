@@ -51,6 +51,7 @@
    #:display-svg render-svg
    #:display-json render-json
    #:display-javascript render-javascript
+   #:html #:latex #:svg
    #:png-from-file
    #:svg-from-file
    #:quit))
