@@ -43,6 +43,7 @@ The history of evaluations is also saved by the evaluator.
   (vector-push code (evaluator-history-in evaluator))
   (let ((execution-count (length (evaluator-history-in evaluator))))
     (let ((code-to-eval (read-from-string (format nil "~A" code))))
+      ;;(format t "[Evaluator] Code to evaluate: ~W~%" code-to-eval)
       (let* ((stdout-str (make-array 0 :element-type 'character :fill-pointer 0 :adjustable t))
              (stderr-str (make-array 0 :element-type 'character :fill-pointer 0 :adjustable t)))
         (let ((results (with-output-to-string (stdout stdout-str)
@@ -50,7 +51,13 @@ The history of evaluations is also saved by the evaluator.
                            (let ((*standard-output* stdout)
                                  (*error-output* stderr))
                              (handling-errors
-                              (multiple-value-list (eval code-to-eval))))))))
+			       (if (and (consp code-to-eval)
+					(eql (car code-to-eval) 'quicklisp-client:quickload)
+					(stringp (cadr code-to-eval)))
+				   ;; quicklisp hook
+				   (multiple-value-list (ql:quickload (cadr code-to-eval)))
+				   ;; normal evaluation
+				   (multiple-value-list (eval code-to-eval)))))))))
           ;;(format t "[Evaluator] : results = ~W~%" results)
           (vector-push results (evaluator-history-out evaluator))
           (values execution-count results stdout-str stderr-str))))))
