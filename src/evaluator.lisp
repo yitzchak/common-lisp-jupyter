@@ -51,13 +51,13 @@ The history of evaluations is also saved by the evaluator.
                            (let ((*standard-output* stdout)
                                  (*error-output* stderr))
                              (handling-errors
-			       (if (and (consp code-to-eval)
-					(eql (car code-to-eval) 'quicklisp-client:quickload)
-					(stringp (cadr code-to-eval)))
+			       ;(if (and (consp code-to-eval)
+				;	(eql (car code-to-eval) 'quicklisp-client:quickload)
+				;	(stringp (cadr code-to-eval)))
 				   ;; quicklisp hook
-				   (multiple-value-list (ql:quickload (cadr code-to-eval)))
+				 ;  (multiple-value-list (ql:quickload (cadr code-to-eval)))
 				   ;; normal evaluation
-				   (multiple-value-list (eval code-to-eval)))))))))
+				   (multiple-value-list (eval code-to-eval))))))));)
           ;;(format t "[Evaluator] : results = ~W~%" results)
           (vector-push results (evaluator-history-out evaluator))
           (values execution-count results stdout-str stderr-str))))))
