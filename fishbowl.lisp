@@ -12,11 +12,12 @@
        #+clisp ext:*args*
        #-(or sbcl clozure gcl ecl cmu allegro lispworks clisp)
        (error "get-argv not supported for your implementation")))
-  (when (not (= (length cmd-args) 3))
-    (error "Wrong number of arguments (given ~A, expecting 3)" (length cmd-args)))
-  (let ((def-dir (truename (car cmd-args))))
+  (when (not (>= (length cmd-args) 3))
+    (error "Wrong number of arguments (given ~A, expecting at least 3)" (length cmd-args)))
+  (let ((def-dir (truename (car (last cmd-args 3)))))
         ;;(run-dir (truename (cadr cmd-args))))
     ;; add the source directory to the ASDF registry
+    ;; (format t "Definition dir = ~A~%" def-dir)
     (push def-dir asdf:*central-registry*)))
 
 ;; for debugging

@@ -85,13 +85,13 @@
   (let ((cmd-args (get-argv)))
     ;(princ (banner))
     (write-line "")
-    (format t "~A: an enhanced interactive Common Lisp Shell~%" +KERNEL-IMPLEMENTATION-NAME+)
+    (format t "~A: an enhanced interactive Common Lisp REPL~%" +KERNEL-IMPLEMENTATION-NAME+)
     (format t "(Version ~A - Ipython protocol v.~A)~%"
             +KERNEL-IMPLEMENTATION-VERSION+
             +KERNEL-PROTOCOL-VERSION+)
     (format t "--> (C) 2014-2015 Frederic Peschanski (cf. LICENSE)~%")
     (write-line "")
-    (let ((connection-file-name(caddr cmd-args)))
+    (let ((connection-file-name  (car (last cmd-args))))
       ;; (format t "connection file = ~A~%" connection-file-name)
       (unless (stringp connection-file-name)
         (error "Wrong connection file argument (expecting a string)"))
