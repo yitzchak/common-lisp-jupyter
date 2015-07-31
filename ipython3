@@ -1,0 +1,3 @@
+#!/usr/bin/python3
+from IPython import start_ipython
+start_ipython ()
