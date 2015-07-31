@@ -145,7 +145,10 @@ else:
         halt("Error: {}".format(e))
 
     #print("ipython version string = {}".format(ipython_version_string))
-    ipython_version = tuple([int(d) for d in ipython_version_string.split(".")])
+    import re
+    # cut off a hyphen and anything following, e.g. "2.4.2-maint" --> "2.4.2"
+    foo = re.sub ("-.*$", "", ipython_version_string)
+    ipython_version = tuple([int(d) for d in foo.split(".")])
     #print("ipython version = {}".format(ipython_version))
     if (ipython_version[0] != ipython_version_major) \
        or (ipython_version[1] != ipython_version_minor):
