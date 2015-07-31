@@ -187,7 +187,7 @@ if config.lisp_implementation == "sbcl":
     config.sbcl_version = tuple([int(d) for d in m.group(1).split(".")])
     #print("sbcl version = {}".format(config.sbcl_version))
     if config.sbcl_version[0] < 1 or config.sbcl_version[1] < 2:
-        halt("Error: require SBCL v1.2.x or above")
+        print ("warning: might require SBCL v1.2.x or above; stagger forward nonetheless")
 
     print("... Kernel: using {}".format(sbcl_version_string))
         
