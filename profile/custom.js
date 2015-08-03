@@ -51,17 +51,17 @@
 $([IPython.events]).on('notebook_loaded.Notebook', function(){
     // add here logic that should be run once per **notebook load**
     // alert(IPython.notebook.metadata.language)
-    IPython.notebook.metadata.language = 'commonlisp' ;
+    IPython.notebook.metadata.language = 'common-lisp' ;
 });
 $([IPython.events]).on('app_initialized.NotebookApp', function(){
     // add here logic that shoudl be run once per **page load**
 
      $.getScript('/static/components/codemirror/mode/commonlisp/commonlisp.js');
 
-    CodeMirror.requireMode('commonlisp', function(){
+    CodeMirror.requireMode('common-lisp', function(){
         console.log('Lisp mode should now be available in codemirror.');
     })
-   IPython.CodeCell.options_default['cm_config']['mode'] = 'commonlisp';
+   IPython.CodeCell.options_default['cm_config']['mode'] = 'common-lisp';
    IPython.CodeCell.options_default['cm_config']['indentUnit'] = 4;
 
    var cells = IPython.notebook.get_cells();
@@ -71,7 +71,7 @@ $([IPython.events]).on('app_initialized.NotebookApp', function(){
             // Force the mode to be Haskell
             // This is necessary, otherwise sometimes highlighting just doesn't happen.
             // This may be an IPython bug.
-            c.code_mirror.setOption('mode', 'commonlisp');
+            c.code_mirror.setOption('mode', 'common-lisp');
             c.auto_highlight()
         }
    }

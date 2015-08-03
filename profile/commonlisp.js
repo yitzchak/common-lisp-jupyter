@@ -3,7 +3,7 @@
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
-CodeMirror.defineMode("commonlisp", function (config) {
+CodeMirror.defineMode("common-lisp", function (config) {
     console.log("Defining lisp mode");
 
   var specialForm = /^(block|let*|return-from|catch|load-time-value|setq|eval-when|locally|symbol-macrolet|flet|macrolet|tagbody|function|multiple-value-call|the|go|multiple-value-prog1|throw|if|progn|unwind-protect|labels|progv|let|quote)$/;
@@ -111,5 +111,5 @@ CodeMirror.defineMode("commonlisp", function (config) {
   };
 });
 
-CodeMirror.defineMIME("text/x-common-lisp", "commonlisp");
+CodeMirror.defineMIME("text/x-common-lisp", "common-lisp");
 
