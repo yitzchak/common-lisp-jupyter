@@ -1,12 +1,12 @@
 
-(in-package #:fishbowl-user)
+(in-package #:cl-jupyter-user)
 
-(defclass fishbowl-quit-obj ()
+(defclass cl-jupyter-quit-obj ()
   ()
   (:documentation "A quit object for identifying a request for kernel shutdown."))
 
 (defun quit ()
-  (make-instance 'fishbowl-quit-obj))
+  (make-instance 'cl-jupyter-quit-obj))
   
 
 #|
@@ -42,7 +42,7 @@
 (defun latex (text)
   (display-latex (make-instance 'latex-text :text text)))
 
-(example (fishbowl::display-object-data (latex "$\\frac{1}{2}$"))
+(example (cl-jupyter::display-object-data (latex "$\\frac{1}{2}$"))
          => '(("text/plain" . "#<LATEX-TEXT #x302001F9E74D>")
               ("text/latex" . "$\\frac{1}{2}$")) :warn-only t)
 
@@ -64,11 +64,11 @@
 (defun html (text)
   (display-html (make-instance 'html-text :text text)))
 
-(example (fishbowl::display-object-data 
-	  (html "<p bgcolor=\"lightblue\"><strong>Fishbowl<strong> is <tt>cool</tt> !</p>"))
+(example (cl-jupyter::display-object-data 
+	  (html "<p bgcolor=\"lightblue\"><strong>cl-Jupyter<strong> is <tt>cool</tt> !</p>"))
          => '(("text/plain" . "#<HTML-TEXT {1005721623}>")
 	      ("text/html"
-	       . "<p bgcolor=\"lightblue\"><strong>Fishbowl<strong> is <tt>cool</tt> !</p>")) :warn-only t)
+	       . "<p bgcolor=\"lightblue\"><strong>cl-Jupyter<strong> is <tt>cool</tt> !</p>")) :warn-only t)
 
 #|
 

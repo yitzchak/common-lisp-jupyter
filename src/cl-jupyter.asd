@@ -1,7 +1,7 @@
 
-(asdf:defsystem #:fishbowl
-  :description "An Enhanced Interactive Shell for Common Lisp (based on the Ipython protocol)."
-  :version "0.3"
+(asdf:defsystem #:cl-jupyter
+  :description "An Enhanced Interactive Shell for Common Lisp (based on the Jupyter protocol)."
+  :version "0.6"
   :author "Frederic Peschanski (format nil \"<frederic~Apeschanski~Awork~Agmail~Acom>\" \".\" \".\" \"@\" \".\")" 
   :license "BSD 2-Clause. See LICENSE."
   :depends-on (:pzmq

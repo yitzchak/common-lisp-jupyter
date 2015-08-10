@@ -1,4 +1,4 @@
-(in-package #:fishbowl)
+(in-package #:cl-jupyter)
 
 #|
 
@@ -154,7 +154,7 @@
         ;(format t "STDERR = ~A~%" stderr)
         ;; broadcast the code to connected frontends
         (send-execute-code (kernel-iopub (shell-kernel shell)) msg sig execution-count code)
-	(when (and (consp results) (typep (car results) 'fishbowl-user::fishbowl-quit-obj))
+	(when (and (consp results) (typep (car results) 'cl-jupyter-user::cl-jupyter-quit-obj))
 	  ;; ----- ** request for shutdown ** -----
 	  (let ((reply (make-message-from-parent msg "execute_reply" nil
 						 `(("status" . "abort")

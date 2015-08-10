@@ -1,4 +1,4 @@
-(in-package #:fishbowl)
+(in-package #:cl-jupyter)
 
 (defclass kernel ()
   ((config :initarg :config :reader kerner-config)
