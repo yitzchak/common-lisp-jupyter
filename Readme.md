@@ -1,3 +1,5 @@
+**WARNING WARNING** : cl-jupyter is broken during the migration to Jupyter, please use for now the version in the 2.x branch (compatible with Ipython 2.x).
+
 cl-Jupyter
 ==========
 
