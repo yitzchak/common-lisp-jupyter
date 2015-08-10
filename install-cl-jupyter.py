@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 
-## Fishbowl startup script
+## cl-Jupyter installation script
 
-## As a distributed program, the startup phase of
-## Fishbowl/IPython is non-trivial, and requires access to
-## the filesystem.   Since Python (3.x) is a requirement
-## for Fishbowl, the startup script is also written in
-## Python
+## Note: since the kernel of Jupyter is written itself in Python,
+##       it is much simpler to have a Python-based installation script.
 
 import subprocess
 import sys
 import shutil
 import os
+import json
 
 def halt(msg):
     print(msg, file=sys.stderr)
@@ -19,21 +17,21 @@ def halt(msg):
     sys.exit(1)
 
 
-FISHBOWL_HEADER = """
-Fishbowl -- an enhanced interactive Common Lisp shell
+CL_JUPYTER_HEADER = """
+cl-Jupyter -- an enhanced interactive Common Lisp shell
 (C) 2014-2015 Frederic Peschanski (cf. LICENSE)
 ----"""
 
-print(FISHBOWL_HEADER)
+print(CL_JUPYTER_HEADER)
 
 # check that we run as a script
 if __name__ != "__main__":
-    halt("Error: Fishbowl startup must be run as a script")
+    halt("Error: cl-Jupyter startup must be run as a script")
 
 # check the python version, needs at least 3.2
 if sys.version_info.major < 3 \
    or sys.version_info.minor < 3:
-    halt("Error: Fishbowl requires Python v3.3 or above")
+    halt("Error: cl-Jupyter requires Python v3.3 or above")
 
 # check if ipython is available
 try:
@@ -44,8 +42,8 @@ except ImportError:
 # check Ipython version
 
 ipython_version_major, ipython_version_minor, ipython_version_patch, ipython_version_tag = IPython.version_info
-if ipython_version_major != 2:
-    halt("Error: IPython v2.x required (found v{}.{})".format(ipython_version_major, ipython_version_minor))
+if ipython_version_major < 3:
+    halt("Error: IPython v3.x required (found v{}.{})".format(ipython_version_major, ipython_version_minor))
 
 print("... Frontend: using IPython v{}.{}".format(ipython_version_major, ipython_version_minor))
 
@@ -56,7 +54,7 @@ print("... Frontend: using IPython v{}.{}".format(ipython_version_major, ipython
 class Config:
     def __init__(self):
         self.ipython_dir = IPython.utils.path.get_ipython_dir()
-        self.ipython_profile_dir = self.ipython_dir + "/profile_fishbowl"
+        self.ipython_profile_dir = self.ipython_dir + "/profile_cl_jupyter"
         self.lisp_implementation = "sbcl" # TODO: ccl support (others ? requires threading)
         self.lisp_executable = None # we'll derive executable from implementation later if need be
         self.ipython_executable = shutil.which("ipython3")
@@ -68,14 +66,14 @@ def process_command_line(argv):
     
     import inspect
     import os.path
-    config.fishbowl_startup_def_dir = os.path.dirname(os.path.realpath(inspect.getsourcefile(Config)))
-    #print("Fishbowl startup def dir = {}".format(config.fishbowl_startup_def_dir))
+    config.cl_jupyter_startup_def_dir = os.path.dirname(os.path.realpath(inspect.getsourcefile(Config)))
+    #print("cl-Jupyter startup def dir = {}".format(config.cl_jupyter_startup_def_dir))
 
-    config.fishbowl_startup_run_dir = os.path.realpath(os.getcwd())
-    #print("Fishbowl startup run dir = {}".format(config.fishbowl_startup_run_dir))
+    config.cl_jupyter_startup_run_dir = os.path.realpath(os.getcwd())
+    #print("cl-Jupyter startup run dir = {}".format(config.cl_jupyter_startup_run_dir))
 
-    config.fishbowl_startup_script = os.path.realpath(argv[0])
-    #print("Fishbowl startup script = {}".format(config.fishbowl_startup_script))
+    config.cl_jupyter_startup_script = os.path.realpath(argv[0])
+    #print("cl-Jupyter startup script = {}".format(config.cl_jupyter_startup_script))
 
     i = 1
     if len(argv) > 1 and not (argv[i].startswith('-')):  # first argument should be the ipython command
@@ -216,7 +214,7 @@ elif config.lisp_implementation == "ccl":
         halt("Error: require CCL v1.10 or above")
 
     print("... Kernel: using {}".format(ccl_version_string))
-        
+
 elif config.lisp_implementation == "ecl":
     halt("Error: ECL not (yet) supported")
 elif config.lisp_implementation == "cmucl":
@@ -264,49 +262,51 @@ while not custom_js_file:
 
 ## copy the custom js file
 
-shutil.copy(config.fishbowl_startup_def_dir + "/profile/custom.js",
+shutil.copy(config.cl_jupyter_startup_def_dir + "/profile/custom.js",
             config.ipython_profile_dir + "/static/custom/custom.js")
 
 os.makedirs(config.ipython_profile_dir + "/static/components/codemirror/mode/commonlisp/", exist_ok=True)
-shutil.copy(config.fishbowl_startup_def_dir + "/profile/commonlisp.js",
+shutil.copy(config.cl_jupyter_startup_def_dir + "/profile/commonlisp.js",
             config.ipython_profile_dir + "/static/components/codemirror/mode/commonlisp/commonlisp.js")
 
 
+os.makedirs(config.ipython_dir + "/kernels/lisp", exist_ok=True)
 
-##############################
-## Run the IPython command  ##
-##############################
-
-print("... launch frontend")
-
-### XXX: strange MultipleInstanceError error raise, use subprocess
-# IPython.start_ipython([config.ipython_executable, config.ipython_command,  
-#                        "--profile-dir={}".format(config.ipython_profile_dir),
-#                        "--Session.key=b''",
-#                        "--KernelManager.kernel_cmd=['sbcl', '--non-interactive', '--load', '{}/fishbowl.lisp', '{{connection_file}}']".format(config.fishbowl_startup_def_dir)])
-
-if config.lisp_implementation == "sbcl":
-    KERNEL_CMD = "--KernelManager.kernel_cmd=['{3}', '--non-interactive',{1} '--load', '{0}/fishbowl.lisp', '{0}/src', '{2}', '{{connection_file}}']".format(config.fishbowl_startup_def_dir, "'--load', '{}',".format(config.lisp_preload) if config.lisp_preload else "", config.fishbowl_startup_run_dir, config.lisp_executable)
-
+if config.lisp_implementation == "sbcl":    
+    KERNEL_SPEC = {
+        "argv": [
+            config.lisp_executable,'--non-interactive', '--load',
+            "{0}/cl-jupyter.lisp".format(config.cl_jupyter_startup_def_dir),
+            "{0}/src".format(config.cl_jupyter_startup_def_dir),
+            config.cl_jupyter_startup_def_dir,
+            '{connection_file}'],
+        "display_name": "SBCL Lisp",
+        "language": "lisp"
+    }
 elif config.lisp_implementation == "ccl":
-    KERNEL_CMD = "--KernelManager.kernel_cmd=['{3}', '--batch',{1} '--load', '{0}/fishbowl.lisp', '--', '{0}/src', '{2}', '{{connection_file}}']".format(config.fishbowl_startup_def_dir,  "'--load', '{}',".format(config.lisp_preload) if config.lisp_preload else "", config.fishbowl_startup_run_dir, config.lisp_executable)
-
+    KERNEL_SPEC = {
+        "argv": [
+            config.lisp_executable,'--batch', '--load',
+            "{0}/cl-jupyter.lisp".format(config.cl_jupyter_startup_def_dir), "--", 
+            "{0}/src".format(config.cl_jupyter_startup_def_dir),
+            config.cl_jupyter_startup_def_dir,
+            '{connection_file}'],
+        "display_name": "CCL Lisp",
+        "language": "lisp"
+    }
 else:
     halt("Error: unsupported lisp implementation '{}'".format(lisp_implementation))
-    
-# print("KERNEL_CMD = {}".format(KERNEL_CMD))
 
-try:
-    import signal
-    signal.signal(signal.SIGINT, signal.SIG_IGN)
-    subprocess.check_call([config.ipython_executable,
-                           config.ipython_command,
-                           "--profile-dir={}".format(config.ipython_profile_dir),
-                           "--Session.key=b''", KERNEL_CMD],
-                          stdout=sys.stdout, stdin=sys.stdin, stderr=sys.stderr, shell=False)
-except FileNotFoundError:
-    halt("Error: '{}' executable not found".format(config.ipython_executable))
-except subprocess.CalledProcessError as e:
-    halt("Error: {} from IPython".format(e))
+with open(config.ipython_dir + "/kernels/lisp/kernel.json", "w") as kernel_spec_file:
+    json.dump(KERNEL_SPEC, kernel_spec_file)
+
+print("Installation Complete.")
+print("---- Running cl-jupyter:")
+
+print("ipython3 console --kernel lisp")
+print("ipython3 notebook --kernel lisp")
+
+print("---- enjoy !")
+
 
 

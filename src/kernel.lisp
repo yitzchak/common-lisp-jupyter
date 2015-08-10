@@ -86,7 +86,7 @@
     ;(princ (banner))
     (write-line "")
     (format t "~A: an enhanced interactive Common Lisp REPL~%" +KERNEL-IMPLEMENTATION-NAME+)
-    (format t "(Version ~A - Ipython protocol v.~A)~%"
+    (format t "(Version ~A - Jupyter protocol v.~A)~%"
             +KERNEL-IMPLEMENTATION-VERSION+
             +KERNEL-PROTOCOL-VERSION+)
     (format t "--> (C) 2014-2015 Frederic Peschanski (cf. LICENSE)~%")
@@ -112,7 +112,7 @@
                  (shell (make-shell-channel kernel))
                  (iopub (make-iopub-channel kernel)))
 	    ;; Launch the hearbeat thread
-	    (let ((hb-socket (pzmq:socket (kernel-ctx kernel) :rep)))  
+	    (let ((hb-socket (pzmq:socket (kernel-ctx kernel) :rep)))
 	      (let ((hb-endpoint (format nil "~A://~A:~A"
 					 (config-transport config)
 					 (config-ip config)
@@ -121,7 +121,7 @@
 		(pzmq:bind hb-socket hb-endpoint)
 		(let ((heartbeat-thread-id (start-heartbeat hb-socket)))
 		  ;; main loop
-		  (unwind-protect 
+		  (unwind-protect
 		       ;;(format t "[Kernel] Entering mainloop ...~%")
 		       (shell-loop shell)
 		    ;; clean up when exiting
@@ -131,9 +131,9 @@
 		    (pzmq:close (shell-socket shell))
 		    (pzmq:ctx-destroy (kernel-ctx kernel))
 		    (format t "Bye bye.~%")))))))))))
-				
+
 (defun start-heartbeat (socket)
-  (let ((thread-id (bordeaux-threads:make-thread 
+  (let ((thread-id (bordeaux-threads:make-thread
 		    (lambda ()
 		      ;;(format t "[Heartbeat] thread started~%")
 		      (loop

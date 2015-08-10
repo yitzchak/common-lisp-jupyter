@@ -1,0 +1,9 @@
+
+cl-Jupyter Authors/Contributors
+===============================
+
+Frederic Peschanski -- creator and maintainer
+
+Robert Dodier -- enhancements in startup/installation script
+
+Mike Mann -- installation script updates for Jupyter (Ipython 3.x) migration
