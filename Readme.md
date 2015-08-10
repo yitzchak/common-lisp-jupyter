@@ -1,4 +1,3 @@
-**WARNING WARNING** : cl-jupyter is broken during the migration to Jupyter, please use for now the old *Fishbowl repl* in the 2.x branch (compatible with Ipython 2.x).
 
 cl-Jupyter
 ==========
@@ -46,43 +45,37 @@ To try cl-Jupyter you need :
 
  - Python 3.2 or above
 
- - IPython 2.1 or above
+ - IPython 3.0 or above
 
-## Quick launch ##
+## Quick install ##
 
-For simple interactions on the console, just type:
+Please run the installation script :
 
-    python3 ./cl-jupyter.py     (or directly ./cl-jupyter.py if python3 is in PATH)
-
-```
-In [1]: (* 2 21)
-Out[1]: 42
-
-In [2]: 
-```
+    python3 ./install-cl-jupyter.py
 
 By default, cl-Jupyter assumes SBCL as the default lisp implementation. Using CCL instead requires
 the following command line:
 
-    python3 ./cl-jupyter.py  --lisp=ccl
-
+    python3 ./install-cl-jupyter.py  --lisp=ccl
 
 **Note**: cl-Jupyter seems to work better with CCL on MacOS  (but on Linux everything's fine with SBCL).
 
-## Notebooks ##
+## Running cl-jupyter
+
+### Console mode
+
+    ipython3 console --no-secure --kernel=lisp
+
+**Remark**: the `--no-secure` option is for the moment required because cl-jupyter
+does not yet support message encryption.
+
+### Notebooks
 
 The real interest of cl-Jupyter is its use conjointly
  with the Jupyter notebook frontend. For a try, type:
 
-    python3 ./cl-jupyter.py notebook
+    ipython3 notebook --Session.key="b''" --kernel=lisp
 
-(for SBCL)
-
-or
-
-    python3 ./cl-jupyter.py notebook  --lisp=ccl
-
-(for CCL)
 
 The file `AboutCLJupyter.ipynb` is an example of a Lisp-based notebook.
 
