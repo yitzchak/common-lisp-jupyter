@@ -63,7 +63,7 @@ class Config:
 
 def process_command_line(argv):
     config = Config()
-    
+
     import inspect
     import os.path
     config.cl_jupyter_startup_def_dir = os.path.dirname(os.path.realpath(inspect.getsourcefile(Config)))
@@ -181,14 +181,14 @@ if config.lisp_implementation == "sbcl":
     m = re.match(r".*([0-9]+\.[0-9]+\.[0-9]+)", sbcl_version_string)
     if not m:
         halt("Error: issue with sbcl version string (please report)")
-    
+
     config.sbcl_version = tuple([int(d) for d in m.group(1).split(".")])
     #print("sbcl version = {}".format(config.sbcl_version))
     if config.sbcl_version[0] < 1 or config.sbcl_version[1] < 2:
         halt("Error: require SBCL v1.2.x or above")
 
     print("... Kernel: using {}".format(sbcl_version_string))
-        
+
 elif config.lisp_implementation == "ccl":
     if not config.lisp_executable:
         config.lisp_executable = 'ccl'
@@ -202,12 +202,12 @@ elif config.lisp_implementation == "ccl":
 
     #print("ccl version string = {}".format(ccl_version_string))
 
-    
+
     import re
     m = re.match(r".*([0-9]+\.[0-9]+)", ccl_version_string)
     if not m:
         halt("Error: issue with ccl version string (please report)")
-    
+
     config.ccl_version = tuple([int(d) for d in m.group(1).split(".")])
     #print("ccl version = {}".format(config.ccl_version))
     if config.ccl_version[0] < 1 or config.ccl_version[1] < 10:
@@ -226,53 +226,12 @@ else:
 
 
 ##############################
-## Installation of profile  ##
+## Installation of kernel   ##
 ##############################
-
-print("... profile customization")
-
-custom_js_file = None
-
-nb_try = 0
-while not custom_js_file:
-    try:
-        custom_js_file = open(config.ipython_profile_dir + "/static/custom/custom.js", "r")
-    except FileNotFoundError:
-        # profile creation
-        print("... create profile '{}'".format(config.ipython_profile_dir))
-        ### XXX: Issue when running ipython for different commands multiple times
-        ### (MultipleInstanceError) ... So run in a subprocess
-        #IPython.start_ipython([config.ipython_executable, 
-        #                       "profile", "create",  
-        #                       "--profile-dir={}".format(config.ipython_profile_dir)])
-
-        try:
-            subprocess.check_call([config.ipython_executable,
-                                  'profile', 'create',
-                                  "--profile-dir={}".format(config.ipython_profile_dir)])
-        except FileNotFoundError:
-            halt("Error: '{}' executable not found".format(config.ipython_executable))
-        except subprocess.CalledProcessError as e:
-            halt("Error: {} from IPython".format(e))
-
-
-    nb_try += 1
-    if nb_try > 2:
-        halt("Error: could not create profile (please report)")
-
-## copy the custom js file
-
-shutil.copy(config.cl_jupyter_startup_def_dir + "/profile/custom.js",
-            config.ipython_profile_dir + "/static/custom/custom.js")
-
-os.makedirs(config.ipython_profile_dir + "/static/components/codemirror/mode/commonlisp/", exist_ok=True)
-shutil.copy(config.cl_jupyter_startup_def_dir + "/profile/commonlisp.js",
-            config.ipython_profile_dir + "/static/components/codemirror/mode/commonlisp/commonlisp.js")
-
 
 os.makedirs(config.ipython_dir + "/kernels/lisp", exist_ok=True)
 
-if config.lisp_implementation == "sbcl":    
+if config.lisp_implementation == "sbcl":
     KERNEL_SPEC = {
         "argv": [
             config.lisp_executable,'--non-interactive', '--load',

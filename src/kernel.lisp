@@ -52,7 +52,7 @@
            "     .-----------------.       /_________/ |      "
            "    /                 / |      |         | |      "
            "   /+================+\\ |      | |====|  | |      "
-           "   ||Fishbowl        || |      |         | |      "
+           "   ||cl-jupyter      || |      |         | |      "
            "   ||                || |      | |====|  | |      "
            "   ||* (fact 5)      || |      |         | |      "
            "   ||120             || |      |   ___   | |      "
@@ -96,6 +96,7 @@
       (unless (stringp connection-file-name)
         (error "Wrong connection file argument (expecting a string)"))
       (let ((config-alist (parse-json-from-string (concat-all 'string "" (read-file-lines connection-file-name)))))
+        (format t "kernel configuration = ~A~%" config-alist)
         (let ((config
                (make-instance 'kernel-config
                               :transport (afetch "transport" config-alist :test #'equal)
@@ -106,6 +107,9 @@
                               :hb-port (afetch "hb_port" config-alist :test #'equal)
                               :signature-scheme (afetch "signature_scheme" config-alist :test #'equal)
                               :key (afetch "key" config-alist :test #'equal))))
+          (when (not (string= (kernel-config-key config) ""))
+            ;; TODO: add support for encryption
+            (error "Secure connection not yet supported: please use an empty encryption key"))
           ;;(inspect config)
           (let* ((kernel (make-kernel config))
                  (evaluator (make-evaluator kernel))
