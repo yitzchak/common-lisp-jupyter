@@ -43,7 +43,7 @@
     ;; (message-send (iopub-socket iopub) result-msg :identities '("pyin") :raw-content t))))
     (message-send (iopub-socket iopub) code-msg)))
 
-                                                                    
+
 (defun send-execute-result (iopub parent-msg sig execution-count result)
   (let ((display-obj (display result)))
     (let ((result-msg (make-message-from-parent parent-msg "pyout" nil
