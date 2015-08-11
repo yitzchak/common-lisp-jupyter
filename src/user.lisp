@@ -79,7 +79,7 @@
 (defclass png-bytes ()
   ((bytes :initarg :bytes :reader png-bytes)))
 
-(defmethod render-jpg ((img png-bytes))
+(defmethod render-png ((img png-bytes))
   (cl-base64:usb8-array-to-base64-string (png-bytes img)))
 
 (defun png-from-file (filename)
