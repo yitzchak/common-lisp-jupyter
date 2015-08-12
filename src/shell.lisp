@@ -27,13 +27,15 @@
 
 (defun shell-loop (shell)
   (let ((active t))
+    (format t "[Shell] loop started~%")
+    (send-status-starting (kernel-iopub (shell-kernel shell)) "") ;; TODO: add the signature
     (while active
       (vbinds (ids sig msg raw)  (message-recv (shell-socket shell))
-        ;(format t "Shell Received:~%")
-	;(format t "  | identities: ~A~%" ids)
-	;(format t "  | signature: ~W~%" sig)
-	;(format t "  | message: ~A~%" (encode-json-to-string (message-header msg)))
-	;(format t "  | raw: ~W~%" raw)
+        ;;(format t "Shell Received:~%")
+	;;(format t "  | identities: ~A~%" ids)
+	;;(format t "  | signature: ~W~%" sig)
+	;;(format t "  | message: ~A~%" (encode-json-to-string (message-header msg)))
+	;;(format t "  | raw: ~W~%" raw)
 	(let ((msg-type (header-msg-type (message-header msg))))
 	  (cond ((equal msg-type "kernel_info_request")
 		 (handle-kernel-info-request shell ids msg sig raw))
@@ -92,10 +94,10 @@
                                               ("version" . ,language-info-version)
                                               ("mimetype" . ,language-info-mimetype)
                                               ("pygments_lexer" . ,language-info-pygments-lexer)
-                                              ("codemirror_mode" . ,language-info-codemirror-mode)
-                                              ("nbconvert_exporter" . ,language-info-nbconvert-exporter)))
-                          ("banner" . ,banner)
-                          ("help_links" . ,(help-links-to-json help-links)))
+                                              ("codemirror_mode" . ,language-info-codemirror-mode)))
+                                              ;("nbconvert_exporter" . ,language-info-nbconvert-exporter)))
+                          ("banner" . "")) ; ,banner)
+                          ;("help_links" . ,help-links))
                  :indent indent :first-line first-line)))
 
 ;; for protocol version 4.1
@@ -110,9 +112,11 @@
 
 (defun handle-kernel-info-request (shell ids msg sig raw)
   ;;(format t "[Shell] handling 'kernel-info-request'~%")
-  (when (not *status-starting-sent*)
-    (setf *status-starting-sent* t)
-    (send-status-update (kernel-iopub (shell-kernel shell)) msg sig "starting"))
+  ;(when (not *status-starting-sent*)
+  ;  (setf *status-starting-sent* t)
+  ;  (send-status-update (kernel-iopub (shell-kernel shell)) msg sig "starting"))
+  ;; status to busy
+  (send-status-update (kernel-iopub (shell-kernel shell)) msg sig "busy")
   ;; for protocol version 5
   (let ((reply (make-message-from-parent
                 msg "kernel_info_reply" nil 
@@ -128,15 +132,18 @@
                  :language-info-codemirror-mode "text/x-common-lisp"
                  :language-info-nbconvert-exporter ""
                  :banner (banner)
-                 :help-links '(("Common Lisp Hyperspec" . "http://www.lispworks.com/documentation/HyperSpec/Front/index.htm"))))))
+                 :help-links (vector)))))
+		 ;;'(("Common Lisp Hyperspec" . "http://www.lispworks.com/documentation/HyperSpec/Front/index.htm"))))))
   ;; for protocol version 4.1
   ;; (let ((reply (make-message-from-parent msg "kernel_info_reply" nil 
   ;;   				 (make-instance
   ;;   				  'content-kernel-info-reply
   ;;   				  :protocol-version #(4 1)
   ;;   				  :language-version #(1 2 7)  ;; XXX: impl. dependent but really cares ?
-  ;;   				  :language "common-lisp"))))
-    (message-send (shell-socket shell) reply :identities ids)))
+    ;;   				  :language "common-lisp"))))
+    (message-send (shell-socket shell) reply :identities ids)
+    ;; status back to idle
+    (send-status-update (kernel-iopub (shell-kernel shell)) msg sig "idle")))
 
 #|
 

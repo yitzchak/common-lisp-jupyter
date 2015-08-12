@@ -126,7 +126,7 @@
 		(let ((heartbeat-thread-id (start-heartbeat hb-socket)))
 		  ;; main loop
 		  (unwind-protect
-		       ;;(format t "[Kernel] Entering mainloop ...~%")
+		       (format t "[Kernel] Entering mainloop ...~%")
 		       (shell-loop shell)
 		    ;; clean up when exiting
 		    (bordeaux-threads:destroy-thread heartbeat-thread-id)
@@ -139,12 +139,12 @@
 (defun start-heartbeat (socket)
   (let ((thread-id (bordeaux-threads:make-thread
 		    (lambda ()
-		      ;;(format t "[Heartbeat] thread started~%")
+		      (format t "[Heartbeat] thread started~%")
 		      (loop
 			 (pzmq:with-message msg
 			   (pzmq:msg-recv msg socket)
-					;(format t "Heartbeat Received:~%")
+					;;(format t "Heartbeat Received:~%")
 			   (pzmq:msg-send msg socket)
-					;(format t "  | message: ~A~%" msg)
+					;;(format t "  | message: ~A~%" msg)
 			   ))))))
     thread-id))

@@ -130,6 +130,18 @@ The deserialization of a message header from a JSon string is then trivial.
      :metadata metadata
      :content content)))
 
+(defun make-dummy-message-without-parent (msg_type metadata content) 
+  (make-instance 
+   'message
+   :header (make-instance 
+	    'header
+	    :msg-id (format nil "~W" (uuid:make-v4-uuid))
+	    :username "username"
+	    :session "cl-jupyter"
+	    :msg-type msg_type
+	    :version "5.0")
+     :metadata metadata
+     :content content))
 
 (example-progn
   (defparameter *msg1* (make-instance 'message :header *header1*)))
@@ -232,13 +244,19 @@ The wire-deserialization part follows.
 
 (defun message-send (socket msg &key (identities nil))
   (let ((wire-parts (wire-serialize msg :identities identities)))
-    (format t "~%[Send] wire parts: ~W~%" wire-parts)
+    ;;(format t "~%[Send] wire parts: ~W~%" wire-parts)
     (dolist (part wire-parts)
       (pzmq:send socket part :sndmore t))
     (pzmq:send socket nil)))
 
 (defun zmq-recv-list (socket &optional (parts nil) (part-num 1))
-  (multiple-value-bind (part more) (pzmq:recv-string socket)
+  (multiple-value-bind (part more)
+      (handler-case (pzmq:recv-string socket)
+		    (BABEL-ENCODINGS:INVALID-UTF8-STARTER-BYTE
+		     ()
+		     ;; if it's not utf-8 we try latin-1 (Ugly !)
+		     (format t "[Recv]: issue with UTF-8 decoding~%")
+		     (pzmq:recv-string socket :encoding :latin-1)))
     ;;(format t "[Shell]: received message part #~A: ~W (more? ~A)~%" part-num part more)
     (if more
         (zmq-recv-list socket (cons part parts) (+ part-num 1))
@@ -246,7 +264,7 @@ The wire-deserialization part follows.
 
 (defun message-recv (socket)
   (let ((parts (zmq-recv-list socket)))
-    (format t "[Recv]: parts: ~A~%" (mapcar (lambda (part) (format nil "~W" part)) parts))
+    ;;(format t "[Recv]: parts: ~A~%" (mapcar (lambda (part) (format nil "~W" part)) parts))
     (wire-deserialize parts)))
 
 #|

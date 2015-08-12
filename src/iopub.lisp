@@ -26,6 +26,12 @@
 	  (setf (slot-value kernel 'iopub) iopub)
           iopub)))))
 
+(defun send-status-starting (iopub sig)
+  (let ((status-msg (make-dummy-message-without-parent "status" nil
+						       `(("execution_state" . "starting")))))
+    ;;(message-send (iopub-socket iopub) status-msg :identities '("status")))))
+    (message-send (iopub-socket iopub) status-msg)))
+  
 (defun send-status-update (iopub parent-msg sig status)
   (let ((status-content `((:execution--state . ,status))))
     (let ((status-msg (make-message-from-parent parent-msg "status" nil
