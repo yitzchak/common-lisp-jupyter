@@ -36,7 +36,7 @@
 ;; (json:encode-json-to-string '((:execution--state . :busy) (:text--plain . "toto")))
 
 (defun send-execute-code (iopub parent-msg sig execution-count code)
-  (let ((code-msg (make-message-from-parent parent-msg "pyin" nil
+  (let ((code-msg (make-message-from-parent parent-msg "execute_input" nil
                                             `(("code" . ,code)
                                               ("execution_count" . ,execution-count)))))
     ;;(format t "content to send = ~W~%" (encode-json-to-string (message-content code-msg)))
@@ -46,7 +46,7 @@
 
 (defun send-execute-result (iopub parent-msg sig execution-count result)
   (let ((display-obj (display result)))
-    (let ((result-msg (make-message-from-parent parent-msg "pyout" nil
+    (let ((result-msg (make-message-from-parent parent-msg "execute_result" nil
 						`(("execution_count" . ,execution-count)
 						  ("data" . ,(display-object-data display-obj))
 						  ("metadata" . ())))))
@@ -55,7 +55,7 @@
 
 (defun send-stream (iopub parent-msg sig stream-name data)
   (let ((stream-msg (make-message-from-parent parent-msg "stream" nil
-					      `(("name" . ,stream-name)
-						("data" . ,data)))))
+                                              `(("name" . ,stream-name)
+                                                ("text" . ,data)))))
     ;; (message-send (iopub-socket iopub) stream-msg :identities '("stream") :raw-content t))))
     (message-send (iopub-socket iopub) stream-msg)))

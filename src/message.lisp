@@ -35,7 +35,7 @@
                           ("msg_type" . ,msg-type)
                           ("version" . ,version))
                  :indent indent :first-line first-line)))
-    
+
 (example-progn
   (defparameter *header1* (make-instance 'header
                                          :msg-id "XXX-YYY-ZZZ-TTT"
@@ -50,13 +50,13 @@
   \"username\": \"fredokun\",
   \"session\": \"AAA-BBB-CCC-DDD\",
   \"msg_type\": \"execute_request\",
-  \"version\": \"4.1\"
+  \"version\": \"5.0\"
 }")
 
 
 (example
  (encode-json-to-string *header1*)
- => "{\"msg_id\": \"XXX-YYY-ZZZ-TTT\",\"username\": \"fredokun\",\"session\": \"AAA-BBB-CCC-DDD\",\"msg_type\": \"execute_request\",\"version\": \"4.1\"}")
+ => "{\"msg_id\": \"XXX-YYY-ZZZ-TTT\",\"username\": \"fredokun\",\"session\": \"AAA-BBB-CCC-DDD\",\"msg_type\": \"execute_request\",\"version\": \"5.0\"}")
 
 #|
 
@@ -67,7 +67,7 @@
 (example (parse-json-from-string (encode-json-to-string *header1*))
          => '(("msg_id" . "XXX-YYY-ZZZ-TTT") ("username" . "fredokun")
 	      ("session" . "AAA-BBB-CCC-DDD") ("msg_type" . "execute_request")
-	      ("version" . "4.1")))
+	      ("version" . "5.0")))
 
 (example
  (afetch "msg_id" (parse-json-from-string (encode-json-to-string *header1*)) :test #'equal)
@@ -188,11 +188,11 @@ The wire-deserialization part follows.
 (example
  (subseq *wire1* (+ 6 (position +WIRE-IDS-MSG-DELIMITER+ *wire1*)))
  => nil)
-         
+
 (example
  (let ((delim-index (position +WIRE-IDS-MSG-DELIMITER+ *wire1*)))
    (subseq *wire1* (+ 2 delim-index) (+ 6 delim-index)))
- => '("{\"msg_id\": \"XXX-YYY-ZZZ-TTT\",\"username\": \"fredokun\",\"session\": \"AAA-BBB-CCC-DDD\",\"msg_type\": \"execute_request\",\"version\": \"4.1\"}"
+ => '("{\"msg_id\": \"XXX-YYY-ZZZ-TTT\",\"username\": \"fredokun\",\"session\": \"AAA-BBB-CCC-DDD\",\"msg_type\": \"execute_request\",\"version\": \"5.0\"}"
       "{}" "{}" "{}"))
 
 
@@ -232,7 +232,7 @@ The wire-deserialization part follows.
 
 (defun message-send (socket msg &key (identities nil))
   (let ((wire-parts (wire-serialize msg :identities identities)))
-    ;;(format t "~%[Send] wire parts: ~W~%" wire-parts)
+    (format t "~%[Send] wire parts: ~W~%" wire-parts)
     (dolist (part wire-parts)
       (pzmq:send socket part :sndmore t))
     (pzmq:send socket nil)))
@@ -246,7 +246,7 @@ The wire-deserialization part follows.
 
 (defun message-recv (socket)
   (let ((parts (zmq-recv-list socket)))
-    ;;(format t "[Recv]: parts: ~A~%" (mapcar (lambda (part) (format nil "~W" part)) parts))
+    (format t "[Recv]: parts: ~A~%" (mapcar (lambda (part) (format nil "~W" part)) parts))
     (wire-deserialize parts)))
 
 #|
