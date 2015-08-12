@@ -5,14 +5,17 @@
    (ctx :initarg :ctx :reader kernel-ctx)
    (shell :initarg :shell :initform nil :reader kernel-shell)
    (iopub :initarg :iopub :initform nil :reader kernel-iopub)
+   (session :initarg :session :reader kernel-session)
    (evaluator :initarg :evaluator :initform nil :reader kernel-evaluator))
   (:documentation "Kernel state representation."))
 
 (defun make-kernel (config)
-  (let ((ctx (pzmq:ctx-new)))
+  (let ((ctx (pzmq:ctx-new))
+	(session-id (format nil "~W" (uuid:make-v4-uuid))))
     (make-instance 'kernel
                    :config config
-                   :ctx ctx)))
+                   :ctx ctx
+		   :session session-id)))
 
 (defun get-argv ()
   ;; Borrowed from apply-argv, command-line-arguments.  Temporary solution (?)
@@ -96,7 +99,7 @@
       (unless (stringp connection-file-name)
         (error "Wrong connection file argument (expecting a string)"))
       (let ((config-alist (parse-json-from-string (concat-all 'string "" (read-file-lines connection-file-name)))))
-        (format t "kernel configuration = ~A~%" config-alist)
+        ;; (format t "kernel configuration = ~A~%" config-alist)
         (let ((config
                (make-instance 'kernel-config
                               :transport (afetch "transport" config-alist :test #'equal)
@@ -140,11 +143,14 @@
   (let ((thread-id (bordeaux-threads:make-thread
 		    (lambda ()
 		      (format t "[Heartbeat] thread started~%")
-		      (loop
-			 (pzmq:with-message msg
-			   (pzmq:msg-recv msg socket)
-					;;(format t "Heartbeat Received:~%")
-			   (pzmq:msg-send msg socket)
-					;;(format t "  | message: ~A~%" msg)
-			   ))))))
+		      (pzmq:proxy socket socket (cffi:null-pointer))))))
+
+    ;; XXX: without proxy
+    ;; (loop
+    ;; 	 (pzmq:with-message msg
+    ;; 	   (pzmq:msg-recv msg socket)
+    ;; 			;;(format t "Heartbeat Received:~%")
+    ;; 	   (pzmq:msg-send msg socket)
+    ;; 			;;(format t "  | message: ~A~%" msg)
+    ;; 	   ))))))
     thread-id))

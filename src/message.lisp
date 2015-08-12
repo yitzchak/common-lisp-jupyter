@@ -115,7 +115,7 @@ The deserialization of a message header from a JSon string is then trivial.
    (content :initarg :content :initform nil :accessor message-content))
   (:documentation "Representation of IPython messages"))
 
-(defun make-message-from-parent (parent_msg msg_type metadata content) 
+(defun make-message (parent_msg msg_type metadata content) 
   (let ((hdr (message-header parent_msg)))
     (make-instance 
      'message
@@ -130,18 +130,19 @@ The deserialization of a message header from a JSon string is then trivial.
      :metadata metadata
      :content content)))
 
-(defun make-dummy-message-without-parent (msg_type metadata content) 
+(defun make-orphan-message (session-id msg-type metadata content) 
   (make-instance 
    'message
    :header (make-instance 
 	    'header
 	    :msg-id (format nil "~W" (uuid:make-v4-uuid))
-	    :username "username"
-	    :session "cl-jupyter"
-	    :msg-type msg_type
-	    :version "5.0")
-     :metadata metadata
-     :content content))
+	    :username "kernel"
+	    :session session-id
+	    :msg-type msg-type
+	    :version +KERNEL-PROTOCOL-VERSION+)
+   :parent-header '()
+   :metadata metadata
+   :content content))
 
 (example-progn
   (defparameter *msg1* (make-instance 'message :header *header1*)))
@@ -185,7 +186,6 @@ The wire-serialization of IPython kernel messages uses multi-parts ZMQ messages.
 The wire-deserialization part follows.
 
 |#
-
 
 (example (position +WIRE-IDS-MSG-DELIMITER+ *wire1*)
          => 2)
@@ -266,14 +266,3 @@ The wire-deserialization part follows.
   (let ((parts (zmq-recv-list socket)))
     ;;(format t "[Recv]: parts: ~A~%" (mapcar (lambda (part) (format nil "~W" part)) parts))
     (wire-deserialize parts)))
-
-#|
-     
-## Message content ##
-
-|#
-
-(defclass message-content ()
-  ()
-  (:documentation "The base class of message contents."))
-

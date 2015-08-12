@@ -1,6 +1,6 @@
 ----
 
-**INFORMATION**: the master branch is for the moment broken. A version "almost usable" for Ipython 2.x is in the branch `2.x`  and a version for IPython 3.x  (using the old protocol 4.1) is in the branch `protocol_4.1_on_3.x`.  Sorry for the (hopefully !) temporary inconvenience.
+**INFORMATION**: this is master branch for IPython 3.x (protocol version 5.0). A version for Ipython 2.x is in the branch `2.x`.
 
 ----
 

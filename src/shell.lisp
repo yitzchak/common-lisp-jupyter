@@ -28,20 +28,22 @@
 (defun shell-loop (shell)
   (let ((active t))
     (format t "[Shell] loop started~%")
-    (send-status-starting (kernel-iopub (shell-kernel shell)) "") ;; TODO: add the signature
+    (send-status-starting (kernel-iopub (shell-kernel shell)) (kernel-session (shell-kernel shell)))
     (while active
-      (vbinds (ids sig msg raw)  (message-recv (shell-socket shell))
-        ;;(format t "Shell Received:~%")
-	;;(format t "  | identities: ~A~%" ids)
-	;;(format t "  | signature: ~W~%" sig)
-	;;(format t "  | message: ~A~%" (encode-json-to-string (message-header msg)))
-	;;(format t "  | raw: ~W~%" raw)
-	(let ((msg-type (header-msg-type (message-header msg))))
-	  (cond ((equal msg-type "kernel_info_request")
-		 (handle-kernel-info-request shell ids msg sig raw))
-		((equal msg-type "execute_request")
-		 (setf active (handle-execute-request shell ids msg sig raw)))
-		(t (warn "[Shell] message type '~A' not (yet ?) supported, skipping..." msg-type))))))))
+      (vbinds (identities sig msg buffers)  (message-recv (shell-socket shell))
+	      ;;(format t "Shell Received:~%")
+	      ;;(format t "  | identities: ~A~%" identities)
+	      ;;(format t "  | signature: ~W~%" sig)
+	      ;;(format t "  | message: ~A~%" (encode-json-to-string (message-header msg)))
+	      ;;(format t "  | buffers: ~W~%" buffers)
+
+	      ;; TODO: check the signature (after that, sig can be forgotten)
+	      (let ((msg-type (header-msg-type (message-header msg))))
+		(cond ((equal msg-type "kernel_info_request")
+		       (handle-kernel-info-request shell identities msg buffers))
+		      ((equal msg-type "execute_request")
+		       (setf active (handle-execute-request shell identities msg buffers)))
+		      (t (warn "[Shell] message type '~A' not (yet ?) supported, skipping..." msg-type))))))))
 
 
 #|
@@ -108,17 +110,12 @@
 ;;                           ("language" . ,language))
 ;;                  :indent indent :first-line first-line)))
 
-(defvar *status-starting-sent* nil)
-
-(defun handle-kernel-info-request (shell ids msg sig raw)
+(defun handle-kernel-info-request (shell identities msg buffers)
   ;;(format t "[Shell] handling 'kernel-info-request'~%")
-  ;(when (not *status-starting-sent*)
-  ;  (setf *status-starting-sent* t)
-  ;  (send-status-update (kernel-iopub (shell-kernel shell)) msg sig "starting"))
   ;; status to busy
-  (send-status-update (kernel-iopub (shell-kernel shell)) msg sig "busy")
+  (send-status-update (kernel-iopub (shell-kernel shell)) msg "busy")
   ;; for protocol version 5
-  (let ((reply (make-message-from-parent
+  (let ((reply (make-message
                 msg "kernel_info_reply" nil 
                 (make-instance
                  'content-kernel-info-reply
@@ -141,9 +138,9 @@
   ;;   				  :protocol-version #(4 1)
   ;;   				  :language-version #(1 2 7)  ;; XXX: impl. dependent but really cares ?
     ;;   				  :language "common-lisp"))))
-    (message-send (shell-socket shell) reply :identities ids)
+    (message-send (shell-socket shell) reply :identities identities)
     ;; status back to idle
-    (send-status-update (kernel-iopub (shell-kernel shell)) msg sig "idle")))
+    (send-status-update (kernel-iopub (shell-kernel shell)) msg "idle")))
 
 #|
 
@@ -152,9 +149,9 @@
 |#
 
 
-(defun handle-execute-request (shell ids msg sig raw)
+(defun handle-execute-request (shell identities msg buffers)
   ;;(format t "[Shell] handling 'execute_request'~%")
-  (send-status-update (kernel-iopub (shell-kernel shell)) msg sig "busy")
+  (send-status-update (kernel-iopub (shell-kernel shell)) msg "busy")
   (let ((content (parse-json-from-string (message-content msg))))
     ;;(format t "  ==> Message content = ~W~%" content)
     (let ((code (afetch "code" content :test #'equal)))
@@ -166,30 +163,41 @@
         ;(format t "STDOUT = ~A~%" stdout)
         ;(format t "STDERR = ~A~%" stderr)
         ;; broadcast the code to connected frontends
-        (send-execute-code (kernel-iopub (shell-kernel shell)) msg sig execution-count code)
+        (send-execute-code (kernel-iopub (shell-kernel shell)) msg execution-count code)
 	(when (and (consp results) (typep (car results) 'cl-jupyter-user::cl-jupyter-quit-obj))
 	  ;; ----- ** request for shutdown ** -----
-	  (let ((reply (make-message-from-parent msg "execute_reply" nil
-						 `(("status" . "abort")
-						   ("execution_count" . ,execution-count)))))
-	    (message-send (shell-socket shell) reply :identities ids))
+	  (let ((reply (make-message msg "execute_reply" nil
+				     `(("status" . "abort")
+				       ("execution_count" . ,execution-count)))))
+	    (message-send (shell-socket shell) reply :identities identities))
 	  (return-from handle-execute-request nil))
 	;; ----- ** normal request ** -----
         ;; send the stdout
         (when (and stdout (> (length stdout) 0))
-          (send-stream (kernel-iopub (shell-kernel shell)) msg sig "stdout" stdout))
+          (send-stream (kernel-iopub (shell-kernel shell)) msg "stdout" stdout))
         ;; send the stderr
         (when (and stderr (> (length stderr) 0))
-          (send-stream (kernel-iopub (shell-kernel shell)) msg sig "stderr" stderr))
+          (send-stream (kernel-iopub (shell-kernel shell)) msg "stderr" stderr))
 	;; send the first result
 	(send-execute-result (kernel-iopub (shell-kernel shell)) 
-			     msg sig execution-count (car results))
+			     msg execution-count (car results))
 	;; status back to idle
-	(send-status-update (kernel-iopub (shell-kernel shell)) msg sig "idle")
+	(send-status-update (kernel-iopub (shell-kernel shell)) msg "idle")
 	;; send reply (control)
-	(let ((reply (make-message-from-parent msg "execute_reply" nil
-					       `(("status" . "ok")
-						 ("execution_count" . ,execution-count)
-						 ("payload" . ,(vector))))))
-	  (message-send (shell-socket shell) reply :identities ids)
+	(let ((reply (make-message msg "execute_reply" nil
+				   `(("status" . "ok")
+				     ("execution_count" . ,execution-count)
+				     ("payload" . ,(vector))))))
+	  (message-send (shell-socket shell) reply :identities identities)
 	  t)))))
+
+#|
+     
+## Message content ##
+
+|#
+
+(defclass message-content ()
+  ()
+  (:documentation "The base class of message contents."))
+
