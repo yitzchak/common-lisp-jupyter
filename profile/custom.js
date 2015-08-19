@@ -61,17 +61,17 @@ $([IPython.events]).on('app_initialized.NotebookApp', function(){
     CodeMirror.requireMode('common-lisp', function(){
         console.log('Lisp mode should now be available in codemirror.');
     })
-   IPython.CodeCell.options_default['cm_config']['mode'] = 'common-lisp';
+   IPython.CodeCell.options_default['cm_config']['mode'] = 'commonlisp';
    IPython.CodeCell.options_default['cm_config']['indentUnit'] = 4;
 
    var cells = IPython.notebook.get_cells();
    for(var i in cells){
        var c = cells[i];
        if (c.cell_type === 'code') {
-            // Force the mode to be Haskell
+            // Force the mode to be common lisp
             // This is necessary, otherwise sometimes highlighting just doesn't happen.
             // This may be an IPython bug.
-            c.code_mirror.setOption('mode', 'common-lisp');
+            c.code_mirror.setOption('mode', 'commonlisp');
             c.auto_highlight()
         }
    }

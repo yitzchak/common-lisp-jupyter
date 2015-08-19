@@ -1,5 +1,5 @@
 
-(in-package #:fishbowl)
+(in-package #:cl-jupyter)
 
 #|
 
@@ -35,7 +35,7 @@
                           ("msg_type" . ,msg-type)
                           ("version" . ,version))
                  :indent indent :first-line first-line)))
-    
+
 (example-progn
   (defparameter *header1* (make-instance 'header
                                          :msg-id "XXX-YYY-ZZZ-TTT"
@@ -50,13 +50,13 @@
   \"username\": \"fredokun\",
   \"session\": \"AAA-BBB-CCC-DDD\",
   \"msg_type\": \"execute_request\",
-  \"version\": \"4.1\"
+  \"version\": \"5.0\"
 }")
 
 
 (example
  (encode-json-to-string *header1*)
- => "{\"msg_id\": \"XXX-YYY-ZZZ-TTT\",\"username\": \"fredokun\",\"session\": \"AAA-BBB-CCC-DDD\",\"msg_type\": \"execute_request\",\"version\": \"4.1\"}")
+ => "{\"msg_id\": \"XXX-YYY-ZZZ-TTT\",\"username\": \"fredokun\",\"session\": \"AAA-BBB-CCC-DDD\",\"msg_type\": \"execute_request\",\"version\": \"5.0\"}")
 
 #|
 
@@ -67,7 +67,7 @@
 (example (parse-json-from-string (encode-json-to-string *header1*))
          => '(("msg_id" . "XXX-YYY-ZZZ-TTT") ("username" . "fredokun")
 	      ("session" . "AAA-BBB-CCC-DDD") ("msg_type" . "execute_request")
-	      ("version" . "4.1")))
+	      ("version" . "5.0")))
 
 (example
  (afetch "msg_id" (parse-json-from-string (encode-json-to-string *header1*)) :test #'equal)
@@ -115,7 +115,7 @@ The deserialization of a message header from a JSon string is then trivial.
    (content :initarg :content :initform nil :accessor message-content))
   (:documentation "Representation of IPython messages"))
 
-(defun make-message-from-parent (parent_msg msg_type metadata content) 
+(defun make-message (parent_msg msg_type metadata content) 
   (let ((hdr (message-header parent_msg)))
     (make-instance 
      'message
@@ -130,6 +130,19 @@ The deserialization of a message header from a JSon string is then trivial.
      :metadata metadata
      :content content)))
 
+(defun make-orphan-message (session-id msg-type metadata content) 
+  (make-instance 
+   'message
+   :header (make-instance 
+	    'header
+	    :msg-id (format nil "~W" (uuid:make-v4-uuid))
+	    :username "kernel"
+	    :session session-id
+	    :msg-type msg-type
+	    :version +KERNEL-PROTOCOL-VERSION+)
+   :parent-header '()
+   :metadata metadata
+   :content content))
 
 (example-progn
   (defparameter *msg1* (make-instance 'message :header *header1*)))
@@ -174,7 +187,6 @@ The wire-deserialization part follows.
 
 |#
 
-
 (example (position +WIRE-IDS-MSG-DELIMITER+ *wire1*)
          => 2)
 
@@ -188,11 +200,11 @@ The wire-deserialization part follows.
 (example
  (subseq *wire1* (+ 6 (position +WIRE-IDS-MSG-DELIMITER+ *wire1*)))
  => nil)
-         
+
 (example
  (let ((delim-index (position +WIRE-IDS-MSG-DELIMITER+ *wire1*)))
    (subseq *wire1* (+ 2 delim-index) (+ 6 delim-index)))
- => '("{\"msg_id\": \"XXX-YYY-ZZZ-TTT\",\"username\": \"fredokun\",\"session\": \"AAA-BBB-CCC-DDD\",\"msg_type\": \"execute_request\",\"version\": \"4.1\"}"
+ => '("{\"msg_id\": \"XXX-YYY-ZZZ-TTT\",\"username\": \"fredokun\",\"session\": \"AAA-BBB-CCC-DDD\",\"msg_type\": \"execute_request\",\"version\": \"5.0\"}"
       "{}" "{}" "{}"))
 
 
@@ -238,7 +250,13 @@ The wire-deserialization part follows.
     (pzmq:send socket nil)))
 
 (defun zmq-recv-list (socket &optional (parts nil) (part-num 1))
-  (multiple-value-bind (part more) (pzmq:recv-string socket)
+  (multiple-value-bind (part more)
+      (handler-case (pzmq:recv-string socket)
+		    (BABEL-ENCODINGS:INVALID-UTF8-STARTER-BYTE
+		     ()
+		     ;; if it's not utf-8 we try latin-1 (Ugly !)
+		     (format t "[Recv]: issue with UTF-8 decoding~%")
+		     (pzmq:recv-string socket :encoding :latin-1)))
     ;;(format t "[Shell]: received message part #~A: ~W (more? ~A)~%" part-num part more)
     (if more
         (zmq-recv-list socket (cons part parts) (+ part-num 1))
@@ -248,14 +266,3 @@ The wire-deserialization part follows.
   (let ((parts (zmq-recv-list socket)))
     ;;(format t "[Recv]: parts: ~A~%" (mapcar (lambda (part) (format nil "~W" part)) parts))
     (wire-deserialize parts)))
-
-#|
-     
-## Message content ##
-
-|#
-
-(defclass message-content ()
-  ()
-  (:documentation "The base class of message contents."))
-

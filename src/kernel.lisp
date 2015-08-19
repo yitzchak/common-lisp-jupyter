@@ -1,18 +1,21 @@
-(in-package #:fishbowl)
+(in-package #:cl-jupyter)
 
 (defclass kernel ()
   ((config :initarg :config :reader kerner-config)
    (ctx :initarg :ctx :reader kernel-ctx)
    (shell :initarg :shell :initform nil :reader kernel-shell)
    (iopub :initarg :iopub :initform nil :reader kernel-iopub)
+   (session :initarg :session :reader kernel-session)
    (evaluator :initarg :evaluator :initform nil :reader kernel-evaluator))
   (:documentation "Kernel state representation."))
 
 (defun make-kernel (config)
-  (let ((ctx (pzmq:ctx-new)))
+  (let ((ctx (pzmq:ctx-new))
+	(session-id (format nil "~W" (uuid:make-v4-uuid))))
     (make-instance 'kernel
                    :config config
-                   :ctx ctx)))
+                   :ctx ctx
+		   :session session-id)))
 
 (defun get-argv ()
   ;; Borrowed from apply-argv, command-line-arguments.  Temporary solution (?)
@@ -52,7 +55,7 @@
            "     .-----------------.       /_________/ |      "
            "    /                 / |      |         | |      "
            "   /+================+\\ |      | |====|  | |      "
-           "   ||Fishbowl        || |      |         | |      "
+           "   ||cl-jupyter      || |      |         | |      "
            "   ||                || |      | |====|  | |      "
            "   ||* (fact 5)      || |      |         | |      "
            "   ||120             || |      |   ___   | |      "
@@ -86,7 +89,7 @@
     ;(princ (banner))
     (write-line "")
     (format t "~A: an enhanced interactive Common Lisp REPL~%" +KERNEL-IMPLEMENTATION-NAME+)
-    (format t "(Version ~A - Ipython protocol v.~A)~%"
+    (format t "(Version ~A - Jupyter protocol v.~A)~%"
             +KERNEL-IMPLEMENTATION-VERSION+
             +KERNEL-PROTOCOL-VERSION+)
     (format t "--> (C) 2014-2015 Frederic Peschanski (cf. LICENSE)~%")
@@ -96,6 +99,7 @@
       (unless (stringp connection-file-name)
         (error "Wrong connection file argument (expecting a string)"))
       (let ((config-alist (parse-json-from-string (concat-all 'string "" (read-file-lines connection-file-name)))))
+        ;; (format t "kernel configuration = ~A~%" config-alist)
         (let ((config
                (make-instance 'kernel-config
                               :transport (afetch "transport" config-alist :test #'equal)
@@ -106,13 +110,16 @@
                               :hb-port (afetch "hb_port" config-alist :test #'equal)
                               :signature-scheme (afetch "signature_scheme" config-alist :test #'equal)
                               :key (afetch "key" config-alist :test #'equal))))
+          (when (not (string= (kernel-config-key config) ""))
+            ;; TODO: add support for encryption
+            (error "Secure connection not yet supported: please use an empty encryption key"))
           ;;(inspect config)
           (let* ((kernel (make-kernel config))
                  (evaluator (make-evaluator kernel))
                  (shell (make-shell-channel kernel))
                  (iopub (make-iopub-channel kernel)))
 	    ;; Launch the hearbeat thread
-	    (let ((hb-socket (pzmq:socket (kernel-ctx kernel) :rep)))  
+	    (let ((hb-socket (pzmq:socket (kernel-ctx kernel) :rep)))
 	      (let ((hb-endpoint (format nil "~A://~A:~A"
 					 (config-transport config)
 					 (config-ip config)
@@ -121,8 +128,8 @@
 		(pzmq:bind hb-socket hb-endpoint)
 		(let ((heartbeat-thread-id (start-heartbeat hb-socket)))
 		  ;; main loop
-		  (unwind-protect 
-		       ;;(format t "[Kernel] Entering mainloop ...~%")
+		  (unwind-protect
+		       (format t "[Kernel] Entering mainloop ...~%")
 		       (shell-loop shell)
 		    ;; clean up when exiting
 		    (bordeaux-threads:destroy-thread heartbeat-thread-id)
@@ -131,16 +138,19 @@
 		    (pzmq:close (shell-socket shell))
 		    (pzmq:ctx-destroy (kernel-ctx kernel))
 		    (format t "Bye bye.~%")))))))))))
-				
+
 (defun start-heartbeat (socket)
-  (let ((thread-id (bordeaux-threads:make-thread 
+  (let ((thread-id (bordeaux-threads:make-thread
 		    (lambda ()
-		      ;;(format t "[Heartbeat] thread started~%")
-		      (loop
-			 (pzmq:with-message msg
-			   (pzmq:msg-recv msg socket)
-					;(format t "Heartbeat Received:~%")
-			   (pzmq:msg-send msg socket)
-					;(format t "  | message: ~A~%" msg)
-			   ))))))
+		      (format t "[Heartbeat] thread started~%")
+		      (pzmq:proxy socket socket (cffi:null-pointer))))))
+
+    ;; XXX: without proxy
+    ;; (loop
+    ;; 	 (pzmq:with-message msg
+    ;; 	   (pzmq:msg-recv msg socket)
+    ;; 			;;(format t "Heartbeat Received:~%")
+    ;; 	   (pzmq:msg-send msg socket)
+    ;; 			;;(format t "  | message: ~A~%" msg)
+    ;; 	   ))))))
     thread-id))

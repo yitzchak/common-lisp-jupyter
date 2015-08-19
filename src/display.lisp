@@ -1,5 +1,5 @@
 
-(in-package #:fishbowl)
+(in-package #:cl-jupyter)
 
 #|
 

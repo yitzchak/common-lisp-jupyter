@@ -23,7 +23,7 @@
 	   #:encode-json
 	   #:encode-json-to-string))
 
-(defpackage #:fishbowl
+(defpackage #:cl-jupyter
   (:use #:cl #:fredo-utils #:myjson)
   (:export 
    #:display
@@ -38,8 +38,8 @@
    #:display-javascript render-javascript
    #:kernel-start))
 
-(defpackage #:fishbowl-user
-  (:use #:cl #:fredo-utils #:fishbowl #:common-lisp-user)
+(defpackage #:cl-jupyter-user
+  (:use #:cl #:fredo-utils #:cl-jupyter #:common-lisp-user)
   (:export 
    #:display
    #:display-plain render-plain
@@ -56,4 +56,4 @@
    #:svg-from-file
    #:quit))
 
-(in-package #:fishbowl)
+(in-package #:cl-jupyter)

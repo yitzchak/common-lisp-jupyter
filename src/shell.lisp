@@ -1,4 +1,4 @@
-(in-package #:fishbowl)
+(in-package #:cl-jupyter)
 
 #|
 
@@ -12,7 +12,7 @@
 
 
 (defun make-shell-channel (kernel)
-  (let ((socket (pzmq:socket (kernel-ctx kernel) :router)))  
+  (let ((socket (pzmq:socket (kernel-ctx kernel) :router)))
     (let ((shell (make-instance 'shell-channel
                                 :kernel kernel
                                 :socket socket)))
@@ -24,22 +24,26 @@
           ;; (format t "shell endpoint is: ~A~%" endpoint)
           (pzmq:bind socket endpoint)
           shell)))))
-      
+
 (defun shell-loop (shell)
   (let ((active t))
+    (format t "[Shell] loop started~%")
+    (send-status-starting (kernel-iopub (shell-kernel shell)) (kernel-session (shell-kernel shell)))
     (while active
-      (vbinds (ids sig msg raw)  (message-recv (shell-socket shell))
-        ;(format t "Shell Received:~%")
-	;(format t "  | identities: ~A~%" ids)
-	;(format t "  | signature: ~W~%" sig)
-	;(format t "  | message: ~A~%" (encode-json-to-string (message-header msg)))
-	;(format t "  | raw: ~W~%" raw)
-	(let ((msg-type (header-msg-type (message-header msg))))
-	  (cond ((equal msg-type "kernel_info_request")
-		 (handle-kernel-info-request shell ids msg sig raw))
-		((equal msg-type "execute_request")
-		 (setf active (handle-execute-request shell ids msg sig raw)))
-		(t (warn "[Shell] message type '~A' not (yet ?) supported, skipping..." msg-type))))))))
+      (vbinds (identities sig msg buffers)  (message-recv (shell-socket shell))
+	      ;;(format t "Shell Received:~%")
+	      ;;(format t "  | identities: ~A~%" identities)
+	      ;;(format t "  | signature: ~W~%" sig)
+	      ;;(format t "  | message: ~A~%" (encode-json-to-string (message-header msg)))
+	      ;;(format t "  | buffers: ~W~%" buffers)
+
+	      ;; TODO: check the signature (after that, sig can be forgotten)
+	      (let ((msg-type (header-msg-type (message-header msg))))
+		(cond ((equal msg-type "kernel_info_request")
+		       (handle-kernel-info-request shell identities msg buffers))
+		      ((equal msg-type "execute_request")
+		       (setf active (handle-execute-request shell identities msg buffers)))
+		      (t (warn "[Shell] message type '~A' not (yet ?) supported, skipping..." msg-type))))))))
 
 
 #|
@@ -49,24 +53,25 @@
 |#
 
 ;; for protocol version 5  
-;; (defclass content-kernel-info-reply (message-content)
-;;   ((protocol-version :initarg :protocol-version :type string)
-;;    (implementation :initarg :implementation :type string)
-;;    (implementation-version :initarg :implementation-version :type string)
-;;    (language :initarg :language :type string)
-;;    (language-version :initarg :language-version :type string)
-;;    (language-info-mimetype :initarg :language-info-mimetype :type string)
-;;    (language-info-pygments-lexer :initarg :language-info-pygments-lexer :type string)
-;;    (language-info-codemirror-mode :initarg :language-info-codemirror-mode :type string)
-;;    (banner :initarg :banner :type string)
-;;    ;; help links: (text . url) a-list
-;;    (help-links :initarg :help-links)))
+(defclass content-kernel-info-reply (message-content)
+  ((protocol-version :initarg :protocol-version :type string)
+   (implementation :initarg :implementation :type string)
+   (implementation-version :initarg :implementation-version :type string)
+   (language-info-name :initarg :language-info-name :type string)
+   (language-info-version :initarg :language-info-version :type string)
+   (language-info-mimetype :initarg :language-info-mimetype :type string)
+   (language-info-pygments-lexer :initarg :language-info-pygments-lexer :type string)
+   (language-info-codemirror-mode :initarg :language-info-codemirror-mode :type string)
+   (language-info-nbconvert-exporter :initarg :language-info-nbconvert-exporter :type string)
+   (banner :initarg :banner :type string)
+   ;; help links: (text . url) a-list
+   (help-links :initarg :help-links)))
 
 ;; for protocol version 4.1
-(defclass content-kernel-info-reply (message-content)
-  ((protocol-version :initarg :protocol-version)
-   (language-version :initarg :language-version)
-   (language :initarg :language :type string)))
+;;(defclass content-kernel-info-reply (message-content)
+;; ((protocol-version :initarg :protocol-version)
+;;   (language-version :initarg :language-version)
+;;   (language :initarg :language :type string)))
 
 (defun help-links-to-json (help-links)
   (concatenate 'string "["
@@ -77,71 +82,76 @@
 	       "]"))
 
 ;; for protocol version 5
-;; (defmethod encode-json (stream (object content-kernel-info-reply) &key (indent nil) (first-line nil))
-;;   (with-slots (protocol-version implementation implementation-version 
-;; 				language language-version language-info-mimetype
-;; 				language-info-pygments-lexer language-info-codemirror-mode
-;; 				banner help-links) object
-;;     (encode-json stream `(("protocol_version" . ,protocol-version)
-;;                           ("implementation" . ,implementation)
-;;                           ("implementation_version" . ,implementation-version)
-;;                           ("language" . ,language)
-;;                           ("language_version" . ,language-version)
-;;                           ("language_info" . (("mimetype" . ,language-info-mimetype)
-;;                                               ("pygments_lexer" . ,language-info-pygments-lexer)
-;;                                               ("codemirror_mode" . ,language-info-codemirror-mode)
-;;                                               ("banner" . ,banner)
-;;                                               ("help_links" . ,(help-links-to-json help-links)))))
-;;                  :indent indent :first-line first-line)))
-
-;; for protocol version 4.1
 (defmethod encode-json (stream (object content-kernel-info-reply) &key (indent nil) (first-line nil))
-  (with-slots (protocol-version ipython-version language-version language) object
+  (with-slots (protocol-version
+               implementation implementation-version
+               language-info-name language-info-version
+               language-info-mimetype language-info-pygments-lexer language-info-codemirror-mode
+               language-info-nbconvert-exporter
+               banner help-links) object
     (encode-json stream `(("protocol_version" . ,protocol-version)
-                          ("language_version" . ,language-version)
-                          ("language" . ,language))
+                          ("implementation" . ,implementation)
+                          ("implementation_version" . ,implementation-version)
+                          ("language_info" . (("name" . ,language-info-name)
+                                              ("version" . ,language-info-version)
+                                              ("mimetype" . ,language-info-mimetype)
+                                              ("pygments_lexer" . ,language-info-pygments-lexer)
+                                              ("codemirror_mode" . ,language-info-codemirror-mode)))
+                                              ;("nbconvert_exporter" . ,language-info-nbconvert-exporter)))
+                          ("banner" . "")) ; ,banner)
+                          ;("help_links" . ,help-links))
                  :indent indent :first-line first-line)))
 
-(defvar *status-starting-sent* nil)
+;; for protocol version 4.1
+;; (defmethod encode-json (stream (object content-kernel-info-reply) &key (indent nil) (first-line nil))
+;;   (with-slots (protocol-version ipython-version language-version language) object
+;;     (encode-json stream `(("protocol_version" . ,protocol-version)
+;;                           ("language_version" . ,language-version)
+;;                           ("language" . ,language))
+;;                  :indent indent :first-line first-line)))
 
-(defun handle-kernel-info-request (shell ids msg sig raw)
-  ;; (format t "[Shell] handling 'kernel-info-request'~%")
-  (when (not *status-starting-sent*)
-    (setf *status-starting-sent* t)
-    (send-status-update (kernel-iopub (shell-kernel shell)) msg sig "starting"))
+(defun handle-kernel-info-request (shell identities msg buffers)
+  ;;(format t "[Shell] handling 'kernel-info-request'~%")
+  ;; status to busy
+  (send-status-update (kernel-iopub (shell-kernel shell)) msg "busy")
   ;; for protocol version 5
-  ;; (let ((reply (make-message-from-parent msg "kernel_info_reply" nil 
-  ;; 					 (make-instance
-  ;; 					  'content-kernel-info-reply
-  ;; 					  :protocol-version (header-version (message-header msg))
-  ;; 					  :implementation +KERNEL-IMPLEMENTATION-NAME+
-  ;; 					  :implementation-version +KERNEL-IMPLEMENTATION-VERSION+
-  ;; 					  :language "common-lisp"
-  ;; 					  :language-version "X3J13"
-  ;; 					  :language-info-mimetype "text/x-common-lisp"
-  ;; 					  :language-info-pygments-lexer "common-lisp"
-  ;; 					  :language-info-codemirror-mode "text/x-common-lisp"
-  ;; 					  :banner (banner)
-  ;; 					  :help-links '(("Common Lisp Hyperspec" . "http://www.lispworks.com/documentation/HyperSpec/Front/index.htm"))))))
+  (let ((reply (make-message
+                msg "kernel_info_reply" nil 
+                (make-instance
+                 'content-kernel-info-reply
+                 :protocol-version (header-version (message-header msg))
+                 :implementation +KERNEL-IMPLEMENTATION-NAME+
+                 :implementation-version +KERNEL-IMPLEMENTATION-VERSION+
+                 :language-info-name "common-lisp"
+                 :language-info-version "X3J13"
+                 :language-info-mimetype "text/x-common-lisp"
+                 :language-info-pygments-lexer "common-lisp"
+                 :language-info-codemirror-mode "text/x-common-lisp"
+                 :language-info-nbconvert-exporter ""
+                 :banner (banner)
+                 :help-links (vector)))))
+		 ;;'(("Common Lisp Hyperspec" . "http://www.lispworks.com/documentation/HyperSpec/Front/index.htm"))))))
   ;; for protocol version 4.1
-  (let ((reply (make-message-from-parent msg "kernel_info_reply" nil 
-					 (make-instance
-					  'content-kernel-info-reply
-					  :protocol-version #(4 1)
-					  :language-version #(1 2 7)  ;; XXX: impl. dependent but really cares ?
-					  :language "common-lisp"))))
-    (message-send (shell-socket shell) reply :identities ids)))					      
+  ;; (let ((reply (make-message-from-parent msg "kernel_info_reply" nil 
+  ;;   				 (make-instance
+  ;;   				  'content-kernel-info-reply
+  ;;   				  :protocol-version #(4 1)
+  ;;   				  :language-version #(1 2 7)  ;; XXX: impl. dependent but really cares ?
+    ;;   				  :language "common-lisp"))))
+    (message-send (shell-socket shell) reply :identities identities)
+    ;; status back to idle
+    (send-status-update (kernel-iopub (shell-kernel shell)) msg "idle")))
 
 #|
 
 ### Message type: execute_request ###
 
 |#
-  
 
-(defun handle-execute-request (shell ids msg sig raw)
+
+(defun handle-execute-request (shell identities msg buffers)
   ;;(format t "[Shell] handling 'execute_request'~%")
-  (send-status-update (kernel-iopub (shell-kernel shell)) msg sig "busy")
+  (send-status-update (kernel-iopub (shell-kernel shell)) msg "busy")
   (let ((content (parse-json-from-string (message-content msg))))
     ;;(format t "  ==> Message content = ~W~%" content)
     (let ((code (afetch "code" content :test #'equal)))
@@ -153,31 +163,41 @@
         ;(format t "STDOUT = ~A~%" stdout)
         ;(format t "STDERR = ~A~%" stderr)
         ;; broadcast the code to connected frontends
-        (send-execute-code (kernel-iopub (shell-kernel shell)) msg sig execution-count code)
-	(when (and (consp results) (typep (car results) 'fishbowl-user::fishbowl-quit-obj))
+        (send-execute-code (kernel-iopub (shell-kernel shell)) msg execution-count code)
+	(when (and (consp results) (typep (car results) 'cl-jupyter-user::cl-jupyter-quit-obj))
 	  ;; ----- ** request for shutdown ** -----
-	  (let ((reply (make-message-from-parent msg "execute_reply" nil
-						 `(("status" . "abort")
-						   ("execution_count" . ,execution-count)
-						   ("payload" . ,(vector))))))
-	    (message-send (shell-socket shell) reply :identities ids))
+	  (let ((reply (make-message msg "execute_reply" nil
+				     `(("status" . "abort")
+				       ("execution_count" . ,execution-count)))))
+	    (message-send (shell-socket shell) reply :identities identities))
 	  (return-from handle-execute-request nil))
 	;; ----- ** normal request ** -----
         ;; send the stdout
         (when (and stdout (> (length stdout) 0))
-          (send-stream (kernel-iopub (shell-kernel shell)) msg sig "stdout" stdout))
+          (send-stream (kernel-iopub (shell-kernel shell)) msg "stdout" stdout))
         ;; send the stderr
         (when (and stderr (> (length stderr) 0))
-          (send-stream (kernel-iopub (shell-kernel shell)) msg sig "stderr" stderr))
+          (send-stream (kernel-iopub (shell-kernel shell)) msg "stderr" stderr))
 	;; send the first result
 	(send-execute-result (kernel-iopub (shell-kernel shell)) 
-			     msg sig execution-count (car results))
+			     msg execution-count (car results))
 	;; status back to idle
-	(send-status-update (kernel-iopub (shell-kernel shell)) msg sig "idle")
+	(send-status-update (kernel-iopub (shell-kernel shell)) msg "idle")
 	;; send reply (control)
-	(let ((reply (make-message-from-parent msg "execute_reply" nil
-					       `(("status" . "ok")
-						 ("execution_count" . ,execution-count)
-						 ("payload" . ,(vector))))))
-	  (message-send (shell-socket shell) reply :identities ids)
+	(let ((reply (make-message msg "execute_reply" nil
+				   `(("status" . "ok")
+				     ("execution_count" . ,execution-count)
+				     ("payload" . ,(vector))))))
+	  (message-send (shell-socket shell) reply :identities identities)
 	  t)))))
+
+#|
+     
+## Message content ##
+
+|#
+
+(defclass message-content ()
+  ()
+  (:documentation "The base class of message contents."))
+
