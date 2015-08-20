@@ -16,11 +16,7 @@
 })(function(CodeMirror) {
 "use strict";
 
-console.log ('HEY HEY WITHIN MAXIMA.JS #1 ...');
-
 CodeMirror.defineMode('maxima', function(_config, _parserConfig) {
-
-  console.log ('HEY HEY WITHIN MAXIMA.JS #2 ...');
 
   // used pattern building blocks
   var pIdentifier    = '(?:[a-zA-Z][a-zA-Z0-9]*)';
@@ -35,8 +31,6 @@ CodeMirror.defineMode('maxima', function(_config, _parserConfig) {
   var reFloat        = new RegExp ('(?:' + pFloatSansExpt + '|' + pFloatSansExpt + pFloatExpt + ')');
 
   function tokenBase(stream, state) {
-    console.log ('HEY HEY HEY WITHIN MAXIMA.JS #3 ...');
-
     var ch;
 
     // get next character
@@ -89,8 +83,6 @@ CodeMirror.defineMode('maxima', function(_config, _parserConfig) {
   }
 
   function tokenString(stream, state) {
-    console.log ('HEY HEY HEY WITHIN MAXIMA.JS #4 ...');
-
     var next, end = false, escaped = false;
     while ((next = stream.next()) != null) {
       if (next === '"' && !escaped) {
@@ -106,8 +98,6 @@ CodeMirror.defineMode('maxima', function(_config, _parserConfig) {
   };
 
   function tokenComment(stream, state) {
-    console.log ('HEY HEY HEY WITHIN MAXIMA.JS #5 ...');
-
     var prev, next;
     while(state.commentLevel > 0 && (next = stream.next()) != null) {
       if (prev === '/' && next === '*') state.commentLevel++;
