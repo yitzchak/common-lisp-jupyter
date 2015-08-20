@@ -20,7 +20,7 @@
 (defun get-argv ()
   ;; Borrowed from apply-argv, command-line-arguments.  Temporary solution (?)
   #+sbcl (cdr sb-ext:*posix-argv*)
-  #+clozure CCL:*UNPROCESSED-COMMAND-LINE-ARGUMENTS*  ;(ccl::command-line-arguments)
+  #+clozure (cdr ccl:*command-line-argument-list*)
   #+gcl si:*command-args*
   #+ecl (loop for i from 0 below (si:argc) collect (si:argv i))
   #+cmu extensions:*command-line-strings*
@@ -85,17 +85,20 @@
    (key :initarg :key :reader kernel-config-key :type string)))
 
 (defun kernel-start ()
+  ;; IS THERE OTHER STUFF HANDLED BY MAXIMA INIT-CL.LISP THAT WE NEED TO DUPLICATE HERE ??
+  (setq *read-default-float-format* 'double-float)
+
   (let ((cmd-args (get-argv)))
     ;(princ (banner))
     (write-line "")
-    (format t "~A: an enhanced interactive Common Lisp REPL~%" +KERNEL-IMPLEMENTATION-NAME+)
+    (format t "~A: an enhanced interactive Maxima REPL~%" +KERNEL-IMPLEMENTATION-NAME+)
     (format t "(Version ~A - Jupyter protocol v.~A)~%"
             +KERNEL-IMPLEMENTATION-VERSION+
             +KERNEL-PROTOCOL-VERSION+)
     (format t "--> (C) 2014-2015 Frederic Peschanski (cf. LICENSE)~%")
     (write-line "")
     (let ((connection-file-name  (car (last cmd-args))))
-      ;; (format t "connection file = ~A~%" connection-file-name)
+      (format t "connection file = ~A~%" connection-file-name)
       (unless (stringp connection-file-name)
         (error "Wrong connection file argument (expecting a string)"))
       (let ((config-alist (parse-json-from-string (concat-all 'string "" (read-file-lines connection-file-name)))))

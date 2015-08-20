@@ -65,11 +65,11 @@ Lisp printer. In most cases this is enough but specializations are
 
 
 (defmethod render-plain ((value t))
-  ;; Lisp printer by default
-  (format nil "~S" value))
+  (let ((maxima::$grind t))
+    (maxima::mfuncall 'maxima::$string value)))
 
-(example (render-plain '(1 2 3))
-			  => "(1 2 3)")
+(example (render-plain '((maxima::mlist) 1 2 3))
+			  => "[1,2,3]")
 
 
 (defgeneric render-html (value)
@@ -91,8 +91,9 @@ Lisp printer. In most cases this is enough but specializations are
   (:documentation "Render the VALUE as a LATEX document."))
 
 (defmethod render-latex ((value t))
-  ;; no rendering by default
-  nil)
+  ;; Render LaTeX only if it's not going to be rendered as SVG.
+  (if (not (and (consp value) (eq (caar value) 'maxima::%plot2d)))
+    (maxima::mfuncall 'maxima::$tex value nil)))
 
 (defgeneric render-png (value)
   (:documentation "Render the VALUE as a PNG image. The expected
@@ -114,8 +115,24 @@ Lisp printer. In most cases this is enough but specializations are
   (:documentation "Render the VALUE as a SVG image (XML format represented as a string)."))
 
 (defmethod render-svg ((value t))
-  ;; no rendering by default
-  nil)
+  (if (and (consp value) (eq (caar value) 'maxima::%plot2d))
+    (let ((svg-file-name (format nil "~A/~A.svg" maxima::$maxima_tempdir (symbol-name (gensym "maxima-fishbowl")))))
+      ;; MAYBE BIND THESE INSTEAD OF ASSIGNING ??
+      (maxima::$set_plot_option '((maxima::mlist) maxima::$plot_format maxima::$gnuplot))
+      (maxima::$set_plot_option `((maxima::mlist) maxima::$svg_file ,svg-file-name))
+      (let ((*package* (find-package :maxima))) (maxima::mapply1 (maxima::$verbify (caar value)) (cdr value) nil nil))
+      ;; substitute spaces for tabs in SVG file; otherwise tabs seem
+      ;; to cause JSON heartburn. I suspect, without much evidence,
+      ;; that this is a bug in some JSON library or the other.
+      ;; Possibly the same bug: https://github.com/JuliaLang/IJulia.jl/issues/200
+      (substitute #\space #\tab (file-slurp svg-file-name)))))
+
+;; nicked from: http://rosettacode.org/wiki/Read_entire_file#Common_Lisp
+(defun file-slurp (path)
+  (with-open-file (stream path)
+    (let ((data (make-string (file-length stream))))
+      (read-sequence data stream)
+      data)))
 
 (defgeneric render-json (value)
   (:documentation "Render the VALUE as a JSON document. This uses the MYJSON encoding

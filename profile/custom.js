@@ -51,30 +51,30 @@
 $([IPython.events]).on('notebook_loaded.Notebook', function(){
     // add here logic that should be run once per **notebook load**
     // alert(IPython.notebook.metadata.language)
-    IPython.notebook.metadata.language = 'common-lisp' ;
+    IPython.notebook.metadata.language = 'maxima' ;
 });
 $([IPython.events]).on('app_initialized.NotebookApp', function(){
     // add here logic that shoudl be run once per **page load**
 
-     $.getScript('/static/components/codemirror/mode/commonlisp/commonlisp.js');
+     $.getScript('/static/components/codemirror/mode/maxima/maxima.js');
 
-    CodeMirror.requireMode('common-lisp', function(){
-        console.log('Lisp mode should now be available in codemirror.');
+    CodeMirror.requireMode('maxima', function(){
+        console.log('Maxima mode should now be available in codemirror.');
     })
-   IPython.CodeCell.options_default['cm_config']['mode'] = 'commonlisp';
+   IPython.CodeCell.options_default['cm_config']['mode'] = 'maxima';
    IPython.CodeCell.options_default['cm_config']['indentUnit'] = 4;
 
    var cells = IPython.notebook.get_cells();
    for(var i in cells){
        var c = cells[i];
        if (c.cell_type === 'code') {
-            // Force the mode to be common lisp
+            // Force the mode to be Maxima
             // This is necessary, otherwise sometimes highlighting just doesn't happen.
             // This may be an IPython bug.
-            c.code_mirror.setOption('mode', 'commonlisp');
+            c.code_mirror.setOption('mode', 'maxima');
             c.auto_highlight()
         }
    }
 
 });
-document.title = document.title.replace('IPython', 'Fishbowl');
+document.title = document.title.replace('Jupyter', 'Maxima-Jupyter');

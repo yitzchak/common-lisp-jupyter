@@ -122,11 +122,11 @@
                  :protocol-version (header-version (message-header msg))
                  :implementation +KERNEL-IMPLEMENTATION-NAME+
                  :implementation-version +KERNEL-IMPLEMENTATION-VERSION+
-                 :language-info-name "common-lisp"
-                 :language-info-version "X3J13"
-                 :language-info-mimetype "text/x-common-lisp"
-                 :language-info-pygments-lexer "common-lisp"
-                 :language-info-codemirror-mode "text/x-common-lisp"
+                 :language-info-name "maxima"
+                 :language-info-version "circa-5.37"
+                 :language-info-mimetype "text/x-maxima"
+                 :language-info-pygments-lexer "maxima"
+                 :language-info-codemirror-mode "maxima"
                  :language-info-nbconvert-exporter ""
                  :banner (banner)
                  :help-links (vector)))))

@@ -39,10 +39,10 @@ The history of evaluations is also saved by the evaluator.
                (class-name (class-of err)) err))))
 
 (defun evaluate-code (evaluator code)
-  ;;(format t "[Evaluator] Code to evaluate: ~W~%" code)
+  (format t "[Evaluator] Code to evaluate: ~W; (TYPE-OF CODE)=>~S~%" code (type-of code))
   (vector-push code (evaluator-history-in evaluator))
   (let ((execution-count (length (evaluator-history-in evaluator))))
-    (let ((code-to-eval (read-from-string (format nil "~A" code))))
+    (let ((code-to-eval (let ((*package* (find-package :maxima))) (maxima::$parse_string (format nil "~A" code)))))
       (if (and (consp code-to-eval)
 	       (eql (car code-to-eval) 'quicklisp-client:quickload)
 	       (stringp (cadr code-to-eval)))
@@ -50,22 +50,23 @@ The history of evaluations is also saved by the evaluator.
 	  (let ((results (multiple-value-list (ql:quickload (cadr code-to-eval)))))
 	    (values execution-count results "" ""))
 	  ;; else "normal" evaluation
-	  ;;(format t "[Evaluator] Code to evaluate: ~W~%" code-to-eval)
-	  (let* ((stdout-str (make-array 0 :element-type 'character :fill-pointer 0 :adjustable t))
-		 (stderr-str (make-array 0 :element-type 'character :fill-pointer 0 :adjustable t)))
-	    (let ((results (with-output-to-string (stdout stdout-str)
-			     (with-output-to-string (stderr stderr-str)
-			       (let ((*standard-output* stdout)
-				     (*error-output* stderr))
-				 (handling-errors
-					;(if (and (consp code-to-eval)
-					;	(eql (car code-to-eval) 'quicklisp-client:quickload)
-					;	(stringp (cadr code-to-eval)))
-				  ;; quicklisp hook
-					;  (multiple-value-list (ql:quickload (cadr code-to-eval)))
-				  ;; normal evaluation
-				  (multiple-value-list (eval code-to-eval))))))));)
+	  (progn 
+        (format t "[Evaluator] Code to evaluate: ~W~%" code-to-eval)
+	    (let* ((stdout-str (make-array 0 :element-type 'character :fill-pointer 0 :adjustable t))
+		   (stderr-str (make-array 0 :element-type 'character :fill-pointer 0 :adjustable t)))
+	      (let ((results (with-output-to-string (stdout stdout-str)
+			       (with-output-to-string (stderr stderr-str)
+			         (let ((*standard-output* stdout)
+				       (*error-output* stderr))
+				   (handling-errors
+					  ;(if (and (consp code-to-eval)
+					  ;	(eql (car code-to-eval) 'quicklisp-client:quickload)
+					  ;	(stringp (cadr code-to-eval)))
+				    ;; quicklisp hook
+					  ;  (multiple-value-list (ql:quickload (cadr code-to-eval)))
+				    ;; normal evaluation
+				    (multiple-value-list (let ((*package* (find-package :maxima))) (maxima::meval code-to-eval)))))))));)
 	      ;;(format t "[Evaluator] : results = ~W~%" results)
 	      (vector-push results (evaluator-history-out evaluator))
-	      (values execution-count results stdout-str stderr-str)))))))
+	      (values execution-count results stdout-str stderr-str))))))))
 
