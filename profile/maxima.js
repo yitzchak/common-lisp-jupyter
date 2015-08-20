@@ -23,16 +23,16 @@ CodeMirror.defineMode('maxima', function(_config, _parserConfig) {
   console.log ('HEY HEY WITHIN MAXIMA.JS #2 ...');
 
   // used pattern building blocks
-  var Identifier = '[a-zA-Z\\$][a-zA-Z0-9\\$]*';
-  var pBase      = "(?:\\d+)";
-  var pFloat     = "(?:\\.\\d+|\\d+\\.\\d*|\\d+)";
-  var pFloatBase = "(?:\\.\\w+|\\w+\\.\\w*|\\w+)";
-  var pPrecision = "(?:`(?:`?"+pFloat+")?)";
+  var pIdentifier    = '(?:[a-zA-Z][a-zA-Z0-9]*)';
+  var pInteger       = "(?:\\d+|\\d+\\.|0\\[A-Za-z0-9]*)";
+  // overlap here with integers ... oh well, not too important to make them mutually exclusive
+  var pFloatSansExpt = "(?:\\d+|\\.\\d+|\\d+\\.\\d+)";
+  var pFloatExpt     = "(?:[DdEeSsLlFfBb][+-]*\\d+)";
 
   // regular expressions
-  var reBaseForm        = new RegExp('(?:'+pBase+'(?:\\^\\^'+pFloatBase+pPrecision+'?(?:\\*\\^[+-]?\\d+)?))');
-  var reFloatForm       = new RegExp('(?:' + pFloat + pPrecision + '?(?:\\*\\^[+-]?\\d+)?)');
-  var reIdInContext     = new RegExp('(?:`?)(?:' + Identifier + ')(?:`(?:' + Identifier + '))*(?:`?)');
+  var reIdentifier   = new RegExp (pIdentifier);
+  var reInteger      = new RegExp (pInteger);
+  var reFloat        = new RegExp ('(?:' + pFloatSansExpt + '|' + pFloatSansExpt + pFloatExpt + ')');
 
   function tokenBase(stream, state) {
     console.log ('HEY HEY HEY WITHIN MAXIMA.JS #3 ...');
@@ -61,8 +61,11 @@ CodeMirror.defineMode('maxima', function(_config, _parserConfig) {
     stream.backUp(1);
 
     // look for numbers
-    // Numbers in a baseform
-    if (stream.match(reBaseForm, true, false)) {
+    if (stream.match(reInteger, true, false)) {
+      return 'number';
+    }
+
+    if (stream.match(reFloat, true, false)) {
       return 'number';
     }
 
@@ -72,7 +75,7 @@ CodeMirror.defineMode('maxima', function(_config, _parserConfig) {
     }
 
     // Literals like variables, keywords, functions
-    if (stream.match(reIdInContext, true, false)) {
+    if (stream.match(reIdentifier, true, false)) {
       return 'keyword';
     }
 
@@ -128,7 +131,7 @@ CodeMirror.defineMode('maxima', function(_config, _parserConfig) {
   };
 });
 
-CodeMirror.defineMIME('text/plain', {
+CodeMirror.defineMIME('text/x-maxima', {
   name: 'maxima'
 });
 
