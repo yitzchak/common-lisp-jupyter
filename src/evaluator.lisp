@@ -27,22 +27,26 @@ The history of evaluations is also saved by the evaluator.
 
 ;;; macro taken from: http://www.cliki.net/REPL
 (defmacro handling-errors (&body body)
-  `(handler-case (progn ,@body)
-     (simple-condition (err) 
-       (format *error-output* "~&~A: ~%" (class-name (class-of err)))
-       (apply (function format) *error-output*
-              (simple-condition-format-control   err)
-              (simple-condition-format-arguments err))
-       (format *error-output* "~&"))
-     (condition (err) 
-       (format *error-output* "~&~A: ~%  ~S~%"
-               (class-name (class-of err)) err))))
+  `(catch 'maxima::return-from-debugger
+    (handler-case (progn ,@body)
+       (simple-condition (err) 
+         (format *error-output* "~&~A: ~%" (class-name (class-of err)))
+         (apply (function format) *error-output*
+                (simple-condition-format-control   err)
+                (simple-condition-format-arguments err))
+         (format *error-output* "~&"))
+       (condition (err) 
+         (format *error-output* "~&~A: ~%  ~S~%"
+                 (class-name (class-of err)) err)))))
 
 (defun evaluate-code (evaluator code)
   (format t "[Evaluator] Code to evaluate: ~W; (TYPE-OF CODE)=>~S~%" code (type-of code))
   (vector-push code (evaluator-history-in evaluator))
   (let ((execution-count (length (evaluator-history-in evaluator))))
-    (let ((code-to-eval (let ((*package* (find-package :maxima))) (maxima::$parse_string (format nil "~A" code)))))
+    (let ((code-to-eval
+            (handling-errors
+              (let ((*package* (find-package :maxima)))
+                (maxima::$parse_string (format nil "~A" code))))))
       (if (and (consp code-to-eval)
 	       (eql (car code-to-eval) 'quicklisp-client:quickload)
 	       (stringp (cadr code-to-eval)))
