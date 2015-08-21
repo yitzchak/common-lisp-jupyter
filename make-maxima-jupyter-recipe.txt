@@ -1,4 +1,5 @@
-$ sh maxima-local -l ccl
-(%i1) parse_string ("1");
-(%i2) :lisp (load "/home/robert/playpen/github/fishbowl-repl/load-cl-jupyter.lisp")
+# this recipe is for Clozure CL; something similar for SBCL should be possible
+$ maxima -l ccl
+(%i1) parse_string ("1"); /* causes parse_string to be loaded */
+(%i2) :lisp (load "path/to/load-cl-jupyter.lisp")
 (%i2) :lisp (ccl:save-application "binary/binary-openmcl/maxima-jupyter" :toplevel-function 'cl-jupyter:kernel-start :prepend-kernel t)
