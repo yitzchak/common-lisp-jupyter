@@ -37,7 +37,7 @@ A `diplay-object` instance associates a Lisp `value` to some
   ((value :initarg :value :reader display-object-value)
    (data :initarg :data :reader display-object-data))
   (:documentation "The class of DISPLAY-OBJECTs, i.e. objets supposed
-to be displayed by the Fishbowl/IPython frontend."))
+to be displayed by the Jupyter frontend."))
 
 #|
 
@@ -116,7 +116,7 @@ Lisp printer. In most cases this is enough but specializations are
 
 (defmethod render-svg ((value t))
   (if (and (consp value) (eq (caar value) 'maxima::%plot2d))
-    (let ((svg-file-name (format nil "~A/~A.svg" maxima::$maxima_tempdir (symbol-name (gensym "maxima-fishbowl")))))
+    (let ((svg-file-name (format nil "~A/~A.svg" maxima::$maxima_tempdir (symbol-name (gensym "maxima-jupyter")))))
       ;; MAYBE BIND THESE INSTEAD OF ASSIGNING ??
       (maxima::$set_plot_option '((maxima::mlist) maxima::$plot_format maxima::$gnuplot))
       (maxima::$set_plot_option `((maxima::mlist) maxima::$svg_file ,svg-file-name))
