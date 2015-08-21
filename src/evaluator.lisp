@@ -69,7 +69,9 @@ The history of evaluations is also saved by the evaluator.
 				    ;; quicklisp hook
 					  ;  (multiple-value-list (ql:quickload (cadr code-to-eval)))
 				    ;; normal evaluation
-				    (multiple-value-list (let ((*package* (find-package :maxima))) (maxima::meval code-to-eval)))))))));)
+				    (multiple-value-list
+				      (let ((*package* (find-package :maxima)))
+				        (setq maxima::$% (maxima::meval code-to-eval))))))))));)
 	      ;;(format t "[Evaluator] : results = ~W~%" results)
 	      (vector-push results (evaluator-history-out evaluator))
 	      (values execution-count results stdout-str stderr-str))))))))
