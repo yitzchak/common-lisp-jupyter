@@ -1,0 +1,10 @@
+--- /usr/local/lib/python3.4/dist-packages/pygments/lexers/_mapping.py-original	2015-08-09 17:20:01.388994934 -0700
++++ /usr/local/lib/python3.4/dist-packages/pygments/lexers/_mapping.py	2015-08-09 17:22:04.477605297 -0700
+@@ -217,6 +217,7 @@
+     'MathematicaLexer': ('pygments.lexers.algebra', 'Mathematica', ('mathematica', 'mma', 'nb'), ('*.nb', '*.cdf', '*.nbp', '*.ma'), ('application/mathematica', 'application/vnd.wolfram.mathematica', 'application/vnd.wolfram.mathematica.package', 'application/vnd.wolfram.cdf')),
+     'MatlabLexer': ('pygments.lexers.matlab', 'Matlab', ('matlab',), ('*.m',), ('text/matlab',)),
+     'MatlabSessionLexer': ('pygments.lexers.matlab', 'Matlab session', ('matlabsession',), (), ()),
++    'MaximaLexer': ('pygments.lexers.maxima_lexer', 'Maxima', ('maxima', 'macsyma'), ('*.mac', '*.max'), ()),
+     'MiniDLexer': ('pygments.lexers.d', 'MiniD', ('minid',), (), ('text/x-minidsrc',)),
+     'ModelicaLexer': ('pygments.lexers.modeling', 'Modelica', ('modelica',), ('*.mo',), ('text/x-modelica',)),
+     'Modula2Lexer': ('pygments.lexers.pascal', 'Modula-2', ('modula2', 'm2'), ('*.def', '*.mod'), ('text/x-modula2',)),

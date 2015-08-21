@@ -1,0 +1,10 @@
+--- /usr/local/lib/python3.4/dist-packages/notebook/static/components/codemirror/mode/meta.js-original	2015-08-19 12:49:59.526000839 -0700
++++ /usr/local/lib/python3.4/dist-packages/notebook/static/components/codemirror/mode/meta.js	2015-08-20 12:12:58.073384504 -0700
+@@ -77,6 +77,7 @@
+     {name: "mIRC", mime: "text/mirc", mode: "mirc"},
+     {name: "MariaDB SQL", mime: "text/x-mariadb", mode: "sql"},
+     {name: "Mathematica", mime: "text/x-mathematica", mode: "mathematica", ext: ["m", "nb"]},
++    {name: "Maxima", mime: "text/x-maxima", mode: "maxima", ext: ["mac", "max"]},
+     {name: "Modelica", mime: "text/x-modelica", mode: "modelica", ext: ["mo"]},
+     {name: "MUMPS", mime: "text/x-mumps", mode: "mumps"},
+     {name: "MS SQL", mime: "text/x-mssql", mode: "sql"},
