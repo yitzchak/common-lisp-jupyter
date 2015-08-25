@@ -16,6 +16,7 @@
 	       (:file "config")
                (:file "message")
                (:file "shell")
+               (:file "stdin")
 	       (:file "iopub")
 	       (:file "display")
 	       (:file "evaluator")

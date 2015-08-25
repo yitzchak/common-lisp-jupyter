@@ -148,13 +148,19 @@
 
 |#
 
+;; probably should make this a lexical symbol ...
+(defparameter *execute-request-shell* nil)
+(defparameter *execute-request-msg* nil)
 
 (defun handle-execute-request (shell identities msg buffers)
   ;;(format t "[Shell] handling 'execute_request'~%")
   (send-status-update (kernel-iopub (shell-kernel shell)) msg "busy")
   (let ((content (parse-json-from-string (message-content msg))))
     ;;(format t "  ==> Message content = ~W~%" content)
-    (let ((code (afetch "code" content :test #'equal)))
+    (let
+      ((code (afetch "code" content :test #'equal))
+       (*execute-request-shell* shell)
+       (*execute-request-msg* msg))
       ;;(format t "  ===> Code to execute = ~W~%" code)
       (vbinds (execution-count results stdout stderr)
           (evaluate-code (kernel-evaluator (shell-kernel shell)) code)
