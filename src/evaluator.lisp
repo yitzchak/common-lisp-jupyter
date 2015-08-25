@@ -11,6 +11,7 @@ The history of evaluations is also saved by the evaluator.
 
 |#
 
+(defparameter maxima::$debug_evaluator nil)
 
 (defclass evaluator ()
   ((kernel :initarg :kernel :reader evaluator-kernel)
@@ -40,7 +41,9 @@ The history of evaluations is also saved by the evaluator.
                  (class-name (class-of err)) err)))))
 
 (defun evaluate-code (evaluator code)
-  (format t "[Evaluator] Code to evaluate: ~W; (TYPE-OF CODE)=>~S~%" code (type-of code))
+  (when maxima::$debug_evaluator
+    (format t "[Evaluator] unparsed input: ~W~%" code)
+    (terpri))
   (vector-push code (evaluator-history-in evaluator))
   (let ((execution-count (length (evaluator-history-in evaluator))))
     (let ((code-to-eval
@@ -55,7 +58,9 @@ The history of evaluations is also saved by the evaluator.
 	    (values execution-count results "" ""))
 	  ;; else "normal" evaluation
 	  (progn 
-        (format t "[Evaluator] Code to evaluate: ~W~%" code-to-eval)
+        (when maxima::$debug_evaluator
+          (format t "[Evaluator] parsed expression to evaluate: ~W~%" code-to-eval)
+          (terpri))
 	    (let* ((stdout-str (make-array 0 :element-type 'character :fill-pointer 0 :adjustable t))
 		   (stderr-str (make-array 0 :element-type 'character :fill-pointer 0 :adjustable t)))
 	      (let ((results (with-output-to-string (stdout stdout-str)
@@ -72,7 +77,9 @@ The history of evaluations is also saved by the evaluator.
 				    (multiple-value-list
 				      (let ((*package* (find-package :maxima)))
 				        (setq maxima::$% (maxima::meval code-to-eval))))))))));)
-	      ;;(format t "[Evaluator] : results = ~W~%" results)
+	      (when maxima::$debug_evaluator
+            (format t "[Evaluator] evaluated result: ~W~%" results)
+            (terpri))
 	      (vector-push results (evaluator-history-out evaluator))
 	      (values execution-count results stdout-str stderr-str))))))))
 
