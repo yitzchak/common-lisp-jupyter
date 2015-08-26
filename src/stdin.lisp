@@ -2,7 +2,7 @@
 
 #|
 
-# The stdin router socket #
+# The stdin dealer socket #
 
 See: http://jupyter-client.readthedocs.org/en/latest/messaging.html#messages-on-the-stdin-router-dealer-sockets
 
@@ -13,7 +13,7 @@ See: http://jupyter-client.readthedocs.org/en/latest/messaging.html#messages-on-
    (socket :initarg :socket :initform nil :accessor stdin-socket)))
 
 (defun make-stdin-channel (kernel)
-  (let ((socket (pzmq:socket (kernel-ctx kernel) :router)))
+  (let ((socket (pzmq:socket (kernel-ctx kernel) :dealer)))
     (let ((stdin (make-instance 'stdin-channel
                                 :kernel kernel
                                 :socket socket)))
