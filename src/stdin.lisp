@@ -59,9 +59,7 @@ See: http://jupyter-client.readthedocs.org/en/latest/messaging.html#messages-on-
 )
 
 (defun send-input-request (stdin parent-msg prompt)
-  (format t "HEY SEND-INPUT-REQUEST, STDIN=~S, PARENT-MSG=~S, PROMPT=~S~%" stdin parent-msg prompt)
   (let ((message (make-message parent-msg "input_request" nil `(("prompt" . ,prompt)))))
-    (format t "HEY SEND-INPUT-REQUEST, CONTENT TO SEND=~W~%" (encode-json-to-string (message-content message)))
     (message-send (stdin-socket stdin) message :identities '("input_request"))))
 
 ;; Redefine RETRIEVE in src/macsys.lisp to make use of input-request/input-reply.
@@ -85,13 +83,9 @@ See: http://jupyter-client.readthedocs.org/en/latest/messaging.html#messages-on-
           (format nil "~{~A~}" (cdr maxima::msg)))
          (t
           (maxima::aformat nil "~M" maxima::msg)))))
-    (format t "HEY RETRIEVE, RETRIEVE-PROMPT=~S~%" retrieve-prompt)
     (let ((kernel (shell-kernel *execute-request-shell*)))
-      (format t "HEY RETRIEVE, KERNEL=~S~%" kernel)
       (let ((stdin (kernel-stdin kernel)))
-        (format t "HEY RETRIEVE, STDIN=~S~%" stdin)
-        (send-input-request stdin *execute-request-msg* retrieve-prompt)))
-    )
+        (send-input-request stdin *execute-request-msg* retrieve-prompt))))
   ;; !! (let ((reply (receive-input-reply)))
     ;; !! (format t "HEY MAXIMA::RETRIEVE, RECEIVED INPUT-REPLY=~S~%" reply)
     ;; !! (input-reply-value reply))
