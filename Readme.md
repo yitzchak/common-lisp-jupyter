@@ -92,6 +92,8 @@ formulas, and plots). To execute the notebook server:
 
 The file [MaximaJupyterExample.ipynb](http://nbviewer.ipython.org/github/robert-dodier/maxima-jupyter/blob/master/MaximaJupyterExample.ipynb) is an example of a Maxima-Jupyter notebook.
 
+[MaximaJupyterTalk.ipynb](http://nbviewer.ipython.org/github/robert-dodier/maxima-jupyter/blob/master/MaximaJupyterTalk.ipynb) are my notes for a talk given to the Portland Python User Group.
+
 Note that the Github notebook renderer is currently (August 2015) broken ([bug report here](https://github.com/jupyter/nbviewer/issues/452)); it renders all math formulas in a tiny font.
 
 ----
