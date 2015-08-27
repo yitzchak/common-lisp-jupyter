@@ -90,7 +90,7 @@ formulas, and plots). To execute the notebook server:
 
     jupyter notebook --Session.key="b''"
 
-The file `MaximaJupyterExample.ipynb` is an example of a Maxima-Jupyter notebook.
+The file [MaximaJupyterExample.ipynb](http://nbviewer.ipython.org/github/robert-dodier/maxima-jupyter/blob/master/MaximaJupyterExample.ipynb) is an example of a Maxima-Jupyter notebook.
 
 Note that the Github notebook renderer is currently (August 2015) broken ([bug report here](https://github.com/jupyter/nbviewer/issues/452)); it renders all math formulas in a tiny font.
 
