@@ -93,7 +93,11 @@ Lisp printer. In most cases this is enough but specializations are
 (defmethod render-latex ((value t))
   ;; Render LaTeX only if it's not going to be rendered as SVG.
   (if (not (and (consp value) (eq (caar value) 'maxima::%plot2d)))
-    (maxima::mfuncall 'maxima::$tex value nil)))
+    (let ((s (maxima::mfuncall 'maxima::$tex value nil)))
+      ;; Trailing newline causes trouble for nbconvert --
+      ;; equations in the generated TeX document have empty lines
+      ;; which causes latex errors.
+      (maxima::$strimr (coerce '(#\newline #\return #\linefeed) 'string) s))))
 
 (defgeneric render-png (value)
   (:documentation "Render the VALUE as a PNG image. The expected
