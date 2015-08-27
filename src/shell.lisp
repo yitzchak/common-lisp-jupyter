@@ -148,54 +148,81 @@
 
 |#
 
-;; probably should make this a lexical symbol ...
-(defparameter *execute-request-shell* nil)
-(defparameter *execute-request-msg* nil)
+(let (execute-request-shell execute-request-msg)
 
-(defun handle-execute-request (shell identities msg buffers)
-  ;;(format t "[Shell] handling 'execute_request'~%")
-  (send-status-update (kernel-iopub (shell-kernel shell)) msg "busy")
-  (let ((content (parse-json-from-string (message-content msg))))
-    ;;(format t "  ==> Message content = ~W~%" content)
+  (defun handle-execute-request (shell identities msg buffers)
+    ;;(format t "[Shell] handling 'execute_request'~%")
+    (send-status-update (kernel-iopub (shell-kernel shell)) msg "busy")
+    (let ((content (parse-json-from-string (message-content msg))))
+      ;;(format t "  ==> Message content = ~W~%" content)
+      (let ((code (afetch "code" content :test #'equal)))
+        (setq execute-request-shell shell)
+        (setq execute-request-msg msg)
+        ;;(format t "  ===> Code to execute = ~W~%" code)
+        (vbinds (execution-count results stdout stderr)
+            (evaluate-code (kernel-evaluator (shell-kernel shell)) code)
+          ;(format t "Execution count = ~A~%" execution-count)
+          ;(format t "results = ~A~%" results)
+          ;(format t "STDOUT = ~A~%" stdout)
+          ;(format t "STDERR = ~A~%" stderr)
+          ;; broadcast the code to connected frontends
+          (send-execute-code (kernel-iopub (shell-kernel shell)) msg execution-count code)
+  	(when (and (consp results) (typep (car results) 'cl-jupyter-user::cl-jupyter-quit-obj))
+  	  ;; ----- ** request for shutdown ** -----
+  	  (let ((reply (make-message msg "execute_reply" nil
+  				     `(("status" . "abort")
+  				       ("execution_count" . ,execution-count)))))
+  	    (message-send (shell-socket shell) reply :identities identities))
+  	  (return-from handle-execute-request nil))
+  	;; ----- ** normal request ** -----
+          ;; send the stdout
+          (when (and stdout (> (length stdout) 0))
+            (send-stream (kernel-iopub (shell-kernel shell)) msg "stdout" stdout))
+          ;; send the stderr
+          (when (and stderr (> (length stderr) 0))
+            (send-stream (kernel-iopub (shell-kernel shell)) msg "stderr" stderr))
+  	;; send the first result
+  	(send-execute-result (kernel-iopub (shell-kernel shell)) 
+  			     msg execution-count (car results))
+  	;; status back to idle
+  	(send-status-update (kernel-iopub (shell-kernel shell)) msg "idle")
+  	;; send reply (control)
+  	(let ((reply (make-message msg "execute_reply" nil
+  				   `(("status" . "ok")
+  				     ("execution_count" . ,execution-count)
+  				     ("payload" . ,(vector))))))
+  	  (message-send (shell-socket shell) reply :identities identities)
+  	  t)))))
+
+  ;; Redefine RETRIEVE in src/macsys.lisp to make use of input-request/input-reply.
+  ;; MSG, FLAG, and PRINT? are declared special there, so be careful to
+  ;; refer to those symbols in the :maxima package.
+  
+  (defun maxima::retrieve (maxima::msg maxima::flag &aux (maxima::print? nil))
+    (declare (special maxima::msg maxima::flag maxima::print?))
+    (or (eq maxima::flag 'maxima::noprint) (setq maxima::print? t))
     (let
-      ((code (afetch "code" content :test #'equal))
-       (*execute-request-shell* shell)
-       (*execute-request-msg* msg))
-      ;;(format t "  ===> Code to execute = ~W~%" code)
-      (vbinds (execution-count results stdout stderr)
-          (evaluate-code (kernel-evaluator (shell-kernel shell)) code)
-        ;(format t "Execution count = ~A~%" execution-count)
-        ;(format t "results = ~A~%" results)
-        ;(format t "STDOUT = ~A~%" stdout)
-        ;(format t "STDERR = ~A~%" stderr)
-        ;; broadcast the code to connected frontends
-        (send-execute-code (kernel-iopub (shell-kernel shell)) msg execution-count code)
-	(when (and (consp results) (typep (car results) 'cl-jupyter-user::cl-jupyter-quit-obj))
-	  ;; ----- ** request for shutdown ** -----
-	  (let ((reply (make-message msg "execute_reply" nil
-				     `(("status" . "abort")
-				       ("execution_count" . ,execution-count)))))
-	    (message-send (shell-socket shell) reply :identities identities))
-	  (return-from handle-execute-request nil))
-	;; ----- ** normal request ** -----
-        ;; send the stdout
-        (when (and stdout (> (length stdout) 0))
-          (send-stream (kernel-iopub (shell-kernel shell)) msg "stdout" stdout))
-        ;; send the stderr
-        (when (and stderr (> (length stderr) 0))
-          (send-stream (kernel-iopub (shell-kernel shell)) msg "stderr" stderr))
-	;; send the first result
-	(send-execute-result (kernel-iopub (shell-kernel shell)) 
-			     msg execution-count (car results))
-	;; status back to idle
-	(send-status-update (kernel-iopub (shell-kernel shell)) msg "idle")
-	;; send reply (control)
-	(let ((reply (make-message msg "execute_reply" nil
-				   `(("status" . "ok")
-				     ("execution_count" . ,execution-count)
-				     ("payload" . ,(vector))))))
-	  (message-send (shell-socket shell) reply :identities identities)
-	  t)))))
+      ((retrieve-prompt
+         (cond
+           ((not maxima::print?)
+            (setq maxima::print? t)
+            (format nil ""))
+           ((null maxima::msg)
+            (format nil ""))
+           ((atom maxima::msg)
+            (format nil "~A" maxima::msg))
+           ((eq maxima::flag t)
+            (format nil "~{~A~}" (cdr maxima::msg)))
+           (t
+            (maxima::aformat nil "~M" maxima::msg)))))
+      (let ((kernel (shell-kernel execute-request-shell)))
+        (let ((stdin (kernel-stdin kernel)))
+          (send-input-request stdin execute-request-msg retrieve-prompt)
+          (multiple-value-bind (identities signature message buffers) (message-recv (stdin-socket stdin))
+            (let*
+              ((content (parse-json-from-string (message-content message)))
+               (value (afetch "value" content :test #'equal)))
+              (maxima::$parse_string value))))))))
 
 #|
      

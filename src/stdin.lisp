@@ -62,32 +62,3 @@ See: http://jupyter-client.readthedocs.org/en/latest/messaging.html#messages-on-
   (let ((message (make-message parent-msg "input_request" nil `(("prompt" . ,prompt)))))
     (message-send (stdin-socket stdin) message :identities '("input_request"))))
 
-;; Redefine RETRIEVE in src/macsys.lisp to make use of input-request/input-reply.
-;; MSG, FLAG, and PRINT? are declared special there, so be careful to
-;; refer to those symbols in the :maxima package.
-
-(defun maxima::retrieve (maxima::msg maxima::flag &aux (maxima::print? nil))
-  (declare (special maxima::msg maxima::flag maxima::print?))
-  (or (eq maxima::flag 'maxima::noprint) (setq maxima::print? t))
-  (let
-    ((retrieve-prompt
-       (cond
-         ((not maxima::print?)
-          (setq maxima::print? t)
-          (format nil ""))
-         ((null maxima::msg)
-          (format nil ""))
-         ((atom maxima::msg)
-          (format nil "~A" maxima::msg))
-         ((eq maxima::flag t)
-          (format nil "~{~A~}" (cdr maxima::msg)))
-         (t
-          (maxima::aformat nil "~M" maxima::msg)))))
-    (let ((kernel (shell-kernel *execute-request-shell*)))
-      (let ((stdin (kernel-stdin kernel)))
-        (send-input-request stdin *execute-request-msg* retrieve-prompt)
-        (multiple-value-bind (identities signature message buffers) (message-recv (stdin-socket stdin))
-          (let*
-            ((content (parse-json-from-string (message-content message)))
-             (value (afetch "value" content :test #'equal)))
-            (maxima::$parse_string value)))))))
