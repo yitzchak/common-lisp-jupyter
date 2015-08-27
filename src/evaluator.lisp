@@ -76,7 +76,7 @@ The history of evaluations is also saved by the evaluator.
 				    ;; normal evaluation
 				    (multiple-value-list
 				      (let ((*package* (find-package :maxima)))
-				        (setq maxima::$% (maxima::meval code-to-eval))))))))));)
+				        (setq maxima::$% (maxima::meval* code-to-eval))))))))));)
 	      (when maxima::$debug_evaluator
             (format t "[Evaluator] evaluated result: ~W~%" results)
             (terpri))
