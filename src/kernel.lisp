@@ -1,7 +1,7 @@
 (in-package #:cl-jupyter)
 
 (defclass kernel ()
-  ((config :initarg :config :reader kerner-config)
+  ((config :initarg :config :reader kernel-config)
    (ctx :initarg :ctx :reader kernel-ctx)
    (shell :initarg :shell :initform nil :reader kernel-shell)
    (stdin :initarg :stdin :initform nil :reader kernel-stdin)
@@ -82,8 +82,8 @@
    (iopub-port :initarg :iopub-port :reader config-iopub-port :type fixnum)
    (control-port :initarg :control-port :reader config-control-port :type fixnum)
    (hb-port :initarg :hb-port :reader config-hb-port :type fixnum)
-   (signature-scheme :initarg :signature-scheme :reader kernel-config-signature-scheme :type string)
-   (key :initarg :key :reader kernel-config-key :type string)))
+   (signature-scheme :initarg :signature-scheme :reader config-signature-scheme :type string)
+   (key :initarg :key :reader kernel-config-key)))
 
 (defun kernel-start ()
   ;; IS THERE OTHER STUFF HANDLED BY MAXIMA INIT-CL.LISP THAT WE NEED TO DUPLICATE HERE ??
@@ -103,7 +103,7 @@
       (unless (stringp connection-file-name)
         (error "Wrong connection file argument (expecting a string)"))
       (let ((config-alist (parse-json-from-string (concat-all 'string "" (read-file-lines connection-file-name)))))
-        ;; (format t "kernel configuration = ~A~%" config-alist)
+        ;;dsoares (format t "kernel configuration = ~A~%" config-alist)
         (let ((config
                (make-instance 'kernel-config
                               :transport (afetch "transport" config-alist :test #'equal)
@@ -114,10 +114,13 @@
                               :control-port (afetch "control_port" config-alist :test #'equal)
                               :hb-port (afetch "hb_port" config-alist :test #'equal)
                               :signature-scheme (afetch "signature_scheme" config-alist :test #'equal)
-                              :key (afetch "key" config-alist :test #'equal))))
-          (when (not (string= (kernel-config-key config) ""))
-            ;; TODO: add support for encryption
-            (error "Secure connection not yet supported: please use an empty encryption key"))
+                              :key (let ((str-key (afetch "key" config-alist :test #'equal)))
+                                     (if (string= str-key "")
+                                         nil
+                                         (babel:string-to-octets str-key :encoding :ASCII))))))
+          (when (not (string= (config-signature-scheme config) "hmac-sha256"))
+            ;; XXX: only hmac-sha256 supported
+            (error "Kernel only support signature scheme 'hmac-sha256' (provided ~S)" (config-signature-scheme config)))
           ;;(inspect config)
           (let* ((kernel (make-kernel config))
                  (evaluator (make-evaluator kernel))
