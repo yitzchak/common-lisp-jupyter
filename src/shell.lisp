@@ -220,8 +220,6 @@
             (maxima::aformat nil "~M" maxima::msg)))))
       (let ((kernel (shell-kernel execute-request-shell)))
         (let ((stdin (kernel-stdin kernel)))
-	  ;; dsoares
-          ;;(send-input-request stdin execute-request-msg retrieve-prompt)
 	  (send-input-request stdin execute-request-msg retrieve-prompt :key (kernel-key shell))
           (multiple-value-bind (identities signature message buffers) (message-recv (stdin-socket stdin))
             (let*

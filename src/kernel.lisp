@@ -103,7 +103,7 @@
       (unless (stringp connection-file-name)
         (error "Wrong connection file argument (expecting a string)"))
       (let ((config-alist (parse-json-from-string (concat-all 'string "" (read-file-lines connection-file-name)))))
-        ;;dsoares (format t "kernel configuration = ~A~%" config-alist)
+        ;;(format t "kernel configuration = ~A~%" config-alist)
         (let ((config
                (make-instance 'kernel-config
                               :transport (afetch "transport" config-alist :test #'equal)

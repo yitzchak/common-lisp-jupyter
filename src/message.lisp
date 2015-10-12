@@ -268,7 +268,6 @@ The wire-deserialization part follows.
 (defun message-send (socket msg &key (identities nil) (key nil))
   (let ((wire-parts (wire-serialize msg :identities identities :key key)))
     ;;(format t "~%[Send] wire parts: ~W~%" wire-parts)
-    ;;dsoares e o resto do codigo?!?!? esta muito diferente aqui
     (dolist (part wire-parts)
       (when (< (pzmq:send socket part :sndmore t) 0)
         (format *error-output* "CL-JUPYTER::MESSAGE-SEND: PZMQ:SEND failed with errno=~W~%" (pzmq:errno))
