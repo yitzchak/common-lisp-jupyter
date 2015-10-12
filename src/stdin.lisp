@@ -57,8 +57,7 @@ See: http://jupyter-client.readthedocs.org/en/latest/messaging.html#messages-on-
   ;; AT THIS POINT NEED TO HAND OFF VALUE TO ASKSIGN OR WHATEVER
   ;; CAUSED INPUT_REQUEST TO BE SENT !!
 )
-
-(defun send-input-request (stdin parent-msg prompt)
+(defun send-input-request (stdin parent-msg prompt &key (key nil))
   (let ((message (make-message parent-msg "input_request" nil `(("prompt" . ,prompt)))))
-    (message-send (stdin-socket stdin) message :identities '("input_request"))))
+    (message-send (stdin-socket stdin) message :identities '("input_request") :key key)))
 

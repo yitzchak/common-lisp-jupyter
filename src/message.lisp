@@ -37,11 +37,11 @@
                  :indent indent :first-line first-line)))
 
 (example-progn
-  (defparameter *header1* (make-instance 'header
-                                         :msg-id "XXX-YYY-ZZZ-TTT"
-                                         :username "fredokun"
-                                         :session "AAA-BBB-CCC-DDD"
-                                         :msg-type "execute_request")))
+ (defparameter *header1* (make-instance 'header
+					:msg-id "XXX-YYY-ZZZ-TTT"
+					:username "fredokun"
+					:session "AAA-BBB-CCC-DDD"
+					:msg-type "execute_request")))
 
 (example
  (encode-json-to-string *header1* :indent 0)
@@ -96,7 +96,7 @@ The deserialization of a message header from a JSon string is then trivial.
         nil)))
 
 (example-progn
-  (defparameter *header2* (wire-deserialize-header (encode-json-to-string *header1*))))
+ (defparameter *header2* (wire-deserialize-header (encode-json-to-string *header1*))))
 
 
 (example (header-username *header2*)
@@ -145,7 +145,7 @@ The deserialization of a message header from a JSon string is then trivial.
    :content content))
 
 (example-progn
-  (defparameter *msg1* (make-instance 'message :header *header1*)))
+ (defparameter *msg1* (make-instance 'message :header *header1*)))
 
 
 #|
@@ -156,27 +156,50 @@ The wire-serialization of IPython kernel messages uses multi-parts ZMQ messages.
 
 |#
 
-;; strange issue with defconstant...
+(defun octets-to-hex-string (bytes)
+  (apply #'concatenate (cons 'string (map 'list (lambda (x) (format nil "~(~2,'0X~)" x)) bytes))))
+
+(defun message-signing (key parts)
+  (let ((hmac (ironclad:make-hmac key :SHA256)))
+    ;; updates
+    (loop for part in parts
+       do (let ((part-bin (babel:string-to-octets part)))
+            (ironclad:update-hmac hmac part-bin)))
+    ;; digest
+    (octets-to-hex-string (ironclad:hmac-digest hmac))))
+
+(example
+ (message-signing (babel:string-to-octets "toto") '("titi" "tata" "tutu" "tonton"))
+ => "d32d091b5aabeb59b4291a8c5d70e0c20302a8bf9f642956b6affe5a16d9e134")
+
+;; XXX: should be a defconstant but  strings are not EQL-able...
 (defvar +WIRE-IDS-MSG-DELIMITER+ "<IDS|MSG>")
 
-(defmethod wire-serialize ((msg message) &key (identities nil))
+(defmethod wire-serialize ((msg message) &key (identities nil) (key nil))
   (with-slots (header parent-header metadata content) msg
-      (append identities
-              (list +WIRE-IDS-MSG-DELIMITER+
-                    "" ; TODO   HMAC signature
-                    (encode-json-to-string header)
-		    (if parent-header
-			(encode-json-to-string parent-header)
-			"{}")
-		    (if metadata
-			(encode-json-to-string metadata)
-			"{}")
-		    (if content
-			(encode-json-to-string content)
-			"{}")))))
+    (let ((header-json (encode-json-to-string header))
+          (parent-header-json (if parent-header
+                                  (encode-json-to-string parent-header)
+				"{}"))
+          (metadata-json (if metadata
+                             (encode-json-to-string metadata)
+                             "{}"))
+          (content-json (if content
+                            (encode-json-to-string content)
+                            "{}")))
+      (let ((sig (if key
+                     (message-signing key (list header-json parent-header-json metadata-json content-json))
+                     "")))
+        (append identities
+                (list +WIRE-IDS-MSG-DELIMITER+
+                      sig
+                      header-json
+                      parent-header-json
+                      metadata-json
+                      content-json))))))
 
 (example-progn
-  (defparameter *wire1* (wire-serialize *msg1* :identities '("XXX-YYY-ZZZ-TTT" "AAA-BBB-CCC-DDD"))))
+ (defparameter *wire1* (wire-serialize *msg1* :identities '("XXX-YYY-ZZZ-TTT" "AAA-BBB-CCC-DDD"))))
 
 
 #|
@@ -228,9 +251,9 @@ The wire-deserialization part follows.
 
 
 (example-progn
-  (defparameter *dewire-1* (multiple-value-bind (ids sig msg raw)
-                               (wire-deserialize *wire1*)
-                             (list ids sig msg raw))))
+ (defparameter *dewire-1* (multiple-value-bind (ids sig msg raw)
+			      (wire-deserialize *wire1*)
+			    (list ids sig msg raw))))
 
 (example
  (header-username (message-header (third *dewire-1*)))
@@ -242,8 +265,8 @@ The wire-deserialization part follows.
 
 |#
 
-(defun message-send (socket msg &key (identities nil))
-  (let ((wire-parts (wire-serialize msg :identities identities)))
+(defun message-send (socket msg &key (identities nil) (key nil))
+  (let ((wire-parts (wire-serialize msg :identities identities :key key)))
     ;;(format t "~%[Send] wire parts: ~W~%" wire-parts)
     (dolist (part wire-parts)
       (when (< (pzmq:send socket part :sndmore t) 0)

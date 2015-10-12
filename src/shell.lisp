@@ -28,7 +28,7 @@
 (defun shell-loop (shell)
   (let ((active t))
     (format t "[Shell] loop started~%")
-    (send-status-starting (kernel-iopub (shell-kernel shell)) (kernel-session (shell-kernel shell)))
+    (send-status-starting (kernel-iopub (shell-kernel shell)) (kernel-session (shell-kernel shell)) :key (kernel-key shell))
     (while active
       (vbinds (identities sig msg buffers)  (message-recv (shell-socket shell))
 	      ;;(format t "Shell Received:~%")
@@ -110,13 +110,16 @@
 ;;                           ("language" . ,language))
 ;;                  :indent indent :first-line first-line)))
 
+(defun kernel-key (shell)
+  (kernel-config-key (kernel-config (shell-kernel shell))))
+
 (defun handle-kernel-info-request (shell identities msg buffers)
   ;;(format t "[Shell] handling 'kernel-info-request'~%")
   ;; status to busy
-  (send-status-update (kernel-iopub (shell-kernel shell)) msg "busy")
+  (send-status-update (kernel-iopub (shell-kernel shell)) msg "busy" :key (kernel-key shell))
   ;; for protocol version 5
   (let ((reply (make-message
-                msg "kernel_info_reply" nil 
+                msg "kernel_info_reply" nil
                 (make-instance
                  'content-kernel-info-reply
                  :protocol-version (header-version (message-header msg))
@@ -138,9 +141,9 @@
   ;;   				  :protocol-version #(4 1)
   ;;   				  :language-version #(1 2 7)  ;; XXX: impl. dependent but really cares ?
     ;;   				  :language "common-lisp"))))
-    (message-send (shell-socket shell) reply :identities identities)
+    (message-send (shell-socket shell) reply :identities identities :key (kernel-key shell))
     ;; status back to idle
-    (send-status-update (kernel-iopub (shell-kernel shell)) msg "idle")))
+    (send-status-update (kernel-iopub (shell-kernel shell)) msg "idle" :key (kernel-key shell))))
 
 #|
 
@@ -152,7 +155,7 @@
 
   (defun handle-execute-request (shell identities msg buffers)
     ;;(format t "[Shell] handling 'execute_request'~%")
-    (send-status-update (kernel-iopub (shell-kernel shell)) msg "busy")
+    (send-status-update (kernel-iopub (shell-kernel shell)) msg "busy" :key (kernel-key shell))
     (let ((content (parse-json-from-string (message-content msg))))
       ;;(format t "  ==> Message content = ~W~%" content)
       (let ((code (afetch "code" content :test #'equal)))
@@ -166,32 +169,32 @@
           ;(format t "STDOUT = ~A~%" stdout)
           ;(format t "STDERR = ~A~%" stderr)
           ;; broadcast the code to connected frontends
-          (send-execute-code (kernel-iopub (shell-kernel shell)) msg execution-count code)
+	  (send-execute-code (kernel-iopub (shell-kernel shell)) msg execution-count code :key (kernel-key shell))
   	(when (and (consp results) (typep (car results) 'cl-jupyter-user::cl-jupyter-quit-obj))
   	  ;; ----- ** request for shutdown ** -----
   	  (let ((reply (make-message msg "execute_reply" nil
   				     `(("status" . "abort")
   				       ("execution_count" . ,execution-count)))))
-  	    (message-send (shell-socket shell) reply :identities identities))
+	    (message-send (shell-socket shell) reply :identities identities :key (kernel-key shell)))
   	  (return-from handle-execute-request nil))
   	;; ----- ** normal request ** -----
           ;; send the stdout
           (when (and stdout (> (length stdout) 0))
-            (send-stream (kernel-iopub (shell-kernel shell)) msg "stdout" stdout))
+	    (send-stream (kernel-iopub (shell-kernel shell)) msg "stdout" stdout :key (kernel-key shell)))
           ;; send the stderr
           (when (and stderr (> (length stderr) 0))
-            (send-stream (kernel-iopub (shell-kernel shell)) msg "stderr" stderr))
+	    (send-stream (kernel-iopub (shell-kernel shell)) msg "stderr" stderr :key (kernel-key shell)))
   	;; send the first result
   	(send-execute-result (kernel-iopub (shell-kernel shell)) 
-  			     msg execution-count (car results))
+			     msg execution-count (car results) :key (kernel-key shell))
   	;; status back to idle
-  	(send-status-update (kernel-iopub (shell-kernel shell)) msg "idle")
+	(send-status-update (kernel-iopub (shell-kernel shell)) msg "idle" :key (kernel-key shell))
   	;; send reply (control)
   	(let ((reply (make-message msg "execute_reply" nil
   				   `(("status" . "ok")
   				     ("execution_count" . ,execution-count)
   				     ("payload" . ,(vector))))))
-  	  (message-send (shell-socket shell) reply :identities identities)
+	  (message-send (shell-socket shell) reply :identities identities :key (kernel-key shell))
   	  t)))))
 
   ;; Redefine RETRIEVE in src/macsys.lisp to make use of input-request/input-reply.
@@ -217,7 +220,7 @@
             (maxima::aformat nil "~M" maxima::msg)))))
       (let ((kernel (shell-kernel execute-request-shell)))
         (let ((stdin (kernel-stdin kernel)))
-          (send-input-request stdin execute-request-msg retrieve-prompt)
+	  (send-input-request stdin execute-request-msg retrieve-prompt :key (kernel-key shell))
           (multiple-value-bind (identities signature message buffers) (message-recv (stdin-socket stdin))
             (let*
               ((content (parse-json-from-string (message-content message)))
