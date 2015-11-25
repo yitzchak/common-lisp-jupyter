@@ -22,7 +22,7 @@ To try Maxima-Jupyter you need :
 
  - Quicklisp (see: http://www.quicklisp.org)
 
-   - When you load CL-Jupyter into Maxima for the first time,
+   - When you load Maxima-Jupyter into Maxima for the first time,
      Quicklisp will download some dependencies automatically.
      Good luck.
 
@@ -30,12 +30,12 @@ To try Maxima-Jupyter you need :
 
  - Jupyter, or IPython 3.x
  
-   - I installed Jupyter via:
-
-     python3 -m pip install jupyter
-
 
 ## Quick install ##
+
+I installed Jupyter via:
+
+     python3 -m pip install jupyter
 
 The installation script creates a kernel description so Jupyter knows how to execute the kernel:
 
