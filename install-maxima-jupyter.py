@@ -54,7 +54,10 @@ print("... Frontend: using IPython v{}.{}".format(ipython_version_major, ipython
 
 class Config:
     def __init__(self):
-        self.ipython_dir = IPython.utils.path.get_ipython_dir()
+        # Find IPython directory. See comment by zockoshi at:
+        # https://github.com/robert-dodier/maxima-jupyter/issues/4
+        # self.ipython_dir = IPython.utils.path.get_ipython_dir()
+        self.ipython_dir = IPython.paths.get_ipython_dir()
         self.ipython_executable = shutil.which("ipython3")
         self.maxima_jupyter_executable = None
 
