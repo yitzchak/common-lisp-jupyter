@@ -306,8 +306,14 @@ The wire-deserialization part follows.
         (zmq-recv-list socket (cons part parts) (+ part-num 1))
         (reverse (cons part parts)))))
 
+(defparameter *message-recv-lock* (bordeaux-threads:make-lock "message-recv-lock"))
+
 (defun message-recv (socket)
-  (let ((parts (zmq-recv-list socket)))
-    ;;DEBUG>>
-    (format t "[Recv]: parts: ~A~%" (mapcar (lambda (part) (format nil "~W" part)) parts))
-    (wire-deserialize parts)))
+  (unwind-protect
+       (progn
+	 (bordeaux-threads:acquire-lock *message-recv-lock*)
+	 (let ((parts (zmq-recv-list socket)))
+	   ;;DEBUG>>
+	   (format t "[Recv]: parts: ~A~%" (mapcar (lambda (part) (format nil "~W" part)) parts))
+	   (wire-deserialize parts)))
+    (bordeaux-threads:release-lock *message-recv-lock*)))
