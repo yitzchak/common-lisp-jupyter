@@ -29,7 +29,7 @@ To try Maxima-Jupyter you need :
  - Python 3.2 or above
 
  - Jupyter, or IPython 3.x
- 
+
 
 ## Quick install ##
 
@@ -46,12 +46,36 @@ saved Lisp image. The saved image needs to contain Maxima and CL-Jupyter.
 I create these images by executing Maxima and loading CL-Jupyter into
 Maxima, and then saving an image. See `make-maxima-jupyter-recipe.txt`.
 
+## Installation on Arch/Manjaro
+
+The package for Arch Linux is
+[maxima-jupyter-git](https://aur.archlinux.org/packages/maxima-jupyter-git/).
+This package works with the
+[maxima](https://www.archlinux.org/packages/extra/x86_64/maxima/) package, but
+not with
+[maxima-ecl](https://www.archlinux.org/packages/community/x86_64/maxima-ecl/)
+since ECL does not permit saving LISP images. Building and installing (including
+dependencies) can be accomplished with:
+
+    yaourt -Sy cadabra2-git
+
+Alternatively use ``makepkg``:
+
+    curl -L -O https://aur.archlinux.org/cgit/aur.git/snapshot/maxima-jupyter-git.tar.gz
+    tar -xvf maxima-jupyter-git.tar.gz
+    cd maxima-jupyter-git
+    makepkg -Csri
+
+Please consult the
+[Arch Wiki](https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_packages)
+for more information regarding installing packages from the AUR.
+
 ## Code highlighting installation ##
 
 Highlighting Maxima code is handled by CodeMirror in the notebook
 and Pygments in HTML export.
 
-The CodeMirror mode for Maxima is maxima.js. To install it, 
+The CodeMirror mode for Maxima is maxima.js. To install it,
 find the CodeMirror mode installation directory, create a directory named "maxima" there,
 copy maxima.js to the maxima directory, and update codemirror/mode/meta.js
 as shown in codemirror-mode-meta-patch.
@@ -79,7 +103,7 @@ semicolon or dollar sign:
 In [1]: 2*21
 Out[1]: 42
 
-In [2]: 
+In [2]:
 ```
 
 ### Notebooks
