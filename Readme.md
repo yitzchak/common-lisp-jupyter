@@ -57,7 +57,7 @@ not with
 since ECL does not permit saving LISP images. Building and installing (including
 dependencies) can be accomplished with:
 
-    yaourt -Sy cadabra2-git
+    yaourt -Sy maxima-jupyter-git
 
 Alternatively use ``makepkg``:
 
