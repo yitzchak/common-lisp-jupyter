@@ -115,34 +115,37 @@ Lisp printer. In most cases this is enough but specializations are
   ;; no rendering by default
   nil)
 
+(defun ends-with-p (str1 str2)
+  (let ((p (mismatch str2 str1 :from-end T)))
+    (or (not p) (= 0 p))))
+
+(defun render-image (value ext base64)
+  (if (and
+        (consp value)
+        (eq (caar value) 'maxima::mlist)
+        (eq (list-length value) 3)
+        (ends-with-p (cadr value) ".gnuplot")
+        (ends-with-p (caddr value) ext))
+    (if base64
+      (file-to-base64-string (caddr value))
+      ;; substitute spaces for tabs in SVG file; otherwise tabs seem
+      ;; to cause JSON heartburn. I suspect, without much evidence,
+      ;; that this is a bug in some JSON library or the other.
+      ;; Possibly the same bug: https://github.com/JuliaLang/IJulia.jl/issues/200
+      (substitute #\space #\tab (file-slurp file-name)))))
+
 (defgeneric render-pdf (value)
   (:documentation "Render the VALUE as a PDF. The expected
  encoding is a Base64-encoded string."))
 
 (defmethod render-pdf ((value t))
-  (if (and (consp value) (eq (caar value) 'maxima::%plot2d))
-    (let ((pdf-file-name (format nil "~A/~A.pdf" maxima::$maxima_tempdir (symbol-name (gensym "maxima-jupyter")))))
-      ;; MAYBE BIND THESE INSTEAD OF ASSIGNING ??
-      (maxima::$set_plot_option '((maxima::mlist) maxima::$plot_format maxima::$gnuplot))
-      (maxima::$set_plot_option `((maxima::mlist) maxima::$pdf_file ,pdf-file-name))
-      (let ((*package* (find-package :maxima))) (maxima::mapply1 (maxima::$verbify (caar value)) (cdr value) nil nil))
-      (file-to-base64-string pdf-file-name))))
+  (render-image value ".pdf"))
 
 (defgeneric render-svg (value)
   (:documentation "Render the VALUE as a SVG image (XML format represented as a string)."))
 
 (defmethod render-svg ((value t))
-  (if (and (consp value) (eq (caar value) 'maxima::%plot2d))
-    (let ((svg-file-name (format nil "~A/~A.svg" maxima::$maxima_tempdir (symbol-name (gensym "maxima-jupyter")))))
-      ;; MAYBE BIND THESE INSTEAD OF ASSIGNING ??
-      (maxima::$set_plot_option '((maxima::mlist) maxima::$plot_format maxima::$gnuplot))
-      (maxima::$set_plot_option `((maxima::mlist) maxima::$svg_file ,svg-file-name))
-      (let ((*package* (find-package :maxima))) (maxima::mapply1 (maxima::$verbify (caar value)) (cdr value) nil nil))
-      ;; substitute spaces for tabs in SVG file; otherwise tabs seem
-      ;; to cause JSON heartburn. I suspect, without much evidence,
-      ;; that this is a bug in some JSON library or the other.
-      ;; Possibly the same bug: https://github.com/JuliaLang/IJulia.jl/issues/200
-      (substitute #\space #\tab (file-slurp svg-file-name)))))
+  (render-image value ".svg"))
 
 ;; nicked from: http://rosettacode.org/wiki/Read_entire_file#Common_Lisp
 (defun file-slurp (path)
