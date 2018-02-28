@@ -14,7 +14,7 @@
   (defparameter *example-equal-predicate* #'equal)
 
   (defparameter *example-with-echo* nil)
-  
+
   )
 
 
@@ -71,7 +71,7 @@
       `(progn (format ,*log-out-stream* "[LOG]:")
               (format ,*log-out-stream* ,fmt ,@args)
               (format ,*log-out-stream* "~%"))))
-  
+
 (defmacro vbinds (binders expr &body body)
   "An abbreviation for MULTIPLE-VALUE-BIND."
   (labels ((replace-underscores (bs &optional (result nil) (fresh-vars nil) (replaced nil))
@@ -138,3 +138,6 @@
     (let ((str (make-array (file-length stream) :element-type 'character :fill-pointer t)))
       (setf (fill-pointer str) (read-sequence str stream))
       str)))
+
+(defun file-to-base64-string (path)
+  (cl-base64:usb8-array-to-base64-string (read-binary-file path)))

@@ -150,9 +150,6 @@ Lisp printer. In most cases this is enough but specializations are
       (read-sequence data stream)
       data)))
 
-(defun file-to-base64-string (path)
-  (cl-base64:usb8-array-to-base64-string (read-binary-file path)))
-
 (defgeneric render-json (value)
   (:documentation "Render the VALUE as a JSON document. This uses the MYJSON encoding
  (alist with string keys)"))
