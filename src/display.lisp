@@ -125,7 +125,7 @@ Lisp printer. In most cases this is enough but specializations are
       (maxima::$set_plot_option '((maxima::mlist) maxima::$plot_format maxima::$gnuplot))
       (maxima::$set_plot_option `((maxima::mlist) maxima::$pdf_file ,pdf-file-name))
       (let ((*package* (find-package :maxima))) (maxima::mapply1 (maxima::$verbify (caar value)) (cdr value) nil nil))
-      (file-to-base64-string svg-file-name))))
+      (file-to-base64-string pdf-file-name))))
 
 (defgeneric render-svg (value)
   (:documentation "Render the VALUE as a SVG image (XML format represented as a string)."))
