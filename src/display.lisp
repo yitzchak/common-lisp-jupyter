@@ -125,7 +125,7 @@ Lisp printer. In most cases this is enough but specializations are
       (maxima::$set_plot_option '((maxima::mlist) maxima::$plot_format maxima::$gnuplot))
       (maxima::$set_plot_option `((maxima::mlist) maxima::$pdf_file ,pdf-file-name))
       (let ((*package* (find-package :maxima))) (maxima::mapply1 (maxima::$verbify (caar value)) (cdr value) nil nil))
-      (file-slurp svg-file-name))))
+      (file-to-base64-string svg-file-name))))
 
 (defgeneric render-svg (value)
   (:documentation "Render the VALUE as a SVG image (XML format represented as a string)."))
@@ -149,6 +149,9 @@ Lisp printer. In most cases this is enough but specializations are
     (let ((data (make-string (file-length stream))))
       (read-sequence data stream)
       data)))
+
+(defun file-to-base64-string (path)
+  (cl-base64:usb8-array-to-base64-string (read-binary-file path)))
 
 (defgeneric render-json (value)
   (:documentation "Render the VALUE as a JSON document. This uses the MYJSON encoding
