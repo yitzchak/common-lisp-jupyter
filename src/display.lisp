@@ -115,17 +115,17 @@ Lisp printer. In most cases this is enough but specializations are
   ;; no rendering by default
   nil)
 
-(defun ends-with-p (str1 str2)
+(defun ends-with (str1 str2)
   (let ((p (mismatch str2 str1 :from-end T)))
     (or (not p) (= 0 p))))
 
 (defun render-image (value ext base64)
   (if (and
-        (consp value)
+        (listp value)
         (eq (caar value) 'maxima::mlist)
         (eq (list-length value) 3)
-        (ends-with-p (cadr value) ".gnuplot")
-        (ends-with-p (caddr value) ext))
+        (ends-with (cadr value) ".gnuplot")
+        (ends-with (caddr value) ext))
     (if base64
       (file-to-base64-string (caddr value))
       ;; substitute spaces for tabs in SVG file; otherwise tabs seem
@@ -139,13 +139,13 @@ Lisp printer. In most cases this is enough but specializations are
  encoding is a Base64-encoded string."))
 
 (defmethod render-pdf ((value t))
-  (render-image value ".pdf"))
+  (render-image value ".pdf" t))
 
 (defgeneric render-svg (value)
   (:documentation "Render the VALUE as a SVG image (XML format represented as a string)."))
 
 (defmethod render-svg ((value t))
-  (render-image value ".svg"))
+  (render-image value ".svg" nil))
 
 ;; nicked from: http://rosettacode.org/wiki/Read_entire_file#Common_Lisp
 (defun file-slurp (path)
