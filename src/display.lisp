@@ -115,6 +115,19 @@ Lisp printer. In most cases this is enough but specializations are
   ;; no rendering by default
   nil)
 
+(defgeneric render-pdf (value)
+  (:documentation "Render the VALUE as a PDF. The expected
+ encoding is a Base64-encoded string."))
+
+(defmethod render-pdf ((value t))
+  (if (and (consp value) (eq (caar value) 'maxima::%plot2d))
+    (let ((pdf-file-name (format nil "~A/~A.pdf" maxima::$maxima_tempdir (symbol-name (gensym "maxima-jupyter")))))
+      ;; MAYBE BIND THESE INSTEAD OF ASSIGNING ??
+      (maxima::$set_plot_option '((maxima::mlist) maxima::$plot_format maxima::$gnuplot))
+      (maxima::$set_plot_option `((maxima::mlist) maxima::$pdf_file ,pdf-file-name))
+      (let ((*package* (find-package :maxima))) (maxima::mapply1 (maxima::$verbify (caar value)) (cdr value) nil nil))
+      (file-to-base64-string pdf-file-name))))
+
 (defgeneric render-svg (value)
   (:documentation "Render the VALUE as a SVG image (XML format represented as a string)."))
 
@@ -161,15 +174,15 @@ Lisp printer. In most cases this is enough but specializations are
 |#
 
 (defun combine-render (pairs)
-  (loop 
-   for pair in pairs 
+  (loop
+   for pair in pairs
      when (not (null (cdr pair)))
    collect pair))
 
 (example (combine-render  `(("hello" . "world")
 			    ("bonjour" . nil)
 			    ("griacias" . (1 2 3))))
-	 => '(("hello" . "world") 
+	 => '(("hello" . "world")
 	      ("griacias" . (1 2 3))))
 
 (defun display-dispatch (value render-alist)
@@ -188,6 +201,7 @@ Lisp printer. In most cases this is enough but specializations are
 			     ("text/latex" . ,(render-latex value))
 			     ("image/png" . ,(render-png value))
 			     ("image/jpeg" . ,(render-jpeg value))
+           ("application/pdf" . ,(render-pdf value))
 			     ("image/svg+xml" . ,(render-svg value))
 			     ("application/json" . ,(render-json value))
 			     ("application/javascript" . ,(render-javascript value)))))
@@ -212,6 +226,10 @@ Lisp printer. In most cases this is enough but specializations are
   "Display VALUE as a JPEG image."
   (display-dispatch value `(("image/jpeg" . ,(render-jpeg value)))))
 
+(defun display-pdf (value)
+  "Display VALUE as a PDF image."
+  (display-dispatch value `(("application/pdf" . ,(render-pdf value)))))
+
 (defun display-svg (value)
   "Display VALUE as a SVG image."
   (display-dispatch value `(("image/svg+xml" . ,(render-svg value)))))
@@ -223,5 +241,3 @@ Lisp printer. In most cases this is enough but specializations are
 (defun display-javascript (value)
   "Display VALUE as embedded JAVASCRIPT."
   (display-dispatch value `(("application/javascript" . ,(render-javascript value)))))
-
-
