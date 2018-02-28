@@ -116,7 +116,8 @@ Lisp printer. In most cases this is enough but specializations are
   nil)
 
 (defgeneric render-pdf (value)
-  (:documentation "Render the VALUE as a PDF."))
+  (:documentation "Render the VALUE as a PDF. The expected
+ encoding is a Base64-encoded string."))
 
 (defmethod render-pdf ((value t))
   (if (and (consp value) (eq (caar value) 'maxima::%plot2d))
@@ -224,6 +225,10 @@ Lisp printer. In most cases this is enough but specializations are
 (defun display-jpeg (value)
   "Display VALUE as a JPEG image."
   (display-dispatch value `(("image/jpeg" . ,(render-jpeg value)))))
+
+(defun display-pdf (value)
+  "Display VALUE as a PDF image."
+  (display-dispatch value `(("application/pdf" . ,(render-pdf value)))))
 
 (defun display-svg (value)
   "Display VALUE as a SVG image."
