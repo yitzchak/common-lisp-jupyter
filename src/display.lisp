@@ -91,8 +91,8 @@ Lisp printer. In most cases this is enough but specializations are
   (:documentation "Render the VALUE as a LATEX document."))
 
 (defmethod render-latex ((value t))
-  ;; Render LaTeX only if it's not going to be rendered as SVG.
-  (if (not (and (consp value) (eq (caar value) 'maxima::%plot2d)))
+  ;; Render LaTeX only if it's not a plot return value.
+  (if (not (plot-p value))
     (let ((s (maxima::mfuncall 'maxima::$tex value nil)))
       ;; Trailing newline causes trouble for nbconvert --
       ;; equations in the generated TeX document have empty lines
@@ -104,8 +104,7 @@ Lisp printer. In most cases this is enough but specializations are
  encoding is a Base64-encoded string."))
 
 (defmethod render-png ((value t))
-  ;; no rendering by default
-  nil)
+  (render-image value ".png" t))
 
 (defgeneric render-jpeg (value)
   (:documentation "Render the VALUE as a JPEG image. The expected
@@ -119,20 +118,19 @@ Lisp printer. In most cases this is enough but specializations are
   (let ((p (mismatch str2 str1 :from-end T)))
     (or (not p) (= 0 p))))
 
+(defun plot-p (value)
+  (and (listp value) (eq (caar value) 'maxima::mlist)
+    (eq (list-length value) 3) (ends-with (cadr value) ".gnuplot")))
+
 (defun render-image (value ext base64)
-  (if (and
-        (listp value)
-        (eq (caar value) 'maxima::mlist)
-        (eq (list-length value) 3)
-        (ends-with (cadr value) ".gnuplot")
-        (ends-with (caddr value) ext))
+  (if (and (plot-p value) (ends-with (caddr value) ext))
     (if base64
       (file-to-base64-string (caddr value))
       ;; substitute spaces for tabs in SVG file; otherwise tabs seem
       ;; to cause JSON heartburn. I suspect, without much evidence,
       ;; that this is a bug in some JSON library or the other.
       ;; Possibly the same bug: https://github.com/JuliaLang/IJulia.jl/issues/200
-      (substitute #\space #\tab (file-slurp file-name)))))
+      (substitute #\space #\tab (file-slurp (caddr value))))))
 
 (defgeneric render-pdf (value)
   (:documentation "Render the VALUE as a PDF. The expected
