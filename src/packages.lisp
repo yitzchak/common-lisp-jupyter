@@ -12,6 +12,7 @@
            #:vbinds
            #:afetch
 	   #:while
+     #:file-to-base64-string
 	   #:read-file-lines
 	   #:read-string-file
 	   #:read-binary-file))
@@ -25,7 +26,7 @@
 
 (defpackage #:cl-jupyter
   (:use #:cl #:fredo-utils #:myjson)
-  (:export 
+  (:export
    #:display
    #:display-plain render-plain
    #:display-html render-html
@@ -33,6 +34,7 @@
    #:display-latex render-latex
    #:display-png render-png
    #:display-jpeg render-jpeg
+   #:display-pdf render-pdf
    #:display-svg render-svg
    #:display-json render-json
    #:display-javascript render-javascript
@@ -40,7 +42,7 @@
 
 (defpackage #:cl-jupyter-user
   (:use #:cl #:fredo-utils #:cl-jupyter #:common-lisp-user)
-  (:export 
+  (:export
    #:display
    #:display-plain render-plain
    #:display-html render-html

@@ -91,8 +91,8 @@ Lisp printer. In most cases this is enough but specializations are
   (:documentation "Render the VALUE as a LATEX document."))
 
 (defmethod render-latex ((value t))
-  ;; Render LaTeX only if it's not going to be rendered as SVG.
-  (if (not (and (consp value) (eq (caar value) 'maxima::%plot2d)))
+  ;; Render LaTeX only if it's not a plot return value.
+  (if (not (plot-p value))
     (let ((s (maxima::mfuncall 'maxima::$tex value nil)))
       ;; Trailing newline causes trouble for nbconvert --
       ;; equations in the generated TeX document have empty lines
@@ -104,8 +104,7 @@ Lisp printer. In most cases this is enough but specializations are
  encoding is a Base64-encoded string."))
 
 (defmethod render-png ((value t))
-  ;; no rendering by default
-  nil)
+  (render-plot value ".png" t))
 
 (defgeneric render-jpeg (value)
   (:documentation "Render the VALUE as a JPEG image. The expected
@@ -115,21 +114,37 @@ Lisp printer. In most cases this is enough but specializations are
   ;; no rendering by default
   nil)
 
-(defgeneric render-svg (value)
-  (:documentation "Render the VALUE as a SVG image (XML format represented as a string)."))
+;; nicked from: https://rosettacode.org/wiki/String_matching#Common_Lisp
+(defun ends-with-p (str1 str2)
+  (let ((p (mismatch str2 str1 :from-end T)))
+    (or (not p) (= 0 p))))
 
-(defmethod render-svg ((value t))
-  (if (and (consp value) (eq (caar value) 'maxima::%plot2d))
-    (let ((svg-file-name (format nil "~A/~A.svg" maxima::$maxima_tempdir (symbol-name (gensym "maxima-jupyter")))))
-      ;; MAYBE BIND THESE INSTEAD OF ASSIGNING ??
-      (maxima::$set_plot_option '((maxima::mlist) maxima::$plot_format maxima::$gnuplot))
-      (maxima::$set_plot_option `((maxima::mlist) maxima::$svg_file ,svg-file-name))
-      (let ((*package* (find-package :maxima))) (maxima::mapply1 (maxima::$verbify (caar value)) (cdr value) nil nil))
+(defun plot-p (value)
+  (and (listp value) (eq (caar value) 'maxima::mlist)
+    (eq (list-length value) 3) (ends-with-p (cadr value) ".gnuplot")))
+
+(defun render-plot (value ext base64)
+  (if (and (plot-p value) (ends-with-p (caddr value) ext))
+    (if base64
+      (file-to-base64-string (caddr value))
       ;; substitute spaces for tabs in SVG file; otherwise tabs seem
       ;; to cause JSON heartburn. I suspect, without much evidence,
       ;; that this is a bug in some JSON library or the other.
       ;; Possibly the same bug: https://github.com/JuliaLang/IJulia.jl/issues/200
-      (substitute #\space #\tab (file-slurp svg-file-name)))))
+      (substitute #\space #\tab (file-slurp (caddr value))))))
+
+(defgeneric render-pdf (value)
+  (:documentation "Render the VALUE as a PDF. The expected
+ encoding is a Base64-encoded string."))
+
+(defmethod render-pdf ((value t))
+  (render-plot value ".pdf" t))
+
+(defgeneric render-svg (value)
+  (:documentation "Render the VALUE as a SVG image (XML format represented as a string)."))
+
+(defmethod render-svg ((value t))
+  (render-plot value ".svg" nil))
 
 ;; nicked from: http://rosettacode.org/wiki/Read_entire_file#Common_Lisp
 (defun file-slurp (path)
@@ -161,15 +176,15 @@ Lisp printer. In most cases this is enough but specializations are
 |#
 
 (defun combine-render (pairs)
-  (loop 
-   for pair in pairs 
+  (loop
+   for pair in pairs
      when (not (null (cdr pair)))
    collect pair))
 
 (example (combine-render  `(("hello" . "world")
 			    ("bonjour" . nil)
 			    ("griacias" . (1 2 3))))
-	 => '(("hello" . "world") 
+	 => '(("hello" . "world")
 	      ("griacias" . (1 2 3))))
 
 (defun display-dispatch (value render-alist)
@@ -188,6 +203,7 @@ Lisp printer. In most cases this is enough but specializations are
 			     ("text/latex" . ,(render-latex value))
 			     ("image/png" . ,(render-png value))
 			     ("image/jpeg" . ,(render-jpeg value))
+           ("application/pdf" . ,(render-pdf value))
 			     ("image/svg+xml" . ,(render-svg value))
 			     ("application/json" . ,(render-json value))
 			     ("application/javascript" . ,(render-javascript value)))))
@@ -212,6 +228,10 @@ Lisp printer. In most cases this is enough but specializations are
   "Display VALUE as a JPEG image."
   (display-dispatch value `(("image/jpeg" . ,(render-jpeg value)))))
 
+(defun display-pdf (value)
+  "Display VALUE as a PDF image."
+  (display-dispatch value `(("application/pdf" . ,(render-pdf value)))))
+
 (defun display-svg (value)
   "Display VALUE as a SVG image."
   (display-dispatch value `(("image/svg+xml" . ,(render-svg value)))))
@@ -223,5 +243,3 @@ Lisp printer. In most cases this is enough but specializations are
 (defun display-javascript (value)
   "Display VALUE as embedded JAVASCRIPT."
   (display-dispatch value `(("application/javascript" . ,(render-javascript value)))))
-
-
