@@ -104,7 +104,7 @@ Lisp printer. In most cases this is enough but specializations are
  encoding is a Base64-encoded string."))
 
 (defmethod render-png ((value t))
-  (render-image value ".png" t))
+  (render-plot value ".png" t))
 
 (defgeneric render-jpeg (value)
   (:documentation "Render the VALUE as a JPEG image. The expected
@@ -114,16 +114,17 @@ Lisp printer. In most cases this is enough but specializations are
   ;; no rendering by default
   nil)
 
-(defun ends-with (str1 str2)
+;; nicked from: https://rosettacode.org/wiki/String_matching#Common_Lisp
+(defun ends-with-p (str1 str2)
   (let ((p (mismatch str2 str1 :from-end T)))
     (or (not p) (= 0 p))))
 
 (defun plot-p (value)
   (and (listp value) (eq (caar value) 'maxima::mlist)
-    (eq (list-length value) 3) (ends-with (cadr value) ".gnuplot")))
+    (eq (list-length value) 3) (ends-with-p (cadr value) ".gnuplot")))
 
-(defun render-image (value ext base64)
-  (if (and (plot-p value) (ends-with (caddr value) ext))
+(defun render-plot (value ext base64)
+  (if (and (plot-p value) (ends-with-p (caddr value) ext))
     (if base64
       (file-to-base64-string (caddr value))
       ;; substitute spaces for tabs in SVG file; otherwise tabs seem
@@ -137,13 +138,13 @@ Lisp printer. In most cases this is enough but specializations are
  encoding is a Base64-encoded string."))
 
 (defmethod render-pdf ((value t))
-  (render-image value ".pdf" t))
+  (render-plot value ".pdf" t))
 
 (defgeneric render-svg (value)
   (:documentation "Render the VALUE as a SVG image (XML format represented as a string)."))
 
 (defmethod render-svg ((value t))
-  (render-image value ".svg" nil))
+  (render-plot value ".svg" nil))
 
 ;; nicked from: http://rosettacode.org/wiki/Read_entire_file#Common_Lisp
 (defun file-slurp (path)
