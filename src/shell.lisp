@@ -52,7 +52,7 @@
 
 |#
 
-;; for protocol version 5  
+;; for protocol version 5
 (defclass content-kernel-info-reply (message-content)
   ((protocol-version :initarg :protocol-version :type string)
    (implementation :initarg :implementation :type string)
@@ -76,8 +76,8 @@
 (defun help-links-to-json (help-links)
   (concatenate 'string "["
 	       (concat-all 'string ""
-			   (join "," (mapcar (lambda (link) 
-					       (format nil "{ \"text\": ~W, \"url\": ~W }" (car link) (cdr link))) 
+			   (join "," (mapcar (lambda (link)
+					       (format nil "{ \"text\": ~W, \"url\": ~W }" (car link) (cdr link)))
 					     help-links)))
 	       "]"))
 
@@ -135,7 +135,7 @@
                  :help-links (vector)))))
 		 ;;'(("Common Lisp Hyperspec" . "http://www.lispworks.com/documentation/HyperSpec/Front/index.htm"))))))
   ;; for protocol version 4.1
-  ;; (let ((reply (make-message-from-parent msg "kernel_info_reply" nil 
+  ;; (let ((reply (make-message-from-parent msg "kernel_info_reply" nil
   ;;   				 (make-instance
   ;;   				  'content-kernel-info-reply
   ;;   				  :protocol-version #(4 1)
@@ -168,7 +168,7 @@
           ;(format t "results = ~A~%" results)
           ;(format t "STDOUT = ~A~%" stdout)
           ;(format t "STDERR = ~A~%" stderr)
-          ;; broadcast the code to connected frontends
+          ;broadcast the code to connected frontends
 	  (send-execute-code (kernel-iopub (shell-kernel shell)) msg execution-count code :key (kernel-key shell))
   	(when (and (consp results) (typep (car results) 'cl-jupyter-user::cl-jupyter-quit-obj))
   	  ;; ----- ** request for shutdown ** -----
@@ -184,9 +184,10 @@
           ;; send the stderr
           (when (and stderr (> (length stderr) 0))
 	    (send-stream (kernel-iopub (shell-kernel shell)) msg "stderr" stderr :key (kernel-key shell)))
-  	;; send the first result
-  	(send-execute-result (kernel-iopub (shell-kernel shell)) 
-			     msg execution-count (car results) :key (kernel-key shell))
+  	;; send the results
+    (dolist (result results)
+    	(send-execute-result (kernel-iopub (shell-kernel shell))
+  			     msg execution-count result :key (kernel-key shell)))
   	;; status back to idle
 	(send-status-update (kernel-iopub (shell-kernel shell)) msg "idle" :key (kernel-key shell))
   	;; send reply (control)
@@ -200,7 +201,7 @@
   ;; Redefine RETRIEVE in src/macsys.lisp to make use of input-request/input-reply.
   ;; MSG, FLAG, and PRINT? are declared special there, so be careful to
   ;; refer to those symbols in the :maxima package.
-  
+
   (defun maxima::retrieve (maxima::msg maxima::flag &aux (maxima::print? nil))
     (declare (special maxima::msg maxima::flag maxima::print?))
     (or (eq maxima::flag 'maxima::noprint) (setq maxima::print? t))
@@ -220,15 +221,15 @@
             (maxima::aformat nil "~M" maxima::msg)))))
       (let ((kernel (shell-kernel execute-request-shell)))
         (let ((stdin (kernel-stdin kernel)))
-	  (send-input-request stdin execute-request-msg retrieve-prompt :key (kernel-key shell))
+          (send-input-request stdin execute-request-msg retrieve-prompt :key (kernel-key shell))
           (multiple-value-bind (identities signature message buffers) (message-recv (stdin-socket stdin))
             (let*
               ((content (parse-json-from-string (message-content message)))
                (value (afetch "value" content :test #'equal)))
-              (maxima::$parse_string value))))))))
+               (maxima::mread-noprompt (make-string-input-stream value) nil))))))))
 
 #|
-     
+
 ## Message content ##
 
 |#
@@ -236,4 +237,3 @@
 (defclass message-content ()
   ()
   (:documentation "The base class of message contents."))
-
