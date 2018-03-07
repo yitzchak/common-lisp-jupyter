@@ -138,5 +138,5 @@ else:
 
     with open(config.ipython_dir + "/kernels/maxima/kernel.json", "w") as kernel_spec_file:
         json.dump(KERNEL_SPEC, kernel_spec_file)
-    
+
     print("maxima-jupyter: installation complete.")

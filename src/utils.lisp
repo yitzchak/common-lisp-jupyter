@@ -1,4 +1,3 @@
-
 (in-package #:fredokun-utilities)
 
 #|

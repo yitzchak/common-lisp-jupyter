@@ -60,4 +60,3 @@ See: http://jupyter-client.readthedocs.org/en/latest/messaging.html#messages-on-
 (defun send-input-request (stdin parent-msg prompt &key (key nil))
   (let ((message (make-message parent-msg "input_request" nil `(("prompt" . ,prompt)))))
     (message-send (stdin-socket stdin) message :identities '("input_request") :key key)))
-
