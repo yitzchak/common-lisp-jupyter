@@ -226,7 +226,7 @@
             (let*
               ((content (parse-json-from-string (message-content message)))
                (value (afetch "value" content :test #'equal)))
-               (maxima::mread-noprompt (make-string-input-stream value) nil))))))))
+               (maxima::mread-noprompt (make-string-input-stream (add-terminator value)) nil))))))))
 
 #|
 

@@ -52,7 +52,7 @@ The history of evaluations is also saved by the evaluator.
   (let* ((execution-count (length (evaluator-history-in evaluator)))
          (stdout (make-string-output-stream))
          (stderr (make-string-output-stream))
-         (input (make-string-input-stream code))
+         (input (make-string-input-stream (add-terminator code)))
          (results (do ((results '())
                        (code-to-eval (my-mread input) (my-mread input)))
                     ((not code-to-eval) (reverse results))

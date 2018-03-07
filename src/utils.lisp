@@ -140,3 +140,16 @@
 
 (defun file-to-base64-string (path)
   (cl-base64:usb8-array-to-base64-string (read-binary-file path)))
+
+;; nicked from: https://rosettacode.org/wiki/String_matching#Common_Lisp
+(defun ends-with-p (str1 str2)
+  (let ((p (mismatch str2 str1 :from-end T)))
+    (or (not p) (= 0 p))))
+
+(defun add-terminator (code)
+  (let ((trimmed (string-right-trim
+                  '(#\Space #\Newline #\Backspace #\Tab #\Linefeed #\Page #\Return #\Rubout)
+                  code)))
+    (if (or (ends-with-p trimmed "$") (ends-with-p trimmed ";"))
+      code
+      (concatenate 'string code ";"))))
