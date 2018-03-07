@@ -40,7 +40,7 @@ The history of evaluations is also saved by the evaluator.
          (format *error-output* "~&~A: ~%  ~S~%"
                  (class-name (class-of err)) err)))))
 
-(defun mread (input)
+(defun my-mread (input)
   (when (and (open-stream-p input) (peek-char nil input nil))
     (maxima::mread-noprompt input nil)))
 
@@ -54,7 +54,7 @@ The history of evaluations is also saved by the evaluator.
          (stderr (make-string-output-stream))
          (input (make-string-input-stream code))
          (results (do ((results '())
-                       (code-to-eval (mread input) (mread input)))
+                       (code-to-eval (my-mread input) (my-mread input)))
                     ((not code-to-eval) (reverse results))
                     (when maxima::$debug_evaluator
                       (format t "[Evaluator] parsed expression to evaluate: ~W~%" code-to-eval)
