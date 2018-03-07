@@ -131,10 +131,10 @@ There are several libraries available for json encoding and decoding,
 	 => "this is a \"string")
 
 
-(example (with-input-from-string (s "this is a \\\"string with a \\n newline\" and the rest")
+(example (with-input-from-string (s "this is a \\\"string with a\\nnewline\" and the rest")
           (parse-json-string s))
          => "this is a \"string with a
- newline")
+newline")
 
 (defun parse-json-object (input)
   (let ((obj (list)))
@@ -384,7 +384,7 @@ The INDENT can be given for beautiful/debugging output (default is NIL
 (example
  (string-to-json-string "this is a string
 with a new line")
- => "this is a string  \\nwith a new line")
+ => "this is a string\\nwith a new line")
 
 (example
  (string-to-json-string "(format t \"hello~%\")")
