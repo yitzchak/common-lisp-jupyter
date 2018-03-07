@@ -1,4 +1,3 @@
-
 (in-package #:myjson)
 
 #|
@@ -48,7 +47,7 @@ There are several libraries available for json encoding and decoding,
       (char= char #\Linefeed)))
 
 (defun read-next-char (input)
-  (loop 
+  (loop
      (let ((char (read-char input nil :eof)))
        (cond ((eql char :eof) (error 'json-parse-error :message "Unexpected end of file"))
 	     ((char= char #\\) ; c-style escape chars
@@ -64,7 +63,7 @@ There are several libraries available for json encoding and decoding,
 	 => '(#\{ #\]))
 
 (defun peek-next-char (input)
-  (loop 
+  (loop
      (let ((char (peek-char nil input nil :eof)))
        (cond ((eql char :eof) (error 'json-parse-error :message "Unexpected end of file"))
 	     ((char-whitespace-p char) (read-char input))
@@ -91,7 +90,7 @@ There are several libraries available for json encoding and decoding,
 	  (t (error 'json-parse-error :message (format nil "Unexpected character: ~A" char))))))
 
 (defun parse-json-literal (input first literal)
-  (loop 
+  (loop
      for expect across literal
      do (let ((char (read-char input nil :eof)))
 	  (cond ((eql char :eof)  (error 'json-parse-error :message (format nil "Unexpected end of file while parsing literal: ~A~A" first literal)))
@@ -121,7 +120,7 @@ There are several libraries available for json encoding and decoding,
 		  ;(format t "escape char = ~A~%" escape-char)
 		  (cond ((eql escape-char :eof) (error 'json-parse-error :message "Unexpected end of file (after '\')"))
 			((char= escape-char #\n) (vector-push-extend #\Newline str))
-			(t 
+			(t
 			 ;;(vector-push-extend char str) ;; XXX: escaping is performed on the lisp side
 			 (vector-push-extend escape-char str)))))
 	       ((char= char #\") (return str))
@@ -134,14 +133,14 @@ There are several libraries available for json encoding and decoding,
 
 (example (with-input-from-string (s "this is a \\\"string with a \\n newline\" and the rest")
           (parse-json-string s))
-         => "this is a \"string with a 
+         => "this is a \"string with a
  newline")
 
 (defun parse-json-object (input)
   (let ((obj (list)))
     (loop
        (let ((ckey (read-next-char input)))
-	 (cond ((char= ckey #\}) (return (nreverse obj))) ;; special case : empty object 
+	 (cond ((char= ckey #\}) (return (nreverse obj))) ;; special case : empty object
 	       ((not (char= ckey #\"))
 		(error 'json-parse-error :message (format nil "Expecting \" for object key, found: ~A" ckey))))
 	 (let ((key (parse-json-string input)))
@@ -171,7 +170,7 @@ There are several libraries available for json encoding and decoding,
   (let ((array (make-array 32 :fill-pointer 0 :adjustable t)))
     (loop
        (let ((char (peek-next-char input)))
-	 (if (char= char #\]) 
+	 (if (char= char #\])
 	     (progn (read-char input) ; consume the character
 		    (return array))
 	     ;; any other character
@@ -241,13 +240,13 @@ There are several libraries available for json encoding and decoding,
 	  (setf number (concatenate 'string number exppart)))))
       ;; return the resulting number
       (read-from-string number)))
-	      
+
 (defun parse-json-number-fractional-part (init input)
   (cond ((char= init #\0) "")
 	((and (char>= init #\1)
 	      (char<= init #\9)) (parse-json-digits input))
 	(t
-	 (concatenate 'string 
+	 (concatenate 'string
 		      (format nil "~A" (parse-json-digit input :min #\1))
 		      (parse-json-digits input)))))
 
@@ -262,7 +261,7 @@ There are several libraries available for json encoding and decoding,
 (example (with-input-from-string (s "toto")
 	   (parse-json-number-fractional-part #\0 s))
 	 => "")
-      
+
 (defun parse-json-number-decimal-part (input)
   (concatenate 'string "." (parse-json-digits input)))
 
@@ -272,7 +271,7 @@ There are several libraries available for json encoding and decoding,
       (cond ((eql char #\+) (read-char input) (setf exponent (concatenate 'string exponent "+")))
 	    ((eql char #\-) (read-char input) (setf exponent (concatenate 'string exponent "-")))
 	    ((and (characterp char)
-		  (char>= char #\0) 
+		  (char>= char #\0)
 		  (char<= char #\9)) (read-char input) (setf exponent (concatenate 'string exponent (format nil "~A" char))))
 	    (t (error 'json-parse-error :message (format nil "Missing exponent digit(s) or sign, found: ~A" char)))))
     (concatenate 'string exponent (parse-json-digits input))))
@@ -303,7 +302,7 @@ There are several libraries available for json encoding and decoding,
 	 => 2.12e31 :warn-only t)
 
 
-(example (afetch "isAlive" 
+(example (afetch "isAlive"
 		 (with-input-from-string (s "{
   \"firstName\": \"John\",
   \"lastName\": \"Smith\",
@@ -353,12 +352,12 @@ There are several libraries available for json encoding and decoding,
  JSon encoder (default is 2).")
 
 (defgeneric encode-json (stream thing &key indent)
-  (:documentation "Encode on STREAM a JSon representation of THING. 
+  (:documentation "Encode on STREAM a JSon representation of THING.
 The INDENT can be given for beautiful/debugging output (default is NIL
  for deactivating the indentation)."))
 
 (defun encode-json-to-string (thing &key indent)
-  "Encode as a string a JSon representation of THING. 
+  "Encode as a string a JSon representation of THING.
 The INDENT can be given for beautiful/debugging output (default is NIL
  for deactivating the indentation)."
   (with-output-to-string (stream)
@@ -373,7 +372,7 @@ The INDENT can be given for beautiful/debugging output (default is NIL
          => "          ")
 
 (defun string-to-json-string (str)
-  (let ((jstr (make-array (length str) :fill-pointer 0 :adjustable t :element-type 'character)))               
+  (let ((jstr (make-array (length str) :fill-pointer 0 :adjustable t :element-type 'character)))
     (loop
        for char across str
        do (cond ((char= char #\Newline)
@@ -383,7 +382,7 @@ The INDENT can be given for beautiful/debugging output (default is NIL
     jstr))
 
 (example
- (string-to-json-string "this is a string  
+ (string-to-json-string "this is a string
 with a new line")
  => "this is a string  \\nwith a new line")
 
@@ -396,7 +395,7 @@ with a new line")
     (write-string (gen-indent indent) stream))
   (write-string str stream)
   (when with-newline
-    (terpri stream))) 
+    (terpri stream)))
 
 (example (with-output-to-string (stream)
 	   (let ((toto '(me toto)))
@@ -417,7 +416,7 @@ with a new line")
 (defmethod encode-json (stream (thing cons) &key (indent nil) (first-line nil))
   (json-write stream (if first-line nil indent) (if indent t nil) "{")
   (let ((sepstr (if indent (format nil ",~%") ",")))
-    (loop 
+    (loop
        for (key . val) in thing
        for sep = "" then sepstr
        do (progn (json-write stream nil nil sep)
@@ -433,7 +432,7 @@ with a new line")
 (defmethod encode-json (stream (thing array) &key (indent nil) (first-line nil))
   (json-write stream (if first-line nil indent) (if indent t nil) "[")
   (let ((sepstr (if indent (format nil ",~%") ",")))
-    (loop 
+    (loop
        for val across thing
        for sep = "" then sepstr
        do (progn (json-write stream nil nil sep)
@@ -445,16 +444,16 @@ with a new line")
 (defmethod encode-json (stream (thing string) &key (indent nil) (first-line nil))
   (json-write stream (if first-line nil indent) nil (string-to-json-string (with-output-to-string (str) (prin1 thing str)))))
 
-(example 
+(example
  (encode-json-to-string "help me \"man\" yeah !")
  => "\"help me \\\"man\\\" yeah !\"")
 
-(example 
+(example
  (encode-json-to-string "help me \"man\"
 yeah !")
  => "\"help me \\\"man\\\"\\nyeah !\"")
 
-(example 
+(example
  (encode-json-to-string "(format t \"hello~%\")")
  => "\"(format t \\\"hello~%\\\")\"")
 
@@ -462,7 +461,7 @@ yeah !")
 (defmethod encode-json (stream (thing integer) &key (indent nil) (first-line nil))
   (json-write stream (if first-line nil indent) nil (format nil "~A" thing)))
 
-(example 
+(example
  (encode-json-to-string 123)
  => "123")
 
@@ -470,28 +469,28 @@ yeah !")
 (defmethod encode-json (stream (thing float) &key (indent nil) (first-line nil))
   (json-write stream (if first-line nil indent) nil (format nil "~A" thing)))
 
-(example 
+(example
  (encode-json-to-string -3.242E-12)
  => "-3.242E-12" :warn-only t)
 
 (defmethod encode-json (stream (thing (eql :true)) &key (indent nil) (first-line nil))
   (json-write stream (if first-line nil indent) nil "true"))
 
-(example 
+(example
  (encode-json-to-string :true)
  => "true")
 
 (defmethod encode-json (stream (thing (eql :false)) &key (indent nil) (first-line nil))
   (json-write stream (if first-line nil indent) nil "false"))
 
-(example 
+(example
  (encode-json-to-string :false)
  => "false")
 
 (defmethod encode-json (stream (thing (eql :null)) &key (indent nil) (first-line nil))
   (json-write stream (if first-line nil indent) nil "null"))
 
-(example 
+(example
  (encode-json-to-string :null)
  => "null")
 
@@ -520,6 +519,3 @@ yeah !")
  (encode-json-to-string '(("name" . "frederic")
 			  ("parent" . #("dany" "robi" "krim" "claude"))))
  => "{\"name\": \"frederic\",\"parent\": [\"dany\",\"robi\",\"krim\",\"claude\"]}")
-
-
-

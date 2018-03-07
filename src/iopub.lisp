@@ -1,4 +1,3 @@
-
 (in-package #:cl-jupyter)
 
 #|
@@ -12,7 +11,7 @@
    (socket :initarg :socket :initform nil :accessor iopub-socket)))
 
 (defun make-iopub-channel (kernel)
-  (let ((socket (pzmq:socket (kernel-ctx kernel) :pub)))  
+  (let ((socket (pzmq:socket (kernel-ctx kernel) :pub)))
     (let ((iopub (make-instance 'iopub-channel
                                 :kernel kernel
                                 :socket socket)))

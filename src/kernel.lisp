@@ -36,7 +36,7 @@
         ((endp (cdr l)) l)
         (t (cons (car l) (cons e (join e (cdr l)))))))
 
-(example (join 1 '(a b c d e)) 
+(example (join 1 '(a b c d e))
          => '(a 1 b 1 c 1 d 1 e))
 
 (defun concat-all (kind term ls)
@@ -46,7 +46,7 @@
 
 (example (concat-all 'string "" '("a" "b" "c" "d" "e"))
          => "abcde")
-  
+
 (defun banner ()
   (concat-all
    'string ""

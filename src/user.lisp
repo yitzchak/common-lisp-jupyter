@@ -1,4 +1,3 @@
-
 (in-package #:cl-jupyter-user)
 
 (defclass cl-jupyter-quit-obj ()
@@ -7,7 +6,7 @@
 
 (defun quit ()
   (make-instance 'cl-jupyter-quit-obj))
-  
+
 
 #|
 
@@ -64,7 +63,7 @@
 (defun html (text)
   (display-html (make-instance 'html-text :text text)))
 
-(example (cl-jupyter::display-object-data 
+(example (cl-jupyter::display-object-data
 	  (html "<p bgcolor=\"lightblue\"><strong>cl-Jupyter<strong> is <tt>cool</tt> !</p>"))
          => '(("text/plain" . "#<HTML-TEXT {1005721623}>")
 	      ("text/html"
@@ -72,7 +71,7 @@
 
 #|
 
-  ## Basic PNG support ## 
+  ## Basic PNG support ##
 
 |#
 
@@ -105,5 +104,3 @@
 (defun svg-from-file (filename)
   (let ((str (read-string-file filename)))
     (display-svg (make-instance 'svg-str :str str))))
-
-

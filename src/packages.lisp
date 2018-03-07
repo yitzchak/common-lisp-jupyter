@@ -1,4 +1,3 @@
-
 (defpackage #:fredokun-utilities
   (:nicknames #:fredo-utils)
   (:use #:cl)

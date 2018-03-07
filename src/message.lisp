@@ -1,4 +1,3 @@
-
 (in-package #:cl-jupyter)
 
 #|
@@ -9,7 +8,7 @@
 
 #|
 
-## Message header ## 
+## Message header ##
 
 |#
 
@@ -115,11 +114,11 @@ The deserialization of a message header from a JSon string is then trivial.
    (content :initarg :content :initform nil :accessor message-content))
   (:documentation "Representation of IPython messages"))
 
-(defun make-message (parent_msg msg_type metadata content) 
+(defun make-message (parent_msg msg_type metadata content)
   (let ((hdr (message-header parent_msg)))
-    (make-instance 
+    (make-instance
      'message
-     :header (make-instance 
+     :header (make-instance
 	      'header
 	      :msg-id (format nil "~W" (uuid:make-v4-uuid))
 	      :username (header-username hdr)
@@ -130,10 +129,10 @@ The deserialization of a message header from a JSon string is then trivial.
      :metadata metadata
      :content content)))
 
-(defun make-orphan-message (session-id msg-type metadata content) 
-  (make-instance 
+(defun make-orphan-message (session-id msg-type metadata content)
+  (make-instance
    'message
-   :header (make-instance 
+   :header (make-instance
 	    'header
 	    :msg-id (format nil "~W" (uuid:make-v4-uuid))
 	    :username "kernel"

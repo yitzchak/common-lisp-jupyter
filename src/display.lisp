@@ -1,4 +1,3 @@
-
 (in-package #:cl-jupyter)
 
 #|
