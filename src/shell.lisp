@@ -186,8 +186,9 @@
 	    (send-stream (kernel-iopub (shell-kernel shell)) msg "stderr" stderr :key (kernel-key shell)))
   	;; send the results
     (dolist (result results)
-    	(send-execute-result (kernel-iopub (shell-kernel shell))
-  			     msg execution-count result :key (kernel-key shell)))
+      (when (eq (caar result) 'maxima::displayinput)
+      	(send-execute-result (kernel-iopub (shell-kernel shell))
+    			     msg execution-count (caddr result) :key (kernel-key shell))))
   	;; status back to idle
 	(send-status-update (kernel-iopub (shell-kernel shell)) msg "idle" :key (kernel-key shell))
   	;; send reply (control)
