@@ -113,11 +113,6 @@ Lisp printer. In most cases this is enough but specializations are
   ;; no rendering by default
   nil)
 
-;; nicked from: https://rosettacode.org/wiki/String_matching#Common_Lisp
-(defun ends-with-p (str1 str2)
-  (let ((p (mismatch str2 str1 :from-end T)))
-    (or (not p) (= 0 p))))
-
 (defun plot-p (value)
   (and (listp value) (eq (caar value) 'maxima::mlist)
     (eq (list-length value) 3) (ends-with-p (cadr value) ".gnuplot")))

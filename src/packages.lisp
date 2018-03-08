@@ -10,11 +10,13 @@
            #:logg
            #:vbinds
            #:afetch
-	   #:while
-     #:file-to-base64-string
-	   #:read-file-lines
-	   #:read-string-file
-	   #:read-binary-file))
+           #:while
+           #:add-terminator
+           #:ends-with-p
+           #:file-to-base64-string
+           #:read-file-lines
+           #:read-string-file
+           #:read-binary-file))
 
 (defpackage #:myjson
   (:use #:cl #:fredo-utils)

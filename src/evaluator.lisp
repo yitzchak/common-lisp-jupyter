@@ -42,7 +42,9 @@ The history of evaluations is also saved by the evaluator.
 
 (defun my-mread (input)
   (when (and (open-stream-p input) (peek-char nil input nil))
-    (maxima::mread-noprompt input nil)))
+    (let ((maxima::*mread-prompt* "") (maxima::*prompt-on-read-hang*))
+      (declare (special maxima::*mread-prompt* maxima::*prompt-on-read-hang*))
+      (maxima::mread input nil))))
 
 (defun evaluate-code (evaluator code)
   (when maxima::$debug_evaluator
@@ -52,7 +54,7 @@ The history of evaluations is also saved by the evaluator.
   (let* ((execution-count (length (evaluator-history-in evaluator)))
          (stdout (make-string-output-stream))
          (stderr (make-string-output-stream))
-         (input (make-string-input-stream code))
+         (input (make-string-input-stream (add-terminator code)))
          (results (do ((results '())
                        (code-to-eval (my-mread input) (my-mread input)))
                     ((not code-to-eval) (reverse results))
@@ -63,11 +65,12 @@ The history of evaluations is also saved by the evaluator.
                                    (let ((*standard-output* stdout)
                                          (*error-output* stderr)
                                          (*package* (find-package :maxima)))
-                              				   (setq maxima::$% (maxima::meval* code-to-eval))))))
+                                   (maxima::meval* code-to-eval)))))
                       (when maxima::$debug_evaluator
                         (format t "[Evaluator] evaluated result: ~W~%" result)
                         (terpri))
-                  	   (setq results (cons result results))))))
+                      (setq maxima::$% (caddr result))
+                      (setq results (cons result results))))))
     (vector-push results (evaluator-history-out evaluator))
     (values execution-count results
             (get-output-stream-string stdout) (get-output-stream-string stderr))))

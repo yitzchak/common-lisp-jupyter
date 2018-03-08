@@ -186,8 +186,9 @@
 	    (send-stream (kernel-iopub (shell-kernel shell)) msg "stderr" stderr :key (kernel-key shell)))
   	;; send the results
     (dolist (result results)
-    	(send-execute-result (kernel-iopub (shell-kernel shell))
-  			     msg execution-count result :key (kernel-key shell)))
+      (when (eq (caar result) 'maxima::displayinput)
+      	(send-execute-result (kernel-iopub (shell-kernel shell))
+    			     msg execution-count (caddr result) :key (kernel-key shell))))
   	;; status back to idle
 	(send-status-update (kernel-iopub (shell-kernel shell)) msg "idle" :key (kernel-key shell))
   	;; send reply (control)
@@ -221,12 +222,12 @@
             (maxima::aformat nil "~M" maxima::msg)))))
       (let ((kernel (shell-kernel execute-request-shell)))
         (let ((stdin (kernel-stdin kernel)))
-          (send-input-request stdin execute-request-msg retrieve-prompt :key (kernel-key shell))
+          (send-input-request stdin execute-request-msg retrieve-prompt :key (kernel-key execute-request-shell))
           (multiple-value-bind (identities signature message buffers) (message-recv (stdin-socket stdin))
             (let*
               ((content (parse-json-from-string (message-content message)))
                (value (afetch "value" content :test #'equal)))
-               (maxima::mread-noprompt (make-string-input-stream value) nil))))))))
+               (maxima::mread-noprompt (make-string-input-stream (add-terminator value)) nil))))))))
 
 #|
 
