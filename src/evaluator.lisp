@@ -65,7 +65,7 @@ The history of evaluations is also saved by the evaluator.
                                    (let ((*standard-output* stdout)
                                          (*error-output* stderr)
                                          (*package* (find-package :maxima)))
-                                         (maxima::meval* code-to-eval)))))
+                                   (maxima::meval* code-to-eval)))))
                       (when maxima::$debug_evaluator
                         (format t "[Evaluator] evaluated result: ~W~%" result)
                         (terpri))
