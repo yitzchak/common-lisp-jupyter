@@ -264,19 +264,34 @@ The wire-deserialization part follows.
 
 |#
 
+;; Locking, courtesy of dmeister, thanks !
+(defparameter *message-send-lock* (bordeaux-threads:make-lock "message-send-lock"))
+
 (defun message-send (socket msg &key (identities nil) (key nil))
-  (let ((wire-parts (wire-serialize msg :identities identities :key key)))
-    ;;(format t "~%[Send] wire parts: ~W~%" wire-parts)
-    (dolist (part wire-parts)
-      (when (< (pzmq:send socket part :sndmore t) 0)
-        (format *error-output* "CL-JUPYTER::MESSAGE-SEND: PZMQ:SEND failed with errno=~W~%" (pzmq:errno))
-        (format *error-output* "CL-JUPYTER::MESSAGE-SEND: I was trying to send PART=~W to socket=~W~%" part socket)
-        (return-from message-send -1)))
-    (when (< (pzmq:send socket nil) 0)
-      (format *error-output* "CL-JUPYTER::MESSAGE-SEND: PZMQ:SEND failed with errno=~W~%" (pzmq:errno))
-      (format *error-output* "CL-JUPYTER::MESSAGE-SEND: I was trying to send NIL to socket=~W~%" socket)
-      (return-from message-send -1)))
-  0)
+  (unwind-protect
+       (progn
+	 (bordeaux-threads:acquire-lock *message-send-lock*)
+	 (let ((wire-parts (wire-serialize msg :identities identities :key key)))
+	   ;;DEBUG>>
+	   ;;(format t "~%[Send] wire parts: ~W~%" wire-parts)
+	   (dolist (part wire-parts)
+	     (pzmq:send socket part :sndmore t))
+	   (pzmq:send socket nil)))
+    (bordeaux-threads:release-lock *message-send-lock*)))
+
+(defun recv-string (socket &key dontwait (encoding cffi:*default-foreign-encoding*))
+  "Receive a message part from a socket as a string."
+  (pzmq:with-message msg
+    (pzmq:msg-recv msg socket :dontwait dontwait)
+    (values
+     (handler-case
+         (cffi:foreign-string-to-lisp (pzmq:msg-data msg) :count (pzmq:msg-size msg) :encoding encoding)
+       (BABEL-ENCODINGS:INVALID-UTF8-STARTER-BYTE
+           ()
+         ;; if it's not utf-8 we try latin-1 (Ugly !)
+         (format t "[Recv]: issue with UTF-8 decoding~%")
+         (cffi:foreign-string-to-lisp (pzmq:msg-data msg) :count (pzmq:msg-size msg) :encoding :latin-1)))
+     (pzmq:getsockopt socket :rcvmore))))
 
 (defun zmq-recv-list (socket &optional (parts nil) (part-num 1))
   (multiple-value-bind (part more)
@@ -291,7 +306,14 @@ The wire-deserialization part follows.
         (zmq-recv-list socket (cons part parts) (+ part-num 1))
         (reverse (cons part parts)))))
 
+(defparameter *message-recv-lock* (bordeaux-threads:make-lock "message-recv-lock"))
+
 (defun message-recv (socket)
-  (let ((parts (zmq-recv-list socket)))
-    ;;(format t "[Recv]: parts: ~A~%" (mapcar (lambda (part) (format nil "~W" part)) parts))
-    (wire-deserialize parts)))
+  (unwind-protect
+       (progn
+	 (bordeaux-threads:acquire-lock *message-recv-lock*)
+	 (let ((parts (zmq-recv-list socket)))
+	   ;;DEBUG>>
+	   ;;(format t "[Recv]: parts: ~A~%" (mapcar (lambda (part) (format nil "~W" part)) parts))
+	   (wire-deserialize parts)))
+    (bordeaux-threads:release-lock *message-recv-lock*)))

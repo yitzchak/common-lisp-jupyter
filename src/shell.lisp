@@ -116,7 +116,7 @@
 (defun handle-kernel-info-request (shell identities msg buffers)
   ;;(format t "[Shell] handling 'kernel-info-request'~%")
   ;; status to busy
-  (send-status-update (kernel-iopub (shell-kernel shell)) msg "busy" :key (kernel-key shell))
+  ;;(send-status-update (kernel-iopub (shell-kernel shell)) msg "busy" :key (kernel-key shell))
   ;; for protocol version 5
   (let ((reply (make-message
                 msg "kernel_info_reply" nil
@@ -143,7 +143,8 @@
     ;;   				  :language "common-lisp"))))
     (message-send (shell-socket shell) reply :identities identities :key (kernel-key shell))
     ;; status back to idle
-    (send-status-update (kernel-iopub (shell-kernel shell)) msg "idle" :key (kernel-key shell))))
+    ;;(send-status-update (kernel-iopub (shell-kernel shell)) msg "idle" :key (kernel-key shell))
+    ))
 
 #|
 

@@ -138,8 +138,8 @@
 		(let ((heartbeat-thread-id (start-heartbeat hb-socket)))
 		  ;; main loop
 		  (unwind-protect
-		       (format t "[Kernel] Entering mainloop ...~%")
-		       (shell-loop shell)
+		       (progn (format t "[Kernel] Entering mainloop ...~%")
+			      (shell-loop shell))
 		    ;; clean up when exiting
 		    (bordeaux-threads:destroy-thread heartbeat-thread-id)
 		    (pzmq:close hb-socket)
