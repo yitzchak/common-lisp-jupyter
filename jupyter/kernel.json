@@ -1,0 +1,8 @@
+{
+ "argv": [
+  "maxima",
+  "--batch-string=:lisp (ql:quickload \"maxima-jupyter\")\nparse_string(\"1\")$kernel_start(\"{connection_file}\")$"
+ ],
+ "display_name": "Maxima",
+ "language": "maxima"
+}
