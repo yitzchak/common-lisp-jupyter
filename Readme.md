@@ -68,12 +68,7 @@ details.
 
 The package for Arch Linux is
 [maxima-jupyter-git](https://aur.archlinux.org/packages/maxima-jupyter-git/).
-This package works with the
-[maxima](https://www.archlinux.org/packages/extra/x86_64/maxima/) package, but
-not with
-[maxima-ecl](https://www.archlinux.org/packages/community/x86_64/maxima-ecl/)
-since ECL does not permit saving LISP images. Building and installing (including
-dependencies) can be accomplished with:
+Building and installing (including dependencies) can be accomplished with:
 
     yaourt -Sy maxima-jupyter-git
 
@@ -127,7 +122,7 @@ I created this project in order to combine Maxima with the IPython notebook
 (with the goal of using the notebook to create blog posts containing text,
 formulas, and plots). To execute the notebook server:
 
-    jupyter notebook --Session.key="b''"
+    jupyter notebook
 
 The file [MaximaJupyterExample.ipynb](http://nbviewer.ipython.org/github/robert-dodier/maxima-jupyter/blob/master/MaximaJupyterExample.ipynb) is an example of a Maxima-Jupyter notebook.
 
