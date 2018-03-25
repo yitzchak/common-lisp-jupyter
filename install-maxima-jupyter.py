@@ -55,6 +55,9 @@ g.add_argument('--src', help='Absoute path to source files for embedded kernel.'
 ap.add_argument('--maxima', default='maxima',
                 help='Path to Maxima executable.')
 
+ap.add_argument('--prefix',
+                help='Prefix path to append to generated bootstrap file. Used in packaging scripts.')
+
 args = ap.parse_args()
 
 ##############################
@@ -67,8 +70,9 @@ if not registry_path.endswith('/'):
     registry_path += '/'
 
 bootstrap_path = os.path.join(args.src, 'bootstrap.lisp')
+actual_bootstrap_path = bootstrap_path if args.prefix is None else os.path.join(bootstrap_path, args.prefix)
 
-with open(bootstrap_path, 'w') as bootstrap_file:
+with open(actual_bootstrap_path, 'w') as bootstrap_file:
     bootstrap_file.write('''(push #p"{0}" asdf:*central-registry*)
 (ql:quickload "maxima-jupyter")
 (maxima::$load "stringproc")'''.format(registry_path))
