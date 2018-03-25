@@ -33,7 +33,7 @@ if __name__ != "__main__":
 
 # check the python version, needs at least 3.2
 if sys.version_info.major < 3 or sys.version_info.minor < 3:
-        halt("Error: Maxima-Jupyter requires Python v3.3 or above")
+    halt("Error: Maxima-Jupyter requires Python v3.3 or above")
 
 
 ##############################
