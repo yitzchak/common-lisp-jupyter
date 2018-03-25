@@ -61,15 +61,16 @@ args = ap.parse_args()
 ## Installation of kernel   ##
 ##############################
 
+if not args.src.endswith('/'):
+    args.src += '/'
+
 KERNEL_SPEC = {
     "argv": [
         args.exec,
         '{connection_file}'
     ] if args.src is None else [
         args.maxima,
-        '''--batch-string=:lisp (push #p"{0}{1}" asdf:*central-registry*)
-:lisp (ql:quickload "maxima-jupyter")
-parse_string("1")$kernel_start("{{connection_file}}")$'''.format(args.src, '' if args.src.endswith('/') else '/')
+        '''--batch-string=loadfile("{0}bootstrap.lisp")$bootstrap("{0}")$kernel_start("{{connection_file}}")$'''.format(args.src)
     ],
     "display_name": "Maxima",
     "language": "maxima"
