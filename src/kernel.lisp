@@ -85,69 +85,71 @@
    (signature-scheme :initarg :signature-scheme :reader config-signature-scheme :type string)
    (key :initarg :key :reader kernel-config-key)))
 
+(defun kernel-start-common (connection-file-name)
+  (write-line "")
+  (format t "~A: an enhanced interactive Maxima REPL~%" +KERNEL-IMPLEMENTATION-NAME+)
+  (format t "(Version ~A - Jupyter protocol v.~A)~%"
+          +KERNEL-IMPLEMENTATION-VERSION+
+          +KERNEL-PROTOCOL-VERSION+)
+  (format t "--> (C) 2014-2015 Frederic Peschanski (cf. LICENSE)~%")
+  (write-line "")
+  (format t "connection file = ~A~%" connection-file-name)
+  (unless (stringp connection-file-name)
+    (error "Wrong connection file argument (expecting a string)"))
+  (let* ((config-alist (parse-json-from-string (concat-all 'string "" (read-file-lines connection-file-name))))
+         (config (make-instance 'kernel-config
+                                :transport (afetch "transport" config-alist :test #'equal)
+                                :ip (afetch "ip" config-alist :test #'equal)
+                                :shell-port (afetch "shell_port" config-alist :test #'equal)
+                                :stdin-port (afetch "stdin_port" config-alist :test #'equal)
+                                :iopub-port (afetch "iopub_port" config-alist :test #'equal)
+                                :control-port (afetch "control_port" config-alist :test #'equal)
+                                :hb-port (afetch "hb_port" config-alist :test #'equal)
+                                :signature-scheme (afetch "signature_scheme" config-alist :test #'equal)
+                                :key (let ((str-key (afetch "key" config-alist :test #'equal)))
+                                       (if (string= str-key "")
+                                           nil
+                                           (babel:string-to-octets str-key :encoding :ASCII))))))
+    (when (not (string= (config-signature-scheme config) "hmac-sha256"))
+      ;; XXX: only hmac-sha256 supported
+      (error "Kernel only support signature scheme 'hmac-sha256' (provided ~S)" (config-signature-scheme config)))
+      ;;(inspect config)
+    (let* ((kernel (make-kernel config))
+           (evaluator (make-evaluator kernel))
+           (shell (make-shell-channel kernel))
+           (stdin (make-stdin-channel kernel))
+           (iopub (make-iopub-channel kernel))
+           (hb-socket (pzmq:socket (kernel-ctx kernel) :rep)) ;; Launch the hearbeat thread
+           (hb-endpoint (format nil "~A://~A:~A"
+                                (config-transport config)
+                                (config-ip config)
+                                (config-hb-port config)))
+           (hb-bind (pzmq:bind hb-socket hb-endpoint))
+           (heartbeat-thread-id (start-heartbeat hb-socket)))
+      ;; main loop
+      (unwind-protect
+           (progn (format t "[Kernel] Entering mainloop ...~%")
+    	      (shell-loop shell))
+        ;; clean up when exiting
+        (bordeaux-threads:destroy-thread heartbeat-thread-id)
+        (pzmq:close hb-socket)
+        (pzmq:close (iopub-socket iopub))
+        (pzmq:close (shell-socket shell))
+        (pzmq:close (stdin-socket stdin))
+        (pzmq:ctx-destroy (kernel-ctx kernel))
+        (format t "Bye bye.~%")))))
+
+;; This is the entry point for a saved lisp image created by
+;; trivial-dump-core:save-executable or equivalent.
 (defun kernel-start ()
   ;; IS THERE OTHER STUFF HANDLED BY MAXIMA INIT-CL.LISP THAT WE NEED TO DUPLICATE HERE ??
   (setq *read-default-float-format* 'double-float)
+  (kernel-start-common (car (last (get-argv)))))
 
-  (let ((cmd-args (get-argv)))
-    ;(princ (banner))
-    (write-line "")
-    (format t "~A: an enhanced interactive Maxima REPL~%" +KERNEL-IMPLEMENTATION-NAME+)
-    (format t "(Version ~A - Jupyter protocol v.~A)~%"
-            +KERNEL-IMPLEMENTATION-VERSION+
-            +KERNEL-PROTOCOL-VERSION+)
-    (format t "--> (C) 2014-2015 Frederic Peschanski (cf. LICENSE)~%")
-    (write-line "")
-    (let ((connection-file-name  (car (last cmd-args))))
-      (format t "connection file = ~A~%" connection-file-name)
-      (unless (stringp connection-file-name)
-        (error "Wrong connection file argument (expecting a string)"))
-      (let ((config-alist (parse-json-from-string (concat-all 'string "" (read-file-lines connection-file-name)))))
-        ;;(format t "kernel configuration = ~A~%" config-alist)
-        (let ((config
-               (make-instance 'kernel-config
-                              :transport (afetch "transport" config-alist :test #'equal)
-                              :ip (afetch "ip" config-alist :test #'equal)
-                              :shell-port (afetch "shell_port" config-alist :test #'equal)
-                              :stdin-port (afetch "stdin_port" config-alist :test #'equal)
-                              :iopub-port (afetch "iopub_port" config-alist :test #'equal)
-                              :control-port (afetch "control_port" config-alist :test #'equal)
-                              :hb-port (afetch "hb_port" config-alist :test #'equal)
-                              :signature-scheme (afetch "signature_scheme" config-alist :test #'equal)
-                              :key (let ((str-key (afetch "key" config-alist :test #'equal)))
-                                     (if (string= str-key "")
-                                         nil
-                                         (babel:string-to-octets str-key :encoding :ASCII))))))
-          (when (not (string= (config-signature-scheme config) "hmac-sha256"))
-            ;; XXX: only hmac-sha256 supported
-            (error "Kernel only support signature scheme 'hmac-sha256' (provided ~S)" (config-signature-scheme config)))
-          ;;(inspect config)
-          (let* ((kernel (make-kernel config))
-                 (evaluator (make-evaluator kernel))
-                 (shell (make-shell-channel kernel))
-                 (stdin (make-stdin-channel kernel))
-                 (iopub (make-iopub-channel kernel)))
-	    ;; Launch the hearbeat thread
-	    (let ((hb-socket (pzmq:socket (kernel-ctx kernel) :rep)))
-	      (let ((hb-endpoint (format nil "~A://~A:~A"
-					 (config-transport config)
-					 (config-ip config)
-					 (config-hb-port config))))
-		;;(format t "heartbeat endpoint is: ~A~%" endpoint)
-		(pzmq:bind hb-socket hb-endpoint)
-		(let ((heartbeat-thread-id (start-heartbeat hb-socket)))
-		  ;; main loop
-		  (unwind-protect
-		       (progn (format t "[Kernel] Entering mainloop ...~%")
-			      (shell-loop shell))
-		    ;; clean up when exiting
-		    (bordeaux-threads:destroy-thread heartbeat-thread-id)
-		    (pzmq:close hb-socket)
-		    (pzmq:close (iopub-socket iopub))
-		    (pzmq:close (shell-socket shell))
-		    (pzmq:close (stdin-socket stdin))
-		    (pzmq:ctx-destroy (kernel-ctx kernel))
-		    (format t "Bye bye.~%")))))))))))
+;; This is the entry point for starting the kernel from within an existing
+;; Maxima session.
+(maxima::defmfun maxima::$kernel_start (connection-file-name)
+  (kernel-start-common connection-file-name))
 
 (defun start-heartbeat (socket)
   (let ((thread-id (bordeaux-threads:make-thread
