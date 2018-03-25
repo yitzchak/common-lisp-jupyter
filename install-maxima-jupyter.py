@@ -97,6 +97,7 @@ with open(os.path.join(tempdir, 'kernel.json'), "w") as kernel_spec_file:
     json.dump(KERNEL_SPEC, kernel_spec_file)
 
 jupyter_client.kernelspec.install_kernel_spec(tempdir, kernel_name='maxima',
-                                              user=args.user)
+                                              user=args.user,
+                                              prefix=args.prefix)
 
 print("maxima-jupyter: installation complete.")
