@@ -67,9 +67,9 @@ KERNEL_SPEC = {
         '{connection_file}'
     ] if args.src is None else [
         args.maxima,
-        '''--batch-string=:lisp (push #p"{0}/" asdf:*central-registry*)
+        '''--batch-string=:lisp (push #p"{0}{1}" asdf:*central-registry*)
 :lisp (ql:quickload "maxima-jupyter")
-parse_string("1")$kernel_start("{{connection_file}}")$'''.format(args.src)
+parse_string("1")$kernel_start("{{connection_file}}")$'''.format(args.src, '' if args.src.endswith('/') else '/')
     ],
     "display_name": "Maxima",
     "language": "maxima"
