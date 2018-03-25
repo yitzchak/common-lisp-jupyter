@@ -49,8 +49,11 @@ g.add_argument('--system', dest='user', action='store_false',
                help='Install as system kernel.')
 
 g = ap.add_mutually_exclusive_group(required=True)
-g.add_argument('--maxima-jupyter', help='Path to saved lisp image.')
-g.add_argument('--maxima', help='Path to Maxima executable.')
+g.add_argument('--exec', help='Absolute path to saved lisp kernel image.')
+g.add_argument('--src', help='Absoute path to source files for embedded kernel.')
+
+ap.add_argument('--maxima', default='maxima',
+                help='Path to Maxima executable.')
 
 args = ap.parse_args()
 
@@ -60,11 +63,13 @@ args = ap.parse_args()
 
 KERNEL_SPEC = {
     "argv": [
-        args.maxima_jupyter,
+        args.exec,
         '{connection_file}'
-    ] if args.maxima is None else [
+    ] if args.src is None else [
         args.maxima,
-        '--batch-string=:lisp (ql:quickload "maxima-jupyter")\nparse_string("1")$kernel_start("{connection_file}")$'
+        '''--batch-string=:lisp (push #p"{0}/" asdf:*central-registry*)
+:lisp (ql:quickload "maxima-jupyter")
+parse_string("1")$kernel_start("{{connection_file}}")$'''.format(args.src)
     ],
     "display_name": "Maxima",
     "language": "maxima"
