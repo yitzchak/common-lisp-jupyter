@@ -37,14 +37,32 @@ I installed Jupyter via:
 
      python3 -m pip install jupyter
 
-The installation script creates a kernel description so Jupyter knows how to execute the kernel:
+There are two kernel installation techniques. The first is to create a saved
+image as detailed in `make-maxima-jupyter-recipe.txt`. Once this image has been
+created then the installation script can be used with:
 
-    python3 ./install-maxima-jupyter.py --maxima-jupyter-exec=path/to/maxima-jupyter
+```sh
+python3 ./install-maxima-jupyter.py --exec=path/to/maxima-jupyter
+```
 
-The executable named by `--maxima-jupyter-exec` is an executable
-saved Lisp image. The saved image needs to contain Maxima and CL-Jupyter.
-I create these images by executing Maxima and loading CL-Jupyter into
-Maxima, and then saving an image. See `make-maxima-jupyter-recipe.txt`.
+Adding the option `--user` will install a user kernel instead of a system
+kernel.
+
+The second installation method will run the kernel from an interactive Maxima
+session. The advantange to this technique is that the normal initialization
+behavior of Maxima, such as loading `maxima-init.mac` from the current directory
+will be preserved. After the files in `src` have been copied to an appropriate
+location such as `/usr/share/maxima-jupyter` for a system installation or
+`~/maxima-jupyter` for a user installation then the installation script called:
+
+```sh
+python3 ./install-maxima-jupyter.py --src=path/to/maxima-jupyter-src
+```
+
+The option `--maxima` may also be used to specify the location of the Maxima
+executable. Please note that in order for this method to work quicklisp needs be
+loaded by default in every Maxima session. See quicklisp documentation for
+details.
 
 ## Installation on Arch/Manjaro
 
@@ -91,10 +109,7 @@ Yes, this is pretty painful too.
 
 ### Console mode
 
-    jupyter console --Session.key="b''" --kernel=maxima
-
-**Remark**: the `--Session.key="b''"` option is for the moment required because Maxima-Jupyter
-does not yet support message encryption.
+    jupyter console --kernel=maxima
 
 When you enter stuff to be evaluated, you omit the usual trailing
 semicolon or dollar sign:
