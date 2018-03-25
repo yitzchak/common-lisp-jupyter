@@ -81,7 +81,7 @@ KERNEL_SPEC = {
         args.maxima,
         '--very-quiet',
         '--preload-lisp={0}'.format(bootstrap_path),
-        '''--batch-string=kernel_start("{connection_file}")$'''
+        '--batch-string=kernel_start("{connection_file}")$'
     ],
     "display_name": "Maxima",
     "language": "maxima"
