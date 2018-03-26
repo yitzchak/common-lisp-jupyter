@@ -17,8 +17,7 @@ To try Maxima-Jupyter you need :
 
      - Other implementations may be possible
 
-   - You don't need to build Maxima! See `make-maxima-jupyter-recipe.txt`
-     about creating the Maxima-Jupyter executable.
+   - You don't need to build Maxima! See install instructions below.
 
  - Quicklisp (see: http://www.quicklisp.org)
 
