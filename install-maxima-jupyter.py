@@ -47,6 +47,8 @@ g.add_argument('--user', dest='user', action='store_true',
                help='Install as user kernel.')
 g.add_argument('--system', dest='user', action='store_false',
                help='Install as system kernel.')
+ap.add_argument('--kernel-prefix',
+                help='Kernel prefix path. Used for conda/virtual or packaging scripts.')
 
 g = ap.add_mutually_exclusive_group(required=True)
 g.add_argument('--exec', help='Absolute path to saved lisp kernel image.')
@@ -55,7 +57,7 @@ g.add_argument('--src', help='Absoute path to source files for embedded kernel.'
 ap.add_argument('--maxima', default='maxima',
                 help='Path to Maxima executable.')
 
-ap.add_argument('--prefix',
+ap.add_argument('--bootstrap-prefix',
                 help='Prefix path to append to generated bootstrap file. Used in packaging scripts.')
 
 args = ap.parse_args()
@@ -70,7 +72,7 @@ if not registry_path.endswith('/'):
     registry_path += '/'
 
 bootstrap_path = os.path.join(args.src, 'bootstrap.lisp')
-actual_bootstrap_path = bootstrap_path if args.prefix is None else os.path.join(bootstrap_path, args.prefix)
+actual_bootstrap_path = bootstrap_path if args.bootstrap_prefix is None else os.path.join(bootstrap_path, args.bootstrap_prefix)
 
 with open(actual_bootstrap_path, 'w') as bootstrap_file:
     bootstrap_file.write('''(push #p"{0}" asdf:*central-registry*)
@@ -98,6 +100,6 @@ with open(os.path.join(tempdir, 'kernel.json'), "w") as kernel_spec_file:
 
 jupyter_client.kernelspec.install_kernel_spec(tempdir, kernel_name='maxima',
                                               user=args.user,
-                                              prefix=args.prefix)
+                                              prefix=args.kernel_prefix)
 
 print("maxima-jupyter: installation complete.")
