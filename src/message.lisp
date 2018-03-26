@@ -12,50 +12,17 @@
 
 |#
 
-(defclass header ()
-  ((msg-id :initarg :msg-id :reader header-msg-id :type string)
-   (username :initarg :username :reader header-username :type string)
-   (session :initarg :session :reader header-session :type string)
-   (msg-type :initarg :msg-type :reader header-msg-type :type string)
-   (version :initarg :version :initform +KERNEL-PROTOCOL-VERSION+ :reader header-version :type string))
-  (:documentation "Header representation for IPython messages"))
-
-#|
-
-### JSon encoding ###
-
-|#
-
-(defmethod encode-json (stream (object header) &key (indent nil) (first-line nil))
-  (with-slots (msg-id username session msg-type version) object
-    (encode-json stream `(("msg_id" . ,msg-id)
-                          ("username" . ,username)
-                          ("session" . ,session)
-                          ("msg_type" . ,msg-type)
-                          ("version" . ,version))
-                 :indent indent :first-line first-line)))
-
 (example-progn
- (defparameter *header1* (make-instance 'header
-					:msg-id "XXX-YYY-ZZZ-TTT"
-					:username "fredokun"
-					:session "AAA-BBB-CCC-DDD"
-					:msg-type "execute_request")))
+ (defparameter *header1* (jsown:new-js
+                           ("msg_id" "XXX-YYY-ZZZ-TTT")
+                           ("username" "fredokun")
+                           ("session" "AAA-BBB-CCC-DDD")
+                           ("msg_type" "execute_request")
+                           ("version" "5.0"))))
 
 (example
- (encode-json-to-string *header1* :indent 0)
- => "{
-  \"msg_id\": \"XXX-YYY-ZZZ-TTT\",
-  \"username\": \"fredokun\",
-  \"session\": \"AAA-BBB-CCC-DDD\",
-  \"msg_type\": \"execute_request\",
-  \"version\": \"5.0\"
-}")
-
-
-(example
- (encode-json-to-string *header1*)
- => "{\"msg_id\": \"XXX-YYY-ZZZ-TTT\",\"username\": \"fredokun\",\"session\": \"AAA-BBB-CCC-DDD\",\"msg_type\": \"execute_request\",\"version\": \"5.0\"}")
+ (jsown:to-json *header1*)
+ => "{\"msg_id\":\"XXX-YYY-ZZZ-TTT\",\"username\":\"fredokun\",\"session\":\"AAA-BBB-CCC-DDD\",\"msg_type\":\"execute_request\",\"version\":\"5.0\"}")
 
 #|
 
@@ -63,43 +30,21 @@
 
 |#
 
-(example (parse-json-from-string (encode-json-to-string *header1*))
-         => '(("msg_id" . "XXX-YYY-ZZZ-TTT") ("username" . "fredokun")
-	      ("session" . "AAA-BBB-CCC-DDD") ("msg_type" . "execute_request")
-	      ("version" . "5.0")))
+(example (jsown:parse (jsown:to-json *header1*))
+         => '(:obj
+              ("msg_id" . "XXX-YYY-ZZZ-TTT")
+              ("username" . "fredokun")
+              ("session" . "AAA-BBB-CCC-DDD")
+              ("msg_type" . "execute_request")
+              ("version" . "5.0")))
 
 (example
- (afetch "msg_id" (parse-json-from-string (encode-json-to-string *header1*)) :test #'equal)
+ (jsown:val (jsown:parse (jsown:to-json *header1*)) "msg_id")
  => "XXX-YYY-ZZZ-TTT")
 
 (example
- (afetch "username" (parse-json-from-string (encode-json-to-string *header1*)) :test #'equal)
+ (jsown:val (jsown:parse (jsown:to-json *header1*)) "username")
  => "fredokun")
-
-#|
-
-### Wire-deserialization ###
-
-The deserialization of a message header from a JSon string is then trivial.
-
-|#
-
-(defun wire-deserialize-header (hdr)
-  (let ((json-list (parse-json-from-string hdr)))
-    (if json-list
-        (make-instance 'header
-                       :msg-id (afetch "msg_id" json-list :test #'equal)
-                       :username (afetch "username"json-list :test #'equal)
-                       :session (afetch "session" json-list :test #'equal)
-                       :msg-type (afetch "msg_type" json-list :test #'equal))
-        nil)))
-
-(example-progn
- (defparameter *header2* (wire-deserialize-header (encode-json-to-string *header1*))))
-
-
-(example (header-username *header2*)
-         => "fredokun")
 
 #|
 
@@ -108,40 +53,41 @@ The deserialization of a message header from a JSon string is then trivial.
 |#
 
 (defclass message ()
-  ((header :initarg :header :accessor message-header)
-   (parent-header :initarg :parent-header :initform nil :accessor message-parent-header)
-   (metadata :initarg :metadata :initform nil :accessor message-metadata)
-   (content :initarg :content :initform nil :accessor message-content))
+  ((header :initarg :header
+           :initform (jsown:new-js)
+           :accessor message-header)
+   (parent-header :initarg :parent-header
+                  :initform (jsown:new-js)
+                  :accessor message-parent-header)
+   (metadata :initarg :metadata
+             :initform (jsown:new-js)
+             :accessor message-metadata)
+   (content :initarg :content
+            :initform (jsown:new-js)
+            :accessor message-content))
   (:documentation "Representation of IPython messages"))
 
-(defun make-message (parent_msg msg_type metadata content)
-  (let ((hdr (message-header parent_msg)))
-    (make-instance
-     'message
-     :header (make-instance
-	      'header
-	      :msg-id (format nil "~W" (uuid:make-v4-uuid))
-	      :username (header-username hdr)
-	      :session (header-session hdr)
-	      :msg-type msg_type
-	      :version (header-version hdr))
-     :parent-header hdr
-     :metadata metadata
-     :content content)))
+(defun make-message (parent-msg msg-type content)
+  (let ((hdr (message-header parent-msg)))
+    (make-instance 'message
+                   :header (jsown:new-js
+                             ("msg_id" (format nil "~W" (uuid:make-v4-uuid)))
+                             ("username" (jsown:val hdr "username"))
+                             ("session" (jsown:val hdr "session"))
+                             ("msg_type" msg-type)
+                             ("version" +KERNEL-PROTOCOL-VERSION+))
+                   :parent-header hdr
+                   :content content)))
 
-(defun make-orphan-message (session-id msg-type metadata content)
-  (make-instance
-   'message
-   :header (make-instance
-	    'header
-	    :msg-id (format nil "~W" (uuid:make-v4-uuid))
-	    :username "kernel"
-	    :session session-id
-	    :msg-type msg-type
-	    :version +KERNEL-PROTOCOL-VERSION+)
-   :parent-header '()
-   :metadata metadata
-   :content content))
+(defun make-orphan-message (session-id msg-type content)
+  (make-instance 'message
+                 :header (jsown:new-js
+                           ("msg_id" (format nil "~W" (uuid:make-v4-uuid)))
+                           ("username" "kernel")
+                           ("session" session-id)
+                           ("msg_type" msg-type)
+                           ("version" +KERNEL-PROTOCOL-VERSION+))
+                 :content content))
 
 (example-progn
  (defparameter *msg1* (make-instance 'message :header *header1*)))
@@ -176,26 +122,20 @@ The wire-serialization of IPython kernel messages uses multi-parts ZMQ messages.
 
 (defmethod wire-serialize ((msg message) &key (identities nil) (key nil))
   (with-slots (header parent-header metadata content) msg
-    (let ((header-json (encode-json-to-string header))
-          (parent-header-json (if parent-header
-                                  (encode-json-to-string parent-header)
-				"{}"))
-          (metadata-json (if metadata
-                             (encode-json-to-string metadata)
-                             "{}"))
-          (content-json (if content
-                            (encode-json-to-string content)
-                            "{}")))
-      (let ((sig (if key
-                     (message-signing key (list header-json parent-header-json metadata-json content-json))
-                     "")))
-        (append identities
-                (list +WIRE-IDS-MSG-DELIMITER+
-                      sig
-                      header-json
-                      parent-header-json
-                      metadata-json
-                      content-json))))))
+    (let* ((header-json (jsown:to-json header))
+           (parent-header-json (jsown:to-json parent-header))
+           (metadata-json (jsown:to-json metadata))
+           (content-json (jsown:to-json content))
+           (sig (if key
+                    (message-signing key (list header-json parent-header-json metadata-json content-json))
+                    "")))
+      (append identities
+        (list +WIRE-IDS-MSG-DELIMITER+
+          sig
+          header-json
+          parent-header-json
+          metadata-json
+          content-json)))))
 
 (example-progn
  (defparameter *wire1* (wire-serialize *msg1* :identities '("XXX-YYY-ZZZ-TTT" "AAA-BBB-CCC-DDD"))))
@@ -226,7 +166,7 @@ The wire-deserialization part follows.
 (example
  (let ((delim-index (position +WIRE-IDS-MSG-DELIMITER+ *wire1*)))
    (subseq *wire1* (+ 2 delim-index) (+ 6 delim-index)))
- => '("{\"msg_id\": \"XXX-YYY-ZZZ-TTT\",\"username\": \"fredokun\",\"session\": \"AAA-BBB-CCC-DDD\",\"msg_type\": \"execute_request\",\"version\": \"5.0\"}"
+ => '("{\"msg_id\":\"XXX-YYY-ZZZ-TTT\",\"username\":\"fredokun\",\"session\":\"AAA-BBB-CCC-DDD\",\"msg_type\":\"execute_request\",\"version\":\"5.0\"}"
       "{}" "{}" "{}"))
 
 
@@ -239,10 +179,10 @@ The wire-deserialization part follows.
       (let ((msg (destructuring-bind (header parent-header metadata content)
                      (subseq parts (+ 2 delim-index) (+ 6 delim-index))
                    (make-instance 'message
-                                  :header (wire-deserialize-header header)
-                                  :parent-header (wire-deserialize-header parent-header)
+                                  :header (jsown:parse header)
+                                  :parent-header (jsown:parse parent-header)
                                   :metadata metadata
-                                  :content content))))
+                                  :content (jsown:parse content)))))
         (values identities
                 signature
                 msg
@@ -255,7 +195,7 @@ The wire-deserialization part follows.
 			    (list ids sig msg raw))))
 
 (example
- (header-username (message-header (third *dewire-1*)))
+ (jsown:val (message-header (third *dewire-1*)) "username")
  => "fredokun")
 
 #|

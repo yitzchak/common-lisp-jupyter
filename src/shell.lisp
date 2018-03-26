@@ -34,11 +34,11 @@
 	      ;;(format t "Shell Received:~%")
 	      ;;(format t "  | identities: ~A~%" identities)
 	      ;;(format t "  | signature: ~W~%" sig)
-	      ;;(format t "  | message: ~A~%" (encode-json-to-string (message-header msg)))
+	      ;;(format t "  | message: ~A~%" (jsown:to-json (message-header msg)))
 	      ;;(format t "  | buffers: ~W~%" buffers)
 
 	      ;; TODO: check the signature (after that, sig can be forgotten)
-	      (let ((msg-type (header-msg-type (message-header msg))))
+	      (let ((msg-type (jsown:val (message-header msg) "msg_type")))
 		(cond ((equal msg-type "kernel_info_request")
 		       (handle-kernel-info-request shell identities msg buffers))
 		      ((equal msg-type "execute_request")
@@ -55,64 +55,6 @@
 
 |#
 
-;; for protocol version 5
-(defclass content-kernel-info-reply (message-content)
-  ((protocol-version :initarg :protocol-version :type string)
-   (implementation :initarg :implementation :type string)
-   (implementation-version :initarg :implementation-version :type string)
-   (language-info-name :initarg :language-info-name :type string)
-   (language-info-version :initarg :language-info-version :type string)
-   (language-info-mimetype :initarg :language-info-mimetype :type string)
-   (language-info-pygments-lexer :initarg :language-info-pygments-lexer :type string)
-   (language-info-codemirror-mode :initarg :language-info-codemirror-mode :type string)
-   (language-info-nbconvert-exporter :initarg :language-info-nbconvert-exporter :type string)
-   (banner :initarg :banner :type string)
-   ;; help links: (text . url) a-list
-   (help-links :initarg :help-links)))
-
-;; for protocol version 4.1
-;;(defclass content-kernel-info-reply (message-content)
-;; ((protocol-version :initarg :protocol-version)
-;;   (language-version :initarg :language-version)
-;;   (language :initarg :language :type string)))
-
-(defun help-links-to-json (help-links)
-  (concatenate 'string "["
-	       (concat-all 'string ""
-			   (join "," (mapcar (lambda (link)
-					       (format nil "{ \"text\": ~W, \"url\": ~W }" (car link) (cdr link)))
-					     help-links)))
-	       "]"))
-
-;; for protocol version 5
-(defmethod encode-json (stream (object content-kernel-info-reply) &key (indent nil) (first-line nil))
-  (with-slots (protocol-version
-               implementation implementation-version
-               language-info-name language-info-version
-               language-info-mimetype language-info-pygments-lexer language-info-codemirror-mode
-               language-info-nbconvert-exporter
-               banner help-links) object
-    (encode-json stream `(("protocol_version" . ,protocol-version)
-                          ("implementation" . ,implementation)
-                          ("implementation_version" . ,implementation-version)
-                          ("language_info" . (("name" . ,language-info-name)
-                                              ("version" . ,language-info-version)
-                                              ("mimetype" . ,language-info-mimetype)
-                                              ("pygments_lexer" . ,language-info-pygments-lexer)
-                                              ("codemirror_mode" . ,language-info-codemirror-mode)))
-                                              ;("nbconvert_exporter" . ,language-info-nbconvert-exporter)))
-                          ("banner" . "")) ; ,banner)
-                          ;("help_links" . ,help-links))
-                 :indent indent :first-line first-line)))
-
-;; for protocol version 4.1
-;; (defmethod encode-json (stream (object content-kernel-info-reply) &key (indent nil) (first-line nil))
-;;   (with-slots (protocol-version ipython-version language-version language) object
-;;     (encode-json stream `(("protocol_version" . ,protocol-version)
-;;                           ("language_version" . ,language-version)
-;;                           ("language" . ,language))
-;;                  :indent indent :first-line first-line)))
-
 (defun kernel-key (shell)
   (kernel-config-key (kernel-config (shell-kernel shell))))
 
@@ -122,28 +64,27 @@
   ;;(send-status-update (kernel-iopub (shell-kernel shell)) msg "busy" :key (kernel-key shell))
   ;; for protocol version 5
   (let ((reply (make-message
-                msg "kernel_info_reply" nil
-                (make-instance
-                 'content-kernel-info-reply
-                 :protocol-version (header-version (message-header msg))
-                 :implementation +KERNEL-IMPLEMENTATION-NAME+
-                 :implementation-version +KERNEL-IMPLEMENTATION-VERSION+
-                 :language-info-name "maxima"
-                 :language-info-version maxima::*autoconf-version*
-                 :language-info-mimetype "text/x-maxima"
-                 :language-info-pygments-lexer "maxima"
-                 :language-info-codemirror-mode "maxima"
-                 :language-info-nbconvert-exporter ""
-                 :banner (banner)
-                 :help-links (vector)))))
-		 ;;'(("Common Lisp Hyperspec" . "http://www.lispworks.com/documentation/HyperSpec/Front/index.htm"))))))
-  ;; for protocol version 4.1
-  ;; (let ((reply (make-message-from-parent msg "kernel_info_reply" nil
-  ;;   				 (make-instance
-  ;;   				  'content-kernel-info-reply
-  ;;   				  :protocol-version #(4 1)
-  ;;   				  :language-version #(1 2 7)  ;; XXX: impl. dependent but really cares ?
-    ;;   				  :language "common-lisp"))))
+                msg "kernel_info_reply"
+                (jsown:new-js
+                  ("protocol_version" (jsown:val (message-header msg) "version"))
+                  ("implementation" +KERNEL-IMPLEMENTATION-NAME+)
+                  ("implementation_version" +KERNEL-IMPLEMENTATION-VERSION+)
+                  ("banner" "")
+                  ("help_links"
+                    (list
+                      (jsown:new-js
+                        ("text" "Maxima Reference Manual")
+                        ("url" "http://maxima.sourceforge.net/docs/manual/maxima.html"))
+                      (jsown:new-js
+                        ("text" "Maxima Documentation")
+                        ("url" "http://maxima.sourceforge.net/documentation.html"))))
+                  ("language_info"
+                    (jsown:new-js
+                      ("name" "maxima")
+                      ("version" maxima::*autoconf-version*)
+                      ("mimetype" "text/x-maxima")
+                      ("pygments_lexer" "maxima")
+                      ("codemirror_mode" "maxima")))))))
     (message-send (shell-socket shell) reply :identities identities :key (kernel-key shell))
     ;; status back to idle
     ;;(send-status-update (kernel-iopub (shell-kernel shell)) msg "idle" :key (kernel-key shell))
@@ -161,8 +102,8 @@
     ;;(format t "[Shell] handling 'execute_request'~%")
     (let* ((key (kernel-key shell))
            (iopub (kernel-iopub (shell-kernel shell)))
-           (content (parse-json-from-string (message-content msg)))
-           (code (afetch "code" content :test #'equal)))
+           (content (message-content msg))
+           (code (jsown:val content "code")))
       (send-status-update (kernel-iopub (shell-kernel shell)) msg "busy" :key key)
       (setq execute-request-shell shell)
       (setq execute-request-msg msg)
@@ -221,10 +162,9 @@
         (let ((stdin (kernel-stdin kernel)))
           (send-input-request stdin execute-request-msg retrieve-prompt :key (kernel-key execute-request-shell))
           (multiple-value-bind (identities signature message buffers) (message-recv (stdin-socket stdin))
-            (let*
-              ((content (parse-json-from-string (message-content message)))
-               (value (afetch "value" content :test #'equal)))
-               (maxima::mread-noprompt (make-string-input-stream (add-terminator value)) nil))))))))
+            (let* ((content (message-content message))
+                   (value (jsown:val content "value")))
+              (maxima::mread-noprompt (make-string-input-stream (add-terminator value)) nil))))))))
 
 #|
 
@@ -233,8 +173,8 @@
 |#
 
 (defun handle-shutdown-request (shell identities msg buffers)
-  (let* ((content (parse-json-from-string (message-content msg)))
-         (restart (afetch "restart" content :test #'equal)))
+  (let* ((content (message-content msg))
+         (restart (jsown:val content "restart")))
     (send-shutdown-reply shell identities msg restart :key (kernel-key shell))
     nil))
 
@@ -245,8 +185,8 @@
 |#
 
 (defun handle-is-complete-request (shell identities msg buffers)
-  (let* ((content (parse-json-from-string (message-content msg)))
-         (code (afetch "code" content :test #'equal))
+  (let* ((content (message-content msg))
+         (code (jsown:val content "code"))
          (status (if (ends-with-terminator code)
                      "complete"
                      "incomplete")))
@@ -259,21 +199,24 @@
 |#
 
 (defun send-shutdown-reply (shell identities parent-msg restart &key (key nil))
-  (let ((msg (make-message parent-msg "shutdown_reply" nil
-                           `(("restart" . ,restart)))))
+  (let ((msg (make-message parent-msg "shutdown_reply"
+                           (jsown:new-js
+                             ("restart" (if restart t :f))))))
     (message-send (shell-socket shell) msg :identities identities :key key)))
 
 (defun send-is-complete-reply (shell identities parent-msg status &key (key nil))
-  (let ((msg (make-message parent-msg "is_complete_reply" nil
-                           `(("status" . ,status)
-                             ("indent" . "")))))
+  (let ((msg (make-message parent-msg "is_complete_reply"
+                           (jsown:new-js
+                             ("status" status)
+                             ("indent" "")))))
     (message-send (shell-socket shell) msg :identities identities :key key)))
 
 (defun send-execute-reply (shell identities parent-msg status execution-count &key (key nil))
-  (let ((msg (make-message parent-msg "execute_reply" nil
-                           `(("status" . ,status)
-                             ("execution_count" . ,execution-count)
-                             ("payload" . ,(vector))))))
+  (let ((msg (make-message parent-msg "execute_reply"
+                           (jsown:new-js
+                             ("status" status)
+                             ("execution_count" execution-count)
+                             ("payload" '())))))
     (message-send (shell-socket shell) msg :identities identities :key key)))
 
 #|
