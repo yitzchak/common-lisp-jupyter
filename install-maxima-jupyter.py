@@ -72,7 +72,7 @@ if not registry_path.endswith('/'):
     registry_path += '/'
 
 bootstrap_path = os.path.join(args.src, 'bootstrap.lisp')
-actual_bootstrap_path = bootstrap_path if args.bootstrap_prefix is None else os.path.join(bootstrap_path, args.bootstrap_prefix)
+actual_bootstrap_path = bootstrap_path if args.bootstrap_prefix is None else os.path.join(args.bootstrap_prefix, bootstrap_path)
 
 with open(actual_bootstrap_path, 'w') as bootstrap_file:
     bootstrap_file.write('''(push #p"{0}" asdf:*central-registry*)
