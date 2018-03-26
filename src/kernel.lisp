@@ -47,32 +47,14 @@
 (example (concat-all 'string "" '("a" "b" "c" "d" "e"))
          => "abcde")
 
-(defun banner ()
-  (concat-all
-   'string ""
-   (join (format nil "~%")
-         '("                                 __________       "
-           "                                /         /.      "
-           "     .-----------------.       /_________/ |      "
-           "    /                 / |      |         | |      "
-           "   /+================+\\ |      | |====|  | |      "
-           "   ||cl-jupyter      || |      |         | |      "
-           "   ||                || |      | |====|  | |      "
-           "   ||* (fact 5)      || |      |         | |      "
-           "   ||120             || |      |   ___   | |      "
-           "   ||                || |      |  |166|  | |      "
-           "   ||                ||/@@@    |   ---   | |      "
-           "   \\+================+/    @   |_________|./.     "
-           "                         @           ..  ....'    "
-           "     ..................@      __.'. '  ''         "
-           "    /oooooooooooooooo//      ///                  "
-           "   /................//      /_/                   "
-           "   ------------------                             "
-           ""))))
-
-;; (format t (banner))
-
-
+(defun banner (stream)
+  (format stream (concatenate 'string
+                              "~A: an enhanced interactive Maxima REPL~%"
+                              "(Version ~A - Jupyter protocol v.~A)~%"
+                              "--> (C) 2014-2015 Frederic Peschanski (cf. LICENSE)~%")
+          +KERNEL-IMPLEMENTATION-NAME+
+          +KERNEL-IMPLEMENTATION-VERSION+
+          +KERNEL-PROTOCOL-VERSION+))
 
 (defclass kernel-config ()
   ((transport :initarg :transport :reader config-transport :type string)
@@ -86,13 +68,6 @@
    (key :initarg :key :reader kernel-config-key)))
 
 (defun kernel-start (connection-file-name)
-  (write-line "")
-  (format t "~A: an enhanced interactive Maxima REPL~%" +KERNEL-IMPLEMENTATION-NAME+)
-  (format t "(Version ~A - Jupyter protocol v.~A)~%"
-          +KERNEL-IMPLEMENTATION-VERSION+
-          +KERNEL-PROTOCOL-VERSION+)
-  (format t "--> (C) 2014-2015 Frederic Peschanski (cf. LICENSE)~%")
-  (write-line "")
   (format t "connection file = ~A~%" connection-file-name)
   (unless (stringp connection-file-name)
     (error "Wrong connection file argument (expecting a string)"))

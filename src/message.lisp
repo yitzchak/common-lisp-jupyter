@@ -59,6 +59,9 @@
    (parent-header :initarg :parent-header
                   :initform (jsown:new-js)
                   :accessor message-parent-header)
+   (identities :initarg :identities
+               :initform nil
+               :accessor message-identities)
    (metadata :initarg :metadata
              :initform (jsown:new-js)
              :accessor message-metadata)
@@ -68,7 +71,8 @@
   (:documentation "Representation of IPython messages"))
 
 (defun make-message (parent-msg msg-type content)
-  (let ((hdr (message-header parent-msg)))
+  (let ((hdr (message-header parent-msg))
+        (identities (message-identities parent-msg)))
     (make-instance 'message
                    :header (jsown:new-js
                              ("msg_id" (format nil "~W" (uuid:make-v4-uuid)))
@@ -77,9 +81,10 @@
                              ("msg_type" msg-type)
                              ("version" +KERNEL-PROTOCOL-VERSION+))
                    :parent-header hdr
+                   :identities identities
                    :content content)))
 
-(defun make-orphan-message (session-id msg-type content)
+(defun make-orphan-message (session-id msg-type identities content)
   (make-instance 'message
                  :header (jsown:new-js
                            ("msg_id" (format nil "~W" (uuid:make-v4-uuid)))
@@ -87,10 +92,13 @@
                            ("session" session-id)
                            ("msg_type" msg-type)
                            ("version" +KERNEL-PROTOCOL-VERSION+))
+                 :identities identities
                  :content content))
 
 (example-progn
- (defparameter *msg1* (make-instance 'message :header *header1*)))
+  (defparameter *msg1* (make-instance 'message
+                                      :header *header1*
+                                      :identities '("XXX-YYY-ZZZ-TTT" "AAA-BBB-CCC-DDD"))))
 
 
 #|
@@ -120,8 +128,8 @@ The wire-serialization of IPython kernel messages uses multi-parts ZMQ messages.
 ;; XXX: should be a defconstant but  strings are not EQL-able...
 (defvar +WIRE-IDS-MSG-DELIMITER+ "<IDS|MSG>")
 
-(defmethod wire-serialize ((msg message) &key (identities nil) (key nil))
-  (with-slots (header parent-header metadata content) msg
+(defmethod wire-serialize ((msg message) &key (key nil))
+  (with-slots (header parent-header identities metadata content) msg
     (let* ((header-json (jsown:to-json header))
            (parent-header-json (jsown:to-json parent-header))
            (metadata-json (jsown:to-json metadata))
@@ -138,7 +146,7 @@ The wire-serialization of IPython kernel messages uses multi-parts ZMQ messages.
           content-json)))))
 
 (example-progn
- (defparameter *wire1* (wire-serialize *msg1* :identities '("XXX-YYY-ZZZ-TTT" "AAA-BBB-CCC-DDD"))))
+ (defparameter *wire1* (wire-serialize *msg1*)))
 
 
 #|
@@ -170,32 +178,30 @@ The wire-deserialization part follows.
       "{}" "{}" "{}"))
 
 
-(defun wire-deserialize (parts)
+(defun wire-deserialize (parts &key (key nil))
   (let ((delim-index (position +WIRE-IDS-MSG-DELIMITER+ parts :test  #'equal)))
     (when (not delim-index)
       (error "no <IDS|MSG> delimiter found in message parts"))
-    (let ((identities (subseq parts 0 delim-index))
-          (signature (nth (1+ delim-index) parts)))
-      (let ((msg (destructuring-bind (header parent-header metadata content)
-                     (subseq parts (+ 2 delim-index) (+ 6 delim-index))
-                   (make-instance 'message
-                                  :header (jsown:parse header)
-                                  :parent-header (jsown:parse parent-header)
-                                  :metadata metadata
-                                  :content (jsown:parse content)))))
-        (values identities
-                signature
-                msg
-                (subseq parts (+ 6 delim-index)))))))
+    (let* ((identities (subseq parts 0 delim-index))
+           (sig (nth (1+ delim-index) parts))
+           (parts (subseq parts (+ 2 delim-index) (+ 6 delim-index)))
+           (expected-sig (if key (message-signing key parts) "")))
+      (unless (equal sig expected-sig)
+        (error "Signature mismatch in message"))
+      (destructuring-bind (header parent-header metadata content) parts
+        (make-instance 'message
+                       :header (jsown:parse header)
+                       :parent-header (jsown:parse parent-header)
+                       :identities identities
+                       :metadata (jsown:parse metadata)
+                       :content (jsown:parse content))))))
 
 
 (example-progn
- (defparameter *dewire-1* (multiple-value-bind (ids sig msg raw)
-			      (wire-deserialize *wire1*)
-			    (list ids sig msg raw))))
+ (defparameter *dewire-1* (wire-deserialize *wire1*)))
 
 (example
- (jsown:val (message-header (third *dewire-1*)) "username")
+ (jsown:val (message-header *dewire-1*) "username")
  => "fredokun")
 
 #|
@@ -207,11 +213,11 @@ The wire-deserialization part follows.
 ;; Locking, courtesy of dmeister, thanks !
 (defparameter *message-send-lock* (bordeaux-threads:make-lock "message-send-lock"))
 
-(defun message-send (socket msg &key (identities nil) (key nil))
+(defun message-send (socket msg &key (key nil))
   (unwind-protect
        (progn
 	 (bordeaux-threads:acquire-lock *message-send-lock*)
-	 (let ((wire-parts (wire-serialize msg :identities identities :key key)))
+	 (let ((wire-parts (wire-serialize msg :key key)))
 	   ;;DEBUG>>
 	   ;;(format t "~%[Send] wire parts: ~W~%" wire-parts)
 	   (dolist (part wire-parts)
@@ -248,12 +254,12 @@ The wire-deserialization part follows.
 
 (defparameter *message-recv-lock* (bordeaux-threads:make-lock "message-recv-lock"))
 
-(defun message-recv (socket)
+(defun message-recv (socket &key (key nil))
   (unwind-protect
        (progn
 	 (bordeaux-threads:acquire-lock *message-recv-lock*)
 	 (let ((parts (zmq-recv-list socket)))
 	   ;;DEBUG>>
 	   ;;(format t "[Recv]: parts: ~A~%" (mapcar (lambda (part) (format nil "~W" part)) parts))
-	   (wire-deserialize parts)))
+	   (wire-deserialize parts :key key)))
     (bordeaux-threads:release-lock *message-recv-lock*)))

@@ -7,47 +7,43 @@
 |#
 
 (defclass shell-channel ()
-  ((kernel :initarg :kernel :reader shell-kernel)
-   (socket :initarg :socket :initform nil :accessor shell-socket)))
+  ((kernel :initarg :kernel
+           :reader shell-kernel)
+   (socket :initarg :socket
+           :initform nil
+           :accessor shell-socket)))
 
 
 (defun make-shell-channel (kernel)
-  (let ((socket (pzmq:socket (kernel-ctx kernel) :router)))
-    (let ((shell (make-instance 'shell-channel
-                                :kernel kernel
-                                :socket socket)))
-      (let ((config (slot-value kernel 'config)))
-        (let ((endpoint (format nil "~A://~A:~A"
-                                  (config-transport config)
-                                  (config-ip config)
-                                  (config-shell-port config))))
-          ;; (format t "shell endpoint is: ~A~%" endpoint)
-          (pzmq:bind socket endpoint)
-          shell)))))
+  (let* ((socket (pzmq:socket (kernel-ctx kernel) :router))
+         (shell (make-instance 'shell-channel
+                               :kernel kernel
+                               :socket socket))
+         (config (slot-value kernel 'config))
+         (endpoint (format nil "~A://~A:~A"
+                           (config-transport config)
+                           (config-ip config)
+                           (config-shell-port config))))
+         ;; (format t "shell endpoint is: ~A~%" endpoint)
+    (pzmq:bind socket endpoint)
+    shell))
 
 (defun shell-loop (shell)
   (let ((active t))
     (format t "[Shell] loop started~%")
     (send-status-starting (kernel-iopub (shell-kernel shell)) (kernel-session (shell-kernel shell)) :key (kernel-key shell))
     (while active
-      (vbinds (identities sig msg buffers)  (message-recv (shell-socket shell))
-	      ;;(format t "Shell Received:~%")
-	      ;;(format t "  | identities: ~A~%" identities)
-	      ;;(format t "  | signature: ~W~%" sig)
-	      ;;(format t "  | message: ~A~%" (jsown:to-json (message-header msg)))
-	      ;;(format t "  | buffers: ~W~%" buffers)
-
-	      ;; TODO: check the signature (after that, sig can be forgotten)
-	      (let ((msg-type (jsown:val (message-header msg) "msg_type")))
-		(cond ((equal msg-type "kernel_info_request")
-		       (handle-kernel-info-request shell identities msg buffers))
-		      ((equal msg-type "execute_request")
-		       (setf active (handle-execute-request shell identities msg buffers)))
-		      ((equal msg-type "shutdown_request")
-		       (setf active (handle-shutdown-request shell identities msg buffers)))
-		      ((equal msg-type "is_complete_request")
-		       (handle-is-complete-request shell identities msg buffers))
-		      (t (warn "[Shell] message type '~A' not (yet ?) supported, skipping..." msg-type))))))))
+      (let* ((msg (message-recv (shell-socket shell) :key (kernel-key shell)))
+             (msg-type (jsown:val (message-header msg) "msg_type")))
+        (cond ((equal msg-type "kernel_info_request")
+               (handle-kernel-info-request shell msg))
+              ((equal msg-type "execute_request")
+               (setf active (handle-execute-request shell msg)))
+              ((equal msg-type "shutdown_request")
+               (setf active (handle-shutdown-request shell msg)))
+              ((equal msg-type "is_complete_request")
+               (handle-is-complete-request shell msg))
+              (t (warn "[Shell] message type '~A' not (yet ?) supported, skipping..." msg-type)))))))
 
 #|
 
@@ -58,7 +54,7 @@
 (defun kernel-key (shell)
   (kernel-config-key (kernel-config (shell-kernel shell))))
 
-(defun handle-kernel-info-request (shell identities msg buffers)
+(defun handle-kernel-info-request (shell msg)
   ;;(format t "[Shell] handling 'kernel-info-request'~%")
   ;; status to busy
   ;;(send-status-update (kernel-iopub (shell-kernel shell)) msg "busy" :key (kernel-key shell))
@@ -69,7 +65,7 @@
                   ("protocol_version" (jsown:val (message-header msg) "version"))
                   ("implementation" +KERNEL-IMPLEMENTATION-NAME+)
                   ("implementation_version" +KERNEL-IMPLEMENTATION-VERSION+)
-                  ("banner" "")
+                  ("banner" (banner nil))
                   ("help_links"
                     (list
                       (jsown:new-js
@@ -85,7 +81,7 @@
                       ("mimetype" "text/x-maxima")
                       ("pygments_lexer" "maxima")
                       ("codemirror_mode" "maxima")))))))
-    (message-send (shell-socket shell) reply :identities identities :key (kernel-key shell))
+    (message-send (shell-socket shell) reply :key (kernel-key shell))
     ;; status back to idle
     ;;(send-status-update (kernel-iopub (shell-kernel shell)) msg "idle" :key (kernel-key shell))
     ))
@@ -98,7 +94,7 @@
 
 (let (execute-request-shell execute-request-msg)
 
-  (defun handle-execute-request (shell identities msg buffers)
+  (defun handle-execute-request (shell msg)
     ;;(format t "[Shell] handling 'execute_request'~%")
     (let* ((key (kernel-key shell))
            (iopub (kernel-iopub (shell-kernel shell)))
@@ -118,7 +114,7 @@
         (send-execute-code iopub msg execution-count code :key key)
         (when (and (consp results) (typep (car results) 'cl-jupyter-user::cl-jupyter-quit-obj))
               ;; ----- ** request for shutdown ** -----
-              (send-execute-reply shell identities msg "abort" execution-count :key key)
+              (send-execute-reply shell msg "abort" execution-count :key key)
               (return-from handle-execute-request nil))
         ;; ----- ** normal request ** -----
         ;; send the stdout
@@ -134,7 +130,7 @@
         ;; status back to idle
         (send-status-update iopub msg "idle" :key key)
         ;; send reply (control)
-        (send-execute-reply shell identities msg "ok" execution-count :key key)
+        (send-execute-reply shell msg "ok" execution-count :key key)
   	    t)))
 
   ;; Redefine RETRIEVE in src/macsys.lisp to make use of input-request/input-reply.
@@ -144,27 +140,25 @@
   (defun maxima::retrieve (maxima::msg maxima::flag &aux (maxima::print? nil))
     (declare (special maxima::msg maxima::flag maxima::print?))
     (or (eq maxima::flag 'maxima::noprint) (setq maxima::print? t))
-    (let
-      ((retrieve-prompt
-         (cond
-           ((not maxima::print?)
-            (setq maxima::print? t)
-            (format nil ""))
-           ((null maxima::msg)
-            (format nil ""))
-           ((atom maxima::msg)
-            (format nil "~A" maxima::msg))
-           ((eq maxima::flag t)
-            (format nil "~{~A~}" (cdr maxima::msg)))
-           (t
-            (maxima::aformat nil "~M" maxima::msg)))))
-      (let ((kernel (shell-kernel execute-request-shell)))
-        (let ((stdin (kernel-stdin kernel)))
-          (send-input-request stdin execute-request-msg retrieve-prompt :key (kernel-key execute-request-shell))
-          (multiple-value-bind (identities signature message buffers) (message-recv (stdin-socket stdin))
-            (let* ((content (message-content message))
-                   (value (jsown:val content "value")))
-              (maxima::mread-noprompt (make-string-input-stream (add-terminator value)) nil))))))))
+    (let* ((retrieve-prompt (cond ((not maxima::print?)
+                                   (setq maxima::print? t)
+                                   (format nil ""))
+                                  ((null maxima::msg)
+                                   (format nil ""))
+                                  ((atom maxima::msg)
+                                   (format nil "~A" maxima::msg))
+                                  ((eq maxima::flag t)
+                                   (format nil "~{~A~}" (cdr maxima::msg)))
+                                  (t
+                                   (maxima::aformat nil "~M" maxima::msg))))
+           (kernel (shell-kernel execute-request-shell))
+           (stdin (kernel-stdin kernel))
+           (key (kernel-key execute-request-shell)))
+      (send-input-request stdin execute-request-msg retrieve-prompt :key key)
+      (let* ((msg (message-recv (stdin-socket stdin) :key key))
+             (content (message-content msg))
+             (value (jsown:val content "value")))
+        (maxima::mread-noprompt (make-string-input-stream (add-terminator value)) nil)))))
 
 #|
 
@@ -172,10 +166,10 @@
 
 |#
 
-(defun handle-shutdown-request (shell identities msg buffers)
+(defun handle-shutdown-request (shell msg)
   (let* ((content (message-content msg))
          (restart (jsown:val content "restart")))
-    (send-shutdown-reply shell identities msg restart :key (kernel-key shell))
+    (send-shutdown-reply shell msg restart :key (kernel-key shell))
     nil))
 
 #|
@@ -184,13 +178,13 @@
 
 |#
 
-(defun handle-is-complete-request (shell identities msg buffers)
+(defun handle-is-complete-request (shell msg)
   (let* ((content (message-content msg))
          (code (jsown:val content "code"))
          (status (if (ends-with-terminator code)
                      "complete"
                      "incomplete")))
-    (send-is-complete-reply shell identities msg status :key (kernel-key shell))))
+    (send-is-complete-reply shell msg status :key (kernel-key shell))))
 
 #|
 
@@ -198,26 +192,26 @@
 
 |#
 
-(defun send-shutdown-reply (shell identities parent-msg restart &key (key nil))
+(defun send-shutdown-reply (shell parent-msg restart &key (key nil))
   (let ((msg (make-message parent-msg "shutdown_reply"
                            (jsown:new-js
                              ("restart" (if restart t :f))))))
-    (message-send (shell-socket shell) msg :identities identities :key key)))
+    (message-send (shell-socket shell) msg :key key)))
 
-(defun send-is-complete-reply (shell identities parent-msg status &key (key nil))
+(defun send-is-complete-reply (shell parent-msg status &key (key nil))
   (let ((msg (make-message parent-msg "is_complete_reply"
                            (jsown:new-js
                              ("status" status)
                              ("indent" "")))))
-    (message-send (shell-socket shell) msg :identities identities :key key)))
+    (message-send (shell-socket shell) msg :key key)))
 
-(defun send-execute-reply (shell identities parent-msg status execution-count &key (key nil))
+(defun send-execute-reply (shell parent-msg status execution-count &key (key nil))
   (let ((msg (make-message parent-msg "execute_reply"
                            (jsown:new-js
                              ("status" status)
                              ("execution_count" execution-count)
                              ("payload" '())))))
-    (message-send (shell-socket shell) msg :identities identities :key key)))
+    (message-send (shell-socket shell) msg :key key)))
 
 #|
 
