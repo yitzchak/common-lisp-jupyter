@@ -85,7 +85,7 @@
    (signature-scheme :initarg :signature-scheme :reader config-signature-scheme :type string)
    (key :initarg :key :reader kernel-config-key)))
 
-(defun kernel-start-common (connection-file-name)
+(defun kernel-start (connection-file-name)
   (write-line "")
   (format t "~A: an enhanced interactive Maxima REPL~%" +KERNEL-IMPLEMENTATION-NAME+)
   (format t "(Version ~A - Jupyter protocol v.~A)~%"
@@ -141,15 +141,15 @@
 
 ;; This is the entry point for a saved lisp image created by
 ;; trivial-dump-core:save-executable or equivalent.
-(defun kernel-start ()
+(defun kernel-start-exec ()
   ;; IS THERE OTHER STUFF HANDLED BY MAXIMA INIT-CL.LISP THAT WE NEED TO DUPLICATE HERE ??
   (setq *read-default-float-format* 'double-float)
-  (kernel-start-common (car (last (get-argv)))))
+  (kernel-start (car (last (get-argv)))))
 
 ;; This is the entry point for starting the kernel from within an existing
 ;; Maxima session.
 (maxima::defmfun maxima::$kernel_start (connection-file-name)
-  (kernel-start-common connection-file-name))
+  (kernel-start connection-file-name))
 
 (defun start-heartbeat (socket)
   (let ((thread-id (bordeaux-threads:make-thread
