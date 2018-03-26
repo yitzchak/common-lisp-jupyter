@@ -47,7 +47,7 @@ g.add_argument('--user', dest='user', action='store_true',
                help='Install as user kernel.')
 g.add_argument('--system', dest='user', action='store_false',
                help='Install as system kernel.')
-ap.add_argument('--kernel-prefix',
+g.add_argument('--kernel-prefix',
                 help='Kernel prefix path. Used for conda/virtual or packaging scripts.')
 
 g = ap.add_mutually_exclusive_group(required=True)
