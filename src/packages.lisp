@@ -40,7 +40,7 @@
    #:display-json render-json
    #:display-javascript render-javascript
    #:kernel-start
-   #:kernel-start-exev))
+   #:kernel-start-exec))
 
 (defpackage #:cl-jupyter-user
   (:use #:cl #:fredo-utils #:cl-jupyter #:common-lisp-user)
