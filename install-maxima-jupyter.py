@@ -63,8 +63,6 @@ args = ap.parse_args()
 ## Installation of kernel   ##
 ##############################
 
-bootstrap_path = os.path.join(args.root, 'load-maxima-jupyter.lisp')
-
 KERNEL_SPEC = {
     "argv": [
         args.exec,
@@ -72,7 +70,7 @@ KERNEL_SPEC = {
     ] if args.root is None else [
         args.maxima,
         '--very-quiet',
-        '--preload-lisp={0}'.format(bootstrap_path),
+        '--preload-lisp={0}'.format(os.path.join(args.root, 'load-maxima-jupyter.lisp')),
         '--batch-string=kernel_start("{connection_file}")$'
     ],
     "display_name": "Maxima",
