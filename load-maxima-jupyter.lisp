@@ -1,4 +1,5 @@
 (require :asdf)
+#+sbcl (require :sb-rotate-byte)
 
 (let ((src-dir
         (make-pathname :device (pathname-device *load-truename*) ;; if ever this is running on Windows ...
@@ -13,4 +14,5 @@
 ;; activate debugging
 (declaim (optimize (speed 0) (space 0) (debug 3) (safety 3)))
 
+(maxima::$load "stringproc")
 (ql:quickload "maxima-jupyter")

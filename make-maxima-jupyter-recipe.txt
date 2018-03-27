@@ -10,8 +10,6 @@
 
 shell input --> $ mkdir -p binary/binary-openmcl
 shell input --> $ maxima -l ccl
-maxima input--> (%i1) load (stringproc);
-maxima input--> (%i2) :lisp (require :sb-rotate-byte) ;; FOR SBCL ONLY
 maxima input--> (%i2) :lisp (load "path/to/load-maxima-jupyter.lisp")
 FOR CLOZURE CL:
 maxima input--> (%i2) :lisp (ccl:save-application "binary/binary-openmcl/maxima-jupyter" :toplevel-function 'cl-jupyter:kernel-start-exec :prepend-kernel t)
