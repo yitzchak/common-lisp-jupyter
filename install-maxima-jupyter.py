@@ -69,7 +69,7 @@ KERNEL_SPEC = {
     "argv": [
         args.exec,
         '{connection_file}'
-    ] if args.src is None else [
+    ] if args.root is None else [
         args.maxima,
         '--very-quiet',
         '--preload-lisp={0}'.format(bootstrap_path),
