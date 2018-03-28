@@ -43,6 +43,10 @@
 		       (handle-kernel-info-request shell identities msg buffers))
 		      ((equal msg-type "execute_request")
 		       (setf active (handle-execute-request shell identities msg buffers)))
+          ((equal msg-type "shutdown_request")
+           (setf active (handle-shutdown-request shell identities msg buffers)))
+          ((equal msg-type "is_complete_request")
+           (handle-is-complete-request shell identities msg buffers))
 		      (t (warn "[Shell] message type '~A' not (yet ?) supported, skipping..." msg-type))))))))
 
 
@@ -126,7 +130,7 @@
                  :implementation +KERNEL-IMPLEMENTATION-NAME+
                  :implementation-version +KERNEL-IMPLEMENTATION-VERSION+
                  :language-info-name "maxima"
-                 :language-info-version "circa-5.37"
+                 :language-info-version maxima::*autoconf-version*
                  :language-info-mimetype "text/x-maxima"
                  :language-info-pygments-lexer "maxima"
                  :language-info-codemirror-mode "maxima"
@@ -229,6 +233,49 @@
               ((content (parse-json-from-string (message-content message)))
                (value (afetch "value" content :test #'equal)))
                (maxima::mread-noprompt (make-string-input-stream (add-terminator value)) nil))))))))
+
+#|
+
+### Message type: shutdown_request ###
+
+|#
+
+(defun handle-shutdown-request (shell identities msg buffers)
+  (let* ((content (parse-json-from-string (message-content msg)))
+         (restart (afetch "restart" content :test #'equal)))
+    (send-shutdown-reply shell identities msg restart :key (kernel-key shell))
+    nil))
+
+#|
+
+### Message type: is_complete_request ###
+
+|#
+
+(defun handle-is-complete-request (shell identities msg buffers)
+  (let* ((content (parse-json-from-string (message-content msg)))
+         (code (afetch "code" content :test #'equal))
+         (status (if (ends-with-terminator code)
+                     "complete"
+                     "incomplete")))
+    (send-is-complete-reply shell identities msg status :key (kernel-key shell))))
+
+#|
+
+# Message sending functions
+
+|#
+
+(defun send-shutdown-reply (shell identities parent-msg restart &key (key nil))
+  (let ((msg (make-message parent-msg "shutdown_reply" nil
+                           `(("restart" . ,restart)))))
+    (message-send (shell-socket shell) msg :identities identities :key key)))
+
+(defun send-is-complete-reply (shell identities parent-msg status &key (key nil))
+  (let ((msg (make-message parent-msg "is_complete_reply" nil
+                           `(("status" . ,status)
+                             ("indent" . "")))))
+    (message-send (shell-socket shell) msg :identities identities :key key)))
 
 #|
 

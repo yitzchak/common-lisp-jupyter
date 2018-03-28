@@ -13,6 +13,7 @@
            #:while
            #:add-terminator
            #:ends-with-p
+           #:ends-with-terminator
            #:file-to-base64-string
            #:read-file-lines
            #:read-string-file
