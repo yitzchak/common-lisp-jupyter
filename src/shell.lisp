@@ -44,7 +44,7 @@
 		      ((equal msg-type "execute_request")
 		       (setf active (handle-execute-request shell identities msg buffers)))
 		      ((equal msg-type "shutdown_request")
-		       (setf active (handle-shutdate-request shell identities msg buffers)))
+		       (setf active (handle-shutdown-request shell identities msg buffers)))
 		      ((equal msg-type "is_complete_request")
 		       (handle-is-complete-request shell identities msg buffers))
 		      (t (warn "[Shell] message type '~A' not (yet ?) supported, skipping..." msg-type))))))))
