@@ -17,8 +17,7 @@ To try Maxima-Jupyter you need :
 
      - Other implementations may be possible
 
-   - You don't need to build Maxima! See `make-maxima-jupyter-recipe.txt`
-     about creating the Maxima-Jupyter executable.
+   - You don't need to build Maxima! See install instructions below.
 
  - Quicklisp (see: http://www.quicklisp.org)
 
@@ -37,25 +36,38 @@ I installed Jupyter via:
 
      python3 -m pip install jupyter
 
-The installation script creates a kernel description so Jupyter knows how to execute the kernel:
+There are two kernel installation techniques. The first is to create a saved
+image as detailed in `make-maxima-jupyter-recipe.txt`. Once this image has been
+created then the installation script can be used with:
 
-    python3 ./install-maxima-jupyter.py --maxima-jupyter-exec=path/to/maxima-jupyter
+```sh
+python3 ./install-maxima-jupyter.py --exec=path/to/maxima-jupyter
+```
 
-The executable named by `--maxima-jupyter-exec` is an executable
-saved Lisp image. The saved image needs to contain Maxima and CL-Jupyter.
-I create these images by executing Maxima and loading CL-Jupyter into
-Maxima, and then saving an image. See `make-maxima-jupyter-recipe.txt`.
+Adding the option `--user` will install a user kernel instead of a system
+kernel.
+
+The second installation method will run the kernel from an interactive Maxima
+session. The advantange to this technique is that the normal initialization
+behavior of Maxima, such as loading `maxima-init.mac` from the current directory
+will be preserved. After the files in `src` have been copied to an appropriate
+location such as `/usr/share/maxima-jupyter` for a system installation or
+`~/maxima-jupyter` for a user installation then the installation script called:
+
+```sh
+python3 ./install-maxima-jupyter.py --src=path/to/maxima-jupyter-src
+```
+
+The option `--maxima` may also be used to specify the location of the Maxima
+executable. Please note that in order for this method to work quicklisp needs be
+loaded by default in every Maxima session. See quicklisp documentation for
+details.
 
 ## Installation on Arch/Manjaro
 
 The package for Arch Linux is
 [maxima-jupyter-git](https://aur.archlinux.org/packages/maxima-jupyter-git/).
-This package works with the
-[maxima](https://www.archlinux.org/packages/extra/x86_64/maxima/) package, but
-not with
-[maxima-ecl](https://www.archlinux.org/packages/community/x86_64/maxima-ecl/)
-since ECL does not permit saving LISP images. Building and installing (including
-dependencies) can be accomplished with:
+Building and installing (including dependencies) can be accomplished with:
 
     yaourt -Sy maxima-jupyter-git
 
@@ -91,10 +103,7 @@ Yes, this is pretty painful too.
 
 ### Console mode
 
-    jupyter console --Session.key="b''" --kernel=maxima
-
-**Remark**: the `--Session.key="b''"` option is for the moment required because Maxima-Jupyter
-does not yet support message encryption.
+    jupyter console --kernel=maxima
 
 When you enter stuff to be evaluated, you omit the usual trailing
 semicolon or dollar sign:
@@ -112,7 +121,7 @@ I created this project in order to combine Maxima with the IPython notebook
 (with the goal of using the notebook to create blog posts containing text,
 formulas, and plots). To execute the notebook server:
 
-    jupyter notebook --Session.key="b''"
+    jupyter notebook
 
 The file [MaximaJupyterExample.ipynb](http://nbviewer.ipython.org/github/robert-dodier/maxima-jupyter/blob/master/MaximaJupyterExample.ipynb) is an example of a Maxima-Jupyter notebook.
 
