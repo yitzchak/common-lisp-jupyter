@@ -64,8 +64,8 @@ Lisp printer. In most cases this is enough but specializations are
 
 
 (defmethod render-plain ((value t))
-  (let ((maxima::$grind t))
-    (maxima::mfuncall 'maxima::$string value)))
+  (with-output-to-string (f)
+    (maxima::mgrind value f)))
 
 (example (render-plain '((maxima::mlist) 1 2 3))
 			  => "[1,2,3]")
@@ -91,12 +91,12 @@ Lisp printer. In most cases this is enough but specializations are
 
 (defmethod render-latex ((value t))
   ;; Render LaTeX only if it's not a plot return value.
-  (if (not (plot-p value))
-    (let ((s (maxima::mfuncall 'maxima::$tex value nil)))
-      ;; Trailing newline causes trouble for nbconvert --
-      ;; equations in the generated TeX document have empty lines
-      ;; which causes latex errors.
-      (maxima::$strimr (coerce '(#\newline #\return #\linefeed) 'string) s))))
+  (when (not (plot-p value))
+    (let* ((env (maxima::get-tex-environment value))
+           (s (maxima::tex value
+                           (list (car env)) (list (cdr env))
+                           'maxima::mparen 'maxima::mparen)))
+      (apply #'concatenate 'string (mapcar #'string s)))))
 
 (defgeneric render-png (value)
   (:documentation "Render the VALUE as a PNG image. The expected
