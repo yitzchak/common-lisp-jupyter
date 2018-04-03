@@ -1,11 +1,15 @@
 (in-package #:cl-jupyter-user)
 
-(defclass cl-jupyter-quit-obj ()
+(define-condition quit (error)
   ()
-  (:documentation "A quit object for identifying a request for kernel shutdown."))
+  (:documentation "A quit condition for identifying a request for kernel shutdown.")
+  (:report (lambda (c stream))))
+
+(maxima::defmfun maxima::$quit ()
+  (error (make-condition 'quit)))
 
 (defun quit ()
-  (make-instance 'cl-jupyter-quit-obj))
+  (error (make-condition 'quit)))
 
 
 #|

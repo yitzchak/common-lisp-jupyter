@@ -56,6 +56,15 @@
                                      ("metadata" (jsown:new-js))))))
     (message-send (iopub-socket iopub) result-msg :key key)))
 
+(defun send-execute-error (iopub parent-msg execution-count ename evalue &key (key nil))
+  (let* ((result-msg (make-message parent-msg "error"
+                                   (jsown:new-js
+                                     ("execution_count" execution-count)
+                                     ("ename" ename)
+                                     ("evalue" evalue)
+                                     ("traceback" nil)))))
+    (message-send (iopub-socket iopub) result-msg :key key)))
+
 (defun send-stream (iopub parent-msg stream-name data &key (key nil))
   (let ((stream-msg (make-message parent-msg "stream"
                                   (jsown:new-js

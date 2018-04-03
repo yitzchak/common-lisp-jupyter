@@ -112,11 +112,6 @@
         ;(format t "STDERR = ~A~%" stderr)
         ;broadcast the code to connected frontends
         (send-execute-code iopub msg execution-count code :key key)
-        (when (and (consp results) (typep (car results) 'cl-jupyter-user::cl-jupyter-quit-obj))
-              ;; ----- ** request for shutdown ** -----
-              (send-execute-reply shell msg "abort" execution-count :key key)
-              (return-from handle-execute-request nil))
-        ;; ----- ** normal request ** -----
         ;; send the stdout
         (when (and stdout (> (length stdout) 0))
               (send-stream iopub msg "stdout" stdout :key key))
@@ -125,13 +120,21 @@
               (send-stream iopub msg "stderr" stderr :key key))
         ;; send the results
         (dolist (result results)
-          (when (eq (caar result) 'maxima::displayinput)
-                (send-execute-result iopub msg execution-count (caddr result) :key key)))
+          (cond ((eval-error-p result)
+                 (send-execute-error iopub msg execution-count (caddr result) (cadddr result) :key key))
+                ((eq (caar result) 'maxima::displayinput)
+                 (send-execute-result iopub msg execution-count (caddr result) :key key))))
         ;; status back to idle
         (send-status-update iopub msg "idle" :key key)
         ;; send reply (control)
-        (send-execute-reply shell msg "ok" execution-count :key key)
-  	    t)))
+        (let ((errors (remove-if-not #'eval-error-p results)))
+          (if errors
+            (let ((ename (format nil "~{~A~^, ~}" (mapcar #'caddr errors)))
+                  (evalue (format nil "~{~A~^, ~}" (mapcar #'cadddr errors))))
+              (send-execute-reply-error shell msg execution-count ename evalue :key key))
+            (send-execute-reply-ok shell msg execution-count :key key)))
+        ;; return t if there is no quit errors present
+        (notany #'quit-eval-error-p results))))
 
   ;; Redefine RETRIEVE in src/macsys.lisp to make use of input-request/input-reply.
   ;; MSG, FLAG, and PRINT? are declared special there, so be careful to
@@ -205,12 +208,22 @@
                              ("indent" "")))))
     (message-send (shell-socket shell) msg :key key)))
 
-(defun send-execute-reply (shell parent-msg status execution-count &key (key nil))
+(defun send-execute-reply-ok (shell parent-msg execution-count &key (key nil))
   (let ((msg (make-message parent-msg "execute_reply"
                            (jsown:new-js
-                             ("status" status)
+                             ("status" "ok")
                              ("execution_count" execution-count)
                              ("payload" '())))))
+    (message-send (shell-socket shell) msg :key key)))
+
+(defun send-execute-reply-error (shell parent-msg execution-count ename evalue &key (key nil))
+  (let ((msg (make-message parent-msg "execute_reply"
+                           (jsown:new-js
+                             ("status" "error")
+                             ("execution_count" execution-count)
+                             ("ename" ename)
+                             ("evalue" evalue)
+                             ("traceback" nil)))))
     (message-send (shell-socket shell) msg :key key)))
 
 #|
