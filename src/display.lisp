@@ -114,8 +114,12 @@ Lisp printer. In most cases this is enough but specializations are
   nil)
 
 (defun plot-p (value)
-  (and (listp value) (eq (caar value) 'maxima::mlist)
-    (eq (list-length value) 3) (ends-with-p (cadr value) ".gnuplot")))
+  (and (listp value)
+       (eq (caar value) 'maxima::mlist)
+       (eq (list-length value) 3)
+       (stringp (cadr value))
+       (stringp (caddr value))
+       (ends-with-p (cadr value) ".gnuplot")))
 
 (defun render-plot (value ext base64)
   (if (and (plot-p value) (ends-with-p (caddr value) ext))
