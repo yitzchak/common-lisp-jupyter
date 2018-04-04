@@ -43,8 +43,11 @@
 		       (handle-kernel-info-request shell identities msg buffers))
 		      ((equal msg-type "execute_request")
 		       (setf active (handle-execute-request shell identities msg buffers)))
+		      ((equal msg-type "shutdown_request")
+		       (setf active (handle-shutdown-request shell identities msg buffers)))
+		      ((equal msg-type "is_complete_request")
+		       (handle-is-complete-request shell identities msg buffers))
 		      (t (warn "[Shell] message type '~A' not (yet ?) supported, skipping..." msg-type))))))))
-
 
 #|
 
@@ -126,7 +129,7 @@
                  :implementation +KERNEL-IMPLEMENTATION-NAME+
                  :implementation-version +KERNEL-IMPLEMENTATION-VERSION+
                  :language-info-name "maxima"
-                 :language-info-version "circa-5.37"
+                 :language-info-version maxima::*autoconf-version*
                  :language-info-mimetype "text/x-maxima"
                  :language-info-pygments-lexer "maxima"
                  :language-info-codemirror-mode "maxima"
@@ -156,49 +159,42 @@
 
   (defun handle-execute-request (shell identities msg buffers)
     ;;(format t "[Shell] handling 'execute_request'~%")
-    (send-status-update (kernel-iopub (shell-kernel shell)) msg "busy" :key (kernel-key shell))
-    (let ((content (parse-json-from-string (message-content msg))))
-      ;;(format t "  ==> Message content = ~W~%" content)
-      (let ((code (afetch "code" content :test #'equal)))
-        (setq execute-request-shell shell)
-        (setq execute-request-msg msg)
-        ;;(format t "  ===> Code to execute = ~W~%" code)
-        (vbinds (execution-count results stdout stderr)
-            (evaluate-code (kernel-evaluator (shell-kernel shell)) code)
-          ;(format t "Execution count = ~A~%" execution-count)
-          ;(format t "results = ~A~%" results)
-          ;(format t "STDOUT = ~A~%" stdout)
-          ;(format t "STDERR = ~A~%" stderr)
-          ;broadcast the code to connected frontends
-	  (send-execute-code (kernel-iopub (shell-kernel shell)) msg execution-count code :key (kernel-key shell))
-  	(when (and (consp results) (typep (car results) 'cl-jupyter-user::cl-jupyter-quit-obj))
-  	  ;; ----- ** request for shutdown ** -----
-  	  (let ((reply (make-message msg "execute_reply" nil
-  				     `(("status" . "abort")
-  				       ("execution_count" . ,execution-count)))))
-	    (message-send (shell-socket shell) reply :identities identities :key (kernel-key shell)))
-  	  (return-from handle-execute-request nil))
-  	;; ----- ** normal request ** -----
-          ;; send the stdout
-          (when (and stdout (> (length stdout) 0))
-	    (send-stream (kernel-iopub (shell-kernel shell)) msg "stdout" stdout :key (kernel-key shell)))
-          ;; send the stderr
-          (when (and stderr (> (length stderr) 0))
-	    (send-stream (kernel-iopub (shell-kernel shell)) msg "stderr" stderr :key (kernel-key shell)))
-  	;; send the results
-    (dolist (result results)
-      (when (eq (caar result) 'maxima::displayinput)
-      	(send-execute-result (kernel-iopub (shell-kernel shell))
-    			     msg execution-count (caddr result) :key (kernel-key shell))))
-  	;; status back to idle
-	(send-status-update (kernel-iopub (shell-kernel shell)) msg "idle" :key (kernel-key shell))
-  	;; send reply (control)
-  	(let ((reply (make-message msg "execute_reply" nil
-  				   `(("status" . "ok")
-  				     ("execution_count" . ,execution-count)
-  				     ("payload" . ,(vector))))))
-	  (message-send (shell-socket shell) reply :identities identities :key (kernel-key shell))
-  	  t)))))
+    (let* ((key (kernel-key shell))
+           (iopub (kernel-iopub (shell-kernel shell)))
+           (content (parse-json-from-string (message-content msg)))
+           (code (afetch "code" content :test #'equal)))
+      (send-status-update (kernel-iopub (shell-kernel shell)) msg "busy" :key key)
+      (setq execute-request-shell shell)
+      (setq execute-request-msg msg)
+      ;;(format t "  ===> Code to execute = ~W~%" code)
+      (vbinds (execution-count results stdout stderr)
+              (evaluate-code (kernel-evaluator (shell-kernel shell)) code)
+        ;(format t "Execution count = ~A~%" execution-count)
+        ;(format t "results = ~A~%" results)
+        ;(format t "STDOUT = ~A~%" stdout)
+        ;(format t "STDERR = ~A~%" stderr)
+        ;broadcast the code to connected frontends
+        (send-execute-code iopub msg execution-count code :key key)
+        (when (and (consp results) (typep (car results) 'cl-jupyter-user::cl-jupyter-quit-obj))
+              ;; ----- ** request for shutdown ** -----
+              (send-execute-reply shell identities msg "abort" execution-count :key key)
+              (return-from handle-execute-request nil))
+        ;; ----- ** normal request ** -----
+        ;; send the stdout
+        (when (and stdout (> (length stdout) 0))
+              (send-stream iopub msg "stdout" stdout :key key))
+        ;; send the stderr
+        (when (and stderr (> (length stderr) 0))
+              (send-stream iopub msg "stderr" stderr :key key))
+        ;; send the results
+        (dolist (result results)
+          (when (eq (caar result) 'maxima::displayinput)
+                (send-execute-result iopub msg execution-count (caddr result) :key key)))
+        ;; status back to idle
+        (send-status-update iopub msg "idle" :key key)
+        ;; send reply (control)
+        (send-execute-reply shell identities msg "ok" execution-count :key key)
+  	    t)))
 
   ;; Redefine RETRIEVE in src/macsys.lisp to make use of input-request/input-reply.
   ;; MSG, FLAG, and PRINT? are declared special there, so be careful to
@@ -229,6 +225,56 @@
               ((content (parse-json-from-string (message-content message)))
                (value (afetch "value" content :test #'equal)))
                (maxima::mread-noprompt (make-string-input-stream (add-terminator value)) nil))))))))
+
+#|
+
+### Message type: shutdown_request ###
+
+|#
+
+(defun handle-shutdown-request (shell identities msg buffers)
+  (let* ((content (parse-json-from-string (message-content msg)))
+         (restart (afetch "restart" content :test #'equal)))
+    (send-shutdown-reply shell identities msg restart :key (kernel-key shell))
+    nil))
+
+#|
+
+### Message type: is_complete_request ###
+
+|#
+
+(defun handle-is-complete-request (shell identities msg buffers)
+  (let* ((content (parse-json-from-string (message-content msg)))
+         (code (afetch "code" content :test #'equal))
+         (status (if (ends-with-terminator code)
+                     "complete"
+                     "incomplete")))
+    (send-is-complete-reply shell identities msg status :key (kernel-key shell))))
+
+#|
+
+# Message sending functions
+
+|#
+
+(defun send-shutdown-reply (shell identities parent-msg restart &key (key nil))
+  (let ((msg (make-message parent-msg "shutdown_reply" nil
+                           `(("restart" . ,restart)))))
+    (message-send (shell-socket shell) msg :identities identities :key key)))
+
+(defun send-is-complete-reply (shell identities parent-msg status &key (key nil))
+  (let ((msg (make-message parent-msg "is_complete_reply" nil
+                           `(("status" . ,status)
+                             ("indent" . "")))))
+    (message-send (shell-socket shell) msg :identities identities :key key)))
+
+(defun send-execute-reply (shell identities parent-msg status execution-count &key (key nil))
+  (let ((msg (make-message parent-msg "execute_reply" nil
+                           `(("status" . ,status)
+                             ("execution_count" . ,execution-count)
+                             ("payload" . ,(vector))))))
+    (message-send (shell-socket shell) msg :identities identities :key key)))
 
 #|
 

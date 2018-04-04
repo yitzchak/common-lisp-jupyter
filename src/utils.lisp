@@ -146,10 +146,13 @@
   (let ((p (mismatch str2 str1 :from-end T)))
     (or (not p) (= 0 p))))
 
-(defun add-terminator (code)
+(defun ends-with-terminator (code)
   (let ((trimmed (string-right-trim
                   '(#\Space #\Newline #\Backspace #\Tab #\Linefeed #\Page #\Return #\Rubout)
                   code)))
-    (if (or (ends-with-p trimmed "$") (ends-with-p trimmed ";"))
-      code
-      (concatenate 'string code ";"))))
+    (or (ends-with-p trimmed "$") (ends-with-p trimmed ";"))))
+
+(defun add-terminator (code)
+  (if (ends-with-terminator code)
+    code
+    (concatenate 'string code ";")))
