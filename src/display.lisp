@@ -191,7 +191,7 @@ Lisp printer. In most cases this is enough but specializations are
       ;; otherwise needs to display
       (let ((data (combine-render (cons `("text/plain" . ,(render-plain value)) ; at least text/plain encoding is required
 					render-alist))))
-	(make-instance 'display-object :value value :data data))))
+	(make-instance 'display-object :value value :data (cons :obj data)))))
 
 
 (defun display (value)

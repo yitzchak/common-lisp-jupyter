@@ -8,11 +8,11 @@
                :uuid
 	       :babel
 	       :ironclad
-	       :cl-base64)
+	       :cl-base64
+         :jsown)
   :serial t
   :components ((:file "packages")
                (:file "utils")
-	       (:file "myjson")
 	       (:file "config")
                (:file "message")
                (:file "shell")

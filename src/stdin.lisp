@@ -37,19 +37,8 @@ See: http://jupyter-client.readthedocs.org/en/latest/messaging.html#messages-on-
   ((prompt :initarg :prompt :type string)
    (password :initarg :password :type boolean)))
 
-(defmethod encode-json (stream (object content-input-request) &key (indent nil) (first-line nil))
-  (with-slots (prompt password) object
-    (encode-json stream `(("prompt" . ,prompt)
-                          ("password" . ,password))
-                 :indent indent :first-line first-line)))
-
 (defclass content-input-reply (message-content)
   ((value :initarg :value :type string)))
-
-(defmethod encode-json (stream (object content-input-reply) &key (indent nil) (first-line nil))
-  (with-slots (value) object
-    (encode-json stream `(("value" . ,value))
-                 :indent indent :first-line first-line)))
 
 (defun handle-input-reply (stdin identities msg buffers)
   (format t "[stdin] handling 'input_reply'~%")
@@ -57,6 +46,9 @@ See: http://jupyter-client.readthedocs.org/en/latest/messaging.html#messages-on-
   ;; AT THIS POINT NEED TO HAND OFF VALUE TO ASKSIGN OR WHATEVER
   ;; CAUSED INPUT_REQUEST TO BE SENT !!
 )
+
 (defun send-input-request (stdin parent-msg prompt &key (key nil))
-  (let ((message (make-message parent-msg "input_request" nil `(("prompt" . ,prompt)))))
+  (let ((message (make-message parent-msg "input_request"
+                               (jsown:new-js
+                                 ("prompt" prompt)))))
     (message-send (stdin-socket stdin) message :identities '("input_request") :key key)))

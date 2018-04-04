@@ -19,15 +19,8 @@
            #:read-string-file
            #:read-binary-file))
 
-(defpackage #:myjson
-  (:use #:cl #:fredo-utils)
-  (:export #:parse-json
-	   #:parse-json-from-string
-	   #:encode-json
-	   #:encode-json-to-string))
-
 (defpackage #:cl-jupyter
-  (:use #:cl #:fredo-utils #:myjson)
+  (:use #:cl #:fredo-utils)
   (:export
    #:display
    #:display-plain render-plain
