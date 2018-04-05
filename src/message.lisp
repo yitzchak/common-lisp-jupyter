@@ -181,13 +181,13 @@ The wire-deserialization part follows.
 (defun wire-deserialize (parts &key (key nil))
   (let ((delim-index (position +WIRE-IDS-MSG-DELIMITER+ parts :test  #'equal)))
     (when (not delim-index)
-      (error "no <IDS|MSG> delimiter found in message parts"))
+      (error "[Wire] No <IDS|MSG> delimiter found in message parts"))
     (let* ((identities (subseq parts 0 delim-index))
            (sig (nth (1+ delim-index) parts))
            (parts (subseq parts (+ 2 delim-index) (+ 6 delim-index)))
            (expected-sig (if key (message-signing key parts) "")))
       (unless (equal sig expected-sig)
-        (error "Signature mismatch in message"))
+        (error "[Wire] Signature mismatch in message"))
       (destructuring-bind (header parent-header metadata content) parts
         (make-instance 'message
                        :header (jsown:parse header)

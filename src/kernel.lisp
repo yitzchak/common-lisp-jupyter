@@ -88,7 +88,7 @@
                                            (babel:string-to-octets str-key :encoding :ASCII))))))
     (when (not (string= (config-signature-scheme config) "hmac-sha256"))
       ;; XXX: only hmac-sha256 supported
-      (error "Kernel only supports signature scheme 'hmac-sha256' (provided ~S)" (config-signature-scheme config)))
+      (error "[Kernel] Signature scheme 'hmac-sha256' required, was provided ~S." (config-signature-scheme config)))
       ;;(inspect config)
     (let* ((kernel (make-kernel config))
            (evaluator (make-evaluator kernel))
