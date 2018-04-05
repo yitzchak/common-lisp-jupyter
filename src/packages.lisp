@@ -5,7 +5,6 @@
            #:*example-equal-predicate*
            #:example
            #:example-progn
-           #:*info-enabled*
            #:info
            #:vbinds
            #:afetch
