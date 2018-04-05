@@ -5,9 +5,8 @@
            #:*example-equal-predicate*
            #:example
            #:example-progn
-           #:*logg-enabled*
-           #:*logg-level*
-           #:logg
+           #:*info-enabled*
+           #:info
            #:vbinds
            #:afetch
            #:while

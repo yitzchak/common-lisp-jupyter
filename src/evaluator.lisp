@@ -11,8 +11,6 @@ The history of evaluations is also saved by the evaluator.
 
 |#
 
-(defparameter maxima::$debug_evaluator nil)
-
 (defclass evaluator ()
   ((kernel :initarg :kernel :reader evaluator-kernel)
    (history-in :initform (make-array 64 :fill-pointer 0 :adjustable t)
@@ -75,22 +73,16 @@ The history of evaluations is also saved by the evaluator.
   (handling-errors
     (let ((code-to-eval (my-mread input)))
       (when code-to-eval
-        (when maxima::$debug_evaluator
-          (format t "[Evaluator] parsed expression to evaluate: ~W~%" code-to-eval)
-          (terpri))
+        (info "[Evaluator] parsed expression to evaluate: ~W~%" code-to-eval)
         (let* ((*package* (find-package :maxima))
                (result (maxima::with-$error (maxima::meval* code-to-eval))))
+          (info "[Evaluator] evaluated result: ~W~%" result)
           (setq maxima::$% (caddr result))
-          (when maxima::$debug_evaluator
-            (format t "[Evaluator] evaluated result: ~W~%" result)
-            (terpri))
           result)))))
 
 (defun evaluate-code (evaluator code)
   (loop
-    initially (when maxima::$debug_evaluator
-                (format t "[Evaluator] unparsed input: ~W~%" code)
-                (terpri))
+    initially (info "[Evaluator] unparsed input: ~W~%" code)
               (vector-push code (evaluator-history-in evaluator))
     with *standard-output* = (make-string-output-stream)
     with *error-output* = (make-string-output-stream)

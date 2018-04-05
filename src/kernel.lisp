@@ -68,9 +68,10 @@
    (key :initarg :key :reader kernel-config-key)))
 
 (defun kernel-start (connection-file-name)
-  (format t "connection file = ~A~%" connection-file-name)
+  (info (banner nil))
+  (info "[Kernel] connection file = ~A~%" connection-file-name)
   (unless (stringp connection-file-name)
-    (error "Wrong connection file argument (expecting a string)"))
+    (error "[Kernel] Wrong connection file argument (expecting a string)"))
   (let* ((config-js (jsown:parse (concat-all 'string "" (read-file-lines connection-file-name))))
          (config (make-instance 'kernel-config
                                 :transport (jsown:val config-js "transport")
@@ -87,7 +88,7 @@
                                            (babel:string-to-octets str-key :encoding :ASCII))))))
     (when (not (string= (config-signature-scheme config) "hmac-sha256"))
       ;; XXX: only hmac-sha256 supported
-      (error "Kernel only support signature scheme 'hmac-sha256' (provided ~S)" (config-signature-scheme config)))
+      (error "Kernel only supports signature scheme 'hmac-sha256' (provided ~S)" (config-signature-scheme config)))
       ;;(inspect config)
     (let* ((kernel (make-kernel config))
            (evaluator (make-evaluator kernel))
@@ -103,8 +104,9 @@
            (heartbeat-thread-id (start-heartbeat hb-socket)))
       ;; main loop
       (unwind-protect
-           (progn (format t "[Kernel] Entering mainloop ...~%")
-    	      (shell-loop shell))
+           (progn
+             (info "[Kernel] Entering mainloop ...~%")
+             (shell-loop shell))
         ;; clean up when exiting
         (bordeaux-threads:destroy-thread heartbeat-thread-id)
         (pzmq:close hb-socket)
@@ -112,7 +114,7 @@
         (pzmq:close (shell-socket shell))
         (pzmq:close (stdin-socket stdin))
         (pzmq:ctx-destroy (kernel-ctx kernel))
-        (format t "Bye bye.~%")))))
+        (info "[Kernel] Exiting mainloop.~%")))))
 
 ;; This is the entry point for a saved lisp image created by
 ;; trivial-dump-core:save-executable or equivalent.
@@ -129,15 +131,15 @@
 (defun start-heartbeat (socket)
   (let ((thread-id (bordeaux-threads:make-thread
 		    (lambda ()
-		      (format t "[Heartbeat] thread started~%")
+		      (info "[Heartbeat] thread started~%")
 		      (pzmq:proxy socket socket (cffi:null-pointer))))))
 
     ;; XXX: without proxy
     ;; (loop
     ;; 	 (pzmq:with-message msg
     ;; 	   (pzmq:msg-recv msg socket)
-    ;; 			;;(format t "Heartbeat Received:~%")
+    ;; 			;;(info "Heartbeat Received:~%")
     ;; 	   (pzmq:msg-send msg socket)
-    ;; 			;;(format t "  | message: ~A~%" msg)
+    ;; 			;;(info "  | message: ~A~%" msg)
     ;; 	   ))))))
     thread-id))

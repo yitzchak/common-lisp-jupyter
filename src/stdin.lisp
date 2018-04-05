@@ -25,7 +25,7 @@ See: http://jupyter-client.readthedocs.org/en/latest/messaging.html#messages-on-
                                (config-transport config)
                                (config-ip config)
                                (config-stdin-port config))))
-    (format t "stdin endpoint is: ~A~%" endpoint)
+    (info "[stdin] endpoint is: ~A~%" endpoint)
     (pzmq:bind socket endpoint)
     (setf (slot-value kernel 'stdin) stdin)
     stdin))
@@ -44,7 +44,7 @@ See: http://jupyter-client.readthedocs.org/en/latest/messaging.html#messages-on-
   ((value :initarg :value :type string)))
 
 (defun handle-input-reply (stdin msg)
-  (format t "[stdin] handling 'input_reply'~%")
+  (info "[stdin] handling 'input_reply'~%")
 
   ;; AT THIS POINT NEED TO HAND OFF VALUE TO ASKSIGN OR WHATEVER
   ;; CAUSED INPUT_REQUEST TO BE SENT !!

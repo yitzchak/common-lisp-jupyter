@@ -24,13 +24,13 @@
                            (config-transport config)
                            (config-ip config)
                            (config-shell-port config))))
-         ;; (format t "shell endpoint is: ~A~%" endpoint)
+         (info "[Shell] endpoint is: ~A~%" endpoint)
     (pzmq:bind socket endpoint)
     shell))
 
 (defun shell-loop (shell)
   (let ((active t))
-    (format t "[Shell] loop started~%")
+    (info "[Shell] loop started~%")
     (send-status-starting (kernel-iopub (shell-kernel shell)) (kernel-session (shell-kernel shell)) :key (kernel-key shell))
     (while active
       (let* ((msg (message-recv (shell-socket shell) :key (kernel-key shell)))
@@ -55,10 +55,7 @@
   (kernel-config-key (kernel-config (shell-kernel shell))))
 
 (defun handle-kernel-info-request (shell msg)
-  ;;(format t "[Shell] handling 'kernel-info-request'~%")
-  ;; status to busy
-  ;;(send-status-update (kernel-iopub (shell-kernel shell)) msg "busy" :key (kernel-key shell))
-  ;; for protocol version 5
+  (info "[Shell] handling 'kernel-info-request'~%")
   (let ((reply (make-message
                 msg "kernel_info_reply"
                 (jsown:new-js
@@ -81,10 +78,7 @@
                       ("mimetype" "text/x-maxima")
                       ("pygments_lexer" "maxima")
                       ("codemirror_mode" "maxima")))))))
-    (message-send (shell-socket shell) reply :key (kernel-key shell))
-    ;; status back to idle
-    ;;(send-status-update (kernel-iopub (shell-kernel shell)) msg "idle" :key (kernel-key shell))
-    ))
+    (message-send (shell-socket shell) reply :key (kernel-key shell))))
 
 #|
 
@@ -95,7 +89,7 @@
 (let (execute-request-shell execute-request-msg)
 
   (defun handle-execute-request (shell msg)
-    ;;(format t "[Shell] handling 'execute_request'~%")
+    (info "[Shell] handling 'execute_request'~%")
     (let* ((key (kernel-key shell))
            (iopub (kernel-iopub (shell-kernel shell)))
            (content (message-content msg))
@@ -103,13 +97,13 @@
       (send-status-update (kernel-iopub (shell-kernel shell)) msg "busy" :key key)
       (setq execute-request-shell shell)
       (setq execute-request-msg msg)
-      ;;(format t "  ===> Code to execute = ~W~%" code)
+      ;;(info "  ===> Code to execute = ~W~%" code)
       (vbinds (execution-count results stdout stderr)
               (evaluate-code (kernel-evaluator (shell-kernel shell)) code)
-        ;(format t "Execution count = ~A~%" execution-count)
-        ;(format t "results = ~A~%" results)
-        ;(format t "STDOUT = ~A~%" stdout)
-        ;(format t "STDERR = ~A~%" stderr)
+        ;(info "Execution count = ~A~%" execution-count)
+        ;(info "results = ~A~%" results)
+        ;(info "STDOUT = ~A~%" stdout)
+        ;(info "STDERR = ~A~%" stderr)
         ;broadcast the code to connected frontends
         (send-execute-code iopub msg execution-count code :key key)
         ;; send the stdout

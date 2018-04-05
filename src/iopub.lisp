@@ -23,7 +23,7 @@
                            (config-transport config)
                            (config-ip config)
                            (config-iopub-port config))))
-    ; (format t "[IOPUB] iopub endpoint is: ~A~%" endpoint)
+    (info "[IOPUB] iopub endpoint is: ~A~%" endpoint)
     (pzmq:bind socket endpoint)
 	  (setf (slot-value kernel 'iopub) iopub)
     iopub))

@@ -12,9 +12,9 @@
 
   (defparameter *example-equal-predicate* #'equal)
 
-  (defparameter *example-with-echo* nil)
+  (defparameter *example-with-echo* nil))
 
-  )
+(defvar maxima::$kernel_info nil)
 
 
 (defmacro example (expr arrow expected &key (warn-only nil))
@@ -60,16 +60,9 @@
       `(progn ,@body)
       (values)))
 
-(defmacro logg (level fmt &rest args)
-  "Log the passed ARGS using the format string FMT and its
- arguments ARGS."
-  (if (or (not *log-enabled*)
-          (< level *log-level*))
-      (values);; disabled
-      ;; when enabled
-      `(progn (format ,*log-out-stream* "[LOG]:")
-              (format ,*log-out-stream* ,fmt ,@args)
-              (format ,*log-out-stream* "~%"))))
+(defun info (&rest args)
+  (when maxima::$kernel_info
+    (apply #'format *debug-io* args)))
 
 (defmacro vbinds (binders expr &body body)
   "An abbreviation for MULTIPLE-VALUE-BIND."

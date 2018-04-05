@@ -219,7 +219,7 @@ The wire-deserialization part follows.
 	 (bordeaux-threads:acquire-lock *message-send-lock*)
 	 (let ((wire-parts (wire-serialize msg :key key)))
 	   ;;DEBUG>>
-	   ;;(format t "~%[Send] wire parts: ~W~%" wire-parts)
+	   ;;(info "~%[Send] wire parts: ~W~%" wire-parts)
 	   (dolist (part wire-parts)
 	     (pzmq:send socket part :sndmore t))
 	   (pzmq:send socket nil)))
@@ -235,7 +235,7 @@ The wire-deserialization part follows.
        (BABEL-ENCODINGS:INVALID-UTF8-STARTER-BYTE
            ()
          ;; if it's not utf-8 we try latin-1 (Ugly !)
-         (format t "[Recv]: issue with UTF-8 decoding~%")
+         (warn "[Recv]: issue with UTF-8 decoding~%")
          (cffi:foreign-string-to-lisp (pzmq:msg-data msg) :count (pzmq:msg-size msg) :encoding :latin-1)))
      (pzmq:getsockopt socket :rcvmore))))
 
@@ -245,9 +245,9 @@ The wire-deserialization part follows.
 		    (BABEL-ENCODINGS:INVALID-UTF8-STARTER-BYTE
 		     ()
 		     ;; if it's not utf-8 we try latin-1 (Ugly !)
-		     (format t "[Recv]: issue with UTF-8 decoding~%")
+		     (warn "[Recv]: issue with UTF-8 decoding~%")
 		     (pzmq:recv-string socket :encoding :latin-1)))
-    ;;(format t "[Shell]: received message part #~A: ~W (more? ~A)~%" part-num part more)
+    ;;(info "[Shell]: received message part #~A: ~W (more? ~A)~%" part-num part more)
     (if more
         (zmq-recv-list socket (cons part parts) (+ part-num 1))
         (reverse (cons part parts)))))
@@ -260,6 +260,6 @@ The wire-deserialization part follows.
 	 (bordeaux-threads:acquire-lock *message-recv-lock*)
 	 (let ((parts (zmq-recv-list socket)))
 	   ;;DEBUG>>
-	   ;;(format t "[Recv]: parts: ~A~%" (mapcar (lambda (part) (format nil "~W" part)) parts))
+	   ;;(info "[Recv]: parts: ~A~%" (mapcar (lambda (part) (format nil "~W" part)) parts))
 	   (wire-deserialize parts :key key)))
     (bordeaux-threads:release-lock *message-recv-lock*)))
