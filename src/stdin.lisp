@@ -9,23 +9,26 @@ See: http://jupyter-client.readthedocs.org/en/latest/messaging.html#messages-on-
 |#
 
 (defclass stdin-channel ()
-  ((kernel :initarg :kernel :reader stdin-kernel)
-   (socket :initarg :socket :initform nil :accessor stdin-socket)))
+  ((kernel :initarg :kernel
+           :reader stdin-kernel)
+   (socket :initarg :socket
+           :initform nil
+           :accessor stdin-socket)))
 
 (defun make-stdin-channel (kernel)
-  (let ((socket (pzmq:socket (kernel-ctx kernel) :dealer)))
-    (let ((stdin (make-instance 'stdin-channel
-                                :kernel kernel
-                                :socket socket)))
-      (let ((config (slot-value kernel 'config)))
-        (let ((endpoint (format nil "~A://~A:~A"
-                                  (config-transport config)
-                                  (config-ip config)
-                                  (config-stdin-port config))))
-          (format t "stdin endpoint is: ~A~%" endpoint)
-          (pzmq:bind socket endpoint)
-          (setf (slot-value kernel 'stdin) stdin)
-          stdin)))))
+  (let* ((socket (pzmq:socket (kernel-ctx kernel) :dealer))
+         (stdin (make-instance 'stdin-channel
+                               :kernel kernel
+                               :socket socket))
+         (config (slot-value kernel 'config))
+         (endpoint (format nil "~A://~A:~A"
+                               (config-transport config)
+                               (config-ip config)
+                               (config-stdin-port config))))
+    (format t "stdin endpoint is: ~A~%" endpoint)
+    (pzmq:bind socket endpoint)
+    (setf (slot-value kernel 'stdin) stdin)
+    stdin))
 
 #|
 
@@ -40,7 +43,7 @@ See: http://jupyter-client.readthedocs.org/en/latest/messaging.html#messages-on-
 (defclass content-input-reply (message-content)
   ((value :initarg :value :type string)))
 
-(defun handle-input-reply (stdin identities msg buffers)
+(defun handle-input-reply (stdin msg)
   (format t "[stdin] handling 'input_reply'~%")
 
   ;; AT THIS POINT NEED TO HAND OFF VALUE TO ASKSIGN OR WHATEVER
@@ -51,4 +54,4 @@ See: http://jupyter-client.readthedocs.org/en/latest/messaging.html#messages-on-
   (let ((message (make-message parent-msg "input_request"
                                (jsown:new-js
                                  ("prompt" prompt)))))
-    (message-send (stdin-socket stdin) message :identities '("input_request") :key key)))
+    (message-send (stdin-socket stdin) message :key key)))
