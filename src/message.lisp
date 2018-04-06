@@ -67,7 +67,10 @@
              :accessor message-metadata)
    (content :initarg :content
             :initform (jsown:new-js)
-            :accessor message-content))
+            :accessor message-content)
+   (buffers :initarg :buffers
+            :initform nil
+            :accessor message-buffers))
   (:documentation "Representation of IPython messages"))
 
 (defun make-message (parent-msg msg-type content)
@@ -129,7 +132,7 @@ The wire-serialization of IPython kernel messages uses multi-parts ZMQ messages.
 (defvar +WIRE-IDS-MSG-DELIMITER+ "<IDS|MSG>")
 
 (defmethod wire-serialize ((msg message) &key (key nil))
-  (with-slots (header parent-header identities metadata content) msg
+  (with-slots (header parent-header identities metadata content buffers) msg
     (let* ((header-json (jsown:to-json header))
            (parent-header-json (jsown:to-json parent-header))
            (metadata-json (jsown:to-json metadata))
@@ -143,7 +146,8 @@ The wire-serialization of IPython kernel messages uses multi-parts ZMQ messages.
           header-json
           parent-header-json
           metadata-json
-          content-json)))))
+          content-json)
+        buffers))))
 
 (example-progn
  (defparameter *wire1* (wire-serialize *msg1*)))
@@ -184,6 +188,7 @@ The wire-deserialization part follows.
       (error "[Wire] No <IDS|MSG> delimiter found in message parts"))
     (let* ((identities (subseq parts 0 delim-index))
            (sig (nth (1+ delim-index) parts))
+           (buffers (subseq parts (+ 6 delim-index)))
            (parts (subseq parts (+ 2 delim-index) (+ 6 delim-index)))
            (expected-sig (if key (message-signing key parts) "")))
       (unless (equal sig expected-sig)
@@ -194,7 +199,8 @@ The wire-deserialization part follows.
                        :parent-header (jsown:parse parent-header)
                        :identities identities
                        :metadata (jsown:parse metadata)
-                       :content (jsown:parse content))))))
+                       :content (jsown:parse content)
+                       :buffers buffers)))))
 
 
 (example-progn
