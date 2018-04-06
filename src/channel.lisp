@@ -6,11 +6,14 @@
    (socket :initarg :socket
            :reader channel-socket)
    (transport :initarg :transport
-              :reader channel-transport)
+              :reader channel-transport
+              :type string)
    (ip :initarg :ip
-       :reader channel-ip)
+       :reader channel-ip
+       :type string)
    (port :initarg :port
-         :reader channel-port)))
+         :reader channel-port
+         :type fixnum)))
 
 (defun make-channel (config socket port &key (class 'channel))
   (make-instance class
