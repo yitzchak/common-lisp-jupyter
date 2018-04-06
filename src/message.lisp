@@ -219,16 +219,17 @@ The wire-deserialization part follows.
 ;; Locking, courtesy of dmeister, thanks !
 (defparameter *message-send-lock* (bordeaux-threads:make-lock "message-send-lock"))
 
-(defun message-send (socket msg &key (key nil))
+(defun message-send (channel msg)
   (unwind-protect
-       (progn
-	 (bordeaux-threads:acquire-lock *message-send-lock*)
-	 (let ((wire-parts (wire-serialize msg :key key)))
-	   ;;DEBUG>>
-	   ;;(info "~%[Send] wire parts: ~W~%" wire-parts)
-	   (dolist (part wire-parts)
-	     (pzmq:send socket part :sndmore t))
-	   (pzmq:send socket nil)))
+    (let* ((socket (channel-socket channel))
+           (key (channel-key channel))
+           (wire-parts (wire-serialize msg :key key)))
+      (bordeaux-threads:acquire-lock *message-send-lock*)
+      ;;DEBUG>>
+      ;;(info "~%[Send] wire parts: ~W~%" wire-parts)
+      (dolist (part wire-parts)
+        (pzmq:send socket part :sndmore t))
+      (pzmq:send socket nil))
     (bordeaux-threads:release-lock *message-send-lock*)))
 
 (defun recv-string (socket &key dontwait (encoding cffi:*default-foreign-encoding*))
@@ -260,12 +261,13 @@ The wire-deserialization part follows.
 
 (defparameter *message-recv-lock* (bordeaux-threads:make-lock "message-recv-lock"))
 
-(defun message-recv (socket &key (key nil))
+(defun message-recv (channel)
   (unwind-protect
-       (progn
-	 (bordeaux-threads:acquire-lock *message-recv-lock*)
-	 (let ((parts (zmq-recv-list socket)))
-	   ;;DEBUG>>
-	   ;;(info "[Recv]: parts: ~A~%" (mapcar (lambda (part) (format nil "~W" part)) parts))
-	   (wire-deserialize parts :key key)))
+    (let ((socket (channel-socket channel))
+          (key (channel-key channel)))
+      (bordeaux-threads:acquire-lock *message-recv-lock*)
+      (let ((parts (zmq-recv-list socket)))
+        ;;DEBUG>>
+        ;;(info "[Recv]: parts: ~A~%" (mapcar (lambda (part) (format nil "~W" part)) parts))
+        (wire-deserialize parts :key key)))
     (bordeaux-threads:release-lock *message-recv-lock*)))

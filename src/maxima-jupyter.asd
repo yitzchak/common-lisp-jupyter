@@ -6,19 +6,22 @@
   :depends-on (:pzmq
                :bordeaux-threads
                :uuid
-	       :babel
-	       :ironclad
-	       :cl-base64
-         :jsown)
+               :babel
+               :ironclad
+               :iterate
+               :cl-base64
+               :jsown)
   :serial t
   :components ((:file "packages")
                (:file "utils")
-	       (:file "config")
+               (:file "config")
+               (:file "channel")
+               (:file "heartbeat")
                (:file "message")
                (:file "shell")
                (:file "stdin")
-	       (:file "iopub")
-	       (:file "display")
-	       (:file "evaluator")
+               (:file "iopub")
+               (:file "display")
+               (:file "evaluator")
                (:file "user")
                (:file "kernel")))

@@ -12,17 +12,13 @@ The history of evaluations is also saved by the evaluator.
 |#
 
 (defclass evaluator ()
-  ((kernel :initarg :kernel :reader evaluator-kernel)
-   (history-in :initform (make-array 64 :fill-pointer 0 :adjustable t)
+  ((history-in :initform (make-array 64 :fill-pointer 0 :adjustable t)
 	       :reader evaluator-history-in)
    (history-out :initform (make-array 64 :fill-pointer 0 :adjustable t)
 		:reader evaluator-history-out)))
 
-(defun make-evaluator (kernel)
-  (let ((evaluator (make-instance 'evaluator
-				  :kernel kernel)))
-    (setf (slot-value kernel 'evaluator) evaluator)
-    evaluator))
+(defun make-evaluator ()
+  (make-instance 'evaluator))
 
 ;; Error message is sent to *error-output* and returned in eval-error pattern.
 (defun make-eval-error (quit err msg)
@@ -81,19 +77,21 @@ The history of evaluations is also saved by the evaluator.
           result)))))
 
 (defun evaluate-code (evaluator code)
-  (loop
-    initially (info "[Evaluator] unparsed input: ~W~%" code)
-              (vector-push code (evaluator-history-in evaluator))
-    with *standard-output* = (make-string-output-stream)
-    with *error-output* = (make-string-output-stream)
-    with input = (make-string-input-stream (add-terminator code))
-    for result = (read-and-eval input) then (read-and-eval input)
-    while result
-    collect result into results
-    until (quit-eval-error-p result)
-    finally (vector-push results (evaluator-history-out evaluator))
-            (return
-              (values (length (evaluator-history-in evaluator))
-                      results
-                      (get-output-stream-string *standard-output*)
-                      (get-output-stream-string *error-output*)))))
+  (iter
+    (initially
+      (info "[Evaluator] unparsed input: ~W~%" code)
+      (vector-push code (evaluator-history-in evaluator)))
+    (with *standard-output* = (make-string-output-stream))
+    (with *error-output* = (make-string-output-stream))
+    (with input = (make-string-input-stream (add-terminator code)))
+    (for result = (read-and-eval input))
+    (while result)
+    (collect result into results)
+    (until (quit-eval-error-p result))
+    (finally
+      (vector-push results (evaluator-history-out evaluator))
+      (return
+        (values (length (evaluator-history-in evaluator))
+                results
+                (get-output-stream-string *standard-output*)
+                (get-output-stream-string *error-output*))))))

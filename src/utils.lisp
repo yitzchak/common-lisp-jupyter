@@ -14,7 +14,7 @@
 
   (defparameter *example-with-echo* nil))
 
-(defvar maxima::$kernel_info nil)
+(defvar maxima::$kernel_info t)
 
 
 (defmacro example (expr arrow expected &key (warn-only nil))
@@ -89,28 +89,6 @@
 (example (vbinds (a _ b _) (values 1 2 3 4)
            (cons a b))
          => '(1 . 3)) ;; without a warning
-
-
-(defun afetch (comp alist &key (test #'eql))
-  (let ((binding (assoc comp alist :test test)))
-    (if binding
-        (cdr binding)
-        (error "No such key: ~A" comp))))
-
-(defmacro while (condition &body body)
-  (let ((eval-cond-var (gensym "eval-cond-"))
-        (body-val-var (gensym "body-val-")))
-    `(flet ((,eval-cond-var () ,`,condition))
-       (do ((,body-val-var nil (progn ,@body)))
-           ((not (,eval-cond-var))
-            ,body-val-var)))))
-
-(example (let ((count 0))
-           (while (< count 10)
-             ;;(format t "~A " count)
-             (incf count)
-             count))
-         => 10)
 
 (defun read-file-lines (filename)
   (with-open-file (input filename)
