@@ -142,7 +142,7 @@
               ((equal msg-type "is_complete_request")
                (handle-is-complete-request kernel msg))
               (t
-               (warn "[Shell] message type '~A' not (yet ?) supported, skipping..." msg-type)
+               (warn "[Shell] message type '~A' not supported, skipping..." msg-type)
                t)))
       (finally-protected
         (info "[Kernel] Exiting mainloop.~%")
@@ -163,7 +163,7 @@
 #|
 
 
-### Message type: kernel_info_reply ###
+### Message type: kernel_info_request ###
 
 |#
 
