@@ -97,6 +97,14 @@
                               nil
                               (babel:string-to-octets str-key :encoding :ASCII))))))
 
+;; Start all channels.
+(defmethod start ((k kernel))
+  (start (kernel-hb k))
+  (start (kernel-iopub k))
+  (start (kernel-shell k))
+  (start (kernel-stdin k)))
+
+;; Stop all channels and destroy the control.
 (defmethod stop ((k kernel))
   (stop (kernel-hb k))
   (stop (kernel-iopub k))
@@ -120,21 +128,22 @@
       (with shell = (kernel-shell kernel))
       (initially
         (info "[Kernel] Entering mainloop ...~%")
+        (start kernel)
         (send-status-starting iopub (kernel-session kernel)))
       (for msg = (message-recv shell))
       (for msg-type = (jsown:val (message-header msg) "msg_type"))
       (while
         (cond ((equal msg-type "kernel_info_request")
-         (handle-kernel-info-request kernel msg))
-        ((equal msg-type "execute_request")
-         (handle-execute-request kernel msg))
-        ((equal msg-type "shutdown_request")
-         (handle-shutdown-request kernel msg))
-        ((equal msg-type "is_complete_request")
-         (handle-is-complete-request kernel msg))
-        (t
-         (warn "[Shell] message type '~A' not (yet ?) supported, skipping..." msg-type)
-         t)))
+               (handle-kernel-info-request kernel msg))
+              ((equal msg-type "execute_request")
+               (handle-execute-request kernel msg))
+              ((equal msg-type "shutdown_request")
+               (handle-shutdown-request kernel msg))
+              ((equal msg-type "is_complete_request")
+               (handle-is-complete-request kernel msg))
+              (t
+               (warn "[Shell] message type '~A' not (yet ?) supported, skipping..." msg-type)
+               t)))
       (finally-protected
         (info "[Kernel] Exiting mainloop.~%")
         (stop kernel)))))
