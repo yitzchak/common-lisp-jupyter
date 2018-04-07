@@ -6,8 +6,13 @@
 
 |#
 
+(defclass iopub-channel (channel)
+  ()
+  (:documentation "IOPUB channel class."))
+
 (defun make-iopub-channel (config ctx)
-  (make-channel config
+  (make-channel 'iopub-channel
+                config
                 (pzmq:socket ctx :pub)
                 (config-iopub-port config)))
 

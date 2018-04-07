@@ -6,8 +6,13 @@
 
 |#
 
+(defclass shell-channel (channel)
+  ()
+  (:documentation "SHELL channel class."))
+
 (defun make-shell-channel (config ctx)
-  (make-channel config
+  (make-channel 'shell-channel
+                config
                 (pzmq:socket ctx :router)
                 (config-shell-port config)))
 

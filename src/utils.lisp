@@ -14,7 +14,7 @@
 
   (defparameter *example-with-echo* nil))
 
-(defvar maxima::$kernel_info t)
+(defvar maxima::$kernel_info f)
 
 
 (defmacro example (expr arrow expected &key (warn-only nil))
@@ -105,9 +105,9 @@
 
 (defun read-string-file (filename)
   (with-open-file (stream filename)
-    (let ((str (make-array (file-length stream) :element-type 'character :fill-pointer t)))
-      (setf (fill-pointer str) (read-sequence str stream))
-      str)))
+    (let ((data (make-string (file-length stream))))
+      (read-sequence data stream)
+      data)))
 
 (defun file-to-base64-string (path)
   (cl-base64:usb8-array-to-base64-string (read-binary-file path)))

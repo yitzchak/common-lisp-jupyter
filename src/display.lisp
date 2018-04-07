@@ -125,11 +125,7 @@ Lisp printer. In most cases this is enough but specializations are
   (if (and (plot-p value) (ends-with-p (caddr value) ext))
     (if base64
       (file-to-base64-string (caddr value))
-      ;; substitute spaces for tabs in SVG file; otherwise tabs seem
-      ;; to cause JSON heartburn. I suspect, without much evidence,
-      ;; that this is a bug in some JSON library or the other.
-      ;; Possibly the same bug: https://github.com/JuliaLang/IJulia.jl/issues/200
-      (substitute #\space #\tab (file-slurp (caddr value))))))
+      (read-string-file (caddr value)))))
 
 (defgeneric render-pdf (value)
   (:documentation "Render the VALUE as a PDF. The expected
@@ -143,13 +139,6 @@ Lisp printer. In most cases this is enough but specializations are
 
 (defmethod render-svg ((value t))
   (render-plot value ".svg" nil))
-
-;; nicked from: http://rosettacode.org/wiki/Read_entire_file#Common_Lisp
-(defun file-slurp (path)
-  (with-open-file (stream path)
-    (let ((data (make-string (file-length stream))))
-      (read-sequence data stream)
-      data)))
 
 (defgeneric render-json (value)
   (:documentation "Render the VALUE as a JSON document. This uses the MYJSON encoding

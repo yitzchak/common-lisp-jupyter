@@ -9,13 +9,14 @@
 (defclass hb-channel (channel)
   ((thread-id :initarg :thread-id
               :initform nil
-              :accessor hb-thread-id)))
+              :accessor hb-thread-id))
+  (:documentation "Heartbeat channel class."))
 
 (defun make-hb-channel (config ctx)
-  (make-channel config
+  (make-channel 'hb-channel
+                config
                 (pzmq:socket ctx :rep)
-                (config-hb-port config)
-                :class 'hb-channel))
+                (config-hb-port config)))
 
 (defmethod start ((hb hb-channel))
   (start-channel hb)
@@ -23,10 +24,10 @@
     (setf (hb-thread-id hb)
           (bordeaux-threads:make-thread
             (lambda ()
-              (info "[Heartbeat] thread started~%")
+              (info "[hb-channel] Thread starting...~%")
               (pzmq:proxy socket socket (cffi:null-pointer)))))))
 
 (defmethod stop ((hb hb-channel))
-  (info "[Heartbeat] thread stopped~%")
+  (info "[hb-channel] Thread stopped.~%")
   (bordeaux-threads:destroy-thread (hb-thread-id hb))
   (stop-channel hb))

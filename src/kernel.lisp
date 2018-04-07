@@ -45,22 +45,6 @@
   #-(or sbcl clozure gcl ecl cmu allegro lispworks clisp)
   (error "get-argv not supported for your implementation"))
 
-(defun join (e l)
-  (cond ((endp l) (list))
-        ((endp (cdr l)) l)
-        (t (cons (car l) (cons e (join e (cdr l)))))))
-
-(example (join 1 '(a b c d e))
-         => '(a 1 b 1 c 1 d 1 e))
-
-(defun concat-all (kind term ls)
-  (if (endp ls)
-      term
-      (concatenate kind (car ls) (concat-all kind term (cdr ls)))))
-
-(example (concat-all 'string "" '("a" "b" "c" "d" "e"))
-         => "abcde")
-
 (defun banner (stream)
   (format stream (concatenate 'string
                               "~A: an enhanced interactive Maxima REPL~%"
@@ -82,7 +66,7 @@
    (key :initarg :key :reader config-key)))
 
 (defun make-kernel-config (connection-file-name)
-  (let ((config-js (jsown:parse (concat-all 'string "" (read-file-lines connection-file-name)))))
+  (let ((config-js (jsown:parse (read-string-file connection-file-name))))
     (make-instance 'kernel-config
                    :transport (jsown:val config-js "transport")
                    :ip (jsown:val config-js "ip")
@@ -99,6 +83,7 @@
 
 ;; Start all channels.
 (defmethod start ((k kernel))
+  (info "[kernel] Starting...~%")
   (start (kernel-hb k))
   (start (kernel-iopub k))
   (start (kernel-shell k))
@@ -110,6 +95,7 @@
 
 ;; Stop all channels and destroy the control.
 (defmethod stop ((k kernel))
+  (info "[kernel] Stopped.~%")
   (stop (kernel-hb k))
   (stop (kernel-iopub k))
   (stop (kernel-shell k))
@@ -118,20 +104,19 @@
 
 (defun kernel-start (connection-file-name)
   (info (banner nil))
-  (info "[Kernel] connection file = ~A~%" connection-file-name)
+  (info "[kernel] Connection file = ~A~%" connection-file-name)
   (unless (stringp connection-file-name)
-    (error "[Kernel] Wrong connection file argument (expecting a string)"))
+    (error "[kernel] Wrong connection file argument (expecting a string)"))
   (let ((config (make-kernel-config connection-file-name)))
     (when (not (string= (config-signature-scheme config) "hmac-sha256"))
       ;; XXX: only hmac-sha256 supported
-      (error "[Kernel] Signature scheme 'hmac-sha256' required, was provided ~S." (config-signature-scheme config)))
+      (error "[kernel] Signature scheme 'hmac-sha256' required, was provided ~S." (config-signature-scheme config)))
       ;;(inspect config)
     (iter
       (with kernel = (make-kernel config))
       (with iopub = (kernel-iopub kernel))
       (with shell = (kernel-shell kernel))
       (initially
-        (info "[Kernel] Entering mainloop ...~%")
         (start kernel))
       (for msg = (message-recv shell))
       (send-status-update iopub msg "busy")
@@ -139,7 +124,6 @@
       (after-each
         (send-status-update iopub msg "idle"))
       (finally-protected
-        (info "[Kernel] Exiting mainloop.~%")
         (stop kernel)))))
 
 ;; This is the entry point for a saved lisp image created by
@@ -181,7 +165,7 @@
 |#
 
 (defun handle-kernel-info-request (kernel msg)
-  (info "[Shell] handling 'kernel-info-request'~%")
+  (info "[kernel] Handling 'kernel_info_request'~%")
   (message-send (kernel-shell kernel)
     (make-message msg "kernel_info_reply"
       (jsown:new-js
@@ -214,12 +198,11 @@
 (let (execute-request-kernel execute-request-msg)
 
   (defun handle-execute-request (kernel msg)
-    (info "[Shell] handling 'execute_request'~%")
+    (info "[kernel] Handling 'execute_request'~%")
     (let* ((shell (kernel-shell kernel))
            (iopub (kernel-iopub kernel))
            (content (message-content msg))
            (code (jsown:val content "code")))
-      ; (send-status-update iopub msg "busy")
       (setq execute-request-kernel kernel)
       (setq execute-request-msg msg)
       ;;(info "  ===> Code to execute = ~W~%" code)
@@ -243,8 +226,6 @@
                  (send-execute-error iopub msg execution-count (caddr result) (cadddr result)))
                 ((eq (caar result) 'maxima::displayinput)
                  (send-execute-result iopub msg execution-count (caddr result)))))
-        ;; status back to idle
-        ; (send-status-update iopub msg "idle")
         ;; send reply (control)
         (let ((errors (remove-if-not #'eval-error-p results)))
           (if errors
@@ -287,7 +268,7 @@
 |#
 
 (defun handle-shutdown-request (kernel msg)
-  (info "[Shell] handling 'shutdown_request'~%")
+  (info "[kernel] Handling 'shutdown_request'~%")
   (let* ((shell (kernel-shell kernel))
          (content (message-content msg))
          (restart (jsown:val content "restart")))
@@ -301,7 +282,7 @@
 |#
 
 (defun handle-is-complete-request (kernel msg)
-  (info "[Shell] handling 'is_complete_request'~%")
+  (info "[kernel] Handling 'is_complete_request'~%")
   (let* ((shell (kernel-shell kernel))
          (content (message-content msg))
          (code (jsown:val content "code"))

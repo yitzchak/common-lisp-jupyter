@@ -69,17 +69,17 @@ The history of evaluations is also saved by the evaluator.
   (handling-errors
     (let ((code-to-eval (my-mread input)))
       (when code-to-eval
-        (info "[Evaluator] parsed expression to evaluate: ~W~%" code-to-eval)
+        (info "[evaluator] Parsed expression to evaluate: ~W~%" code-to-eval)
         (let* ((*package* (find-package :maxima))
                (result (maxima::with-$error (maxima::meval* code-to-eval))))
-          (info "[Evaluator] evaluated result: ~W~%" result)
+          (info "[evaluator] Evaluated result: ~W~%" result)
           (setq maxima::$% (caddr result))
           result)))))
 
 (defun evaluate-code (evaluator code)
   (iter
     (initially
-      (info "[Evaluator] unparsed input: ~W~%" code)
+      (info "[evaluator] Unparsed input: ~W~%" code)
       (vector-push code (evaluator-history-in evaluator)))
     (with *standard-output* = (make-string-output-stream))
     (with *error-output* = (make-string-output-stream))

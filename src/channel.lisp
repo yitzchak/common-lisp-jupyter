@@ -13,9 +13,10 @@
        :type string)
    (port :initarg :port
          :reader channel-port
-         :type fixnum)))
+         :type fixnum))
+  (:documentation "Common channel class."))
 
-(defun make-channel (config socket port &key (class 'channel))
+(defun make-channel (class config socket port)
   (make-instance class
                  :key (config-key config)
                  :socket socket
@@ -27,6 +28,7 @@
   (:documentation "Start the resource."))
 
 (defun start-channel (ch)
+  (info "[~(~A~)] Starting...~%" (class-name (class-of ch)))
   (pzmq:bind (channel-socket ch)
              (format nil "~A://~A:~A"
                          (channel-transport ch)
@@ -40,6 +42,7 @@
   (:documentation "Stop the resource."))
 
 (defmethod stop-channel ((ch channel))
+  (info "[~(~A~)] Stopped.~%" (class-name (class-of ch)))
   (pzmq:close (channel-socket ch)))
 
 (defmethod stop ((ch channel))
