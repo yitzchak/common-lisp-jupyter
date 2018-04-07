@@ -12,9 +12,9 @@
 
   (defparameter *example-equal-predicate* #'equal)
 
-  (defparameter *example-with-echo* nil)
+  (defparameter *example-with-echo* nil))
 
-  )
+(defvar maxima::$kernel_info nil)
 
 
 (defmacro example (expr arrow expected &key (warn-only nil))
@@ -60,16 +60,9 @@
       `(progn ,@body)
       (values)))
 
-(defmacro logg (level fmt &rest args)
-  "Log the passed ARGS using the format string FMT and its
- arguments ARGS."
-  (if (or (not *log-enabled*)
-          (< level *log-level*))
-      (values);; disabled
-      ;; when enabled
-      `(progn (format ,*log-out-stream* "[LOG]:")
-              (format ,*log-out-stream* ,fmt ,@args)
-              (format ,*log-out-stream* "~%"))))
+(defun info (&rest args)
+  (when maxima::$kernel_info
+    (apply #'format *debug-io* args)))
 
 (defmacro vbinds (binders expr &body body)
   "An abbreviation for MULTIPLE-VALUE-BIND."
@@ -97,28 +90,6 @@
            (cons a b))
          => '(1 . 3)) ;; without a warning
 
-
-(defun afetch (comp alist &key (test #'eql))
-  (let ((binding (assoc comp alist :test test)))
-    (if binding
-        (cdr binding)
-        (error "No such key: ~A" comp))))
-
-(defmacro while (condition &body body)
-  (let ((eval-cond-var (gensym "eval-cond-"))
-        (body-val-var (gensym "body-val-")))
-    `(flet ((,eval-cond-var () ,`,condition))
-       (do ((,body-val-var nil (progn ,@body)))
-           ((not (,eval-cond-var))
-            ,body-val-var)))))
-
-(example (let ((count 0))
-           (while (< count 10)
-             ;;(format t "~A " count)
-             (incf count)
-             count))
-         => 10)
-
 (defun read-file-lines (filename)
   (with-open-file (input filename)
     (loop
@@ -134,9 +105,9 @@
 
 (defun read-string-file (filename)
   (with-open-file (stream filename)
-    (let ((str (make-array (file-length stream) :element-type 'character :fill-pointer t)))
-      (setf (fill-pointer str) (read-sequence str stream))
-      str)))
+    (let ((data (make-string (file-length stream))))
+      (read-sequence data stream)
+      data)))
 
 (defun file-to-base64-string (path)
   (cl-base64:usb8-array-to-base64-string (read-binary-file path)))

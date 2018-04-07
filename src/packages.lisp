@@ -5,12 +5,8 @@
            #:*example-equal-predicate*
            #:example
            #:example-progn
-           #:*logg-enabled*
-           #:*logg-level*
-           #:logg
+           #:info
            #:vbinds
-           #:afetch
-           #:while
            #:add-terminator
            #:ends-with-p
            #:ends-with-terminator
@@ -20,7 +16,7 @@
            #:read-binary-file))
 
 (defpackage #:cl-jupyter
-  (:use #:cl #:fredo-utils)
+  (:use #:cl #:fredo-utils #:iterate)
   (:export
    #:display
    #:display-plain render-plain

@@ -67,7 +67,10 @@
              :accessor message-metadata)
    (content :initarg :content
             :initform (jsown:new-js)
-            :accessor message-content))
+            :accessor message-content)
+   (buffers :initarg :buffers
+            :initform nil
+            :accessor message-buffers))
   (:documentation "Representation of IPython messages"))
 
 (defun make-message (parent-msg msg-type content)
@@ -129,7 +132,7 @@ The wire-serialization of IPython kernel messages uses multi-parts ZMQ messages.
 (defvar +WIRE-IDS-MSG-DELIMITER+ "<IDS|MSG>")
 
 (defmethod wire-serialize ((msg message) &key (key nil))
-  (with-slots (header parent-header identities metadata content) msg
+  (with-slots (header parent-header identities metadata content buffers) msg
     (let* ((header-json (jsown:to-json header))
            (parent-header-json (jsown:to-json parent-header))
            (metadata-json (jsown:to-json metadata))
@@ -143,7 +146,8 @@ The wire-serialization of IPython kernel messages uses multi-parts ZMQ messages.
           header-json
           parent-header-json
           metadata-json
-          content-json)))))
+          content-json)
+        buffers))))
 
 (example-progn
  (defparameter *wire1* (wire-serialize *msg1*)))
@@ -181,20 +185,22 @@ The wire-deserialization part follows.
 (defun wire-deserialize (parts &key (key nil))
   (let ((delim-index (position +WIRE-IDS-MSG-DELIMITER+ parts :test  #'equal)))
     (when (not delim-index)
-      (error "no <IDS|MSG> delimiter found in message parts"))
+      (error "[Wire] No <IDS|MSG> delimiter found in message parts"))
     (let* ((identities (subseq parts 0 delim-index))
            (sig (nth (1+ delim-index) parts))
+           (buffers (subseq parts (+ 6 delim-index)))
            (parts (subseq parts (+ 2 delim-index) (+ 6 delim-index)))
            (expected-sig (if key (message-signing key parts) "")))
       (unless (equal sig expected-sig)
-        (error "Signature mismatch in message"))
+        (error "[Wire] Signature mismatch in message"))
       (destructuring-bind (header parent-header metadata content) parts
         (make-instance 'message
                        :header (jsown:parse header)
                        :parent-header (jsown:parse parent-header)
                        :identities identities
                        :metadata (jsown:parse metadata)
-                       :content (jsown:parse content))))))
+                       :content (jsown:parse content)
+                       :buffers buffers)))))
 
 
 (example-progn
@@ -213,53 +219,49 @@ The wire-deserialization part follows.
 ;; Locking, courtesy of dmeister, thanks !
 (defparameter *message-send-lock* (bordeaux-threads:make-lock "message-send-lock"))
 
-(defun message-send (socket msg &key (key nil))
+(defun message-send (channel msg)
   (unwind-protect
-       (progn
-	 (bordeaux-threads:acquire-lock *message-send-lock*)
-	 (let ((wire-parts (wire-serialize msg :key key)))
-	   ;;DEBUG>>
-	   ;;(format t "~%[Send] wire parts: ~W~%" wire-parts)
-	   (dolist (part wire-parts)
-	     (pzmq:send socket part :sndmore t))
-	   (pzmq:send socket nil)))
+    (let* ((socket (channel-socket channel))
+           (key (channel-key channel))
+           (wire-parts (wire-serialize msg :key key)))
+      (bordeaux-threads:acquire-lock *message-send-lock*)
+      ;;DEBUG>>
+      ;;(info "~%[Send] wire parts: ~W~%" wire-parts)
+      (dolist (part wire-parts)
+        (if (stringp part)
+          (pzmq:send socket part :sndmore t)
+          (let ((len (length part)))
+            (cffi:with-foreign-pointer (m len)
+              (dotimes (i len)
+                (setf (cffi:mem-aref m :unsigned-char i) (elt part i)))
+              (pzmq:send socket m :len len :sndmore t)))))
+      (pzmq:send socket nil))
     (bordeaux-threads:release-lock *message-send-lock*)))
 
-(defun recv-string (socket &key dontwait (encoding cffi:*default-foreign-encoding*))
-  "Receive a message part from a socket as a string."
+(defun recv-parts (socket)
   (pzmq:with-message msg
-    (pzmq:msg-recv msg socket :dontwait dontwait)
-    (values
-     (handler-case
-         (cffi:foreign-string-to-lisp (pzmq:msg-data msg) :count (pzmq:msg-size msg) :encoding encoding)
-       (BABEL-ENCODINGS:INVALID-UTF8-STARTER-BYTE
-           ()
-         ;; if it's not utf-8 we try latin-1 (Ugly !)
-         (format t "[Recv]: issue with UTF-8 decoding~%")
-         (cffi:foreign-string-to-lisp (pzmq:msg-data msg) :count (pzmq:msg-size msg) :encoding :latin-1)))
-     (pzmq:getsockopt socket :rcvmore))))
-
-(defun zmq-recv-list (socket &optional (parts nil) (part-num 1))
-  (multiple-value-bind (part more)
-      (handler-case (pzmq:recv-string socket)
-		    (BABEL-ENCODINGS:INVALID-UTF8-STARTER-BYTE
-		     ()
-		     ;; if it's not utf-8 we try latin-1 (Ugly !)
-		     (format t "[Recv]: issue with UTF-8 decoding~%")
-		     (pzmq:recv-string socket :encoding :latin-1)))
-    ;;(format t "[Shell]: received message part #~A: ~W (more? ~A)~%" part-num part more)
-    (if more
-        (zmq-recv-list socket (cons part parts) (+ part-num 1))
-        (reverse (cons part parts)))))
+    (iter
+      (pzmq:msg-recv msg socket)
+      (for data = (pzmq:msg-data msg))
+      (for len = (pzmq:msg-size msg))
+      (collect
+        (handler-case
+          (cffi:foreign-string-to-lisp data :count len :encoding :utf-8)
+          (babel-encodings:character-decoding-error ()
+            (let ((res (make-array len :element-type 'unsigned-byte)))
+              (dotimes (i len res)
+                (setf (aref res i) (cffi:mem-aref data :unsigned-char i)))))))
+      (while (pzmq:getsockopt socket :rcvmore)))))
 
 (defparameter *message-recv-lock* (bordeaux-threads:make-lock "message-recv-lock"))
 
-(defun message-recv (socket &key (key nil))
+(defun message-recv (channel)
   (unwind-protect
-       (progn
-	 (bordeaux-threads:acquire-lock *message-recv-lock*)
-	 (let ((parts (zmq-recv-list socket)))
-	   ;;DEBUG>>
-	   ;;(format t "[Recv]: parts: ~A~%" (mapcar (lambda (part) (format nil "~W" part)) parts))
-	   (wire-deserialize parts :key key)))
+    (let ((socket (channel-socket channel))
+          (key (channel-key channel)))
+      (bordeaux-threads:acquire-lock *message-recv-lock*)
+      (let ((parts (recv-parts socket)))
+        ;;DEBUG>>
+        ;;(info "[Recv]: parts: ~A~%" (mapcar (lambda (part) (format nil "~W" part)) parts))
+        (wire-deserialize parts :key key)))
     (bordeaux-threads:release-lock *message-recv-lock*)))
