@@ -228,36 +228,30 @@ The wire-deserialization part follows.
       ;;DEBUG>>
       ;;(info "~%[Send] wire parts: ~W~%" wire-parts)
       (dolist (part wire-parts)
-        (pzmq:send socket part :sndmore t))
+        (if (stringp part)
+          (pzmq:send socket part :sndmore t)
+          (let ((len (length part)))
+            (cffi:with-foreign-pointer (m len)
+              (dotimes (i len)
+                (setf (cffi:mem-aref m :unsigned-char i) (elt part i)))
+              (pzmq:send socket m :len len :sndmore t)))))
       (pzmq:send socket nil))
     (bordeaux-threads:release-lock *message-send-lock*)))
 
-(defun recv-string (socket &key dontwait (encoding cffi:*default-foreign-encoding*))
-  "Receive a message part from a socket as a string."
+(defun recv-parts (socket)
   (pzmq:with-message msg
-    (pzmq:msg-recv msg socket :dontwait dontwait)
-    (values
-     (handler-case
-         (cffi:foreign-string-to-lisp (pzmq:msg-data msg) :count (pzmq:msg-size msg) :encoding encoding)
-       (BABEL-ENCODINGS:INVALID-UTF8-STARTER-BYTE
-           ()
-         ;; if it's not utf-8 we try latin-1 (Ugly !)
-         (warn "[Recv]: issue with UTF-8 decoding~%")
-         (cffi:foreign-string-to-lisp (pzmq:msg-data msg) :count (pzmq:msg-size msg) :encoding :latin-1)))
-     (pzmq:getsockopt socket :rcvmore))))
-
-(defun zmq-recv-list (socket &optional (parts nil) (part-num 1))
-  (multiple-value-bind (part more)
-      (handler-case (pzmq:recv-string socket)
-		    (BABEL-ENCODINGS:INVALID-UTF8-STARTER-BYTE
-		     ()
-		     ;; if it's not utf-8 we try latin-1 (Ugly !)
-		     (warn "[Recv]: issue with UTF-8 decoding~%")
-		     (pzmq:recv-string socket :encoding :latin-1)))
-    ;;(info "[Shell]: received message part #~A: ~W (more? ~A)~%" part-num part more)
-    (if more
-        (zmq-recv-list socket (cons part parts) (+ part-num 1))
-        (reverse (cons part parts)))))
+    (iter
+      (pzmq:msg-recv msg socket)
+      (for data = (pzmq:msg-data msg))
+      (for len = (pzmq:msg-size msg))
+      (collect
+        (handler-case
+          (cffi:foreign-string-to-lisp data :count len :encoding :utf-8)
+          (babel-encodings:character-decoding-error ()
+            (let ((res (make-array len :element-type 'unsigned-byte)))
+              (dotimes (i len res)
+                (setf (aref res i) (cffi:mem-aref data :unsigned-char i)))))))
+      (while (pzmq:getsockopt socket :rcvmore)))))
 
 (defparameter *message-recv-lock* (bordeaux-threads:make-lock "message-recv-lock"))
 
@@ -266,7 +260,7 @@ The wire-deserialization part follows.
     (let ((socket (channel-socket channel))
           (key (channel-key channel)))
       (bordeaux-threads:acquire-lock *message-recv-lock*)
-      (let ((parts (zmq-recv-list socket)))
+      (let ((parts (recv-parts socket)))
         ;;DEBUG>>
         ;;(info "[Recv]: parts: ~A~%" (mapcar (lambda (part) (format nil "~W" part)) parts))
         (wire-deserialize parts :key key)))

@@ -102,7 +102,11 @@
   (start (kernel-hb k))
   (start (kernel-iopub k))
   (start (kernel-shell k))
-  (start (kernel-stdin k)))
+  (start (kernel-stdin k))
+  (let ((iopub (kernel-iopub k))
+        (session (kernel-session k)))
+    (send-status iopub session "starting")
+    (send-status iopub session "idle")))
 
 ;; Stop all channels and destroy the control.
 (defmethod stop ((k kernel))
@@ -128,22 +132,12 @@
       (with shell = (kernel-shell kernel))
       (initially
         (info "[Kernel] Entering mainloop ...~%")
-        (start kernel)
-        (send-status-starting iopub (kernel-session kernel)))
+        (start kernel))
       (for msg = (message-recv shell))
-      (for msg-type = (jsown:val (message-header msg) "msg_type"))
-      (while
-        (cond ((equal msg-type "kernel_info_request")
-               (handle-kernel-info-request kernel msg))
-              ((equal msg-type "execute_request")
-               (handle-execute-request kernel msg))
-              ((equal msg-type "shutdown_request")
-               (handle-shutdown-request kernel msg))
-              ((equal msg-type "is_complete_request")
-               (handle-is-complete-request kernel msg))
-              (t
-               (warn "[Shell] message type '~A' not supported, skipping..." msg-type)
-               t)))
+      (send-status-update iopub msg "busy")
+      (while (handle-message kernel msg))
+      (after-each
+        (send-status-update iopub msg "idle"))
       (finally-protected
         (info "[Kernel] Exiting mainloop.~%")
         (stop kernel)))))
@@ -162,6 +156,25 @@
 
 #|
 
+### Message type: kernel_info_request ###
+
+|#
+
+(defun handle-message (kernel msg)
+  (let ((msg-type (jsown:val (message-header msg) "msg_type")))
+    (cond ((equal msg-type "kernel_info_request")
+           (handle-kernel-info-request kernel msg))
+          ((equal msg-type "execute_request")
+           (handle-execute-request kernel msg))
+          ((equal msg-type "shutdown_request")
+           (handle-shutdown-request kernel msg))
+          ((equal msg-type "is_complete_request")
+           (handle-is-complete-request kernel msg))
+          (t
+           (warn "[Shell] message type '~A' not supported, skipping..." msg-type)
+           t))))
+
+#|
 
 ### Message type: kernel_info_request ###
 
@@ -191,6 +204,7 @@
             ("mimetype" "text/x-maxima")
             ("pygments_lexer" "maxima")
             ("codemirror_mode" "maxima")))))))
+
 #|
 
 ### Message type: execute_request ###
@@ -205,7 +219,7 @@
            (iopub (kernel-iopub kernel))
            (content (message-content msg))
            (code (jsown:val content "code")))
-      (send-status-update iopub msg "busy")
+      ; (send-status-update iopub msg "busy")
       (setq execute-request-kernel kernel)
       (setq execute-request-msg msg)
       ;;(info "  ===> Code to execute = ~W~%" code)
@@ -230,7 +244,7 @@
                 ((eq (caar result) 'maxima::displayinput)
                  (send-execute-result iopub msg execution-count (caddr result)))))
         ;; status back to idle
-        (send-status-update iopub msg "idle")
+        ; (send-status-update iopub msg "idle")
         ;; send reply (control)
         (let ((errors (remove-if-not #'eval-error-p results)))
           (if errors

@@ -17,11 +17,11 @@
 
 |#
 
-(defun send-status-starting (iopub session)
+(defun send-status (iopub session status)
   (message-send iopub
                 (make-orphan-message session "status" '("status")
                                      (jsown:new-js
-                                       ("execution_state" "starting")))))
+                                       ("execution_state" status)))))
 
 (defun send-status-update (iopub parent-msg status)
   (message-send iopub
