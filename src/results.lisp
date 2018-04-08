@@ -1,5 +1,11 @@
 (in-package #:maxima-jupyter)
 
+#|
+
+Standard MIME types
+
+|#
+
 (defvar *html-mime-type* "text/html")
 (defvar *javascript-mime-type* "application/javascript")
 (defvar *jpeg-mime-type* "image/jpeg")
@@ -9,6 +15,8 @@
 (defvar *plain-text-mime-type* "text/plain")
 (defvar *png-mime-type* "image/png")
 (defvar *svg-mime-type* "image/svg+xml")
+
+
 
 (defun plot-p (value)
   (and (listp value)
@@ -141,7 +149,7 @@
 
 #|
 
-Convienence functions to return specific types from Lisp or Maxima.
+Convenience functions to return specific types from Lisp or Maxima.
 
 |#
 
@@ -200,6 +208,7 @@ with TeX/LaTeX and assume that the proper mime type is always text/latex. The
 following function will make sure that trivial-mimes database reflects this.
 
 |#
+
 (defun check-mime-db ()
   (iter
     (for ext in '("tex" "latex" "tikz"))

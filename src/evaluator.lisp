@@ -44,7 +44,7 @@ The history of evaluations is also saved by the evaluator.
 (defmacro handling-errors (&body body)
   `(catch 'maxima::return-from-debugger
     (handler-case (progn ,@body)
-       (maxima-jupyter::quit (err)
+       (quit (err)
          (make-eval-error err (format nil "~A" err) :quit t))
        (simple-condition (err)
          (make-eval-error err
