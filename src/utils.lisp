@@ -14,7 +14,7 @@
 
   (defparameter *example-with-echo* nil))
 
-(defvar maxima::$kernel_info nil)
+(defvar maxima::$kernel_info t)
 
 
 (defmacro example (expr arrow expected &key (warn-only nil))

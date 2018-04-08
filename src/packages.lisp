@@ -19,12 +19,16 @@
 (defpackage #:maxima-jupyter
   (:nicknames #:mj)
   (:use #:cl #:fredo-utils #:iterate)
-  (:export #:kernel-start
-           #:kernel-start-exec
-           #:make-error-result
-           #:make-file-result
-           #:make-inline-result
-           #:make-lisp-result
-           #:make-maxima-result))
+  (:export
+    #:html
+    #:kernel-start
+    #:kernel-start-exec
+    #:latex
+    #:make-error-result
+    #:make-file-result
+    #:make-inline-result
+    #:make-lisp-result
+    #:make-maxima-result
+    #:text))
 
 (in-package #:maxima-jupyter)

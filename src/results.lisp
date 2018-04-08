@@ -1,5 +1,10 @@
 (in-package #:maxima-jupyter)
 
+(defvar *html-mime-type* "text/html")
+(defvar *latex-mime-type* "text/latex")
+(defvar *plain-text-mime-type* "text/plain")
+(defvar *svg-mime-type* "image/svg+xml")
+
 (defun plot-p (value)
   (and (listp value)
        (eq (caar value) 'maxima::mlist)
@@ -38,7 +43,7 @@
 
 (defmethod display ((res sexpr-result))
   (jsown:new-js
-    ("text/plain" (sexpr-to-text (sexpr-result-value res)))))
+    (*plain-text-mime-type* (sexpr-to-text (sexpr-result-value res)))))
 
 (defclass mexpr-result (result)
   ((value :initarg :value
@@ -47,8 +52,8 @@
 (defmethod display ((res mexpr-result))
   (let ((value (mexpr-result-value res)))
     (jsown:new-js
-      ("text/plain" (mexpr-to-text value))
-      ("text/latex" (mexpr-to-latex value)))))
+      (*plain-text-mime-type* (mexpr-to-text value))
+      (*latex-mime-type* (mexpr-to-latex value)))))
 
 (defclass inline-result (result)
   ((value :initarg :value
@@ -56,18 +61,18 @@
    (mime-type :initarg :mime-type
               :reader inline-result-mime-type)))
 
-(defun make-inline-result (path &key (mime-type "text/plain"))
- (make-instance 'inline-result :path path
+(defun make-inline-result (value &key (mime-type *plain-text-mime-type*))
+ (make-instance 'inline-result :value value
                                :mime-type mime-type))
 
 (defmethod display ((res inline-result))
   (let ((value (inline-result-value res))
         (mime-type (inline-result-mime-type res)))
-    (if (equal mime-type "text/plain")
+    (if (equal mime-type *plain-text-mime-type*)
       (jsown:new-js
         (mime-type value))
       (jsown:new-js
-        ("text/plain" "inline-value")
+        (*plain-text-mime-type* "inline-value")
         (mime-type (if (stringp value)
                        value
                        (cl-base64:usb8-array-to-base64-string value)))))))
@@ -86,13 +91,13 @@
 (defmethod display ((res file-result))
   (let* ((path (file-result-path res))
          (mime-type (or (file-result-mime-type res) (trivial-mimes:mime path))))
-    (if (equal mime-type "text/plain")
+    (if (equal mime-type *plain-text-mime-type*)
       (jsown:new-js
         (mime-type (read-string-file path)))
       (jsown:new-js
-        ("text/plain" path)
+        (*plain-text-mime-type* path)
         (mime-type
-          (if (or (equal mime-type "image/svg+xml") (starts-with-p mime-type "text/"))
+          (if (or (equal mime-type *svg-mime-type*) (starts-with-p mime-type "text/"))
             (read-string-file path)
             (file-to-base64-string path)))))))
 
@@ -108,7 +113,7 @@
               :initform nil
               :reader error-result-traceback)))
 
-(defun make-error-result (ename evalue msg &key (quit nil) (traceback nil))
+(defun make-error-result (ename evalue &key (quit nil) (traceback nil))
   (make-instance 'error-result :ename ename :evalue evalue
                                :quit quit :traceback traceback))
 
@@ -128,3 +133,21 @@
   (if (typep value 'result)
     value
     (make-instance 'sexpr-result :value value)))
+
+(defun text (value)
+  (make-inline-result value))
+
+(defmfun maxima::$mj_text (value)
+  (make-inline-result value))
+
+(defun html (value)
+  (make-inline-result value :mime-type *html-mime-type*))
+
+(defmfun maxima::$mj_html (value)
+  (make-inline-result value :mime-type *html-mime-type*))
+
+(defun latex (value)
+  (make-inline-result value :mime-type *latex-mime-type*))
+
+(defmfun maxima::$mj_latex (value)
+  (make-inline-result value :mime-type *latex-mime-type*))
