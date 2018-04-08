@@ -1,4 +1,4 @@
-(in-package #:cl-jupyter)
+(in-package #:maxima-jupyter)
 
 (defclass kernel ()
   ((config :initarg :config
@@ -222,15 +222,18 @@
               (send-stream iopub msg "stderr" stderr))
         ;; send the results
         (dolist (result results)
-          (cond ((eval-error-p result)
-                 (send-execute-error iopub msg execution-count (caddr result) (cadddr result)))
-                ((eq (caar result) 'maxima::displayinput)
-                 (send-execute-result iopub msg execution-count (caddr result)))))
+          (if (typep result 'error-result)
+            (send-execute-error iopub msg execution-count
+                                (error-result-ename result)
+                                (error-result-evalue result))
+            (let ((data (display result)))
+              (when data
+                (send-execute-result iopub msg execution-count data)))))
         ;; send reply (control)
         (let ((errors (remove-if-not #'eval-error-p results)))
           (if errors
-            (let ((ename (format nil "~{~A~^, ~}" (mapcar #'caddr errors)))
-                  (evalue (format nil "~{~A~^, ~}" (mapcar #'cadddr errors))))
+            (let ((ename (format nil "~{~A~^, ~}" (mapcar #'error-result-ename errors)))
+                  (evalue (format nil "~{~A~^, ~}" (mapcar #'error-result-evalue errors))))
               (send-execute-reply-error shell msg execution-count ename evalue))
             (send-execute-reply-ok shell msg execution-count)))
         ;; return t if there is no quit errors present

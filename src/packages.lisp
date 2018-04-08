@@ -8,6 +8,7 @@
            #:info
            #:vbinds
            #:add-terminator
+           #:starts-with-p
            #:ends-with-p
            #:ends-with-terminator
            #:file-to-base64-string
@@ -15,39 +16,15 @@
            #:read-string-file
            #:read-binary-file))
 
-(defpackage #:cl-jupyter
+(defpackage #:maxima-jupyter
+  (:nicknames #:mj)
   (:use #:cl #:fredo-utils #:iterate)
-  (:export
-   #:display
-   #:display-plain render-plain
-   #:display-html render-html
-   #:display-markdown render-markdown
-   #:display-latex render-latex
-   #:display-png render-png
-   #:display-jpeg render-jpeg
-   #:display-pdf render-pdf
-   #:display-svg render-svg
-   #:display-json render-json
-   #:display-javascript render-javascript
-   #:kernel-start
-   #:kernel-start-exec))
+  (:export #:kernel-start
+           #:kernel-start-exec
+           #:make-error-result
+           #:make-file-result
+           #:make-inline-result
+           #:make-lisp-result
+           #:make-maxima-result))
 
-(defpackage #:cl-jupyter-user
-  (:use #:cl #:fredo-utils #:cl-jupyter #:common-lisp-user)
-  (:export
-   #:display
-   #:display-plain render-plain
-   #:display-html render-html
-   #:display-markdown render-markdown
-   #:display-latex render-latex
-   #:display-png render-png
-   #:display-jpeg render-jpeg
-   #:display-svg render-svg
-   #:display-json render-json
-   #:display-javascript render-javascript
-   #:html #:latex #:svg
-   #:png-from-file
-   #:svg-from-file
-   #:quit))
-
-(in-package #:cl-jupyter)
+(in-package #:maxima-jupyter)

@@ -1,4 +1,4 @@
-(in-package #:cl-jupyter)
+(in-package #:maxima-jupyter)
 
 (defclass channel ()
   ((key :initarg :key

@@ -1,4 +1,4 @@
-(in-package #:cl-jupyter)
+(in-package #:maxima-jupyter)
 
 #|
 
@@ -41,12 +41,12 @@
                                 ("code" code)
                                 ("execution_count" execution-count)))))
 
-(defun send-execute-result (iopub parent-msg execution-count result)
+(defun send-execute-result (iopub parent-msg execution-count data)
   (message-send iopub
                 (make-message parent-msg "execute_result"
                               (jsown:new-js
                                 ("execution_count" execution-count)
-                                ("data" (display-object-data (display result)))
+                                ("data" data)
                                 ("metadata" (jsown:new-js))))))
 
 (defun send-execute-error (iopub parent-msg execution-count ename evalue)
