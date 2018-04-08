@@ -20,7 +20,9 @@
   (:nicknames #:mj)
   (:use #:cl #:fredo-utils #:iterate)
   (:export
+    #:file
     #:html
+    #:jpeg
     #:kernel-start
     #:kernel-start-exec
     #:latex
@@ -29,6 +31,9 @@
     #:make-inline-result
     #:make-lisp-result
     #:make-maxima-result
+    #:markdown
+    #:png
+    #:svg
     #:text))
 
 (in-package #:maxima-jupyter)

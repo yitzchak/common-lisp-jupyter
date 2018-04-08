@@ -1,8 +1,13 @@
 (in-package #:maxima-jupyter)
 
 (defvar *html-mime-type* "text/html")
+(defvar *javascript-mime-type* "application/javascript")
+(defvar *jpeg-mime-type* "image/jpeg")
+(defvar *json-mime-type* "application/json")
 (defvar *latex-mime-type* "text/latex")
+(defvar *markdown-mime-type* "text/markdown")
 (defvar *plain-text-mime-type* "text/plain")
+(defvar *png-mime-type* "image/png")
 (defvar *svg-mime-type* "image/svg+xml")
 
 (defun plot-p (value)
@@ -134,20 +139,70 @@
     value
     (make-instance 'sexpr-result :value value)))
 
+#|
+
+Convienence functions to return specific types from Lisp or Maxima.
+
+|#
+
+(defun file (path)
+  (make-file-result path))
+
+(maxima::defmfun maxima::$mj_file (path)
+  (make-file-result path))
+
 (defun text (value)
   (make-inline-result value))
 
-(defmfun maxima::$mj_text (value)
+(maxima::defmfun maxima::$mj_text (value)
   (make-inline-result value))
 
 (defun html (value)
   (make-inline-result value :mime-type *html-mime-type*))
 
-(defmfun maxima::$mj_html (value)
+(maxima::defmfun maxima::$mj_html (value)
   (make-inline-result value :mime-type *html-mime-type*))
+
+(defun jpeg (value)
+  (make-inline-result value :mime-type *jpeg-mime-type*))
+
+(maxima::defmfun maxima::$mj_jpeg (value)
+  (make-inline-result value :mime-type *jpeg-mime-type*))
 
 (defun latex (value)
   (make-inline-result value :mime-type *latex-mime-type*))
 
-(defmfun maxima::$mj_latex (value)
+(maxima::defmfun maxima::$mj_latex (value)
   (make-inline-result value :mime-type *latex-mime-type*))
+
+(defun markdown (value)
+  (make-inline-result value :mime-type *markdown-mime-type*))
+
+(maxima::defmfun maxima::$mj_markdown (value)
+  (make-inline-result value :mime-type *markdown-mime-type*))
+
+(defun png (value)
+  (make-inline-result value :mime-type *png-mime-type*))
+
+(maxima::defmfun maxima::$mj_png (value)
+  (make-inline-result value :mime-type *png-mime-type*))
+
+(defun svg (value)
+  (make-inline-result value :mime-type *svg-mime-type*))
+
+(maxima::defmfun maxima::$mj_svg (value)
+  (make-inline-result value :mime-type *svg-mime-type*))
+
+#|
+
+Jupyter clients generally don't know about the myriad of mime types associated
+with TeX/LaTeX and assume that the proper mime type is always text/latex. The
+following function will make sure that trivial-mimes database reflects this.
+
+|#
+(defun check-mime-db ()
+  (iter
+    (for ext in '("tex" "latex" "tikz"))
+    (setf (gethash ext trivial-mimes:*mime-db*) *latex-mime-type*)))
+
+(check-mime-db)
