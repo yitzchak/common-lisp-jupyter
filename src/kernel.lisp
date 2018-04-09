@@ -258,11 +258,73 @@
                                   (t
                                    (maxima::aformat nil "~M" maxima::msg))))
            (stdin (kernel-stdin execute-request-kernel)))
-      (send-input-request stdin execute-request-msg retrieve-prompt)
-      (let* ((msg (message-recv stdin))
-             (content (message-content msg))
-             (value (jsown:val content "value")))
-        (maxima::mread-noprompt (make-string-input-stream (add-terminator value)) nil)))))
+      (let ((value (get-input stdin execute-request-msg retrieve-prompt)))
+        (maxima::mread-noprompt (make-string-input-stream (add-terminator value)) nil))))
+
+  (defun my-dbm-prompt (at)
+    (format nil "~@[(~a:~a) ~]"
+                (unless (stringp at) "dbm")
+                (length maxima::*quit-tags*)))
+
+  (defun maxima::set-env (bkpt)
+    (format *debug-io*
+            (intl:gettext "(~a line ~a~@[, in function ~a~])")
+            (maxima::short-name (maxima::bkpt-file bkpt))
+  	  (maxima::bkpt-file-line bkpt)
+  	  (maxima::bkpt-function bkpt))
+    (format *debug-io* "~&~a:~a::~%" (maxima::bkpt-file bkpt)
+  	  (maxima::bkpt-file-line bkpt)))
+
+  (defun maxima::break-frame (&optional (n 0) (print-frame-number t))
+    (maxima::restore-bindings)
+    (multiple-value-bind (fname vals params backtr lineinfo bdlist)
+        (maxima::print-one-frame n print-frame-number)
+      backtr params vals fname
+      (maxima::remove-bindings bdlist)
+      (when lineinfo
+        (fresh-line *debug-io*)
+        (format *debug-io* "~a:~a::~%" (cadr lineinfo) (+ 0 (car lineinfo))))
+      (values)))
+
+  (defun maxima::break-dbm-loop (at)
+    (let* ((maxima::*quit-tags* (cons (cons maxima::*break-level* maxima::*quit-tag*) maxima::*quit-tags*))
+           (maxima::*break-level* (if (not at) maxima::*break-level* (cons t maxima::*break-level*)))
+           (maxima::*quit-tag* (cons nil nil))
+           (maxima::*break-env* maxima::*break-env*)
+           (maxima::*mread-prompt* "")
+           (maxima::*diff-bindlist* nil)
+           (maxima::*diff-mspeclist* nil)
+  	       val)
+      (declare (special maxima::*mread-prompt*))
+      (and (consp at) (maxima::set-env at))
+      (cond ((null at)
+             (maxima::break-frame 0 nil)))
+      (catch 'maxima::step-continue
+        (catch maxima::*quit-tag*
+          (unwind-protect
+            (do ((stdin (kernel-stdin execute-request-kernel))
+                 (prompt (my-dbm-prompt at) (my-dbm-prompt at)))
+                (())
+              (finish-output *debug-io*)
+  	          (setq val (catch 'maxima::macsyma-quit
+                          (let* ((inp (get-input stdin execute-request-msg prompt))
+                                 (res (with-input-from-string (f inp)
+                                        (maxima::dbm-read f nil))))
+                            (declare (special maxima::*mread-prompt*))
+                            (cond ((and (consp res) (keywordp (car res)))
+                                   (let ((value (maxima::break-call (car res) (cdr res) 'maxima::break-command)))
+                                     (cond ((eq value :resume) (return)))))
+                                  ((eq res maxima::*top-eof*)
+                                   (funcall (get :top 'maxima::break-command)))
+                                  (t
+                                   ; (setq maxima::$__ (nth 2 res))
+                          				 (setq maxima::$% (maxima::meval* (third res)))
+                          				 ; (setq maxima::$_ $__)
+                          				 (maxima::displa maxima::$%)))
+  			                    nil)))
+  	          (and (eql val 'maxima::top)
+  		        (maxima::throw-macsyma-top)))
+  	        (maxima::restore-bindings)))))))
 
 #|
 

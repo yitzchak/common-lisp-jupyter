@@ -29,3 +29,7 @@ See: http://jupyter-client.readthedocs.org/en/latest/messaging.html#messages-on-
                 (make-message parent-msg "input_request"
                               (jsown:new-js
                                 ("prompt" prompt)))))
+
+(defun get-input (stdin parent-msg prompt)
+  (send-input-request stdin parent-msg prompt)
+  (jsown:val (message-content (message-recv stdin)) "value"))

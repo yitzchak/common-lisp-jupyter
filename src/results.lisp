@@ -17,6 +17,20 @@ Standard MIME types
 (defvar *svg-mime-type* "image/svg+xml")
 
 
+(defun keyword-result-p (code)
+  (and (listp code)
+       (listp (car code))
+       (keywordp (caar code))))
+
+(defun lisp-result-p (code)
+  (and (listp code)
+       (listp (car code))
+       (eq (caar code) ':lisp)))
+
+(defun displayinput-result-p (code)
+  (and (listp code)
+       (listp (car code))
+       (eq (caar code) 'maxima::displayinput)))
 
 (defun plot-p (value)
   (and (listp value)
@@ -133,7 +147,7 @@ Standard MIME types
 (defun make-maxima-result (value)
   (if (typep value 'result)
     value
-    (cond ((eq (caar value) 'maxima::displayinput)
+    (cond ((displayinput-result-p value)
            (let ((actual-value (third value)))
              (cond ((typep actual-value 'result)
                     actual-value)
@@ -141,7 +155,7 @@ Standard MIME types
                     (make-instance 'file-result :path (third actual-value)))
                    (t
                     (make-instance 'mexpr-result :value actual-value)))))
-          ((eq (caar value) ':lisp)
+          ((lisp-result-p value)
             (make-lisp-result (second value))))))
 
 (defun make-lisp-result (value)

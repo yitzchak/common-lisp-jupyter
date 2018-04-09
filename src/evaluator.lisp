@@ -74,12 +74,22 @@ The history of evaluations is also saved by the evaluator.
         (catch 'maxima::macsyma-quit
           (apply old-mread-synerr args)))))))
 
+(defun keyword-lisp-p (code)
+  (and (consp code)
+       (or (equal ':lisp (car code)) (equal ':lisp-quiet (car code)))))
+
+(defun keyword-command-p (code)
+  (and (consp code) (keywordp (car code))))
+
 (defun my-eval (code)
   (let ((*package* (find-package :maxima)))
-    (cond ((and (consp code) (equal ':lisp (car code)))
-           (cons (list ':lisp) (multiple-value-list (eval (cons 'progn code)))))
-          ((and (consp code) (keywordp (car code)))
-           (maxima::break-call (car code) (cdr code) 'maxima::break-command))
+    (cond ((keyword-lisp-p code)
+           (cons (list (car code))
+                 (multiple-value-list (eval (cons 'progn code)))))
+          ((keyword-command-p code)
+           (cons (list (car code))
+                 (maxima::break-call (car code) (cdr code)
+                                     'maxima::break-command)))
           (t
            (maxima::meval* code)))))
 
@@ -90,7 +100,8 @@ The history of evaluations is also saved by the evaluator.
         (info "[evaluator] Parsed expression to evaluate: ~W~%" code-to-eval)
         (let ((result (my-eval code-to-eval)))
           (info "[evaluator] Evaluated result: ~W~%" result)
-          (setq maxima::$% (caddr result))
+          (unless (keyword-result-p result)
+            (setq maxima::$% (caddr result)))
           result)))))
 
 (defun evaluate-code (evaluator code)
