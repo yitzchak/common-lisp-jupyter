@@ -55,9 +55,11 @@ The history of evaluations is also saved by the evaluator.
 
 (defun my-mread (input)
   (when (and (open-stream-p input) (peek-char nil input nil))
-    (let ((maxima::*mread-prompt* "") (maxima::*prompt-on-read-hang*))
-      (declare (special maxima::*mread-prompt* maxima::*prompt-on-read-hang*))
-      (maxima::mread input nil))))
+    (let ((maxima::*mread-prompt* "")
+          (maxima::*prompt-on-read-hang*))
+      (declare (special maxima::*mread-prompt*
+                        maxima::*prompt-on-read-hang*))
+      (maxima::dbm-read input nil))))
 
 (defun eval-error-p (result)
   (typep result 'error-result))
@@ -72,13 +74,21 @@ The history of evaluations is also saved by the evaluator.
         (catch 'maxima::macsyma-quit
           (apply old-mread-synerr args)))))))
 
+(defun my-eval (code)
+  (let ((*package* (find-package :maxima)))
+    (cond ((and (consp code) (equal ':lisp (car code)))
+           (cons (list ':lisp) (multiple-value-list (eval (cons 'progn code)))))
+          ((and (consp code) (keywordp (car code)))
+           (maxima::break-call (car code) (cdr code) 'maxima::break-command))
+          (t
+           (maxima::meval* code)))))
+
 (defun read-and-eval (input)
   (handling-errors
     (let ((code-to-eval (my-mread input)))
       (when code-to-eval
         (info "[evaluator] Parsed expression to evaluate: ~W~%" code-to-eval)
-        (let* ((*package* (find-package :maxima))
-               (result (maxima::with-$error (maxima::meval* code-to-eval))))
+        (let ((result (my-eval code-to-eval)))
           (info "[evaluator] Evaluated result: ~W~%" result)
           (setq maxima::$% (caddr result))
           result)))))

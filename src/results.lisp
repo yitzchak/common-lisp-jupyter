@@ -133,14 +133,16 @@ Standard MIME types
 (defun make-maxima-result (value)
   (if (typep value 'result)
     value
-    (when (eq (caar value) 'maxima::displayinput)
-      (let ((actual-value (third value)))
-        (cond ((typep actual-value 'result)
-               actual-value)
-              ((plot-p actual-value)
-               (make-instance 'file-result :path (third actual-value)))
-              (t
-               (make-instance 'mexpr-result :value actual-value)))))))
+    (cond ((eq (caar value) 'maxima::displayinput)
+           (let ((actual-value (third value)))
+             (cond ((typep actual-value 'result)
+                    actual-value)
+                   ((plot-p actual-value)
+                    (make-instance 'file-result :path (third actual-value)))
+                   (t
+                    (make-instance 'mexpr-result :value actual-value)))))
+          ((eq (caar value) ':lisp)
+            (make-lisp-result (second value))))))
 
 (defun make-lisp-result (value)
   (if (typep value 'result)
