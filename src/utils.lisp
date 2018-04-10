@@ -62,7 +62,7 @@
 
 (defun info (&rest args)
   (when maxima::$kernel_info
-    (apply #'format *debug-io* args)))
+    (apply #'format *trace-output* args)))
 
 (defmacro vbinds (binders expr &body body)
   "An abbreviation for MULTIPLE-VALUE-BIND."
