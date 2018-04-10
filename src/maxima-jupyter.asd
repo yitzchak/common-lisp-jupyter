@@ -11,6 +11,7 @@
                :iterate
                :cl-base64
                :jsown
+               :trivial-gray-streams
                :trivial-mimes)
   :serial t
   :components ((:file "packages")

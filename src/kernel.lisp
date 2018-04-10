@@ -201,12 +201,15 @@
     (info "[kernel] Handling 'execute_request'~%")
     (let* ((shell (kernel-shell kernel))
            (iopub (kernel-iopub kernel))
+           (*error-output* (make-iopub-stream iopub msg "stderr"))
+           (*standard-output* (make-iopub-stream iopub msg "stdout"))
+           (*debug-io* *standard-output*)
            (content (message-content msg))
            (code (jsown:val content "code")))
       (setq execute-request-kernel kernel)
       (setq execute-request-msg msg)
       ;;(info "  ===> Code to execute = ~W~%" code)
-      (vbinds (execution-count results stdout stderr)
+      (vbinds (execution-count results); stdout stderr)
               (evaluate-code (kernel-evaluator kernel) code)
         ;(info "Execution count = ~A~%" execution-count)
         ;(info "results = ~A~%" results)
@@ -215,11 +218,13 @@
         ;broadcast the code to connected frontends
         (send-execute-code iopub msg execution-count code)
         ;; send the stdout
-        (when (and stdout (> (length stdout) 0))
-              (send-stream iopub msg "stdout" stdout))
+        (finish-output *standard-output*)
+        ; (when (and stdout (> (length stdout) 0))
+        ;       (send-stream iopub msg "stdout" stdout))
         ;; send the stderr
-        (when (and stderr (> (length stderr) 0))
-              (send-stream iopub msg "stderr" stderr))
+        (finish-output *error-output*)
+        ; (when (and stderr (> (length stderr) 0))
+        ;       (send-stream iopub msg "stderr" stderr))
         ;; send the results
         (dolist (result results)
           (if (typep result 'error-result)
@@ -351,7 +356,7 @@
   (let* ((shell (kernel-shell kernel))
          (content (message-content msg))
          (code (jsown:val content "code"))
-         (status (if (ends-with-terminator code)
+         (status (if t;(ends-with-terminator code)
                      "complete"
                      "incomplete")))
     (send-is-complete-reply shell msg status)

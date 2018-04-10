@@ -64,3 +64,41 @@
                               (jsown:new-js
                                 ("name" stream-name)
                                 ("text" data)))))
+
+(defclass iopub-stream (trivial-gray-streams:fundamental-character-output-stream)
+  ((channel :initarg :channel
+            :reader iopub-stream-channel)
+   (parent-msg :initarg :parent-msg
+               :reader iopub-stream-parent-msg)
+   (name :initarg :name
+         :reader iopub-stream-name)
+   (value :initarg :value
+          :initform (make-array 0
+                                :fill-pointer 0
+                                :adjustable t
+                                :element-type 'character)
+          :accessor iopub-stream-value)))
+
+(defun make-iopub-stream (iopub parent-msg name)
+  (make-instance 'iopub-stream :channel iopub
+                               :parent-msg parent-msg
+                               :name name))
+
+(defmethod trivial-gray-streams:stream-write-char ((stream iopub-stream) char)
+  (vector-push-extend char (iopub-stream-value stream)))
+
+; (defmethod trivial-gray-streams:stream-write-string ((stream iopub-stream) string &optional start end)
+  ; (format *debug-io* "string: ~A~%" string)
+  ; t)
+
+(defmethod trivial-gray-streams:stream-finish-output ((stream iopub-stream))
+  (unless (zerop (length (iopub-stream-value stream)))
+    (send-stream (iopub-stream-channel stream)
+                 (iopub-stream-parent-msg stream)
+                 (iopub-stream-name stream)
+                 (iopub-stream-value stream))
+    (setf (iopub-stream-value stream)
+          (make-array 0
+                      :fill-pointer 0
+                      :adjustable t
+                      :element-type 'character))))

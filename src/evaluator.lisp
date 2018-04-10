@@ -109,9 +109,9 @@ The history of evaluations is also saved by the evaluator.
     (initially
       (info "[evaluator] Unparsed input: ~W~%" code)
       (vector-push code (evaluator-history-in evaluator)))
-    (with *standard-output* = (make-string-output-stream))
-    (with *error-output* = (make-string-output-stream))
-    (with input = (make-string-input-stream (add-terminator code)))
+    ; (with *standard-output* = (make-string-output-stream))
+    ; (with *error-output* = (make-string-output-stream))
+    (with input = (make-string-input-stream code));(add-terminator code)))
     (for result = (read-and-eval input))
     (while result)
     (for wrapped-result = (make-maxima-result result))
@@ -122,6 +122,6 @@ The history of evaluations is also saved by the evaluator.
       (vector-push results (evaluator-history-out evaluator))
       (return
         (values (length (evaluator-history-in evaluator))
-                results
-                (get-output-stream-string *standard-output*)
-                (get-output-stream-string *error-output*))))))
+                results)))))
+                ; (get-output-stream-string *standard-output*)
+                ; (get-output-stream-string *error-output*))))))
