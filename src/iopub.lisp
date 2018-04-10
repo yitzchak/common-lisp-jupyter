@@ -104,33 +104,3 @@
                       :fill-pointer 0
                       :adjustable t
                       :element-type 'character))))
-
-(defclass iopub-execute ()
-  ((channel :initarg :channel
-            :reader iopub-execute-channel)
-   (parent-msg :initarg :parent-msg
-               :reader iopub-execute-parent-msg)
-   (count :initarg :count
-          :reader iopub-execute-count)))
-
-(defun make-iopub-execute (iopub parent-msg count)
-  (make-instance 'iopub-execute :channel iopub
-                                :parent-msg parent-msg
-                                :count count))
-
-(defgeneric send (context result))
-
-(defmethod send ((context iopub-execute) result)
-  (let ((iopub (iopub-execute-channel context))
-        (msg (iopub-execute-parent-msg context))
-        (execute-count (iopub-execute-count context)))
-    (if (typep result 'error-result)
-      (send-execute-error iopub msg execute-count
-                          (error-result-ename result)
-                          (error-result-evalue result))
-      (let ((data (display result)))
-        (when data
-          (send-execute-result iopub msg execute-count data))))))
-
-(defun send-result (result)
-  (send *iopub-execute* result))

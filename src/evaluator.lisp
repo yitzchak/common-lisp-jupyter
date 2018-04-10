@@ -1,5 +1,8 @@
 (in-package #:maxima-jupyter)
 
+(defvar *kernel* nil)
+(defvar *message* nil)
+
 #|
 
 # Evaluator #
@@ -96,26 +99,27 @@ The history of evaluations is also saved by the evaluator.
 (defun read-and-eval (input)
   (handling-errors
     (let ((code-to-eval (my-mread input)))
-      (when code-to-eval
-        (info "[evaluator] Parsed expression to evaluate: ~W~%" code-to-eval)
-        (let ((result (my-eval code-to-eval)))
-          (info "[evaluator] Evaluated result: ~W~%" result)
-          (unless (keyword-result-p result)
-            (setq maxima::$% (caddr result)))
-          result)))))
+      (if code-to-eval
+        (progn
+          (info "[evaluator] Parsed expression to evaluate: ~W~%" code-to-eval)
+          (let ((result (my-eval code-to-eval)))
+            (info "[evaluator] Evaluated result: ~W~%" result)
+            (unless (keyword-result-p result)
+              (setq maxima::$% (caddr result)))
+            result))
+        'no-more-code))))
 
 (defun evaluate-code (evaluator code)
   (iter
     (initially
       (info "[evaluator] Unparsed input: ~W~%" code)
       (vector-push code (evaluator-history-in evaluator)))
-    ; (with *standard-output* = (make-string-output-stream))
-    ; (with *error-output* = (make-string-output-stream))
-    (with input = (make-string-input-stream code));(add-terminator code)))
+    (with input = (make-string-input-stream code))
     (for result = (read-and-eval input))
-    (while result)
+    (until (eq result 'no-more-code))
     (for wrapped-result = (make-maxima-result result))
-    (if wrapped-result
+    (when wrapped-result
+      (send-result wrapped-result)
       (collect wrapped-result into results))
     (until (quit-eval-error-p wrapped-result))
     (finally
@@ -123,5 +127,104 @@ The history of evaluations is also saved by the evaluator.
       (return
         (values (length (evaluator-history-in evaluator))
                 results)))))
-                ; (get-output-stream-string *standard-output*)
-                ; (get-output-stream-string *error-output*))))))
+
+(defun my-dbm-prompt (at)
+  (format nil "~@[(~a:~a) ~]"
+              (unless (stringp at) "dbm")
+              (length maxima::*quit-tags*)))
+
+(defun maxima::set-env (bkpt)
+  (format *debug-io*
+          (intl:gettext "(~a line ~a~@[, in function ~a~])")
+          (maxima::short-name (maxima::bkpt-file bkpt))
+	  (maxima::bkpt-file-line bkpt)
+	  (maxima::bkpt-function bkpt))
+  (format *debug-io* "~&~a:~a::~%" (maxima::bkpt-file bkpt)
+	  (maxima::bkpt-file-line bkpt)))
+
+(defun maxima::break-frame (&optional (n 0) (print-frame-number t))
+  (maxima::restore-bindings)
+  (multiple-value-bind (fname vals params backtr lineinfo bdlist)
+      (maxima::print-one-frame n print-frame-number)
+    backtr params vals fname
+    (maxima::remove-bindings bdlist)
+    (when lineinfo
+      (fresh-line *debug-io*)
+      (format *debug-io* "~a:~a::~%" (cadr lineinfo) (+ 0 (car lineinfo))))
+    (values)))
+
+(defun maxima::break-dbm-loop (at)
+  (let* ((maxima::*quit-tags* (cons (cons maxima::*break-level* maxima::*quit-tag*) maxima::*quit-tags*))
+         (maxima::*break-level* (if (not at) maxima::*break-level* (cons t maxima::*break-level*)))
+         (maxima::*quit-tag* (cons nil nil))
+         (maxima::*break-env* maxima::*break-env*)
+         (maxima::*mread-prompt* "")
+         (maxima::*diff-bindlist* nil)
+         (maxima::*diff-mspeclist* nil)
+	       val)
+    (declare (special maxima::*mread-prompt*))
+    (and (consp at) (maxima::set-env at))
+    (cond ((null at)
+           (maxima::break-frame 0 nil)))
+    (catch 'maxima::step-continue
+      (catch maxima::*quit-tag*
+        (unwind-protect
+          (do ((stdin (kernel-stdin *kernel*))
+               (prompt (my-dbm-prompt at) (my-dbm-prompt at)))
+              (())
+            (finish-output *debug-io*)
+	          (setq val (catch 'maxima::macsyma-quit
+                        (let* ((inp (get-input stdin *message* prompt))
+                               (res (with-input-from-string (f inp)
+                                      (maxima::dbm-read f nil))))
+                          (declare (special maxima::*mread-prompt*))
+                          (cond ((and (consp res) (keywordp (car res)))
+                                 (let ((value (maxima::break-call (car res) (cdr res) 'maxima::break-command)))
+                                   (cond ((eq value :resume) (return)))))
+                                ((eq res maxima::*top-eof*)
+                                 (funcall (get :top 'maxima::break-command)))
+                                (t
+                                 (let ((v (maxima::meval* res)))
+                                 ; (setq maxima::$__ (nth 2 res))
+                        				   (setq maxima::$% (third v))
+                                 ; (format *trace-output* "~S~%" maxima::$%)
+                        				 ; (setq maxima::$_ $__)
+                        				 ; (maxima::displa maxima::$%)
+                                   (send-result (make-maxima-result v)))))
+			                    nil)))
+	          (and (eql val 'maxima::top)
+		        (maxima::throw-macsyma-top)))
+	        (maxima::restore-bindings))))))
+
+;; Redefine RETRIEVE in src/macsys.lisp to make use of input-request/input-reply.
+;; MSG, FLAG, and PRINT? are declared special there, so be careful to
+;; refer to those symbols in the :maxima package.
+
+(defun maxima::retrieve (maxima::msg maxima::flag &aux (maxima::print? nil))
+  (declare (special maxima::msg maxima::flag maxima::print?))
+  (or (eq maxima::flag 'maxima::noprint) (setq maxima::print? t))
+  (let* ((retrieve-prompt (cond ((not maxima::print?)
+                                 (setq maxima::print? t)
+                                 (format nil ""))
+                                ((null maxima::msg)
+                                 (format nil ""))
+                                ((atom maxima::msg)
+                                 (format nil "~A" maxima::msg))
+                                ((eq maxima::flag t)
+                                 (format nil "~{~A~}" (cdr maxima::msg)))
+                                (t
+                                 (maxima::aformat nil "~M" maxima::msg))))
+         (stdin (kernel-stdin *kernel*)))
+    (let ((value (get-input stdin *message* retrieve-prompt)))
+      (maxima::mread-noprompt (make-string-input-stream (add-terminator value)) nil))))
+
+(defun send-result (result)
+  (let ((iopub (kernel-iopub *kernel*))
+        (execute-count (+ 1 (length (evaluator-history-in (kernel-evaluator *kernel*))))))
+    (if (typep result 'error-result)
+      (send-execute-error iopub *message* execute-count
+                          (error-result-ename result)
+                          (error-result-evalue result))
+      (let ((data (display result)))
+        (when data
+          (send-execute-result iopub *message* execute-count data))))))

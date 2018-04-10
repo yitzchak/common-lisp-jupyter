@@ -195,141 +195,34 @@
 
 |#
 
-(let (execute-request-kernel execute-request-msg)
-
-  (defun handle-execute-request (kernel msg)
-    (info "[kernel] Handling 'execute_request'~%")
-    (let* ((shell (kernel-shell kernel))
-           (iopub (kernel-iopub kernel))
-           (evaluator (kernel-evaluator kernel))
-           (*error-output* (make-iopub-stream iopub msg "stderr"))
-           (*standard-output* (make-iopub-stream iopub msg "stdout"))
-           (*debug-io* *standard-output*)
-           (*iopub-execute* (make-iopub-execute iopub msg
-                                                (+ 1 (length (evaluator-history-in evaluator)))))
-           (content (message-content msg))
-           (code (jsown:val content "code")))
-      (setq execute-request-kernel kernel)
-      (setq execute-request-msg msg)
-      ;;(info "  ===> Code to execute = ~W~%" code)
-      (vbinds (execution-count results); stdout stderr)
-              (evaluate-code evaluator code)
-        ;(info "Execution count = ~A~%" execution-count)
-        ;(info "results = ~A~%" results)
-        ;(info "STDOUT = ~A~%" stdout)
-        ;(info "STDERR = ~A~%" stderr)
-        ;broadcast the code to connected frontends
-        (send-execute-code iopub msg execution-count code)
-        ;; send the stdout
-        (finish-output *standard-output*)
-        ; (when (and stdout (> (length stdout) 0))
-        ;       (send-stream iopub msg "stdout" stdout))
-        ;; send the stderr
-        (finish-output *error-output*)
-        ; (when (and stderr (> (length stderr) 0))
-        ;       (send-stream iopub msg "stderr" stderr))
-        ;; send the results
-        (dolist (result results)
-          (send-result result))
-        ;; send reply (control)
-        (let ((errors (remove-if-not #'eval-error-p results)))
-          (if errors
-            (let ((ename (format nil "~{~A~^, ~}" (mapcar #'error-result-ename errors)))
-                  (evalue (format nil "~{~A~^, ~}" (mapcar #'error-result-evalue errors))))
-              (send-execute-reply-error shell msg execution-count ename evalue))
-            (send-execute-reply-ok shell msg execution-count)))
-        ;; return t if there is no quit errors present
-        (notany #'quit-eval-error-p results))))
-
-  ;; Redefine RETRIEVE in src/macsys.lisp to make use of input-request/input-reply.
-  ;; MSG, FLAG, and PRINT? are declared special there, so be careful to
-  ;; refer to those symbols in the :maxima package.
-
-  (defun maxima::retrieve (maxima::msg maxima::flag &aux (maxima::print? nil))
-    (declare (special maxima::msg maxima::flag maxima::print?))
-    (or (eq maxima::flag 'maxima::noprint) (setq maxima::print? t))
-    (let* ((retrieve-prompt (cond ((not maxima::print?)
-                                   (setq maxima::print? t)
-                                   (format nil ""))
-                                  ((null maxima::msg)
-                                   (format nil ""))
-                                  ((atom maxima::msg)
-                                   (format nil "~A" maxima::msg))
-                                  ((eq maxima::flag t)
-                                   (format nil "~{~A~}" (cdr maxima::msg)))
-                                  (t
-                                   (maxima::aformat nil "~M" maxima::msg))))
-           (stdin (kernel-stdin execute-request-kernel)))
-      (let ((value (get-input stdin execute-request-msg retrieve-prompt)))
-        (maxima::mread-noprompt (make-string-input-stream (add-terminator value)) nil))))
-
-  (defun my-dbm-prompt (at)
-    (format nil "~@[(~a:~a) ~]"
-                (unless (stringp at) "dbm")
-                (length maxima::*quit-tags*)))
-
-  (defun maxima::set-env (bkpt)
-    (format *debug-io*
-            (intl:gettext "(~a line ~a~@[, in function ~a~])")
-            (maxima::short-name (maxima::bkpt-file bkpt))
-  	  (maxima::bkpt-file-line bkpt)
-  	  (maxima::bkpt-function bkpt))
-    (format *debug-io* "~&~a:~a::~%" (maxima::bkpt-file bkpt)
-  	  (maxima::bkpt-file-line bkpt)))
-
-  (defun maxima::break-frame (&optional (n 0) (print-frame-number t))
-    (maxima::restore-bindings)
-    (multiple-value-bind (fname vals params backtr lineinfo bdlist)
-        (maxima::print-one-frame n print-frame-number)
-      backtr params vals fname
-      (maxima::remove-bindings bdlist)
-      (when lineinfo
-        (fresh-line *debug-io*)
-        (format *debug-io* "~a:~a::~%" (cadr lineinfo) (+ 0 (car lineinfo))))
-      (values)))
-
-  (defun maxima::break-dbm-loop (at)
-    (let* ((maxima::*quit-tags* (cons (cons maxima::*break-level* maxima::*quit-tag*) maxima::*quit-tags*))
-           (maxima::*break-level* (if (not at) maxima::*break-level* (cons t maxima::*break-level*)))
-           (maxima::*quit-tag* (cons nil nil))
-           (maxima::*break-env* maxima::*break-env*)
-           (maxima::*mread-prompt* "")
-           (maxima::*diff-bindlist* nil)
-           (maxima::*diff-mspeclist* nil)
-  	       val)
-      (declare (special maxima::*mread-prompt*))
-      (and (consp at) (maxima::set-env at))
-      (cond ((null at)
-             (maxima::break-frame 0 nil)))
-      (catch 'maxima::step-continue
-        (catch maxima::*quit-tag*
-          (unwind-protect
-            (do ((stdin (kernel-stdin execute-request-kernel))
-                 (prompt (my-dbm-prompt at) (my-dbm-prompt at)))
-                (())
-              (finish-output *debug-io*)
-  	          (setq val (catch 'maxima::macsyma-quit
-                          (let* ((inp (get-input stdin execute-request-msg prompt))
-                                 (res (with-input-from-string (f inp)
-                                        (maxima::dbm-read f nil))))
-                            (declare (special maxima::*mread-prompt*))
-                            (cond ((and (consp res) (keywordp (car res)))
-                                   (let ((value (maxima::break-call (car res) (cdr res) 'maxima::break-command)))
-                                     (cond ((eq value :resume) (return)))))
-                                  ((eq res maxima::*top-eof*)
-                                   (funcall (get :top 'maxima::break-command)))
-                                  (t
-                                   (let ((v (maxima::meval* res)))
-                                   ; (setq maxima::$__ (nth 2 res))
-                          				   (setq maxima::$% (third v))
-                                   ; (format *trace-output* "~S~%" maxima::$%)
-                          				 ; (setq maxima::$_ $__)
-                          				 ; (maxima::displa maxima::$%)
-                                     (send-result (make-maxima-result v)))))
-  			                    nil)))
-  	          (and (eql val 'maxima::top)
-  		        (maxima::throw-macsyma-top)))
-  	        (maxima::restore-bindings)))))))
+(defun handle-execute-request (kernel msg)
+  (info "[kernel] Handling 'execute_request'~%")
+  (let* ((shell (kernel-shell kernel))
+         (iopub (kernel-iopub kernel))
+         (*kernel* kernel)
+         (*message* msg)
+         (*error-output* (make-iopub-stream iopub msg "stderr"))
+         (*standard-output* (make-iopub-stream iopub msg "stdout"))
+         (*debug-io* *standard-output*)
+         (content (message-content msg))
+         (code (jsown:val content "code")))
+    (vbinds (execution-count results)
+            (evaluate-code (kernel-evaluator kernel) code)
+      ;broadcast the code to connected frontends
+      (send-execute-code iopub msg execution-count code)
+      ;; send any remaining stdout
+      (finish-output *standard-output*)
+      ;; send any remaining stderr
+      (finish-output *error-output*)
+      ;; send reply (control)
+      (let ((errors (remove-if-not #'eval-error-p results)))
+        (if errors
+          (let ((ename (format nil "~{~A~^, ~}" (mapcar #'error-result-ename errors)))
+                (evalue (format nil "~{~A~^, ~}" (mapcar #'error-result-evalue errors))))
+            (send-execute-reply-error shell msg execution-count ename evalue))
+          (send-execute-reply-ok shell msg execution-count)))
+      ;; return t if there is no quit errors present
+      (notany #'quit-eval-error-p results))))
 
 #|
 
