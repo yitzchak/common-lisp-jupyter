@@ -201,16 +201,19 @@
     (info "[kernel] Handling 'execute_request'~%")
     (let* ((shell (kernel-shell kernel))
            (iopub (kernel-iopub kernel))
+           (evaluator (kernel-evaluator kernel))
            (*error-output* (make-iopub-stream iopub msg "stderr"))
            (*standard-output* (make-iopub-stream iopub msg "stdout"))
            (*debug-io* *standard-output*)
+           (*iopub-execute* (make-iopub-execute iopub msg
+                                                (+ 1 (length (evaluator-history-in evaluator)))))
            (content (message-content msg))
            (code (jsown:val content "code")))
       (setq execute-request-kernel kernel)
       (setq execute-request-msg msg)
       ;;(info "  ===> Code to execute = ~W~%" code)
       (vbinds (execution-count results); stdout stderr)
-              (evaluate-code (kernel-evaluator kernel) code)
+              (evaluate-code evaluator code)
         ;(info "Execution count = ~A~%" execution-count)
         ;(info "results = ~A~%" results)
         ;(info "STDOUT = ~A~%" stdout)
@@ -227,13 +230,7 @@
         ;       (send-stream iopub msg "stderr" stderr))
         ;; send the results
         (dolist (result results)
-          (if (typep result 'error-result)
-            (send-execute-error iopub msg execution-count
-                                (error-result-ename result)
-                                (error-result-evalue result))
-            (let ((data (display result)))
-              (when data
-                (send-execute-result iopub msg execution-count data)))))
+          (send-result result))
         ;; send reply (control)
         (let ((errors (remove-if-not #'eval-error-p results)))
           (if errors
