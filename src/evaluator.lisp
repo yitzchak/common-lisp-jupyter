@@ -178,7 +178,11 @@ The history of evaluations is also saved by the evaluator.
                                (res (with-input-from-string (f inp)
                                       (maxima::dbm-read f nil))))
                           (declare (special maxima::*mread-prompt*))
-                          (cond ((and (consp res) (keywordp (car res)))
+                          (cond ((keyword-lisp-p res)
+                                 (send-result
+                                   (make-maxima-result (cons (list (car res))
+                                     (multiple-value-list (eval (cons 'progn res)))))))
+                                ((keyword-command-p res)
                                  (let ((value (maxima::break-call (car res) (cdr res) 'maxima::break-command)))
                                    (cond ((eq value :resume) (return)))))
                                 ((eq res maxima::*top-eof*)
