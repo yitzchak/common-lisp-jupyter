@@ -228,3 +228,18 @@ The history of evaluations is also saved by the evaluator.
       (let ((data (display result)))
         (when data
           (send-execute-result iopub *message* execute-count data))))))
+
+(defun is-complete (evaluator code)
+  (handler-case
+    (with-input-from-string (input code)
+      (iter
+        (for parsed = (maxima::with-$error (maxima::dbm-read input nil)))
+        (while parsed)
+        (finally (return t))))
+    (simple-condition (err)
+      (not (equal (simple-condition-format-control err)
+                  "parser: end of file while scanning expression.")))
+    (condition (err)
+      t)
+    (simple-error (err)
+      t)))

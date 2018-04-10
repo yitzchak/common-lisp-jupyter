@@ -249,7 +249,7 @@
   (let* ((shell (kernel-shell kernel))
          (content (message-content msg))
          (code (jsown:val content "code"))
-         (status (if t;(ends-with-terminator code)
+         (status (if (is-complete (kernel-evaluator kernel) code)
                      "complete"
                      "incomplete")))
     (send-is-complete-reply shell msg status)
