@@ -16,9 +16,11 @@ The history of evaluations is also saved by the evaluator.
 
 (defclass evaluator ()
   ((history-in :initform (make-array 64 :fill-pointer 0 :adjustable t)
-	       :reader evaluator-history-in)
+               :reader evaluator-history-in)
    (history-out :initform (make-array 64 :fill-pointer 0 :adjustable t)
-		:reader evaluator-history-out)))
+                :reader evaluator-history-out)
+   (in-maxima :initform t
+              :accessor evaluator-in-maxima)))
 
 (defun make-evaluator ()
   (make-instance 'evaluator))
@@ -247,3 +249,11 @@ The history of evaluations is also saved by the evaluator.
       t)
     (simple-error (err)
       t)))
+
+(defun maxima::$to_lisp ()
+  (setf (evaluator-in-maxima (kernel-evaluator *kernel*)) nil)
+  (format t "~&Type (to-maxima) to restart, ($quit) to quit Maxima.~%")
+
+(defun maxima::to-maxima ()
+  (setf (evaluator-in-maxima (kernel-evaluator *kernel*)) t)
+  (format t "Returning to Maxima~%"))
