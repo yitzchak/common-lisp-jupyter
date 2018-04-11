@@ -6,10 +6,10 @@ Jupyter protocol constants
 
 |#
 
-(defconstant +status-complete+ "complete")
-(defconstant +status-incomplete+ "incomplete")
-(defconstant +status-invalid+ "invalid")
-(defconstant +status-unknown+ "unknown")
+(defparameter +status-complete+ "complete")
+(defparameter +status-incomplete+ "incomplete")
+(defparameter +status-invalid+ "invalid")
+(defparameter +status-unknown+ "unknown")
 
 
 (defclass channel ()
