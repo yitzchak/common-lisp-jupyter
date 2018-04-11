@@ -1,7 +1,5 @@
 (in-package #:maxima-jupyter)
 
-(defvar *iopub-execute* nil)
-
 #|
 
 # The IOPUB publish/subscribe channel #
@@ -67,6 +65,8 @@
                                 ("name" stream-name)
                                 ("text" data)))))
 
+(defvar *iopub-stream-size* 1024)
+
 (defclass iopub-stream (trivial-gray-streams:fundamental-character-output-stream)
   ((channel :initarg :channel
             :reader iopub-stream-channel)
@@ -75,7 +75,7 @@
    (name :initarg :name
          :reader iopub-stream-name)
    (value :initarg :value
-          :initform (make-array 0
+          :initform (make-array *iopub-stream-size*
                                 :fill-pointer 0
                                 :adjustable t
                                 :element-type 'character)
@@ -100,7 +100,7 @@
                  (iopub-stream-name stream)
                  (iopub-stream-value stream))
     (setf (iopub-stream-value stream)
-          (make-array 0
+          (make-array *iopub-stream-size*
                       :fill-pointer 0
                       :adjustable t
                       :element-type 'character))))
