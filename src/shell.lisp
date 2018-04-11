@@ -41,6 +41,7 @@
                               (jsown:new-js
                                 ("status" "ok")
                                 ("execution_count" execution-count)
+                                ("user_expressions" (jsown:new-js))
                                 ("payload" '())))))
 
 (defun send-execute-reply-error (shell parent-msg execution-count ename evalue)

@@ -1,8 +1,5 @@
 (in-package #:maxima-jupyter)
 
-(defvar *kernel* nil)
-(defvar *message* nil)
-
 #|
 
 # Evaluator #

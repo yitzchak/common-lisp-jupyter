@@ -34,6 +34,13 @@
                               (jsown:new-js
                                 ("execution_state" status)))))
 
+(defun send-display-data (iopub parent-msg data)
+  (message-send iopub
+                (make-message parent-msg "display_data"
+                              (jsown:new-js
+                                ("data" data)
+                                ("metadata" (jsown:new-js))))))
+
 (defun send-execute-code (iopub parent-msg execution-count code)
   (message-send iopub
                 (make-message parent-msg "execute_input"

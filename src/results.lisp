@@ -1,5 +1,8 @@
 (in-package #:maxima-jupyter)
 
+(defvar *kernel* nil)
+(defvar *message* nil)
+
 #|
 
 Standard MIME types
@@ -88,9 +91,9 @@ Standard MIME types
    (mime-type :initarg :mime-type
               :reader inline-result-mime-type)))
 
-(defun make-inline-result (value &key (mime-type *plain-text-mime-type*))
- (make-instance 'inline-result :value value
-                               :mime-type mime-type))
+(defun make-inline-result (value &key (mime-type *plain-text-mime-type*) (display nil))
+  (make-instance 'inline-result :value value
+                                :mime-type mime-type))
 
 (defmethod display ((res inline-result))
   (let ((value (inline-result-value res))
@@ -217,6 +220,70 @@ Convenience functions to return specific types from Lisp or Maxima.
 
 (maxima::defmfun maxima::$mj_svg (value)
   (make-inline-result value :mime-type *svg-mime-type*))
+
+#|
+
+Display Data functions
+
+|#
+
+
+(defun display-file-result (path &key (mime-type nil))
+  (send-display-data (kernel-iopub *kernel*) *message*
+                     (display (make-file-result path :mime-type mime-type))))
+
+(defun display-inline-result (value &key (mime-type *plain-text-mime-type*))
+  (send-display-data (kernel-iopub *kernel*) *message*
+                     (display (make-inline-result value :mime-type mime-type))))
+
+(defun display-file (path)
+  (display-file-result path))
+
+(maxima::defmfun maxima::$mj_display_file (path)
+  (display-file-result path))
+
+(defun display-text (value)
+  (display-inline-result value))
+
+(maxima::defmfun maxima::$mj_display_text (value)
+  (display-inline-result value))
+
+(defun display-html (value)
+  (display-inline-result value :mime-type *html-mime-type*))
+
+(maxima::defmfun maxima::$mj_display_html (value)
+  (display-inline-result value :mime-type *html-mime-type*))
+
+(defun display-jpeg (value)
+  (display-inline-result value :mime-type *jpeg-mime-type*))
+
+(maxima::defmfun maxima::$mj_display_jpeg (value)
+  (display-inline-result value :mime-type *jpeg-mime-type*))
+
+(defun display-latex (value)
+  (display-inline-result value :mime-type *latex-mime-type*))
+
+(maxima::defmfun maxima::$mj_display_latex (value)
+  (display-inline-result value :mime-type *latex-mime-type*))
+
+(defun display-markdown (value)
+  (display-inline-result value :mime-type *markdown-mime-type*))
+
+(maxima::defmfun maxima::$mj_display_markdown (value)
+  (display-inline-result value :mime-type *markdown-mime-type*))
+
+(defun display-png (value)
+  (display-inline-result value :mime-type *png-mime-type*))
+
+(maxima::defmfun maxima::$mj_display_png (value)
+  (display-inline-result value :mime-type *png-mime-type*))
+
+(defun display-svg (value)
+  (display-inline-result value :mime-type *svg-mime-type*))
+
+(maxima::defmfun maxima::$mj_display_svg (value)
+  (display-inline-result value :mime-type *svg-mime-type*))
+
 
 #|
 
