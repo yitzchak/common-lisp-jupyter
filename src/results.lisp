@@ -159,9 +159,10 @@ Standard MIME types
             (make-lisp-result (second value))))))
 
 (defun make-lisp-result (value)
-  (if (typep value 'result)
-    value
-    (make-instance 'sexpr-result :value value)))
+  (cond ((typep value 'result)
+         value)
+        ((not (eq 'no-output value))
+         (make-instance 'sexpr-result :value value))))
 
 #|
 

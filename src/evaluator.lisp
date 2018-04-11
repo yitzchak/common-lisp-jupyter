@@ -66,6 +66,10 @@ The history of evaluations is also saved by the evaluator.
                         maxima::*prompt-on-read-hang*))
       (maxima::dbm-read input nil))))
 
+(defun my-lread (input)
+  (when (and (open-stream-p input) (peek-char nil input nil))
+    (read input)))
+
 (defun eval-error-p (result)
   (typep result 'error-result))
 
@@ -98,18 +102,23 @@ The history of evaluations is also saved by the evaluator.
           (t
            (maxima::meval* code)))))
 
-(defun read-and-eval (input)
-  (handling-errors
-    (let ((code-to-eval (my-mread input)))
-      (if code-to-eval
-        (progn
-          (info "[evaluator] Parsed expression to evaluate: ~W~%" code-to-eval)
-          (let ((result (my-eval code-to-eval)))
-            (info "[evaluator] Evaluated result: ~W~%" result)
-            (unless (keyword-result-p result)
-              (setq maxima::$% (caddr result)))
-            result))
-        'no-more-code))))
+(defun read-and-eval (input in-maxima)
+  (catch 'state-change
+    (handling-errors
+      (let ((code-to-eval (if in-maxima
+                            (my-mread input)
+                            (my-lread input))))
+        (if code-to-eval
+          (progn
+            (info "[evaluator] Parsed expression to evaluate: ~W~%" code-to-eval)
+            (let ((result (if in-maxima
+                            (my-eval code-to-eval)
+                            (eval code-to-eval))))
+              (info "[evaluator] Evaluated result: ~W~%" result)
+              (when (and in-maxima (not (keyword-result-p result)))
+                (setq maxima::$% (caddr result)))
+              result))
+          'no-more-code)))))
 
 (defun evaluate-code (evaluator code)
   (iter
@@ -117,9 +126,12 @@ The history of evaluations is also saved by the evaluator.
       (info "[evaluator] Unparsed input: ~W~%" code)
       (vector-push code (evaluator-history-in evaluator)))
     (with input = (make-string-input-stream code))
-    (for result = (read-and-eval input))
+    (for in-maxima = (evaluator-in-maxima evaluator))
+    (for result = (read-and-eval input in-maxima))
     (until (eq result 'no-more-code))
-    (for wrapped-result = (make-maxima-result result))
+    (for wrapped-result = (if in-maxima
+                            (make-maxima-result result)
+                            (make-lisp-result result)))
     (when wrapped-result
       (send-result wrapped-result)
       (collect wrapped-result into results))
@@ -235,25 +247,41 @@ The history of evaluations is also saved by the evaluator.
         (when data
           (send-execute-result iopub *message* execute-count data))))))
 
+(defun has-symbol-p (expr sym)
+  (or (eq expr sym)
+      (and (consp expr)
+           (or (has-symbol-p (car expr) sym)
+               (has-symbol-p (cdr expr) sym)))))
+
 (defun is-complete (evaluator code)
   (handler-case
-    (with-input-from-string (input code)
-      (iter
-        (for parsed = (maxima::with-$error (maxima::dbm-read input nil)))
-        (while parsed)
-        (finally (return t))))
+    (with-output-to-string (*standard-output*)
+      (with-output-to-string (*error-output*)
+        (with-input-from-string (input code)
+          (iter
+            (with in-maxima = (evaluator-in-maxima evaluator))
+            (with verboten = (if in-maxima 'maxima::$to_lisp 'maxima::to-maxima))
+            (for parsed = (if in-maxima (maxima::dbm-read input nil) (read input)))
+            (while parsed)
+            (when (has-symbol-p parsed)
+              (leave "unknown"))
+            (finally (return "complete"))))))
     (simple-condition (err)
-      (not (equal (simple-condition-format-control err)
-                  "parser: end of file while scanning expression.")))
+      (if (equal (simple-condition-format-control err)
+                 "parser: end of file while scanning expression.")
+        "incomplete"
+        "invalid"))
     (condition (err)
-      t)
+      "invalid")
     (simple-error (err)
-      t)))
+      "invalid")))
 
 (defun maxima::$to_lisp ()
   (setf (evaluator-in-maxima (kernel-evaluator *kernel*)) nil)
   (format t "~&Type (to-maxima) to restart, ($quit) to quit Maxima.~%")
+  (throw 'state-change 'no-output))
 
 (defun maxima::to-maxima ()
   (setf (evaluator-in-maxima (kernel-evaluator *kernel*)) t)
-  (format t "Returning to Maxima~%"))
+  (format t "Returning to Maxima~%")
+  (throw 'state-change 'no-output))

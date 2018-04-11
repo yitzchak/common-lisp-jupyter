@@ -249,8 +249,6 @@
   (let* ((shell (kernel-shell kernel))
          (content (message-content msg))
          (code (jsown:val content "code"))
-         (status (if (is-complete (kernel-evaluator kernel) code)
-                     "complete"
-                     "incomplete")))
+         (status (is-complete (kernel-evaluator kernel) code)))
     (send-is-complete-reply shell msg status)
     t))
