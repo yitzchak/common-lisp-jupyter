@@ -1,4 +1,4 @@
-(in-package #:cl-jupyter)
+(in-package #:maxima-jupyter)
 
 #|
 
@@ -34,6 +34,13 @@
                               (jsown:new-js
                                 ("execution_state" status)))))
 
+(defun send-display-data (iopub parent-msg data)
+  (message-send iopub
+                (make-message parent-msg "display_data"
+                              (jsown:new-js
+                                ("data" data)
+                                ("metadata" (jsown:new-js))))))
+
 (defun send-execute-code (iopub parent-msg execution-count code)
   (message-send iopub
                 (make-message parent-msg "execute_input"
@@ -41,12 +48,12 @@
                                 ("code" code)
                                 ("execution_count" execution-count)))))
 
-(defun send-execute-result (iopub parent-msg execution-count result)
+(defun send-execute-result (iopub parent-msg execution-count data)
   (message-send iopub
                 (make-message parent-msg "execute_result"
                               (jsown:new-js
                                 ("execution_count" execution-count)
-                                ("data" (display-object-data (display result)))
+                                ("data" data)
                                 ("metadata" (jsown:new-js))))))
 
 (defun send-execute-error (iopub parent-msg execution-count ename evalue)
@@ -64,3 +71,43 @@
                               (jsown:new-js
                                 ("name" stream-name)
                                 ("text" data)))))
+
+(defvar *iopub-stream-size* 1024)
+
+(defclass iopub-stream (trivial-gray-streams:fundamental-character-output-stream)
+  ((channel :initarg :channel
+            :reader iopub-stream-channel)
+   (parent-msg :initarg :parent-msg
+               :reader iopub-stream-parent-msg)
+   (name :initarg :name
+         :reader iopub-stream-name)
+   (value :initarg :value
+          :initform (make-array *iopub-stream-size*
+                                :fill-pointer 0
+                                :adjustable t
+                                :element-type 'character)
+          :accessor iopub-stream-value)))
+
+(defun make-iopub-stream (iopub parent-msg name)
+  (make-instance 'iopub-stream :channel iopub
+                               :parent-msg parent-msg
+                               :name name))
+
+(defmethod trivial-gray-streams:stream-write-char ((stream iopub-stream) char)
+  (vector-push-extend char (iopub-stream-value stream)))
+
+; (defmethod trivial-gray-streams:stream-write-string ((stream iopub-stream) string &optional start end)
+  ; (format *debug-io* "string: ~A~%" string)
+  ; t)
+
+(defmethod trivial-gray-streams:stream-finish-output ((stream iopub-stream))
+  (unless (zerop (length (iopub-stream-value stream)))
+    (send-stream (iopub-stream-channel stream)
+                 (iopub-stream-parent-msg stream)
+                 (iopub-stream-name stream)
+                 (iopub-stream-value stream))
+    (setf (iopub-stream-value stream)
+          (make-array *iopub-stream-size*
+                      :fill-pointer 0
+                      :adjustable t
+                      :element-type 'character))))

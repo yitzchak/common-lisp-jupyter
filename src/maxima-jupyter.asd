@@ -10,7 +10,9 @@
                :ironclad
                :iterate
                :cl-base64
-               :jsown)
+               :jsown
+               :trivial-gray-streams
+               :trivial-mimes)
   :serial t
   :components ((:file "packages")
                (:file "utils")
@@ -21,7 +23,6 @@
                (:file "shell")
                (:file "stdin")
                (:file "iopub")
-               (:file "display")
+               (:file "results")
                (:file "evaluator")
-               (:file "user")
                (:file "kernel")))

@@ -1,4 +1,16 @@
-(in-package #:cl-jupyter)
+(in-package #:maxima-jupyter)
+
+#|
+
+Jupyter protocol constants
+
+|#
+
+(defparameter +status-complete+ "complete")
+(defparameter +status-incomplete+ "incomplete")
+(defparameter +status-invalid+ "invalid")
+(defparameter +status-unknown+ "unknown")
+
 
 (defclass channel ()
   ((key :initarg :key

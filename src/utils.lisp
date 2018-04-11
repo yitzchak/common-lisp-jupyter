@@ -62,7 +62,7 @@
 
 (defun info (&rest args)
   (when maxima::$kernel_info
-    (apply #'format *debug-io* args)))
+    (apply #'format *trace-output* args)))
 
 (defmacro vbinds (binders expr &body body)
   "An abbreviation for MULTIPLE-VALUE-BIND."
@@ -111,6 +111,11 @@
 
 (defun file-to-base64-string (path)
   (cl-base64:usb8-array-to-base64-string (read-binary-file path)))
+
+;; nicked from: https://rosettacode.org/wiki/String_matching#Common_Lisp
+(defun starts-with-p (str1 str2)
+  (let ((p (search str2 str1)))
+    (and p (= 0 p))))
 
 ;; nicked from: https://rosettacode.org/wiki/String_matching#Common_Lisp
 (defun ends-with-p (str1 str2)
