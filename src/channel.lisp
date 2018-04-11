@@ -1,5 +1,17 @@
 (in-package #:maxima-jupyter)
 
+#|
+
+Jupyter protocol constants
+
+|#
+
+(defconstant +status-complete+ "complete")
+(defconstant +status-incomplete+ "incomplete")
+(defconstant +status-invalid+ "invalid")
+(defconstant +status-unknown+ "unknown")
+
+
 (defclass channel ()
   ((key :initarg :key
         :reader channel-key)
