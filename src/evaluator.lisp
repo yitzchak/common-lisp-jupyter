@@ -1,5 +1,8 @@
 (in-package #:maxima-jupyter)
 
+(defvar *kernel* nil)
+(defvar *message* nil)
+
 #|
 
 # Evaluator #
@@ -236,9 +239,11 @@ The history of evaluations is also saved by the evaluator.
       (send-execute-error iopub *message* execute-count
                           (error-result-ename result)
                           (error-result-evalue result))
-      (let ((data (display result)))
+      (let ((data (render result)))
         (when data
-          (send-execute-result iopub *message* execute-count data))))))
+          (if (result-display result)
+            (send-display-data iopub *message* data)
+            (send-execute-result iopub *message* execute-count data)))))))
 
 (defun state-change-p (expr)
   (and (listp expr)
