@@ -37,9 +37,6 @@ The history of evaluations is also saved by the evaluator.
   (:documentation "A quit condition for identifying a request for kernel shutdown.")
   (:report (lambda (c stream))))
 
-(maxima::defmfun maxima::$quit ()
-  (error (make-condition 'quit)))
-
 (define-condition maxima-syntax-error (error)
   ((message :initarg :message
             :reader maxima-syntax-error-message))
@@ -78,13 +75,6 @@ The history of evaluations is also saved by the evaluator.
 
 (defun quit-eval-error-p (result)
   (and (typep result 'error-result) (error-result-quit result)))
-
-(let ((old-mread-synerr #'maxima::mread-synerr))
-  (defun maxima::mread-synerr (&rest args)
-    (error (make-condition 'maxima-syntax-error :message
-      (with-output-to-string (*standard-output*)
-        (catch 'maxima::macsyma-quit
-          (apply old-mread-synerr args)))))))
 
 (defun keyword-lisp-p (code)
   (and (consp code)
@@ -145,94 +135,6 @@ The history of evaluations is also saved by the evaluator.
         (values (length (evaluator-history-in evaluator))
                 results)))))
 
-(defun my-dbm-prompt (at)
-  (format nil "~@[(~a:~a) ~]"
-              (unless (stringp at) "dbm")
-              (length maxima::*quit-tags*)))
-
-(defun maxima::set-env (bkpt)
-  (format *debug-io*
-          (intl:gettext "(~a line ~a~@[, in function ~a~])")
-          (maxima::short-name (maxima::bkpt-file bkpt))
-	  (maxima::bkpt-file-line bkpt)
-	  (maxima::bkpt-function bkpt))
-  (format *debug-io* "~&~a:~a::~%" (maxima::bkpt-file bkpt)
-	  (maxima::bkpt-file-line bkpt)))
-
-(defun maxima::break-frame (&optional (n 0) (print-frame-number t))
-  (maxima::restore-bindings)
-  (multiple-value-bind (fname vals params backtr lineinfo bdlist)
-      (maxima::print-one-frame n print-frame-number)
-    backtr params vals fname
-    (maxima::remove-bindings bdlist)
-    (when lineinfo
-      (fresh-line *debug-io*)
-      (format *debug-io* "~a:~a::~%" (cadr lineinfo) (+ 0 (car lineinfo))))
-    (values)))
-
-(defun maxima::break-dbm-loop (at)
-  (let* ((maxima::*quit-tags* (cons (cons maxima::*break-level* maxima::*quit-tag*) maxima::*quit-tags*))
-         (maxima::*break-level* (if (not at) maxima::*break-level* (cons t maxima::*break-level*)))
-         (maxima::*quit-tag* (cons nil nil))
-         (maxima::*break-env* maxima::*break-env*)
-         (maxima::*mread-prompt* "")
-         (maxima::*diff-bindlist* nil)
-         (maxima::*diff-mspeclist* nil)
-	       val)
-    (declare (special maxima::*mread-prompt*))
-    (and (consp at) (maxima::set-env at))
-    (cond ((null at)
-           (maxima::break-frame 0 nil)))
-    (catch 'maxima::step-continue
-      (catch maxima::*quit-tag*
-        (unwind-protect
-          (do ((prompt (my-dbm-prompt at) (my-dbm-prompt at)))
-              (())
-            (finish-output *debug-io*)
-	          (setq val (catch 'maxima::macsyma-quit
-                        (let* ((inp (get-input prompt))
-                               (res (with-input-from-string (f inp)
-                                      (maxima::dbm-read f nil))))
-                          (declare (special maxima::*mread-prompt*))
-                          (cond ((keyword-lisp-p res)
-                                 (send-result
-                                   (make-maxima-result (cons (list (car res))
-                                     (multiple-value-list (eval (cons 'progn res)))))))
-                                ((keyword-command-p res)
-                                 (let ((value (maxima::break-call (car res) (cdr res) 'maxima::break-command)))
-                                   (cond ((eq value :resume) (return)))))
-                                ((eq res maxima::*top-eof*)
-                                 (funcall (get :top 'maxima::break-command)))
-                                (t
-                                 (let ((v (maxima::meval* res)))
-                        				   (setq maxima::$% (third v))
-                                   (send-result (make-maxima-result v)))))
-			                    nil)))
-	          (and (eql val 'maxima::top)
-		        (maxima::throw-macsyma-top)))
-	        (maxima::restore-bindings))))))
-
-;; Redefine RETRIEVE in src/macsys.lisp to make use of input-request/input-reply.
-;; MSG, FLAG, and PRINT? are declared special there, so be careful to
-;; refer to those symbols in the :maxima package.
-
-(defun maxima::retrieve (maxima::msg maxima::flag &aux (maxima::print? nil))
-  (declare (special maxima::msg maxima::flag maxima::print?))
-  (or (eq maxima::flag 'maxima::noprint) (setq maxima::print? t))
-  (let* ((retrieve-prompt (cond ((not maxima::print?)
-                                 (setq maxima::print? t)
-                                 (format nil ""))
-                                ((null maxima::msg)
-                                 (format nil ""))
-                                ((atom maxima::msg)
-                                 (format nil "~A" maxima::msg))
-                                ((eq maxima::flag t)
-                                 (format nil "~{~A~}" (cdr maxima::msg)))
-                                (t
-                                 (maxima::aformat nil "~M" maxima::msg)))))
-    (let ((value (get-input retrieve-prompt)))
-      (maxima::mread-noprompt (make-string-input-stream (add-terminator value)) nil))))
-
 (defun send-result (result)
   (let ((iopub (kernel-iopub *kernel*))
         (execute-count (+ 1 (length (evaluator-history-in (kernel-evaluator *kernel*))))))
@@ -279,14 +181,12 @@ The history of evaluations is also saved by the evaluator.
     (simple-error ()
       +status-invalid+)))
 
-(defun maxima::$to_lisp ()
+(defun to-lisp ()
   (setf (evaluator-in-maxima (kernel-evaluator *kernel*)) nil)
-  (format t "~&Type (to-maxima) to restart, ($quit) to quit Maxima.~%")
   (throw 'state-change 'no-output))
 
-(defun maxima::to-maxima ()
+(defun to-maxima ()
   (setf (evaluator-in-maxima (kernel-evaluator *kernel*)) t)
-  (format t "Returning to Maxima~%")
   (throw 'state-change 'no-output))
 
 (defun set-next-input (text &optional (replace nil))
@@ -317,8 +217,3 @@ The history of evaluations is also saved by the evaluator.
    (setq maxima::$% (third res))
    (when result
      (send-result result))))
-
-(defun get-input (prompt)
-  (let ((stdin (kernel-stdin *kernel*)))
-    (send-input-request stdin *message* prompt)
-    (jsown:val (message-content (message-recv stdin)) "value")))
