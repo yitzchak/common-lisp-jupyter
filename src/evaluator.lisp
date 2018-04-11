@@ -203,11 +203,7 @@ The history of evaluations is also saved by the evaluator.
                                  (funcall (get :top 'maxima::break-command)))
                                 (t
                                  (let ((v (maxima::meval* res)))
-                                 ; (setq maxima::$__ (nth 2 res))
                         				   (setq maxima::$% (third v))
-                                 ; (format *trace-output* "~S~%" maxima::$%)
-                        				 ; (setq maxima::$_ $__)
-                        				 ; (maxima::displa maxima::$%)
                                    (send-result (make-maxima-result v)))))
 			                    nil)))
 	          (and (eql val 'maxima::top)
@@ -275,9 +271,9 @@ The history of evaluations is also saved by the evaluator.
                  "parser: end of file while scanning expression.")
         "incomplete"
         "invalid"))
-    (condition (err)
+    (condition ()
       "invalid")
-    (simple-error (err)
+    (simple-error ()
       "invalid")))
 
 (defun maxima::$to_lisp ()
