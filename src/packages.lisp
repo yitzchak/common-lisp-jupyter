@@ -17,23 +17,14 @@
            #:read-binary-file))
 
 (defpackage #:maxima-jupyter
-  (:nicknames #:mj)
   (:use #:cl #:fredo-utils #:iterate)
   (:export
-    #:file
-    #:html
-    #:jpeg
     #:kernel-start
     #:kernel-start-exec
-    #:latex
     #:make-error-result
     #:make-file-result
     #:make-inline-result
     #:make-lisp-result
-    #:make-maxima-result
-    #:markdown
-    #:png
-    #:svg
-    #:text))
+    #:make-maxima-result))
 
 (in-package #:maxima-jupyter)
