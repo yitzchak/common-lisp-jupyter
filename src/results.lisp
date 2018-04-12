@@ -14,6 +14,7 @@ Standard MIME types
 (defvar *markdown-mime-type* "text/markdown")
 (defvar *plain-text-mime-type* "text/plain")
 (defvar *png-mime-type* "image/png")
+(defvar *pdf-mime-type* "application/pdf")
 (defvar *svg-mime-type* "image/svg+xml")
 
 
@@ -169,72 +170,6 @@ Standard MIME types
          value)
         ((not (eq 'no-output value))
          (make-instance 'sexpr-result :value value))))
-
-#|
-
-Convenience functions to return specific types from Lisp or Maxima.
-
-|#
-
-(defun file (path &optional (display nil))
-  (make-file-result path :display display))
-
-(maxima::defmfun maxima::$mj_file (path &optional (display nil))
-  (make-file-result path :display display))
-
-(defun text (value &optional (display nil))
-  (make-inline-result value :display display))
-
-(maxima::defmfun maxima::$mj_text (value &optional (display nil))
-  (make-inline-result value :display display))
-
-(defun html (value &optional (display nil))
-  (make-inline-result value :mime-type *html-mime-type*
-                            :display display))
-
-(maxima::defmfun maxima::$mj_html (value &optional (display nil))
-  (make-inline-result value :mime-type *html-mime-type*
-                            :display display))
-
-(defun jpeg (value &optional (display nil))
-  (make-inline-result value :mime-type *jpeg-mime-type*
-                            :display display))
-
-(maxima::defmfun maxima::$mj_jpeg (value &optional (display nil))
-  (make-inline-result value :mime-type *jpeg-mime-type*
-                            :display display))
-
-(defun latex (value &optional (display nil))
-  (make-inline-result value :mime-type *latex-mime-type*
-                            :display display))
-
-(maxima::defmfun maxima::$mj_latex (value &optional (display nil))
-  (make-inline-result value :mime-type *latex-mime-type*
-                            :display display))
-
-(defun markdown (value &optional (display nil))
-  (make-inline-result value :mime-type *markdown-mime-type*
-                            :display display))
-
-(maxima::defmfun maxima::$mj_markdown (value &optional (display nil))
-  (make-inline-result value :mime-type *markdown-mime-type*
-                            :display display))
-
-(defun png (value &optional (display nil))
-  (make-inline-result value :mime-type *png-mime-type*
-                            :display display))
-
-(maxima::defmfun maxima::$mj_png (value &optional (display nil))
-  (make-inline-result value :mime-type *png-mime-type*
-                            :display display))
-
-(defun svg (value &optional (display nil))
-  (make-inline-result value :mime-type *svg-mime-type*
-                            :display display))
-
-(maxima::defmfun maxima::$mj_svg (value &optional (display nil))
-  (make-inline-result value :mime-type *svg-mime-type*
-                            :display display))
 
 #|
 

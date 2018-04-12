@@ -25,4 +25,5 @@
                (:file "iopub")
                (:file "results")
                (:file "evaluator")
-               (:file "kernel")))
+               (:file "kernel")
+               (:file "additions")))

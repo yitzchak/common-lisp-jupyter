@@ -71,7 +71,7 @@ KERNEL_SPEC = {
         args.maxima,
         '--very-quiet',
         '--preload-lisp={0}'.format(os.path.join(args.root, 'load-maxima-jupyter.lisp')),
-        '--batch-string=kernel_start("{connection_file}")$'
+        '--batch-string=jupyter_kernel_start("{connection_file}")$'
     ],
     "display_name": "Maxima",
     "language": "maxima"

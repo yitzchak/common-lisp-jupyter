@@ -133,11 +133,6 @@
   (setq *read-default-float-format* 'double-float)
   (kernel-start (car (last (get-argv)))))
 
-;; This is the entry point for starting the kernel from within an existing
-;; Maxima session.
-(maxima::defmfun maxima::$kernel_start (connection-file-name)
-  (kernel-start connection-file-name))
-
 #|
 
 ### Message type: kernel_info_request ###
