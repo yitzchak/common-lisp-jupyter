@@ -2,6 +2,8 @@
 
 (defvar *kernel* nil)
 (defvar *message* nil)
+(defvar *payload* nil)
+(defvar *page-output* nil)
 
 #|
 
@@ -183,12 +185,11 @@ The history of evaluations is also saved by the evaluator.
     (catch 'maxima::step-continue
       (catch maxima::*quit-tag*
         (unwind-protect
-          (do ((stdin (kernel-stdin *kernel*))
-               (prompt (my-dbm-prompt at) (my-dbm-prompt at)))
+          (do ((prompt (my-dbm-prompt at) (my-dbm-prompt at)))
               (())
             (finish-output *debug-io*)
 	          (setq val (catch 'maxima::macsyma-quit
-                        (let* ((inp (get-input stdin *message* prompt))
+                        (let* ((inp (get-input prompt))
                                (res (with-input-from-string (f inp)
                                       (maxima::dbm-read f nil))))
                           (declare (special maxima::*mread-prompt*))
@@ -227,9 +228,8 @@ The history of evaluations is also saved by the evaluator.
                                 ((eq maxima::flag t)
                                  (format nil "~{~A~}" (cdr maxima::msg)))
                                 (t
-                                 (maxima::aformat nil "~M" maxima::msg))))
-         (stdin (kernel-stdin *kernel*)))
-    (let ((value (get-input stdin *message* retrieve-prompt)))
+                                 (maxima::aformat nil "~M" maxima::msg)))))
+    (let ((value (get-input retrieve-prompt)))
       (maxima::mread-noprompt (make-string-input-stream (add-terminator value)) nil))))
 
 (defun send-result (result)
@@ -287,3 +287,37 @@ The history of evaluations is also saved by the evaluator.
   (setf (evaluator-in-maxima (kernel-evaluator *kernel*)) t)
   (format t "Returning to Maxima~%")
   (throw 'state-change 'no-output))
+
+(defun set-next-input (text &optional (replace nil))
+  (vector-push-extend (jsown:new-js
+                        ("source" "set_next_input")
+                        ("text" text))
+                      *payload*))
+
+(defun page (result &optional (start 0))
+  (vector-push-extend (jsown:new-js
+                        ("source" "page")
+                        ("data" (render result))
+                        ("start" start))
+                      *payload*))
+
+(defun enqueue-input (text)
+  (cl-containers:enqueue (kernel-input-queue *kernel*) text))
+
+(defun display-and-eval (expr)
+  (send-result
+    (make-inline-result
+      (with-output-to-string (f)
+        (maxima::mgrind (third expr) f)
+        (write-char #\; f))
+      :display t))
+  (let* ((res (maxima::meval* expr))
+         (result (make-maxima-result res)))
+   (setq maxima::$% (third res))
+   (when result
+     (send-result result))))
+
+(defun get-input (prompt)
+  (let ((stdin (kernel-stdin *kernel*)))
+    (send-input-request stdin *message* prompt)
+    (jsown:val (message-content (message-recv stdin)) "value")))
