@@ -50,6 +50,7 @@ The history of evaluations is also saved by the evaluator.
 ;;; Based on macro taken from: http://www.cliki.net/REPL
 (defmacro handling-errors (&body body)
   `(catch 'maxima::return-from-debugger
+    (catch 'maxima::macsyma-quit
     (handler-case (progn ,@body)
        (quit (err)
          (make-eval-error err (format nil "~A" err) :quit t))
@@ -58,7 +59,7 @@ The history of evaluations is also saved by the evaluator.
            (apply #'format nil (simple-condition-format-control err)
                                (simple-condition-format-arguments err))))
        (condition (err)
-         (make-eval-error err (format nil "~A" err))))))
+         (make-eval-error err (format nil "~A" err)))))))
 
 (defun my-mread (input)
   (when (and (open-stream-p input) (peek-char nil input nil))
