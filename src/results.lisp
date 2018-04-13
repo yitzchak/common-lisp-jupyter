@@ -154,8 +154,8 @@ Standard MIME types
 (defun make-maxima-result (value)
   (if (typep value 'result)
     value
-    (cond ((eq value 'maxima-error)
-           (make-error-result "maxima-error" maxima::$error))
+    (cond ((eq value 'maxima::maxima-error)
+           (make-error-result "maxima-error" (second maxima::$error)))
           ((displayinput-result-p value)
            (let ((actual-value (third value)))
              (cond ((typep actual-value 'result)
