@@ -10,6 +10,7 @@
                :ironclad
                :iterate
                :cl-base64
+               :cl-containers
                :jsown
                :trivial-gray-streams
                :trivial-mimes)
@@ -26,4 +27,6 @@
                (:file "results")
                (:file "evaluator")
                (:file "kernel")
-               (:file "additions")))
+               (:file "additions")
+               (:file "overrides")
+               (:file "overrides-cl-info")))

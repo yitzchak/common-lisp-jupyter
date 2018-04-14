@@ -16,7 +16,10 @@
    (session :initarg :session
             :reader kernel-session)
    (evaluator :initarg :evaluator
-              :reader kernel-evaluator))
+              :reader kernel-evaluator)
+   (input-queue :initarg :input-queue
+                :initform (make-instance 'cl-containers:basic-queue)
+                :reader kernel-input-queue))
   (:documentation "Kernel state representation."))
 
 (defun make-kernel (config)
@@ -196,6 +199,8 @@
          (iopub (kernel-iopub kernel))
          (*kernel* kernel)
          (*message* msg)
+         (*page-output* (make-string-output-stream))
+         (*payload* (make-array 16 :adjustable t :fill-pointer 0))
          (*error-output* (make-iopub-stream iopub msg "stderr"))
          (*standard-output* (make-iopub-stream iopub msg "stdout"))
          (*debug-io* *standard-output*)
@@ -215,7 +220,13 @@
           (let ((ename (format nil "~{~A~^, ~}" (mapcar #'error-result-ename errors)))
                 (evalue (format nil "~{~A~^, ~}" (mapcar #'error-result-evalue errors))))
             (send-execute-reply-error shell msg execution-count ename evalue))
-          (send-execute-reply-ok shell msg execution-count)))
+          (let ((input-queue (kernel-input-queue kernel))
+                (p (get-output-stream-string *page-output*)))
+            (unless (cl-containers:empty-p input-queue)
+              (set-next-input (cl-containers:dequeue input-queue)))
+            (unless (zerop (length p))
+              (page (make-inline-result p)))
+            (send-execute-reply-ok shell msg execution-count (coerce *payload* 'list)))))
       ;; return t if there is no quit errors present
       (notany #'quit-eval-error-p results))))
 

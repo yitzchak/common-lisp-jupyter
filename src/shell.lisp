@@ -35,14 +35,14 @@
                                 ("status" status)
                                 ("indent" "")))))
 
-(defun send-execute-reply-ok (shell parent-msg execution-count)
+(defun send-execute-reply-ok (shell parent-msg execution-count payload)
   (message-send shell
                 (make-message parent-msg "execute_reply"
                               (jsown:new-js
                                 ("status" "ok")
                                 ("execution_count" execution-count)
                                 ("user_expressions" (jsown:new-js))
-                                ("payload" '())))))
+                                ("payload" payload)))))
 
 (defun send-execute-reply-error (shell parent-msg execution-count ename evalue)
   (message-send shell

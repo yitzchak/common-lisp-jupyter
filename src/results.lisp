@@ -46,8 +46,8 @@ Standard MIME types
   (format nil "~S" value))
 
 (defun mexpr-to-text (value)
-  (with-output-to-string (f)
-    (maxima::mgrind value f)))
+  (with-output-to-string (*standard-output*)
+    (maxima::displa value)))
 
 (defun mexpr-to-latex (value)
   (let ((env (maxima::get-tex-environment value)))
@@ -154,7 +154,9 @@ Standard MIME types
 (defun make-maxima-result (value)
   (if (typep value 'result)
     value
-    (cond ((displayinput-result-p value)
+    (cond ((eq value 'maxima::maxima-error)
+           (make-error-result "maxima-error" (second maxima::$error)))
+          ((displayinput-result-p value)
            (let ((actual-value (third value)))
              (cond ((typep actual-value 'result)
                     actual-value)
