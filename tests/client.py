@@ -31,14 +31,14 @@ class MyKernelTests(jupyter_kernel_test.KernelTests):
         'x;',
         ':br foo',
         ":lisp (mapcar #'car '((1 a) (2 b) (3 c)))",
-        '??erfc'
+        '??erfc',
     ]
     incomplete_code_samples = [
         'x',
-        ":lisp (mapcar #'car '((1 a) (2 b) (3 c))"
+        ":lisp (mapcar #'car '((1 a) (2 b) (3 c))",
     ]
     invalid_code_samples = [
-        'foo(;'
+        'foo(;',
     ]
 
     # Pager: code that should display something (anything) in the pager
@@ -56,28 +56,22 @@ class MyKernelTests(jupyter_kernel_test.KernelTests):
 
     # Samples of code which should generate a rich display output, and
     # the expected MIME type
-    code_display_data = [
-        {
-            'code': 'jupyter_html("<html/>", true);',
-            'mime': 'text/html'
-        },
-        {
-            'code': 'jupyter_latex("$$x$$", true);',
-            'mime': 'text/latex'
-        },
-        {
-            'code': 'jupyter_markdown("x", true);',
-            'mime': 'text/markdown'
-        },
-        {
-            'code': 'jupyter_svg("<svg/>", true);',
-            'mime': 'image/svg+xml'
-        },
-        {
-            'code': 'jupyter_text("x", true);',
-            'mime': 'text/plain'
-        }
-    ]
+    code_display_data = [{
+        'code': 'jupyter_html("<html/>", true);',
+        'mime': 'text/html'
+    }, {
+        'code': 'jupyter_latex("$$x$$", true);',
+        'mime': 'text/latex'
+    }, {
+        'code': 'jupyter_markdown("x", true);',
+        'mime': 'text/markdown'
+    }, {
+        'code': 'jupyter_svg("<svg/>", true);',
+        'mime': 'image/svg+xml'
+    }, {
+        'code': 'jupyter_text("x", true);',
+        'mime': 'text/plain'
+    }]
 
     # def test_maxima_latex(self):
     #     reply, output_msgs = self.execute_helper(code='solve(x^2+x+1=0,x);')
