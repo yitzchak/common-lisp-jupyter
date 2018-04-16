@@ -46,7 +46,7 @@ class MyKernelTests(jupyter_kernel_test.KernelTests):
 
     # code which should generate a (user-level) error in the kernel, and send
     # a traceback to the client
-    code_generate_error = "error();"
+    code_generate_error = ':lisp (maxima-jupyter::make-error-result "foo" "bar")'
 
     # Samples of code which generate a result value (ie, some text
     # displayed as Out[n])
