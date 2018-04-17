@@ -87,6 +87,7 @@
 ;; Start all channels.
 (defmethod start ((k kernel))
   (info "[kernel] Starting...~%")
+  (setq maxima::$linenum 0)
   (start (kernel-hb k))
   (start (kernel-iopub k))
   (start (kernel-shell k))

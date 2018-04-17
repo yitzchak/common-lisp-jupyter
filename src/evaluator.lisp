@@ -93,7 +93,10 @@ The history of evaluations is also saved by the evaluator.
                  (maxima::break-call (car code) (cdr code)
                                      'maxima::break-command)))
           (t
-           (maxima::meval* code)))))
+           (setq maxima::$__ (third code))
+           (let ((result (maxima::meval* code)))
+           (setq maxima::$_ maxima::$__)
+           result)))))
 
 (defun read-and-eval (input in-maxima)
   (catch 'state-change
@@ -104,6 +107,11 @@ The history of evaluations is also saved by the evaluator.
         (if code-to-eval
           (progn
             (info "[evaluator] Parsed expression to evaluate: ~W~%" code-to-eval)
+            (when in-maxima
+              (incf maxima::$linenum)
+              (let ((label (maxima::makelabel maxima::$inchar)))
+                (unless maxima::$nolabels
+                  (setf (symbol-value label) (third code-to-eval)))))
             (let ((result (if in-maxima
                             (my-eval code-to-eval)
                             (eval code-to-eval))))
@@ -112,6 +120,13 @@ The history of evaluations is also saved by the evaluator.
                 (setq maxima::$% (caddr result)))
               result))
           'no-more-code)))))
+
+(defun make-maxima-label (result)
+  (when (displayinput-result-p result)
+    (let ((label (maxima::makelabel maxima::$outchar)))
+      (unless maxima::$nolabels
+        (setf (symbol-value label) (third result)))
+      (make-maxima-result `((maxima::mlabel) ,label ,(third result))))))
 
 (defun evaluate-code (evaluator code)
   (iter
@@ -123,7 +138,7 @@ The history of evaluations is also saved by the evaluator.
     (for result = (read-and-eval input in-maxima))
     (until (eq result 'no-more-code))
     (for wrapped-result = (if in-maxima
-                            (make-maxima-result result)
+                            (make-maxima-label result)
                             (make-lisp-result result)))
     (when wrapped-result
       (send-result wrapped-result)
@@ -205,21 +220,6 @@ The history of evaluations is also saved by the evaluator.
 (defun enqueue-input (text)
   (cl-containers:enqueue (kernel-input-queue *kernel*) text))
 
-(defun display-and-eval (expr)
-  (send-result
-    (make-inline-result
-      (with-output-to-string (f)
-        (maxima::mgrind (third expr) f)
-        (write-char #\; f))
-      :display t))
-  (let* ((res (maxima::meval* expr))
-         (result (make-maxima-result res)))
-   (setq maxima::$% (third res))
-   (when result
-     (send-result result))))
-
 (defun my-displa (form)
   (send-result
-    (make-maxima-result
-      `((maxima::displayinput) nil ,form)
-      :display t)))
+    (make-maxima-result form :display t)))

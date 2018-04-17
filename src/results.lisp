@@ -159,16 +159,17 @@ Standard MIME types
     value
     (cond ((eq value 'maxima::maxima-error)
            (make-error-result "maxima-error" (second maxima::$error)))
-          ((displayinput-result-p value)
-           (let ((actual-value (third value)))
-             (cond ((typep actual-value 'result)
-                    actual-value)
-                   ((plot-p actual-value)
-                    (make-instance 'file-result :path (third actual-value) :display display))
-                   (t
-                    (make-instance 'mexpr-result :value actual-value :display display)))))
           ((lisp-result-p value)
-            (make-lisp-result (second value))))))
+            (make-lisp-result (second value)))
+          (t
+            (let ((actual-value (third value)))
+              (cond ((typep actual-value 'result)
+                     actual-value)
+                    ((plot-p actual-value)
+                     (make-instance 'file-result :path (third actual-value) :display display))
+                    (t
+                     (make-instance 'mexpr-result :value value :display display))))))))
+
 
 (defun make-lisp-result (value &key (display nil))
   (cond ((typep value 'result)
