@@ -46,7 +46,7 @@ Standard MIME types
   (format nil "~S" value))
 
 (defun mexpr-to-text (value)
-  (string-trim '(#\Newline)
+  (string-trim '(#\Space #\Newline #\Backspace #\Tab #\Linefeed #\Page #\Return #\Rubout)
                (with-output-to-string (*standard-output*)
                  (let ((maxima::*alt-display1d* nil)
                        (maxima::*alt-display2d* nil))

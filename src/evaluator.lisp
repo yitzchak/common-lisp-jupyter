@@ -122,11 +122,14 @@ The history of evaluations is also saved by the evaluator.
           'no-more-code)))))
 
 (defun make-maxima-label (result)
-  (when (displayinput-result-p result)
-    (let ((label (maxima::makelabel maxima::$outchar)))
-      (unless maxima::$nolabels
-        (setf (symbol-value label) (third result)))
-      (make-maxima-result `((maxima::mlabel) ,label ,(third result))))))
+  (cond
+    ((displayinput-result-p result)
+      (let ((label (maxima::makelabel maxima::$outchar)))
+        (unless maxima::$nolabels
+          (setf (symbol-value label) (third result)))
+        (make-maxima-result `((maxima::mlabel) ,label ,(third result)))))
+    ((lisp-result-p result)
+      (make-lisp-result (second result)))))
 
 (defun evaluate-code (evaluator code)
   (iter
