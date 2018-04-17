@@ -33,6 +33,11 @@ Standard MIME types
        (listp (car code))
        (eq (caar code) 'maxima::displayinput)))
 
+(defun mtext-result-p (code)
+  (and (listp code)
+         (listp (car code))
+         (eq (caar code) 'maxima::mtext)))
+
 (defun plot-p (value)
   (and (listp value)
        (eq (caar value) 'maxima::mlist)

@@ -224,5 +224,9 @@ The history of evaluations is also saved by the evaluator.
   (cl-containers:enqueue (kernel-input-queue *kernel*) text))
 
 (defun my-displa (form)
-  (send-result
-    (make-maxima-result form :display t)))
+  (if (mtext-result-p form)
+    (let ((maxima::*alt-display1d* nil)
+          (maxima::*alt-display2d* nil))
+      (maxima::displa form))
+    (send-result
+      (make-maxima-result form :display t))))
