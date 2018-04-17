@@ -184,6 +184,7 @@
             ("name" "maxima")
             ("version" maxima::*autoconf-version*)
             ("mimetype" "text/x-maxima")
+            ("file_extension" ".mac")
             ("pygments_lexer" "maxima")
             ("codemirror_mode" "maxima")))))))
 
@@ -193,17 +194,26 @@
 
 |#
 
+(setq maxima::*prompt-prefix* (coerce '(#\Escape #\X) 'string))
+(setq maxima::*prompt-suffix* (coerce '(#\Escape #\\) 'string))
+
 (defun handle-execute-request (kernel msg)
   (info "[kernel] Handling 'execute_request'~%")
   (let* ((shell (kernel-shell kernel))
          (iopub (kernel-iopub kernel))
+         (stdin (kernel-stdin kernel))
          (*kernel* kernel)
          (*message* msg)
-         (*page-output* (make-string-output-stream))
          (*payload* (make-array 16 :adjustable t :fill-pointer 0))
+         (*page-output* (make-string-output-stream))
+         (*query-io* (make-stdin-stream stdin msg))
+         (*standard-input* *query-io*)
+         (maxima::$stdin *query-io*)
          (*error-output* (make-iopub-stream iopub msg "stderr"))
+         (maxima::$stderr *error-output*)
          (*standard-output* (make-iopub-stream iopub msg "stdout"))
          (*debug-io* *standard-output*)
+         (maxima::$stdout *standard-output*)
          (content (message-content msg))
          (code (jsown:val content "code")))
     (vbinds (execution-count results)

@@ -8,7 +8,7 @@ cl-info.lisp Overrides
 
 #|
 
-display-items is overridden to make use of get-input and the pager for output.
+display-items is overridden to make use of the pager for output.
 
 |#
 
@@ -36,20 +36,11 @@ display-items is overridden to make use of get-input and the pager for output.
                 for prompt-count from 0
                 thereis (progn
                           (finish-output *debug-io*)
-                          ;; REPLACE the following with a call to get-input
-                          ;; (print-prompt prompt-count)
-                          ;; (force-output)
-                          ;; (clear-input)
-                          ;; (select-info-items
-                          ;;   (parse-user-choice nitems) items-list)))
-                          ;; BEGIN
-                          (let* ((prompt (with-output-to-string (*standard-output*)
-                                           (print-prompt prompt-count)))
-                                 (input (maxima-jupyter::get-input prompt))
-                                 (choice (with-input-from-string (*standard-input* input)
-                                           (parse-user-choice nitems))))
-                          (select-info-items choice items-list))))
-                          ;; END
+                          (print-prompt prompt-count)
+                          (finish-output)
+                          (clear-input)
+                          (select-info-items
+                            (parse-user-choice nitems) items-list)))
               (clear-input))
             items-list))
     (finish-output *debug-io*)

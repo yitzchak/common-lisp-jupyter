@@ -74,7 +74,8 @@
 
 (defvar *iopub-stream-size* 1024)
 
-(defclass iopub-stream (trivial-gray-streams:fundamental-character-output-stream)
+(defclass iopub-stream (trivial-gray-streams:fundamental-character-output-stream
+                        trivial-gray-streams:fundamental-character-input-stream)
   ((channel :initarg :channel
             :reader iopub-stream-channel)
    (parent-msg :initarg :parent-msg
@@ -86,7 +87,7 @@
                                 :fill-pointer 0
                                 :adjustable t
                                 :element-type 'character)
-          :accessor iopub-stream-value)))
+          :reader iopub-stream-value)))
 
 (defun make-iopub-stream (iopub parent-msg name)
   (make-instance 'iopub-stream :channel iopub
@@ -94,20 +95,43 @@
                                :name name))
 
 (defmethod trivial-gray-streams:stream-write-char ((stream iopub-stream) char)
-  (vector-push-extend char (iopub-stream-value stream)))
-
-; (defmethod trivial-gray-streams:stream-write-string ((stream iopub-stream) string &optional start end)
-  ; (format *debug-io* "string: ~A~%" string)
-  ; t)
+  (unless (equal char #\Sub) ; Ignore subsititute characters
+    (with-slots (channel parent-msg name value) stream
+      (vector-push-extend char value)
+      ;; After the character has been added look for a prompt terminator at the
+      ;; end.
+      (if (ends-with-p value maxima::*prompt-suffix*)
+        (let ((start (search maxima::*prompt-prefix* value)))
+          ;; If there is a prompt start also then print the prompt and remove it
+          ;; from the buffer.
+          (when start
+            ;; If there is data before the prompt then send it now.
+            (unless (zerop start)
+              (send-stream channel parent-msg name (subseq value 0 start)))
+            (write-string (subseq value
+                                  (+ start (length maxima::*prompt-prefix*))
+                                  (- (length value) (length maxima::*prompt-suffix*)))
+                          *query-io*)
+            (finish-output *query-io*)
+            (adjust-array value (array-total-size value)
+                          :fill-pointer 0)))))))
 
 (defmethod trivial-gray-streams:stream-finish-output ((stream iopub-stream))
-  (unless (zerop (length (iopub-stream-value stream)))
-    (send-stream (iopub-stream-channel stream)
-                 (iopub-stream-parent-msg stream)
-                 (iopub-stream-name stream)
-                 (iopub-stream-value stream))
-    (setf (iopub-stream-value stream)
-          (make-array *iopub-stream-size*
-                      :fill-pointer 0
-                      :adjustable t
-                      :element-type 'character))))
+  (with-slots (channel parent-msg name value) stream
+    (unless (zerop (length value))
+      (send-stream channel parent-msg name value)
+      (adjust-array value (array-total-size value)
+                    :fill-pointer 0))))
+
+;; Forward all read calls to *query-io*
+(defmethod trivial-gray-streams:stream-listen ((stream iopub-stream))
+  (trivial-gray-streams:stream-listen *query-io*))
+
+(defmethod trivial-gray-streams:stream-read-char ((stream iopub-stream))
+  (trivial-gray-streams:stream-read-char *query-io*))
+
+(defmethod trivial-gray-streams:stream-peek-char ((stream iopub-stream))
+  (trivial-gray-streams:stream-peek-char *query-io*))
+
+(defmethod trivial-gray-streams:stream-unread-char ((stream iopub-stream) char)
+  (trivial-gray-streams:stream-unread-char *query-io* char))
