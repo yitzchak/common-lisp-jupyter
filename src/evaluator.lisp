@@ -217,3 +217,9 @@ The history of evaluations is also saved by the evaluator.
    (setq maxima::$% (third res))
    (when result
      (send-result result))))
+
+(defun my-displa (form)
+  (send-result
+    (make-maxima-result
+      `((maxima::displayinput) nil ,form)
+      :display t)))

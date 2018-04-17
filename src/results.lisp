@@ -48,7 +48,9 @@ Standard MIME types
 (defun mexpr-to-text (value)
   (string-trim '(#\Newline)
                (with-output-to-string (*standard-output*)
-                 (maxima::displa value))))
+                 (let ((maxima::*alt-display1d* nil)
+                       (maxima::*alt-display2d* nil))
+                   (maxima::displa value)))))
 
 (defun mexpr-to-latex (value)
   (let ((env (maxima::get-tex-environment value)))
@@ -152,7 +154,7 @@ Standard MIME types
                                :quit quit
                                :traceback traceback))
 
-(defun make-maxima-result (value)
+(defun make-maxima-result (value &key (display nil))
   (if (typep value 'result)
     value
     (cond ((eq value 'maxima::maxima-error)
@@ -162,17 +164,17 @@ Standard MIME types
              (cond ((typep actual-value 'result)
                     actual-value)
                    ((plot-p actual-value)
-                    (make-instance 'file-result :path (third actual-value)))
+                    (make-instance 'file-result :path (third actual-value) :display display))
                    (t
-                    (make-instance 'mexpr-result :value actual-value)))))
+                    (make-instance 'mexpr-result :value actual-value :display display)))))
           ((lisp-result-p value)
             (make-lisp-result (second value))))))
 
-(defun make-lisp-result (value)
+(defun make-lisp-result (value &key (display nil))
   (cond ((typep value 'result)
          value)
         ((not (eq 'no-output value))
-         (make-instance 'sexpr-result :value value))))
+         (make-instance 'sexpr-result :value value :display display))))
 
 #|
 

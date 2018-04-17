@@ -204,6 +204,8 @@
          (stdin (kernel-stdin kernel))
          (*kernel* kernel)
          (*message* msg)
+         (maxima::*alt-display1d* #'my-displa)
+         (maxima::*alt-display2d* #'my-displa)
          (*payload* (make-array 16 :adjustable t :fill-pointer 0))
          (*page-output* (make-string-output-stream))
          (*query-io* (make-stdin-stream stdin msg))
