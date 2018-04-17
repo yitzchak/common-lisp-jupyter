@@ -18,10 +18,10 @@ class MyKernelTests(jupyter_kernel_test.KernelTests):
     # Optional --------------------------------------
 
     # Code in the kernel's language to write "hello, world" to stdout
-    code_hello_world = 'print("hello, world");'
+    code_hello_world = 'printf(stdout, "hello, world")$'
 
     # code which should cause (any) text to be written to STDERR
-    code_stderr = 'printf(stderr, "test");'
+    code_stderr = 'printf(stderr, "test")$'
 
     # samples for testing code-completeness (used by console only)
     # these samples should respectively be unambigiously complete statements
