@@ -30,6 +30,34 @@ set a flag and throw out of the current evaluation.
   (maxima-jupyter::to-maxima))
   ; END
 
+#|
+
+mactex.lisp Overrides
+
+The environments for mdefine. mdefmacro and mlabel are set to the default math
+environment since verbatim doesn't understand math mode.
+
+|#
+
+(setf (get 'mdefine 'tex-environment) *tex-environment-default*)
+
+(setf (get 'mdefmacro 'tex-environment) *tex-environment-default*)
+
+(setf (get 'mlabel 'tex-environment) *tex-environment-default*)
+
+#|
+
+tex-mlabel is overridden to use tag so that mlabel will show up correctly.
+
+|#
+
+(defun tex-mlabel (x l r)
+  (tex (caddr x)
+       (append l
+	       (if (cadr x)
+		   (list (format nil "\\tag{$~A$}" (tex-stripdollar (cadr x))))
+		   nil))
+       r 'mparen 'mparen))
 
 #|
 
