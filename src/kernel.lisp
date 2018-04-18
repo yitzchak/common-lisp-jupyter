@@ -205,6 +205,7 @@
          (stdin (kernel-stdin kernel))
          (*kernel* kernel)
          (*message* msg)
+         (maxima::*display-labels-p* t)
          (maxima::*alt-display1d* #'my-displa)
          (maxima::*alt-display2d* #'my-displa)
          (*payload* (make-array 16 :adjustable t :fill-pointer 0))
