@@ -33,6 +33,11 @@ Standard MIME types
        (listp (car code))
        (eq (caar code) 'maxima::displayinput)))
 
+(defun mtext-result-p (code)
+  (and (listp code)
+         (listp (car code))
+         (eq (caar code) 'maxima::mtext)))
+
 (defun plot-p (value)
   (and (listp value)
        (eq (caar value) 'maxima::mlist)
@@ -48,7 +53,9 @@ Standard MIME types
 (defun mexpr-to-text (value)
   (string-trim '(#\Newline)
                (with-output-to-string (*standard-output*)
-                 (maxima::displa value))))
+                 (let ((maxima::*alt-display1d* nil)
+                       (maxima::*alt-display2d* nil))
+                   (maxima::displa value)))))
 
 (defun mexpr-to-latex (value)
   (let ((env (maxima::get-tex-environment value)))
@@ -152,27 +159,28 @@ Standard MIME types
                                :quit quit
                                :traceback traceback))
 
-(defun make-maxima-result (value)
+(defun make-maxima-result (value &key (display nil))
   (if (typep value 'result)
     value
     (cond ((eq value 'maxima::maxima-error)
            (make-error-result "maxima-error" (second maxima::$error)))
-          ((displayinput-result-p value)
-           (let ((actual-value (third value)))
-             (cond ((typep actual-value 'result)
-                    actual-value)
-                   ((plot-p actual-value)
-                    (make-instance 'file-result :path (third actual-value)))
-                   (t
-                    (make-instance 'mexpr-result :value actual-value)))))
           ((lisp-result-p value)
-            (make-lisp-result (second value))))))
+            (make-lisp-result (second value)))
+          (t
+            (let ((actual-value (third value)))
+              (cond ((typep actual-value 'result)
+                     actual-value)
+                    ((plot-p actual-value)
+                     (make-instance 'file-result :path (third actual-value) :display display))
+                    (t
+                     (make-instance 'mexpr-result :value value :display display))))))))
 
-(defun make-lisp-result (value)
+
+(defun make-lisp-result (value &key (display nil))
   (cond ((typep value 'result)
          value)
         ((not (eq 'no-output value))
-         (make-instance 'sexpr-result :value value))))
+         (make-instance 'sexpr-result :value value :display display))))
 
 #|
 

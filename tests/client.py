@@ -18,10 +18,10 @@ class MyKernelTests(jupyter_kernel_test.KernelTests):
     # Optional --------------------------------------
 
     # Code in the kernel's language to write "hello, world" to stdout
-    code_hello_world = 'print("hello, world");'
+    code_hello_world = 'printf(stdout, "hello, world")$'
 
     # code which should cause (any) text to be written to STDERR
-    code_stderr = 'printf(stderr, "test");'
+    code_stderr = 'printf(stderr, "test")$'
 
     # samples for testing code-completeness (used by console only)
     # these samples should respectively be unambigiously complete statements
@@ -51,7 +51,7 @@ class MyKernelTests(jupyter_kernel_test.KernelTests):
     # Samples of code which generate a result value (ie, some text
     # displayed as Out[n])
     code_execute_result = [
-        {'code': '6*7;', 'result': '42'}
+        {'code': 'display2d:false$ 6*7;', 'result': '(%o8) 42'}
     ]
 
     # Samples of code which should generate a rich display output, and

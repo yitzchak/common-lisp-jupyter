@@ -30,143 +30,34 @@ set a flag and throw out of the current evaluation.
   (maxima-jupyter::to-maxima))
   ; END
 
-
 #|
 
-mdebug.lisp Overrides
+mactex.lisp Overrides
 
-break-dbm-loop is overridden to catch the Maxima result and to flush the output
-before *debug-io*.
+The environments for mdefine. mdefmacro and mlabel are set to the default math
+environment since verbatim doesn't understand math mode.
 
 |#
 
-(defun break-dbm-loop (at)
-  (let* ((*quit-tags* (cons (cons *break-level* *quit-tag*) *quit-tags*))
-	 (*break-level* (if (not at) *break-level* (cons t *break-level*)))
-	 (*quit-tag* (cons nil nil))
-	 (*break-env* *break-env*)
-	 (*mread-prompt* "")
-	 (*diff-bindlist* nil)
-	 (*diff-mspeclist* nil)
-	 val)
-    (declare (special *mread-prompt*))
-    (and (consp at) (set-env at))
-    (cond ((null at)
-	   (break-frame 0 nil)))
-    (catch 'step-continue
-      (catch *quit-tag*
-	(unwind-protect
-	     (do () (())
-	       (format-prompt *debug-io* "~&~a"
-			      (format nil "~@[(~a:~a) ~]"
-				      (unless (stringp at) "dbm")
-				      (length *quit-tags*)))
-	       (finish-output *debug-io*)
-	       (setq val
-		     (catch 'macsyma-quit
-		       (let ((res (dbm-read *debug-io*  nil *top-eof* t)))
-			 (declare (special *mread-prompt*))
-			 (cond ((and (consp res) (keywordp (car res)))
-				(let ((value (break-call (car res)
-							 (cdr res)
-				                         'break-command)))
-				  (cond ((eq value :resume) (return)))))
-			       ((eq res *top-eof*)
-			        (funcall (get :top 'break-command)))
-			       (t
-				(setq $__ (nth 2 res))
-				(setq $% (meval* $__))
-				(setq $_ $__)
-				;; REPLACE the following with a call to send-result
-				;; (displa $%)))
-				;; BEGIN
-				(maxima-jupyter::send-result
-				  (maxima-jupyter::make-maxima-result
-				    (list (first res) (second res) $%)))))
-				;; END
-			 nil)))
-	       (and (eql val 'top)
-		    (throw-macsyma-top)))
-	  (restore-bindings))))))
+(setf (get 'mdefine 'tex-environment) *tex-environment-default*)
 
+(setf (get 'mdefmacro 'tex-environment) *tex-environment-default*)
+
+(setf (get 'mlabel 'tex-environment) *tex-environment-default*)
 
 #|
 
-macdes.lisp Overrides
-
-
-$example is overridden so that input is sent as display_data and the output
-produced by meval will handled by displayed make-maxima-result.
+tex-mlabel is overridden to use tag so that mlabel will show up correctly.
 
 |#
 
-(defmspec $example (l)
-  (declare (special *need-prompt*))
-  (let ((example (second l)))
-    (when (symbolp example)
-      ;; Coerce a symbol to be a string.
-      ;; Remove the first character if it is a dollar sign.
-      (setq example (coerce (exploden (stripdollar example)) 'string)))
-    (unless (stringp example)
-      (merror
-        (intl:gettext "example: argument must be a symbol or a string; found: ~M") example))
-    ;; Downcase the string. $example is not case sensitive.
-    (setq example (string-downcase example))
-    (with-open-file (st ($file_search1 $manual_demo '((mlist) $file_search_demo)))
-      (prog (tem all c-tag d-tag)
-       again
-       (setq tem (read-char st nil))
-       (unless tem (go notfound))
-       (unless (eql tem #\&) (go again))
-       (setq tem (read-char st nil))
-       (unless (eql tem #\&) (go again))
-       ;; so we are just after having read &&
-
-       (setq tem (read st nil nil))
-       (unless tem (go notfound))
-       ;; Coerce the topic in tem to be a string.
-       (setq tem (coerce (exploden tem) 'string))
-       (cond ((string= tem example)
-	      (go doit))
-	     (t (push tem all)
-		(go again)))
-       ;; at this stage we read maxima forms and print and eval
-       ;; until a peek sees '&' as the first character of next expression,
-       ;; but at first skip over whitespaces.
-       doit
-       (when (member (setq tem (peek-char nil st nil))
-                     '(#\tab #\space #\newline #\linefeed #\return #\page))
-         ;; Found whitespace. Read char and look for next char.
-         ;; The && label can be positioned anywhere before the next topic.
-         (setq tem (read-char st nil))
-         (go doit))
-       (cond ((or (null tem) (eql tem #\&))
-	      (setf *need-prompt* t)
-	      (return '$done)))
-       (setq tem (dbm-read st nil nil))
-       (incf $linenum)
-       (setq c-tag (makelabel $inchar))
-       (unless $nolabels (setf (symbol-value c-tag) (nth 2 tem)))
-   ;; REPLACE the following that evaluates and displays results.
-   ;;     (let ($display2d)
-   ;; (displa `((mlabel) ,c-tag ,(nth 2 tem))))
-   ;;     (setq $% (meval* (nth 2 tem)))
-   ;;     (setq d-tag (makelabel $outchar))
-   ;;     (unless $nolabels (setf (symbol-value d-tag) $%))
-   ;;     (when (eq (caar tem) 'displayinput)
-   ;; (displa `((mlabel) ,d-tag ,$%)))
-   ;; BEGIN
-       (maxima-jupyter::display-and-eval tem)
-   ;; END
-       (go doit)
-
-       notfound
-       (setf *need-prompt* t)
-       (if (= (length l) 1)
-         (return `((mlist) ,@(nreverse all)))
-         (progn
-           (mtell (intl:gettext "example: ~M not found. 'example();' returns the list of known examples.~%") example)
-           (return '$done)))))))
+(defun tex-mlabel (x l r)
+  (tex (caddr x)
+       (append l
+	       (if (cadr x)
+		   (list (format nil "\\tag{$~A$}" (tex-stripdollar (cadr x))))
+		   nil))
+       r 'mparen 'mparen))
 
 #|
 

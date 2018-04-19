@@ -87,6 +87,7 @@
 ;; Start all channels.
 (defmethod start ((k kernel))
   (info "[kernel] Starting...~%")
+  (setq maxima::$linenum 0)
   (start (kernel-hb k))
   (start (kernel-iopub k))
   (start (kernel-shell k))
@@ -204,6 +205,9 @@
          (stdin (kernel-stdin kernel))
          (*kernel* kernel)
          (*message* msg)
+         (maxima::*display-labels-p* t)
+         (maxima::*alt-display1d* #'my-displa)
+         (maxima::*alt-display2d* #'my-displa)
          (*payload* (make-array 16 :adjustable t :fill-pointer 0))
          (*page-output* (make-string-output-stream))
          (*query-io* (make-stdin-stream stdin msg))
