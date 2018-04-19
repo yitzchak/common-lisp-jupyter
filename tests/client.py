@@ -51,7 +51,7 @@ class MyKernelTests(jupyter_kernel_test.KernelTests):
     # Samples of code which generate a result value (ie, some text
     # displayed as Out[n])
     code_execute_result = [
-        {'code': 'display2d:false$ 6*7;', 'result': '42'}
+        {'code': 'display2d:false$ 6*7;', 'result': '(%o8) 42'}
     ]
 
     # Samples of code which should generate a rich display output, and
