@@ -6,15 +6,16 @@ Standard MIME types
 
 |#
 
+(defvar *gif-mime-type* "image/gif")
 (defvar *html-mime-type* "text/html")
 (defvar *javascript-mime-type* "application/javascript")
 (defvar *jpeg-mime-type* "image/jpeg")
 (defvar *json-mime-type* "application/json")
 (defvar *latex-mime-type* "text/latex")
 (defvar *markdown-mime-type* "text/markdown")
+(defvar *pdf-mime-type* "application/pdf")
 (defvar *plain-text-mime-type* "text/plain")
 (defvar *png-mime-type* "image/png")
-(defvar *pdf-mime-type* "application/pdf")
 (defvar *svg-mime-type* "image/svg+xml")
 
 

@@ -93,21 +93,27 @@ The history of evaluations is also saved by the evaluator.
       (uiop:getcwd))))
 
 (defun my-draw_gnuplot (&rest args)
-  (let ((result (apply old-draw_gnuplot args)))
-    (case (funcall 'maxima::get-option 'maxima::$terminal)
-      (('maxima::$pdf 'maxima::$multipage_pdf 'maxima::$pdfcairo 'maxima::$multipage_pdfcairo)
+  (let* ((result (apply old-draw_gnuplot args))
+         (terminal (funcall 'maxima::get-option 'maxima::$terminal)))
+    (format *trace-output* "~A~%" terminal)
+    (case terminal
+      ((maxima::$pdf maxima::$multipage_pdf maxima::$pdfcairo maxima::$multipage_pdfcairo)
         (send-result (make-file-result (get-draw-file-name ".pdf")
                                        :mime-type *pdf-mime-type*
                                        :display t)))
-      (('maxima::$png 'maxima::$pngcairo)
+      ((maxima::$gif maxima::$animated_gif)
+        (send-result (make-file-result (get-draw-file-name ".gif")
+                                       :mime-type *gif-mime-type*
+                                       :display t)))
+      ((maxima::$png maxima::$pngcairo)
         (send-result (make-file-result (get-draw-file-name ".png")
                                        :mime-type *png-mime-type*
                                        :display t)))
-      ('maxima::$jpg
+      (maxima::$jpg
         (send-result (make-file-result (get-draw-file-name ".jpeg")
                                        :mime-type *jpeg-mime-type*
                                        :display t)))
-      ('maxima::$svg
+      (maxima::$svg
         (send-result (make-file-result (get-draw-file-name ".svg")
                                        :mime-type *svg-mime-type*
                                        :display t))))
