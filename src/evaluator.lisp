@@ -95,7 +95,6 @@ The history of evaluations is also saved by the evaluator.
 (defun my-draw_gnuplot (&rest args)
   (let* ((result (apply old-draw_gnuplot args))
          (terminal (funcall 'maxima::get-option 'maxima::$terminal)))
-    (format *trace-output* "~A~%" terminal)
     (case terminal
       ((maxima::$pdf maxima::$multipage_pdf maxima::$pdfcairo maxima::$multipage_pdfcairo)
         (send-result (make-file-result (get-draw-file-name ".pdf")
