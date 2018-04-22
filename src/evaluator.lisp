@@ -83,7 +83,40 @@ The history of evaluations is also saved by the evaluator.
 (defun keyword-command-p (code)
   (and (consp code) (keywordp (car code))))
 
+(defparameter old-draw_gnuplot nil)
+
+(defun get-draw-file-name (extension)
+  (namestring
+    (merge-pathnames
+      (concatenate 'string (funcall 'maxima::get-option 'maxima::$file_name)
+                           extension)
+      (uiop:getcwd))))
+
+(defun my-draw_gnuplot (&rest args)
+  (let ((result (apply old-draw_gnuplot args)))
+    (case (funcall 'maxima::get-option 'maxima::$terminal)
+      (('maxima::$pdf 'maxima::$multipage_pdf 'maxima::$pdfcairo 'maxima::$multipage_pdfcairo)
+        (send-result (make-file-result (get-draw-file-name ".pdf")
+                                       :mime-type *pdf-mime-type*
+                                       :display t)))
+      (('maxima::$png 'maxima::$pngcairo)
+        (send-result (make-file-result (get-draw-file-name ".png")
+                                       :mime-type *png-mime-type*
+                                       :display t)))
+      ('maxima::$jpg
+        (send-result (make-file-result (get-draw-file-name ".jpeg")
+                                       :mime-type *jpeg-mime-type*
+                                       :display t)))
+      ('maxima::$svg
+        (send-result (make-file-result (get-draw-file-name ".svg")
+                                       :mime-type *svg-mime-type*
+                                       :display t))))
+    result))
+
 (defun my-eval (code)
+  (when (and (fboundp 'maxima::draw_gnuplot) (not old-draw_gnuplot))
+    (setq old-draw_gnuplot (symbol-function 'maxima::draw_gnuplot))
+    (setf (symbol-function 'maxima::draw_gnuplot) #'my-draw_gnuplot))
   (let ((*package* (find-package :maxima)))
     (cond ((keyword-lisp-p code)
            (cons (list (car code))
