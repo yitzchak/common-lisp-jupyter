@@ -83,7 +83,50 @@ The history of evaluations is also saved by the evaluator.
 (defun keyword-command-p (code)
   (and (consp code) (keywordp (car code))))
 
+(defparameter old-draw_gnuplot nil)
+
+(defun get-draw-file-name (extension)
+  (namestring
+    (merge-pathnames
+      (concatenate 'string (funcall 'maxima::get-option 'maxima::$file_name)
+                           extension)
+      (uiop:getcwd))))
+
+(defun my-draw_gnuplot (&rest args)
+  (let* ((result (apply old-draw_gnuplot args))
+         (terminal (funcall 'maxima::get-option 'maxima::$terminal)))
+    (case terminal
+      ((maxima::$pdf maxima::$multipage_pdf maxima::$pdfcairo maxima::$multipage_pdfcairo)
+        (make-file-result (get-draw-file-name ".pdf")
+                          :mime-type *pdf-mime-type*
+                          :display t
+                          :handle t))
+      ((maxima::$gif maxima::$animated_gif)
+        (make-file-result (get-draw-file-name ".gif")
+                          :mime-type *gif-mime-type*
+                          :display t
+                          :handle t))
+      ((maxima::$png maxima::$pngcairo)
+        (make-file-result (get-draw-file-name ".png")
+                          :mime-type *png-mime-type*
+                          :display t
+                          :handle t))
+      (maxima::$jpg
+        (make-file-result (get-draw-file-name ".jpg")
+                          :mime-type *jpeg-mime-type*
+                          :display t
+                          :handle t))
+      (maxima::$svg
+        (make-file-result (get-draw-file-name ".svg")
+                          :mime-type *svg-mime-type*
+                          :display t
+                          :handle t)))
+    result))
+
 (defun my-eval (code)
+  (when (and (fboundp 'maxima::draw_gnuplot) (not old-draw_gnuplot))
+    (setq old-draw_gnuplot (symbol-function 'maxima::draw_gnuplot))
+    (setf (symbol-function 'maxima::draw_gnuplot) #'my-draw_gnuplot))
   (let ((*package* (find-package :maxima)))
     (cond ((keyword-lisp-p code)
            (cons (list (car code))
@@ -228,5 +271,4 @@ The history of evaluations is also saved by the evaluator.
     (let ((maxima::*alt-display1d* nil)
           (maxima::*alt-display2d* nil))
       (maxima::displa form))
-    (send-result
-      (make-maxima-result form :display t))))
+    (make-maxima-result form :display t :handle t)))

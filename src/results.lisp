@@ -6,15 +6,16 @@ Standard MIME types
 
 |#
 
+(defvar *gif-mime-type* "image/gif")
 (defvar *html-mime-type* "text/html")
 (defvar *javascript-mime-type* "application/javascript")
 (defvar *jpeg-mime-type* "image/jpeg")
 (defvar *json-mime-type* "application/json")
 (defvar *latex-mime-type* "text/latex")
 (defvar *markdown-mime-type* "text/markdown")
+(defvar *pdf-mime-type* "application/pdf")
 (defvar *plain-text-mime-type* "text/plain")
 (defvar *png-mime-type* "image/png")
-(defvar *pdf-mime-type* "application/pdf")
 (defvar *svg-mime-type* "image/svg+xml")
 
 
@@ -99,10 +100,15 @@ Standard MIME types
    (mime-type :initarg :mime-type
               :reader inline-result-mime-type)))
 
-(defun make-inline-result (value &key (mime-type *plain-text-mime-type*) (display nil))
-  (make-instance 'inline-result :value value
-                                :mime-type mime-type
-                                :display display))
+(defun make-inline-result (value &key (mime-type *plain-text-mime-type*) (display nil) (handle nil))
+  (let ((result (make-instance 'inline-result :value value
+                                              :mime-type mime-type
+                                              :display display)))
+    (if (and handle display)
+      (progn
+        (send-result result)
+        t)
+      result)))
 
 (defmethod render ((res inline-result))
   (let ((value (inline-result-value res))
@@ -123,10 +129,15 @@ Standard MIME types
               :initform nil
               :reader file-result-mime-type)))
 
-(defun make-file-result (path &key (mime-type nil) (display nil))
-  (make-instance 'file-result :path path
-                              :mime-type mime-type
-                              :display display))
+(defun make-file-result (path &key (mime-type nil) (display nil) (handle nil))
+  (let ((result (make-instance 'file-result :path path
+                                            :mime-type mime-type
+                                            :display display)))
+    (if (and handle display)
+      (progn
+        (send-result result)
+        t)
+      result)))
 
 (defmethod render ((res file-result))
   (let* ((path (file-result-path res))

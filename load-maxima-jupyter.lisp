@@ -12,7 +12,7 @@
 (format t "now ASDF:*CENTRAL-REGISTRY*=~S~%" asdf:*central-registry*)
 
 ;; activate debugging
-(declaim (optimize (speed 0) (space 0) (debug 3) (safety 3)))
+; (declaim (optimize (speed 0) (space 0) (debug 3) (safety 3)))
 
 (maxima::$load "stringproc")
 (ql:quickload "maxima-jupyter")
