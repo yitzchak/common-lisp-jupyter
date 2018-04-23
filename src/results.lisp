@@ -100,10 +100,15 @@ Standard MIME types
    (mime-type :initarg :mime-type
               :reader inline-result-mime-type)))
 
-(defun make-inline-result (value &key (mime-type *plain-text-mime-type*) (display nil))
-  (make-instance 'inline-result :value value
-                                :mime-type mime-type
-                                :display display))
+(defun make-inline-result (value &key (mime-type *plain-text-mime-type*) (display nil) (handle nil))
+  (let ((result (make-instance 'inline-result :value value
+                                              :mime-type mime-type
+                                              :display display)))
+    (if (and handle display)
+      (progn
+        (send-result result)
+        t)
+      result)))
 
 (defmethod render ((res inline-result))
   (let ((value (inline-result-value res))
@@ -124,10 +129,15 @@ Standard MIME types
               :initform nil
               :reader file-result-mime-type)))
 
-(defun make-file-result (path &key (mime-type nil) (display nil))
-  (make-instance 'file-result :path path
-                              :mime-type mime-type
-                              :display display))
+(defun make-file-result (path &key (mime-type nil) (display nil) (handle nil))
+  (let ((result (make-instance 'file-result :path path
+                                            :mime-type mime-type
+                                            :display display)))
+    (if (and handle display)
+      (progn
+        (send-result result)
+        t)
+      result)))
 
 (defmethod render ((res file-result))
   (let* ((path (file-result-path res))

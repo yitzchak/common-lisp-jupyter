@@ -97,25 +97,30 @@ The history of evaluations is also saved by the evaluator.
          (terminal (funcall 'maxima::get-option 'maxima::$terminal)))
     (case terminal
       ((maxima::$pdf maxima::$multipage_pdf maxima::$pdfcairo maxima::$multipage_pdfcairo)
-        (send-result (make-file-result (get-draw-file-name ".pdf")
-                                       :mime-type *pdf-mime-type*
-                                       :display t)))
+        (make-file-result (get-draw-file-name ".pdf")
+                          :mime-type *pdf-mime-type*
+                          :display t
+                          :handle t))
       ((maxima::$gif maxima::$animated_gif)
-        (send-result (make-file-result (get-draw-file-name ".gif")
-                                       :mime-type *gif-mime-type*
-                                       :display t)))
+        (make-file-result (get-draw-file-name ".gif")
+                          :mime-type *gif-mime-type*
+                          :display t
+                          :handle t))
       ((maxima::$png maxima::$pngcairo)
-        (send-result (make-file-result (get-draw-file-name ".png")
-                                       :mime-type *png-mime-type*
-                                       :display t)))
+        (make-file-result (get-draw-file-name ".png")
+                          :mime-type *png-mime-type*
+                          :display t
+                          :handle t))
       (maxima::$jpg
-        (send-result (make-file-result (get-draw-file-name ".jpeg")
-                                       :mime-type *jpeg-mime-type*
-                                       :display t)))
+        (make-file-result (get-draw-file-name ".jpg")
+                          :mime-type *jpeg-mime-type*
+                          :display t
+                          :handle t))
       (maxima::$svg
-        (send-result (make-file-result (get-draw-file-name ".svg")
-                                       :mime-type *svg-mime-type*
-                                       :display t))))
+        (make-file-result (get-draw-file-name ".svg")
+                          :mime-type *svg-mime-type*
+                          :display t
+                          :handle t)))
     result))
 
 (defun my-eval (code)
@@ -266,5 +271,4 @@ The history of evaluations is also saved by the evaluator.
     (let ((maxima::*alt-display1d* nil)
           (maxima::*alt-display2d* nil))
       (maxima::displa form))
-    (send-result
-      (make-maxima-result form :display t))))
+    (make-maxima-result form :display t :handle t)))
