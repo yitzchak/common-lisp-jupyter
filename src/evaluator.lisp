@@ -5,6 +5,8 @@
 (defvar *payload* nil)
 (defvar *page-output* nil)
 
+(defparameter overrides (make-hash-table))
+
 #|
 
 # Evaluator #
@@ -48,7 +50,21 @@ The history of evaluations is also saved by the evaluator.
 (defmacro handling-errors (&body body)
   `(catch 'maxima::return-from-debugger
     (catch 'maxima::macsyma-quit
-    (handler-case (progn ,@body)
+    (handler-case
+      (handler-bind
+        ((simple-warning
+          (lambda (wrn)
+            (apply (function format) *standard-output*
+                  (simple-condition-format-control   wrn)
+                  (simple-condition-format-arguments wrn))
+            (format *standard-output* "~&")
+            (muffle-warning)))
+        (warning
+          (lambda (wrn)
+            (format *standard-output* "~&~A: ~%  ~A~%"
+                    (class-name (class-of wrn)) wrn)
+            (muffle-warning))))
+      	 (progn ,@body))
        (quit (err)
          (make-eval-error err (format nil "~A" err) :quit t))
        (simple-condition (err)
@@ -83,51 +99,18 @@ The history of evaluations is also saved by the evaluator.
 (defun keyword-command-p (code)
   (and (consp code) (keywordp (car code))))
 
-(defparameter old-draw_gnuplot nil)
-
-(defun get-draw-file-name (extension)
-  (namestring
-    (merge-pathnames
-      (concatenate 'string (funcall 'maxima::get-option 'maxima::$file_name)
-                           extension)
-      (uiop:getcwd))))
-
-(defun my-draw_gnuplot (&rest args)
-  (let* ((result (apply old-draw_gnuplot args))
-         (terminal (funcall 'maxima::get-option 'maxima::$terminal)))
-    (case terminal
-      ((maxima::$pdf maxima::$multipage_pdf maxima::$pdfcairo maxima::$multipage_pdfcairo)
-        (make-file-result (get-draw-file-name ".pdf")
-                          :mime-type *pdf-mime-type*
-                          :display t
-                          :handle t))
-      ((maxima::$gif maxima::$animated_gif)
-        (make-file-result (get-draw-file-name ".gif")
-                          :mime-type *gif-mime-type*
-                          :display t
-                          :handle t))
-      ((maxima::$png maxima::$pngcairo)
-        (make-file-result (get-draw-file-name ".png")
-                          :mime-type *png-mime-type*
-                          :display t
-                          :handle t))
-      (maxima::$jpg
-        (make-file-result (get-draw-file-name ".jpg")
-                          :mime-type *jpeg-mime-type*
-                          :display t
-                          :handle t))
-      (maxima::$svg
-        (make-file-result (get-draw-file-name ".svg")
-                          :mime-type *svg-mime-type*
-                          :display t
-                          :handle t)))
-    result))
+(defun apply-overrides ()
+  (iter
+    (for (fun-name handler) in-hashtable overrides)
+    (when (fboundp fun-name)
+      (eval `(setf (fdefinition (quote ,fun-name))
+        (lambda (&rest args)
+          (apply ,handler ,(fdefinition fun-name) args))))
+      (remhash fun-name overrides))))
 
 (defun my-eval (code)
-  (when (and (fboundp 'maxima::draw_gnuplot) (not old-draw_gnuplot))
-    (setq old-draw_gnuplot (symbol-function 'maxima::draw_gnuplot))
-    (setf (symbol-function 'maxima::draw_gnuplot) #'my-draw_gnuplot))
   (let ((*package* (find-package :maxima)))
+    (apply-overrides)
     (cond ((keyword-lisp-p code)
            (cons (list (car code))
                  (multiple-value-list (eval (cons 'progn code)))))
@@ -222,6 +205,8 @@ The history of evaluations is also saved by the evaluator.
       (with *error-output* = (make-string-output-stream))
       (with input = (make-string-input-stream code))
       (with in-maxima = (evaluator-in-maxima evaluator))
+      (initially
+        (apply-overrides))
       (for char = (peek-char nil input nil))
       (while char)
       (for parsed = (if in-maxima (maxima::dbm-read input nil) (my-lread input)))
