@@ -185,11 +185,10 @@ Standard MIME types
                          (make-error-result "maxima-error" (second maxima::$error)))
                         ((lisp-result-p value)
                           (make-lisp-result (second value)))
+                        ((and (listp value) (equal 3 (length value)) (typep (third value) 'result))
+                          (third value))
                         (t
-                          (let ((actual-value (third value)))
-                            (if (typep actual-value 'result)
-                              actual-value
-                              (make-instance 'mexpr-result :value value :display display))))))))
+                          (make-instance 'mexpr-result :value value :display display))))))
     (if (and handle display)
       (progn
         (send-result result)
