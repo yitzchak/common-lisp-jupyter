@@ -31,6 +31,11 @@ Standard MIME types
        (listp (car code))
        (eq (caar code) ':lisp)))
 
+(defun mlabel-result-p (code)
+  (and (listp code)
+       (listp (car code))
+       (eq (caar code) 'maxima::displayinput)))
+
 (defun displayinput-result-p (code)
   (and (listp code)
        (listp (car code))
@@ -179,16 +184,16 @@ Standard MIME types
                                :traceback traceback))
 
 (defun make-maxima-result (value &key (display nil) (handle nil))
-  (let ((result (if (typep value 'result)
-                  value
-                  (cond ((eq value 'maxima::maxima-error)
-                         (make-error-result "maxima-error" (second maxima::$error)))
-                        ((lisp-result-p value)
-                          (make-lisp-result (second value)))
-                        ((and (listp value) (equal 3 (length value)) (typep (third value) 'result))
-                          (third value))
-                        (t
-                          (make-instance 'mexpr-result :value value :display display))))))
+  (let ((result (cond ((typep value 'result)
+                        value)
+                      ((eq value 'maxima::maxima-error)
+                        (make-error-result "maxima-error" (second maxima::$error)))
+                      ((lisp-result-p value)
+                        (make-lisp-result (second value)))
+                      ((and (mlabel-result-p value) (typep (third value) 'result))
+                        (third value))
+                      (t
+                        (make-instance 'mexpr-result :value value :display display)))))
     (if (and handle display)
       (progn
         (send-result result)
