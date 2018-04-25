@@ -22,6 +22,60 @@ Convenience functions to return specific types from Lisp or Maxima.
 (defmfun $jupyter_file (path &optional (display nil))
   (maxima-jupyter::make-file-result path :display display :handle t))
 
+(defun jupyter-gif-file (path &optional (display nil))
+  (maxima-jupyter::make-file-result path
+                                    :display display :handle t
+                                    :mime-type maxima-jupyter::*gif-mime-type*))
+
+(defmfun $jupyter_gif_file (path &optional (display nil))
+  (maxima-jupyter::make-file-result path
+                                    :display display :handle t
+                                    :mime-type maxima-jupyter::*gif-mime-type*))
+
+(defun jupyter-jpeg-file (path &optional (display nil))
+  (maxima-jupyter::make-file-result path
+                                    :display display :handle t
+                                    :mime-type maxima-jupyter::*jpeg-mime-type*))
+
+(defmfun $jupyter_jpeg_file (path &optional (display nil))
+  (maxima-jupyter::make-file-result path
+                                    :display display :handle t
+                                    :mime-type maxima-jupyter::*jpeg-mime-type*))
+
+(defun jupyter-pdf-file (path &optional (display nil))
+  (maxima-jupyter::make-file-result path
+                                    :display display :handle t
+                                    :mime-type maxima-jupyter::*pdf-mime-type*))
+
+(defmfun $jupyter_pdf_file (path &optional (display nil))
+  (maxima-jupyter::make-file-result path :display display :handle t
+                                    :mime-type maxima-jupyter::*pdf-mime-type*))
+
+(defun jupyter-png-file (path &optional (display nil))
+  (maxima-jupyter::make-file-result path :display display :handle t
+                                         :mime-type maxima-jupyter::*png-mime-type*))
+
+(defmfun $jupyter_png_file (path &optional (display nil))
+  (maxima-jupyter::make-file-result path :display display :handle t
+                                         :mime-type maxima-jupyter::*png-mime-type*))
+
+(defun jupyter-ps-file (path &optional (display nil))
+  (maxima-jupyter::make-file-result path
+                                    :display display :handle t
+                                    :mime-type maxima-jupyter::*ps-mime-type*))
+
+(defmfun $jupyter_ps_file (path &optional (display nil))
+  (maxima-jupyter::make-file-result path :display display :handle t
+                                    :mime-type maxima-jupyter::*ps-mime-type*))
+
+(defun jupyter-svg-file (path &optional (display nil))
+  (maxima-jupyter::make-file-result path :display display :handle t
+                                         :mime-type maxima-jupyter::*svg-mime-type*))
+
+(defmfun $jupyter_svg_file (path &optional (display nil))
+  (maxima-jupyter::make-file-result path :display display :handle t
+                                         :mime-type maxima-jupyter::*svg-mime-type*))
+
 (defun jupyter-inline (value mime-type &optional (display nil))
   (maxima-jupyter::make-inline-result value :mime-type mime-type
                                             :display display

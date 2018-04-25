@@ -13,7 +13,9 @@ Standard MIME types
 (defvar *json-mime-type* "application/json")
 (defvar *latex-mime-type* "text/latex")
 (defvar *markdown-mime-type* "text/markdown")
+(defvar *maxima-mime-type* "text/x-maxima")
 (defvar *pdf-mime-type* "application/pdf")
+(defvar *ps-mime-type* "application/postscript")
 (defvar *plain-text-mime-type* "text/plain")
 (defvar *png-mime-type* "image/png")
 (defvar *svg-mime-type* "image/svg+xml")
@@ -28,6 +30,11 @@ Standard MIME types
   (and (listp code)
        (listp (car code))
        (eq (caar code) ':lisp)))
+
+(defun mlabel-result-p (code)
+  (and (listp code)
+       (listp (car code))
+       (eq (caar code) 'maxima::displayinput)))
 
 (defun displayinput-result-p (code)
   (and (listp code)
@@ -66,6 +73,11 @@ Standard MIME types
                                 (list (car env)) (list (cdr env))
                                 'maxima::mparen 'maxima::mparen)))))
 
+(defun mexpr-to-maxima (value)
+  (let ((maxima::*display-labels-p* nil))
+    (with-output-to-string (f)
+      (maxima::mgrind value f))))
+
 (defgeneric render (results)
   (:documentation "Render results."))
 
@@ -92,7 +104,8 @@ Standard MIME types
   (let ((value (mexpr-result-value res)))
     (jsown:new-js
       (*plain-text-mime-type* (mexpr-to-text value))
-      (*latex-mime-type* (mexpr-to-latex value)))))
+      (*latex-mime-type* (mexpr-to-latex value))
+      (*maxima-mime-type* (mexpr-to-maxima value)))))
 
 (defclass inline-result (result)
   ((value :initarg :value
@@ -170,22 +183,22 @@ Standard MIME types
                                :quit quit
                                :traceback traceback))
 
-(defun make-maxima-result (value &key (display nil))
-  (if (typep value 'result)
-    value
-    (cond ((eq value 'maxima::maxima-error)
-           (make-error-result "maxima-error" (second maxima::$error)))
-          ((lisp-result-p value)
-            (make-lisp-result (second value)))
-          (t
-            (let ((actual-value (third value)))
-              (cond ((typep actual-value 'result)
-                     actual-value)
-                    ((plot-p actual-value)
-                     (make-instance 'file-result :path (third actual-value) :display display))
-                    (t
-                     (make-instance 'mexpr-result :value value :display display))))))))
-
+(defun make-maxima-result (value &key (display nil) (handle nil))
+  (let ((result (cond ((typep value 'result)
+                        value)
+                      ((eq value 'maxima::maxima-error)
+                        (make-error-result "maxima-error" (second maxima::$error)))
+                      ((lisp-result-p value)
+                        (make-lisp-result (second value)))
+                      ((and (mlabel-result-p value) (typep (third value) 'result))
+                        (third value))
+                      (t
+                        (make-instance 'mexpr-result :value value :display display)))))
+    (if (and handle display)
+      (progn
+        (send-result result)
+        t)
+      result)))
 
 (defun make-lisp-result (value &key (display nil))
   (cond ((typep value 'result)

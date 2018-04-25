@@ -51,12 +51,63 @@ class MyKernelTests(jupyter_kernel_test.KernelTests):
     # Samples of code which generate a result value (ie, some text
     # displayed as Out[n])
     code_execute_result = [
-        {'code': 'display2d:false$ 6*7;', 'result': '(%o8) 42'}
+        {'code': 'display2d:false$ 6*7;', 'result': '(%o26) 42'}
     ]
 
     # Samples of code which should generate a rich display output, and
     # the expected MIME type
-    code_display_data = [{
+    code_display_data = [{  # plot2d tests
+        'code': 'plot2d(x^2, [x,-1,1], [svg_file, "a.svg"])$',
+        'mime': 'image/svg+xml'
+    }, {
+        'code': 'plot2d(x^2, [x,-1,1], [pdf_file, "a.pdf"])$',
+        'mime': 'application/pdf'
+    }, {
+        'code': 'plot2d(x^2, [x,-1,1], [ps_file, "a.ps"])$',
+        'mime': 'application/postscript'
+    }, {
+        'code': 'plot2d(x^2, [x,-1,1], [png_file, "a.png"])$',
+        'mime': 'image/png'
+    }, {  # plot3d tests
+        'code': 'plot3d(x^2+y, [x,-1,1], [y,-1,1], [svg_file, "a.svg"])$',
+        'mime': 'image/svg+xml'
+    }, {  # implicit_plot tests
+        'code': 'load(implicit_plot)$ implicit_plot (x^2 = y^3 - 3*y + 1, [x, -4, 4], [y, -4, 4], [svg_file, "a.svg"])$',
+        'mime': 'image/svg+xml'
+    }, {
+        'code': 'implicit_plot (x^2 = y^3 - 3*y + 1, [x, -4, 4], [y, -4, 4], [pdf_file, "a.pdf"])$',
+        'mime': 'application/pdf'
+    }, {
+        'code': 'implicit_plot (x^2 = y^3 - 3*y + 1, [x, -4, 4], [y, -4, 4], [ps_file, "a.ps"])$',
+        'mime': 'application/postscript'
+    }, {
+        'code': 'implicit_plot (x^2 = y^3 - 3*y + 1, [x, -4, 4], [y, -4, 4], [png_file, "a.png"])$',
+        'mime': 'image/png'
+    }, { # julia test
+        'code': 'julia (-0.55, 0.6, [x, -0.3, 0.2], [y, 0.3, 0.9], [svg_file, "a.svg"])$',
+        'mime': 'image/svg+xml'
+    }, { # mandelbrot test
+        'code': 'mandelbrot ([x, -2, 1], [y, -1.2, 1.2], [svg_file, "a.svg"])$',
+        'mime': 'image/svg+xml'
+    }, { # draw tests
+        'code': 'draw(terminal=svg,gr3d(explicit(x^2+y^2,x,-1,1,y,-1,1)))$',
+        'mime': 'image/svg+xml'
+    }, {
+        'code': 'draw(terminal=png,gr3d(explicit(x^2+y^2,x,-1,1,y,-1,1)))$',
+        'mime': 'image/png'
+    }, {
+        'code': 'draw(terminal=eps,gr3d(explicit(x^2+y^2,x,-1,1,y,-1,1)))$',
+        'mime': 'application/postscript'
+    }, {
+        'code': 'draw(terminal=jpg,gr3d(explicit(x^2+y^2,x,-1,1,y,-1,1)))$',
+        'mime': 'image/jpeg'
+    }, {
+        'code': 'draw(terminal=pdf,gr3d(explicit(x^2+y^2,x,-1,1,y,-1,1)))$',
+        'mime': 'application/pdf'
+    }, {
+        'code': 'draw(terminal=gif,gr3d(explicit(x^2+y^2,x,-1,1,y,-1,1)))$',
+        'mime': 'image/gif'
+    }, { # conv function tests
         'code': 'jupyter_html("<html/>", true);',
         'mime': 'text/html'
     }, {
