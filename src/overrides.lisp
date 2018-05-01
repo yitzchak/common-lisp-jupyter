@@ -55,7 +55,7 @@ tex-mlabel is overridden to use tag so that mlabel will show up correctly.
 (defun jupyter-mlabel (x l r)
   (tex (caddr x)
        (append l
-	       (if (cadr x)
+	       (if (and (cadr x) *display-labels-p*)
 		   (list (format nil "\\tag{$~A$}" (tex-stripdollar (cadr x))))
 		   nil))
        r 'mparen 'mparen))
