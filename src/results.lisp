@@ -41,6 +41,12 @@ Standard MIME types
        (listp (car code))
        (eq (caar code) 'maxima::displayinput)))
 
+(defun mlabel-input-result-p (code)
+  (and (listp code)
+       (listp (car code))
+       (eq (caar code) 'maxima::mlabel)
+       (starts-with-p (string (second code)) (string maxima::$inchar))))
+
 (defun mtext-result-p (code)
   (and (listp code)
          (listp (car code))
@@ -102,10 +108,14 @@ Standard MIME types
 
 (defmethod render ((res mexpr-result))
   (let ((value (mexpr-result-value res)))
-    (jsown:new-js
-      (*plain-text-mime-type* (mexpr-to-text value))
-      (*latex-mime-type* (mexpr-to-latex value))
-      (*maxima-mime-type* (mexpr-to-maxima value)))))
+    (if (mlabel-input-result-p value)
+      (jsown:new-js
+        (*plain-text-mime-type* (mexpr-to-text value))
+        (*maxima-mime-type* (mexpr-to-maxima value)))
+      (jsown:new-js
+        (*plain-text-mime-type* (mexpr-to-text value))
+        (*latex-mime-type* (mexpr-to-latex value))
+        (*maxima-mime-type* (mexpr-to-maxima value))))))
 
 (defclass inline-result (result)
   ((value :initarg :value
