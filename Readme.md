@@ -142,13 +142,13 @@ robert-dodier @ github
 
 [Arch Wiki]: https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_packages
 [bug report]: https://github.com/jupyter/nbviewer/issues/452
-[codemirror-mode-meta-patch]: https://github.com/robert-dodier/maxima-jupyter/codemirror-mode-meta-patch
-[make-maxima-jupyter-recipe.txt]: https://github.com/robert-dodier/maxima-jupyter/make-maxima-jupyter-recipe.txt
-[maxima_lexer.py]: https://github.com/robert-dodier/maxima-jupyter/maxima_lexer.py
+[codemirror-mode-meta-patch]: https://github.com/robert-dodier/maxima-jupyter/blob/master/codemirror-mode-meta-patch
+[make-maxima-jupyter-recipe.txt]: https://github.com/robert-dodier/maxima-jupyter/blob/master/make-maxima-jupyter-recipe.txt
+[maxima_lexer.py]: https://github.com/robert-dodier/maxima-jupyter/blob/master/maxima_lexer.py
 [maxima-jupyter-git]: https://aur.archlinux.org/packages/maxima-jupyter-git/
-[maxima.js]: https://github.com/robert-dodier/maxima-jupyter/maxima.js
+[maxima.js]: https://github.com/robert-dodier/maxima-jupyter/blob/master/maxima.js
 [MaximaJupyterExample.ipynb]: http://nbviewer.ipython.org/github/robert-dodier/maxima-jupyter/blob/master/examples/MaximaJupyterExample.ipynb
 [MaximaJupyterTalk.ipynb]: http://nbviewer.ipython.org/github/robert-dodier/maxima-jupyter/blob/master/examples/MaximaJupyterTalk.ipynb
 [Plots.ipynb]: http://nbviewer.ipython.org/github/robert-dodier/maxima-jupyter/blob/master/examples/Plots.ipynb
-[pygments-mapping-patch]: https://github.com/robert-dodier/maxima-jupyter/pygments-mapping-patch
+[pygments-mapping-patch]: https://github.com/robert-dodier/maxima-jupyter/blob/master/pygments-mapping-patch
 [Quicklisp]: http://www.quicklisp.org
