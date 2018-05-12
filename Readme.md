@@ -1,11 +1,10 @@
-Maxima-Jupyter
-==========
+# Maxima-Jupyter
 
 An enhanced interactive environment for the computer algebra system Maxima,
 based on CL-Jupyter, a Jupyter kernel for Common Lisp, by Frederic Peschanski.
 Thanks, Frederic!
 
-## Requirements ##
+## Requirements
 
 To try Maxima-Jupyter you need :
 
@@ -19,7 +18,7 @@ To try Maxima-Jupyter you need :
 
    - You don't need to build Maxima! See install instructions below.
 
- - Quicklisp (see: http://www.quicklisp.org)
+ - [Quicklisp][]
 
    - When you load Maxima-Jupyter into Maxima for the first time,
      Quicklisp will download some dependencies automatically.
@@ -30,15 +29,15 @@ To try Maxima-Jupyter you need :
  - Jupyter, or IPython 3.x
 
 
-## Quick install ##
+## Quick Install
 
 I installed Jupyter via:
 
      python3 -m pip install jupyter
 
 There are two kernel installation techniques. The first is to create a saved
-image as detailed in `make-maxima-jupyter-recipe.txt`. Once this image has been
-created then the installation script can be used with:
+image as detailed in [make-maxima-jupyter-recipe.txt][]. Once this image has
+been created then the installation script can be used with:
 
 ```sh
 python3 ./install-maxima-jupyter.py --exec=path/to/maxima-jupyter
@@ -65,9 +64,8 @@ details.
 
 ## Installation on Arch/Manjaro
 
-The package for Arch Linux is
-[maxima-jupyter-git](https://aur.archlinux.org/packages/maxima-jupyter-git/).
-Building and installing (including dependencies) can be accomplished with:
+The package for Arch Linux is [maxima-jupyter-git][]. Building and installing
+(including dependencies) can be accomplished with:
 
     yaourt -Sy maxima-jupyter-git
 
@@ -78,26 +76,24 @@ Alternatively use ``makepkg``:
     cd maxima-jupyter-git
     makepkg -Csri
 
-Please consult the
-[Arch Wiki](https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_packages)
-for more information regarding installing packages from the AUR.
+Please consult the [Arch Wiki][] for more information regarding installing
+packages from the AUR.
 
-## Code highlighting installation ##
+## Code Highlighting Installation
 
 Highlighting Maxima code is handled by CodeMirror in the notebook
 and Pygments in HTML export.
 
-The CodeMirror mode for Maxima is maxima.js. To install it,
-find the CodeMirror mode installation directory, create a directory named "maxima" there,
-copy maxima.js to the maxima directory, and update codemirror/mode/meta.js
-as shown in codemirror-mode-meta-patch.
-Yes, this is pretty painful, sorry about that.
+The CodeMirror mode for Maxima is [maxima.js][]. To install it, find the
+CodeMirror mode installation directory, create a directory named `maxima` there,
+copy [maxima.js][] to the `maxima` directory, and update
+`codemirror/mode/meta.js` as shown in [codemirror-mode-meta-patch][]. Yes, this
+is pretty painful, sorry about that.
 
-The Pygments lexer for Maxima is maxima_lexer.py.
-To install it, find the Pygments installation directory,
-copy maxima_lexer.py to that directory,
-and update lexers/_mapping.py as shown in pygments-mapping-patch.
-Yes, this is pretty painful too.
+The Pygments lexer for Maxima is maxima_lexer.py. To install it, find the
+Pygments installation directory, copy [maxima_lexer.py][] to that directory, and
+update `lexers/_mapping.py` as shown in [pygments-mapping-patch][]. Yes, this is
+pretty painful too.
 
 ## Running Maxima-Jupyter
 
@@ -115,19 +111,24 @@ Out[1]: 42
 In [2]:
 ```
 
-### Notebooks
-
-I created this project in order to combine Maxima with the IPython notebook
-(with the goal of using the notebook to create blog posts containing text,
-formulas, and plots). To execute the notebook server:
+### Notebook mode
 
     jupyter notebook
 
-The file [MaximaJupyterExample.ipynb](http://nbviewer.ipython.org/github/robert-dodier/maxima-jupyter/blob/master/MaximaJupyterExample.ipynb) is an example of a Maxima-Jupyter notebook.
 
-[MaximaJupyterTalk.ipynb](http://nbviewer.ipython.org/github/robert-dodier/maxima-jupyter/blob/master/MaximaJupyterTalk.ipynb) are my notes for a talk given to the Portland Python User Group.
+## Notebook Examples
 
-Note that the Github notebook renderer is currently (August 2015) broken ([bug report here](https://github.com/jupyter/nbviewer/issues/452)); it renders all math formulas in a tiny font.
+- [MaximaJupyterExample.ipynb][] &mdash; General usage of Maxima from within
+  Jupyter Notebook.
+
+- [MaximaJupyterTalk.ipynb][] &mdash; My notes for a talk given to the Portland
+  Python User Group.
+
+- [Plots.ipynb][] &mdash; Usage of plotting facilities from within Jupyter
+  Notebook.
+
+Note that the Github notebook renderer is currently (August 2015) broken
+([bug report][]); it renders all math formulas in a tiny font.
 
 ----
 
@@ -136,3 +137,18 @@ Have fun and keep me posted. Feel free to send pull requests, comments, etc.
 Robert Dodier
 robert.dodier@gmail.com
 robert-dodier @ github
+
+<!--refs-->
+
+[Arch Wiki]: https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_packages
+[bug report]: https://github.com/jupyter/nbviewer/issues/452
+[codemirror-mode-meta-patch]: https://github.com/robert-dodier/maxima-jupyter/codemirror-mode-meta-patch
+[make-maxima-jupyter-recipe.txt]: https://github.com/robert-dodier/maxima-jupyter/make-maxima-jupyter-recipe.txt
+[maxima_lexer.py]: https://github.com/robert-dodier/maxima-jupyter/maxima_lexer.py
+[maxima-jupyter-git]: https://aur.archlinux.org/packages/maxima-jupyter-git/
+[maxima.js]: https://github.com/robert-dodier/maxima-jupyter/maxima.js
+[MaximaJupyterExample.ipynb]: http://nbviewer.ipython.org/github/robert-dodier/maxima-jupyter/blob/master/examples/MaximaJupyterExample.ipynb
+[MaximaJupyterTalk.ipynb]: http://nbviewer.ipython.org/github/robert-dodier/maxima-jupyter/blob/master/examples/MaximaJupyterTalk.ipynb
+[Plots.ipynb]: http://nbviewer.ipython.org/github/robert-dodier/maxima-jupyter/blob/master/examples/Plots.ipynb
+[pygments-mapping-patch]: https://github.com/robert-dodier/maxima-jupyter/pygments-mapping-patch
+[Quicklisp]: http://www.quicklisp.org
