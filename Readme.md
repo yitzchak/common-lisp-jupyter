@@ -101,11 +101,11 @@ pretty painful too.
 
     jupyter console --kernel=maxima
 
-When you enter stuff to be evaluated, you omit the usual trailing
+When you enter stuff to be evaluated, you must include the usual trailing
 semicolon or dollar sign:
 
 ```
-In [1]: 2*21
+In [1]: 2*21;
 Out[1]: 42
 
 In [2]:
