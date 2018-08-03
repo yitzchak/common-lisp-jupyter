@@ -54,7 +54,7 @@ location such as `/usr/share/maxima-jupyter` for a system installation or
 `~/maxima-jupyter` for a user installation then the installation script called:
 
 ```sh
-python3 ./install-maxima-jupyter.py --src=path/to/maxima-jupyter-src
+python3 ./install-maxima-jupyter.py --root=/path/to/maxima-jupyter-src
 ```
 
 The option `--maxima` may also be used to specify the location of the Maxima
