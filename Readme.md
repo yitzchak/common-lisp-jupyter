@@ -28,6 +28,10 @@ To try Maxima-Jupyter you need :
 
  - Jupyter, or IPython 3.x
 
+ - If the build aborts because the file `zmq.h` is missing, you may need to
+   install the development files for the high-level C binding for ZeroMQ.
+   On debian-based systems, you can satisfy this requirement by installing
+   the package `libczmq-dev`.
 
 ## Quick Install
 
