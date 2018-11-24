@@ -195,8 +195,12 @@ In [2]:
 - [Plots.ipynb][] &mdash; Usage of plotting facilities from within Jupyter
   Notebook.
 
-Note that the Github notebook renderer is currently (August 2015) broken
-([bug report][]); it renders all math formulas in a tiny font.
+These examples make use of [nbviewer][].
+You can submit a link to your own notebook to tell nbviewer to render it.
+
+Note that the Github notebook renderer (i.e., what you see if you click on
+a notebook file in the Github file browser) is currently (November 2018)
+somewhat suboptimal ([bug report][]); it renders math as plain text, not as typeset formulas.
 
 ----
 
@@ -209,15 +213,16 @@ robert-dodier @ github
 <!--refs-->
 
 [Arch Wiki]: https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_packages
-[bug report]: https://github.com/jupyter/nbviewer/issues/452
+[nbviewer]: http://nbviewer.jupyter.org
+[bug report]: https://github.com/jupyter/notebook/issues/1962
 [codemirror-mode-meta-patch]: https://github.com/robert-dodier/maxima-jupyter/blob/master/codemirror-mode-meta-patch
 [make-maxima-jupyter-recipe.txt]: https://github.com/robert-dodier/maxima-jupyter/blob/master/make-maxima-jupyter-recipe.txt
 [maxima_lexer.py]: https://github.com/robert-dodier/maxima-jupyter/blob/master/maxima_lexer.py
 [maxima-jupyter-git]: https://aur.archlinux.org/packages/maxima-jupyter-git/
 [maxima.js]: https://github.com/robert-dodier/maxima-jupyter/blob/master/maxima.js
-[MaximaJupyterExample.ipynb]: http://nbviewer.ipython.org/github/robert-dodier/maxima-jupyter/blob/master/examples/MaximaJupyterExample.ipynb
-[MaximaJupyterTalk.ipynb]: http://nbviewer.ipython.org/github/robert-dodier/maxima-jupyter/blob/master/examples/MaximaJupyterTalk.ipynb
-[Plots.ipynb]: http://nbviewer.ipython.org/github/robert-dodier/maxima-jupyter/blob/master/examples/Plots.ipynb
+[MaximaJupyterExample.ipynb]: http://nbviewer.jupyter.org/github/robert-dodier/maxima-jupyter/blob/master/examples/MaximaJupyterExample.ipynb
+[MaximaJupyterTalk.ipynb]: http://nbviewer.jupyter.org/github/robert-dodier/maxima-jupyter/blob/master/examples/MaximaJupyterTalk.ipynb
+[Plots.ipynb]: http://nbviewer.jupyter.org/github/robert-dodier/maxima-jupyter/blob/master/examples/Plots.ipynb
 [pygments-mapping-patch]: https://github.com/robert-dodier/maxima-jupyter/blob/master/pygments-mapping-patch
 [Quicklisp]: http://www.quicklisp.org
 [Bordeaux Threads project description]: https://common-lisp.net/project/bordeaux-threads/
