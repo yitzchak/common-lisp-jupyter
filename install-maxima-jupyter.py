@@ -44,9 +44,9 @@ ap = argparse.ArgumentParser()
 
 g = ap.add_mutually_exclusive_group()
 g.add_argument('--user', dest='user', action='store_true',
-               help='Install as user kernel.')
+               help='Install as user kernel (i.e., somewhere under the user\'s home directory).')
 g.add_argument('--system', dest='user', action='store_false',
-               help='Install as system kernel.')
+               help='Install as system kernel (i.e., in the system-wide kernel registry).')
 g.add_argument('--prefix',
                 help='Kernel prefix path. Used for conda/virtual or packaging scripts.')
 
