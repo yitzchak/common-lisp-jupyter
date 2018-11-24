@@ -12,13 +12,21 @@ To try Maxima-Jupyter you need :
 
    - built with a Common Lisp implementation which has native threads
 
-     - Clozure CL works for sure; SBCL should work (incompletely tested)
+     - SBCL works for sure
+
+     - Clozure CL works for sure
 
      - Other implementations which support the Bordeaux Threads package
        might work. The [Bordeaux Threads project description][] says
        "Supports all major Common Lisp implementations: SBCL, CCL, Lispworks, Allegro, ABCL, ECL, Clisp."
        Aside from SBCL and CCL (i.e. Clozure CL) which are known to work,
        the others in that list are untested with maxima-jupyter.
+
+     - Note also that ECL might theoretically work, since it is supported
+       by Bordeaux Threads. However, Maxima-Jupyter developers have not been
+       successful in getting ECL to work with Maxima-Jupyter, so they
+       recommend against it. SBCL and Clozure CL are known to work, try
+       those instead.
 
      - Note specifically that GCL **is not** supported by Bordeaux Threads,
        and therefore cannot work with maxima-jupyter.
