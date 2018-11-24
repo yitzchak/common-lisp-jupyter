@@ -52,38 +52,83 @@ To try Maxima-Jupyter you need :
    On debian-based systems, you can satisfy this requirement by installing
    the package `libczmq-dev`.
 
-## Quick Install
+## Installing Maxima-Jupyter
+
+First you must install Jupyter, then you can install Maxima-Jupyter.
 
 I installed Jupyter via:
 
      python3 -m pip install jupyter
 
-There are two kernel installation techniques. The first is to create a saved
-image as detailed in [make-maxima-jupyter-recipe.txt][]. Once this image has
-been created then the installation script can be used with:
+For Maxima-Jupyter, there are two kernel installation methods.
+In both methods, the effect of the installation command is to create a file
+named `kernel.json` which tells Jupyter where to find Maxima-Jupyter.
+Note that Maxima-Jupyter installation DOES NOT copy any Maxima-Jupyter files;
+it only creates `kernel.json` which points to the location of Maxima-Jupyter
+in your file system.
+
+With the `--user` option in Method 1 or Method 2,
+the `kernel.json` file is created in a directory somewhere under your home directory.
+Otherwise, `kernel.json` is created in a system directory.
+You might need superuser privilege (via `sudo` for example) to execute a system installation,
+if the directory into which `kernel.json` is copied is not user-writable.
+
+Note that `jupyter --paths` lists file system paths used by Jupyter;
+kernels are sought in the paths under `data`.
+Also, `jupyter kernelspec list` tells the kernels which are known to Jupyter.
+
+For the record, on my system, a system installation copies `kernel.json`
+into `/usr/local/share/jupyter/kernels/maxima/kernel.json`
+and a user installation copies `kernel.json`
+into `/home/robert/.local/share/jupyter/kernels/maxima/kernel.json`.
+
+### Method 1. Maxima-Jupyter binary executable installation
+
+The first installation method is to create a binary executable image,
+as detailed in [make-maxima-jupyter-recipe.txt][].
+After creating that image, execute one of these two commands to tell Jupyter about it.
+
+For a system installation,
 
 ```sh
-python3 ./install-maxima-jupyter.py --exec=path/to/maxima-jupyter
+python3 ./install-maxima-jupyter.py --exec=path/to/maxima-jupyter-image
 ```
 
-Adding the option `--user` will install a user kernel instead of a system
-kernel.
-
-The second installation method will run the kernel from an interactive Maxima
-session. The advantange to this technique is that the normal initialization
-behavior of Maxima, such as loading `maxima-init.mac` from the current directory
-will be preserved. After the files in `src` have been copied to an appropriate
-location such as `/usr/share/maxima-jupyter` for a system installation or
-`~/maxima-jupyter` for a user installation then the installation script called:
+For a user installation,
 
 ```sh
-python3 ./install-maxima-jupyter.py --root=/path/to/maxima-jupyter-src
+python3 ./install-maxima-jupyter.py --exec=path/to/maxima-jupyter-image --user
 ```
 
-The option `--maxima` may also be used to specify the location of the Maxima
-executable. Please note that in order for this method to work quicklisp needs be
-loaded by default in every Maxima session. See quicklisp documentation for
-details.
+### Method 2. Maxima-Jupyter loadable source installation
+
+The second installation method executes Maxima and then loads Maxima-Jupyter into Maxima.
+The advantange to this method is that the normal initialization behavior of Maxima,
+such as loading `maxima-init.mac`, is preserved.
+
+Note that in order for this method to work, Quicklisp needs be loaded by default
+in every Maxima session. See Quicklisp documentation for details.
+
+For a system installation,
+
+```sh
+python3 ./install-maxima-jupyter.py --root=`pwd`
+```
+
+where the shell command `pwd` emits the current working directory
+(which must be the Maxima-Jupyter top-level directory,
+since it contains `install-maxima-jupyter.py`).
+
+For a user installation,
+
+```sh
+python3 ./install-maxima-jupyter.py --root=`pwd` --user
+```
+
+The option `--maxima` may also be used to specify the location of the Maxima executable.
+If not specified, the command which launches Maxima is just `maxima`,
+therefore the first instance of `maxima` in the PATH environment variable
+is the one which is executed.
 
 ## Installation on Arch/Manjaro
 
