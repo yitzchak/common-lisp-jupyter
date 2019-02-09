@@ -14,6 +14,6 @@
 ;; activate debugging
 ; (declaim (optimize (speed 0) (space 0) (debug 3) (safety 3)))
 
-(maxima::$load "mactex-utilities")
-(maxima::$load "stringproc")
-(ql:quickload "maxima-jupyter")
+; (maxima::$load "mactex-utilities")
+; (maxima::$load "stringproc")
+(ql:quickload :cl-jupyter-kernel)

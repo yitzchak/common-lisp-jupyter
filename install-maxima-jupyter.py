@@ -65,16 +65,15 @@ args = ap.parse_args()
 
 KERNEL_SPEC = {
     "argv": [
-        args.exec,
-        '{connection_file}'
-    ] if args.root is None else [
-        args.maxima,
-        '--very-quiet',
-        '--preload-lisp={0}'.format(os.path.join(args.root, 'load-maxima-jupyter.lisp')),
-        '--batch-string=jupyter_kernel_start("{connection_file}")$'
+        'sbcl',
+        '--non-interactive',
+        '--load',
+        format(os.path.join(args.root, 'load-cl-jupyter.lisp')),
+        '--eval',
+        '(jupyter-kernel:kernel-start \'cl-jupyter:kernel "{connection_file}")'
     ],
-    "display_name": "Maxima",
-    "language": "maxima"
+    "display_name": "Lisp",
+    "language": "lisp"
 }
 
 tempdir = tempfile.mkdtemp()
@@ -82,7 +81,7 @@ tempdir = tempfile.mkdtemp()
 with open(os.path.join(tempdir, 'kernel.json'), "w") as kernel_spec_file:
     json.dump(KERNEL_SPEC, kernel_spec_file)
 
-jupyter_client.kernelspec.install_kernel_spec(tempdir, kernel_name='maxima',
+jupyter_client.kernelspec.install_kernel_spec(tempdir, kernel_name='lisp',
                                               user=args.user,
                                               prefix=args.prefix)
 

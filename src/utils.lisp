@@ -14,7 +14,7 @@
 
   (defparameter *example-with-echo* nil))
 
-(defvar maxima::$kernel_info nil)
+; (defvar maxima::$kernel_info nil)
 
 
 (defmacro example (expr arrow expected &key (warn-only nil))
@@ -61,7 +61,7 @@
       (values)))
 
 (defun info (&rest args)
-  (when maxima::$kernel_info
+  (when t;maxima::$kernel_info
     (apply #'format *trace-output* args)))
 
 (defmacro vbinds (binders expr &body body)

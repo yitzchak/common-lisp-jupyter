@@ -1,4 +1,4 @@
-(in-package #:maxima-jupyter)
+(in-package #:jupyter-kernel)
 
 #|
 

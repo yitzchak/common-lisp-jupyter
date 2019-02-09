@@ -1,39 +1,41 @@
-(in-package #:maxima-jupyter)
+(in-package #:jupyter-kernel)
+
+(defvar *kernel* nil)
+(defvar *message* nil)
+(defvar *payload* nil)
+(defvar *page-output* nil)
 
 (defclass kernel ()
   ((config :initarg :config
            :reader kernel-config)
-   (ctx :initarg :ctx
-        :reader kernel-ctx)
-   (hb :initarg :hb
-       :reader kernel-hb)
-   (shell :initarg :shell
-          :reader kernel-shell)
-   (stdin :initarg :stdin
-          :reader kernel-stdin)
-   (iopub :initarg :iopub
-          :reader kernel-iopub)
-   (session :initarg :session
-            :reader kernel-session)
-   (evaluator :initarg :evaluator
-              :reader kernel-evaluator)
+   (ctx :initform nil
+        :accessor kernel-ctx)
+   (hb :initform nil
+       :accessor kernel-hb)
+   (shell :initform nil
+          :accessor kernel-shell)
+   (stdin :initform nil
+          :accessor kernel-stdin)
+   (iopub :initform nil
+          :accessor kernel-iopub)
+   (session :initform nil
+            :accessor kernel-session)
    (input-queue :initarg :input-queue
                 :initform (make-instance 'cl-containers:basic-queue)
-                :reader kernel-input-queue))
+                :reader kernel-input-queue)
+   (history-in :initform (make-array 64 :fill-pointer 0 :adjustable t)
+               :reader kernel-history-in)
+   (history-out :initform (make-array 64 :fill-pointer 0 :adjustable t)
+                :reader kernel-history-out))
   (:documentation "Kernel state representation."))
 
 (defun make-kernel (config)
-  (let ((ctx (pzmq:ctx-new))
-        (session-id (format nil "~W" (uuid:make-v4-uuid))))
-    (make-instance 'kernel
-                   :config config
-                   :ctx ctx
-                   :hb (make-hb-channel config ctx)
-                   :shell (make-shell-channel config ctx)
-                   :stdin (make-stdin-channel config ctx)
-                   :iopub (make-iopub-channel config ctx)
-                   :session session-id
-                   :evaluator (make-evaluator))))
+  (make-instance 'kernel
+                 :config config))
+
+(defgeneric evaluate (kernel input))
+
+(defgeneric is-complete (kernel code))
 
 (defun get-argv ()
   ;; Borrowed from apply-argv, command-line-arguments.  Temporary solution (?)
@@ -87,27 +89,33 @@
 ;; Start all channels.
 (defmethod start ((k kernel))
   (info "[kernel] Starting...~%")
-  (setq maxima::$linenum 0)
-  (setq maxima::*display-labels-p* t)
-  (start (kernel-hb k))
-  (start (kernel-iopub k))
-  (start (kernel-shell k))
-  (start (kernel-stdin k))
-  (let ((iopub (kernel-iopub k))
-        (session (kernel-session k)))
+  ; (setq maxima::$linenum 0)
+  ; (setq maxima::*display-labels-p* t)
+  (with-slots (config ctx hb shell stdin iopub session) k
+    (setq session (format nil "~W" (uuid:make-v4-uuid)))
+    (setq ctx (pzmq:ctx-new))
+    (setq hb (make-hb-channel config ctx))
+    (setq iopub (make-iopub-channel config ctx))
+    (setq shell (make-shell-channel config ctx))
+    (setq stdin (make-stdin-channel config ctx))
+    (start hb)
+    (start iopub)
+    (start shell)
+    (start stdin)
     (send-status iopub session "starting")
     (send-status iopub session "idle")))
 
 ;; Stop all channels and destroy the control.
 (defmethod stop ((k kernel))
   (info "[kernel] Stopped.~%")
-  (stop (kernel-hb k))
-  (stop (kernel-iopub k))
-  (stop (kernel-shell k))
-  (stop (kernel-stdin k))
-  (pzmq:ctx-destroy (kernel-ctx k)))
+  (with-slots (ctx hb iopub shell stdin) k
+    (stop hb)
+    (stop iopub)
+    (stop shell)
+    (stop stdin)
+    (pzmq:ctx-destroy ctx)))
 
-(defun kernel-start (connection-file-name)
+(defun kernel-start (kernel-class connection-file-name)
   (info (banner nil))
   (info "[kernel] Connection file = ~A~%" connection-file-name)
   (unless (stringp connection-file-name)
@@ -118,16 +126,14 @@
       (error "[kernel] Signature scheme 'hmac-sha256' required, was provided ~S." (config-signature-scheme config)))
       ;;(inspect config)
     (iter
-      (with kernel = (make-kernel config))
-      (with iopub = (kernel-iopub kernel))
-      (with shell = (kernel-shell kernel))
+      (with kernel = (make-instance kernel-class :config config))
       (initially
         (start kernel))
-      (for msg = (message-recv shell))
-      (send-status-update iopub msg "busy")
+      (for msg = (message-recv (kernel-shell kernel)))
+      (send-status-update (kernel-iopub kernel) msg "busy")
       (while (handle-message kernel msg))
       (after-each
-        (send-status-update iopub msg "idle"))
+        (send-status-update (kernel-iopub kernel) msg "idle"))
       (finally-protected
         (stop kernel)))))
 
@@ -183,12 +189,12 @@
               ("url" "http://maxima.sourceforge.net/documentation.html"))))
         ("language_info"
           (jsown:new-js
-            ("name" "maxima")
-            ("version" maxima::*autoconf-version*)
+            ("name" "common-lisp")
+            ; ("version" maxima::*autoconf-version*)
             ("mimetype" *maxima-mime-type*)
-            ("file_extension" ".mac")
-            ("pygments_lexer" "maxima")
-            ("codemirror_mode" "maxima")))))))
+            ("file_extension" ".lisp")
+            ("pygments_lexer" "lisp")
+            ("codemirror_mode" "lisp")))))))
 
 #|
 
@@ -196,53 +202,59 @@
 
 |#
 
-(setq maxima::*prompt-prefix* (coerce '(#\Escape #\X) 'string))
-(setq maxima::*prompt-suffix* (coerce '(#\Escape #\\) 'string))
+; (setq maxima::*prompt-prefix* (coerce '(#\Escape #\X) 'string))
+; (setq maxima::*prompt-suffix* (coerce '(#\Escape #\\) 'string))
+
+(defvar *prompt-prefix* (coerce '(#\Escape #\X) 'string))
+(defvar *prompt-suffix* (coerce '(#\Escape #\\) 'string))
 
 (defun handle-execute-request (kernel msg)
   (info "[kernel] Handling 'execute_request'~%")
-  (let* ((shell (kernel-shell kernel))
-         (iopub (kernel-iopub kernel))
-         (stdin (kernel-stdin kernel))
-         (*kernel* kernel)
-         (*message* msg)
-         (maxima::*alt-display1d* #'my-displa)
-         (maxima::*alt-display2d* #'my-displa)
-         (*payload* (make-array 16 :adjustable t :fill-pointer 0))
-         (*page-output* (make-string-output-stream))
-         (*query-io* (make-stdin-stream stdin msg))
-         (*standard-input* *query-io*)
-         (maxima::$stdin *query-io*)
-         (*error-output* (make-iopub-stream iopub msg "stderr"))
-         (maxima::$stderr *error-output*)
-         (*standard-output* (make-iopub-stream iopub msg "stdout"))
-         (*debug-io* *standard-output*)
-         (maxima::$stdout *standard-output*)
-         (content (message-content msg))
-         (code (jsown:val content "code")))
-    (vbinds (execution-count results)
-            (evaluate-code (kernel-evaluator kernel) code)
-      ;broadcast the code to connected frontends
-      (send-execute-code iopub msg execution-count code)
-      ;; send any remaining stdout
-      (finish-output *standard-output*)
-      ;; send any remaining stderr
-      (finish-output *error-output*)
-      ;; send reply (control)
-      (let ((errors (remove-if-not #'eval-error-p results)))
-        (if errors
-          (let ((ename (format nil "~{~A~^, ~}" (mapcar #'error-result-ename errors)))
-                (evalue (format nil "~{~A~^, ~}" (mapcar #'error-result-evalue errors))))
-            (send-execute-reply-error shell msg execution-count ename evalue))
-          (let ((input-queue (kernel-input-queue kernel))
-                (p (get-output-stream-string *page-output*)))
-            (unless (cl-containers:empty-p input-queue)
-              (set-next-input (cl-containers:dequeue input-queue)))
-            (unless (zerop (length p))
-              (page (make-inline-result p)))
-            (send-execute-reply-ok shell msg execution-count (coerce *payload* 'list)))))
-      ;; return t if there is no quit errors present
-      (notany #'quit-eval-error-p results))))
+  (let ((code (jsown:val (message-content msg) "code")))
+    (with-slots (shell iopub stdin history-in history-out) kernel
+      (vector-push code history-in)
+      (let* ((execution-count (length history-in))
+             (*kernel* kernel)
+             (*message* msg)
+             ; (maxima::*alt-display1d* #'my-displa)
+             ; (maxima::*alt-display2d* #'my-displa)
+             (*payload* (make-array 16 :adjustable t :fill-pointer 0))
+             (*page-output* (make-string-output-stream))
+             (*query-io* (make-stdin-stream stdin msg))
+             (*standard-input* *query-io*)
+             ; (maxima::$stdin *query-io*)
+             (*error-output* (make-iopub-stream iopub msg "stderr"))
+             ; (maxima::$stderr *error-output*)
+             (*standard-output* (make-iopub-stream iopub msg "stdout"))
+             (*debug-io* *standard-output*)
+             ; (maxima::$stdout *standard-output*)
+             ; (content (message-content msg))
+             ; (code (jsown:val content "code"))
+             (results (evaluate kernel code)))
+        (dolist (result results)
+          (send-result result)
+          (vector-push result history-out))
+        ;broadcast the code to connected frontends
+        (send-execute-code iopub msg execution-count code)
+        ;; send any remaining stdout
+        (finish-output *standard-output*)
+        ;; send any remaining stderr
+        (finish-output *error-output*)
+        ;; send reply (control)
+        (let ((errors (remove-if-not #'eval-error-p results)))
+          (if errors
+            (let ((ename (format nil "~{~A~^, ~}" (mapcar #'error-result-ename errors)))
+                  (evalue (format nil "~{~A~^, ~}" (mapcar #'error-result-evalue errors))))
+              (send-execute-reply-error shell msg execution-count ename evalue))
+            (let ((input-queue (kernel-input-queue kernel))
+                  (p (get-output-stream-string *page-output*)))
+              (unless (cl-containers:empty-p input-queue)
+                (set-next-input (cl-containers:dequeue input-queue)))
+              (unless (zerop (length p))
+                (page (make-inline-result p)))
+              (send-execute-reply-ok shell msg execution-count (coerce *payload* 'list)))))
+        ;; return t if there is no quit errors present
+        (notany #'quit-eval-error-p results)))))
 
 #|
 
@@ -269,6 +281,6 @@
   (let* ((shell (kernel-shell kernel))
          (content (message-content msg))
          (code (jsown:val content "code"))
-         (status (is-complete (kernel-evaluator kernel) code)))
+         (status (is-complete kernel code)))
     (send-is-complete-reply shell msg status)
     t))

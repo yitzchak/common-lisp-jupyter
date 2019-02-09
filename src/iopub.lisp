@@ -1,4 +1,4 @@
-(in-package #:maxima-jupyter)
+(in-package #:jupyter-kernel)
 
 #|
 
@@ -100,8 +100,8 @@
       (vector-push-extend char value)
       ;; After the character has been added look for a prompt terminator at the
       ;; end.
-      (if (ends-with-p value maxima::*prompt-suffix*)
-        (let ((start (search maxima::*prompt-prefix* value)))
+      (if (ends-with-p value *prompt-suffix*)
+        (let ((start (search *prompt-prefix* value)))
           ;; If there is a prompt start also then print the prompt and remove it
           ;; from the buffer.
           (when start
@@ -109,8 +109,8 @@
             (unless (zerop start)
               (send-stream channel parent-msg name (subseq value 0 start)))
             (write-string (subseq value
-                                  (+ start (length maxima::*prompt-prefix*))
-                                  (- (length value) (length maxima::*prompt-suffix*)))
+                                  (+ start (length *prompt-prefix*))
+                                  (- (length value) (length *prompt-suffix*)))
                           *query-io*)
             (finish-output *query-io*)
             (adjust-array value (array-total-size value)

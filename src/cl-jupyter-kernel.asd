@@ -1,4 +1,4 @@
-(asdf:defsystem #:maxima-jupyter
+(asdf:defsystem #:cl-jupyter-kernel
   :description "An Enhanced Interactive Shell for Common Lisp (based on the Jupyter protocol)."
   :version "0.6"
   :author "Frederic Peschanski (format nil \"<frederic~Apeschanski~Awork~Agmail~Acom>\" \".\" \".\" \"@\" \".\")"
@@ -25,8 +25,6 @@
                (:file "stdin")
                (:file "iopub")
                (:file "results")
-               (:file "evaluator")
                (:file "kernel")
-               (:file "additions")
-               (:file "overrides")
-               (:file "overrides-cl-info")))
+               (:file "evaluator")
+               (:file "cl-kernel")))
