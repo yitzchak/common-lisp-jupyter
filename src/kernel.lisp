@@ -126,9 +126,7 @@
                                :socket (pzmq:socket ctx :pub)
                                :transport transport
                                :ip ip
-                               :port iopub-port
-                               :prompt-prefix prompt-prefix
-                               :prompt-suffix prompt-suffix))
+                               :port iopub-port))
     (setq shell (make-instance 'iopub-channel
                                :key key
                                :socket (pzmq:socket ctx :router)
@@ -263,31 +261,25 @@
 
 |#
 
-; (setq maxima::*prompt-prefix* (coerce '(#\Escape #\X) 'string))
-; (setq maxima::*prompt-suffix* (coerce '(#\Escape #\\) 'string))
-
 (defun handle-execute-request (kernel msg)
   (info "[kernel] Handling 'execute_request'~%")
   (let ((code (jsown:val (message-content msg) "code")))
-    (with-slots (shell iopub stdin history-in history-out) kernel
+    (with-slots (shell iopub stdin history-in history-out prompt-prefix
+                 prompt-suffix)
+                kernel
       (vector-push code history-in)
       (let* ((execution-count (length history-in))
              (*kernel* kernel)
              (*message* msg)
-             ; (maxima::*alt-display1d* #'my-displa)
-             ; (maxima::*alt-display2d* #'my-displa)
              (*payload* (make-array 16 :adjustable t :fill-pointer 0))
              (page-output (make-string-output-stream))
              (*query-io* (make-stdin-stream stdin msg))
              (*standard-input* *query-io*)
-             ; (maxima::$stdin *query-io*)
-             (*error-output* (make-iopub-stream iopub msg "stderr"))
-             ; (maxima::$stderr *error-output*)
-             (*standard-output* (make-iopub-stream iopub msg "stdout"))
+             (*error-output* (make-iopub-stream iopub msg "stderr"
+                                                prompt-prefix prompt-suffix))
+             (*standard-output* (make-iopub-stream iopub msg "stdout"
+                                                   prompt-prefix prompt-suffix))
              (*debug-io* *standard-output*)
-             ; (maxima::$stdout *standard-output*)
-             ; (content (message-content msg))
-             ; (code (jsown:val content "code"))
              (results (evaluate kernel page-output code)))
         (dolist (result results)
           (send-result result)

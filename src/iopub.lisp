@@ -7,10 +7,7 @@
 |#
 
 (defclass iopub-channel (channel)
-  ((prompt-prefix :initarg :prompt-prefix
-                  :reader kernel-prompt-prefix)
-   (prompt-suffix :initarg :prompt-suffix
-                  :reader kernel-prompt-suffix))
+  ()
   (:documentation "IOPUB channel class."))
 
 #|
@@ -84,35 +81,40 @@
                                 :fill-pointer 0
                                 :adjustable t
                                 :element-type 'character)
-          :reader iopub-stream-value)))
+          :reader iopub-stream-value)
+   (prompt-prefix :initarg :prompt-prefix
+                  :reader iopub-stream-prompt-prefix)
+   (prompt-suffix :initarg :prompt-suffix
+                  :reader iopub-stream-prompt-suffix)))
 
-(defun make-iopub-stream (iopub parent-msg name)
+(defun make-iopub-stream (iopub parent-msg name prompt-prefix prompt-suffix)
   (make-instance 'iopub-stream :channel iopub
                                :parent-msg parent-msg
-                               :name name))
+                               :name name
+                               :prompt-prefix prompt-prefix
+                               :prompt-suffix prompt-suffix))
 
 (defmethod trivial-gray-streams:stream-write-char ((stream iopub-stream) char)
   (unless (equal char #\Sub) ; Ignore subsititute characters
-    (with-slots (channel parent-msg name value) stream
-      (with-slots (prompt-prefix prompt-suffix) channel
-        (vector-push-extend char value)
-        ;; After the character has been added look for a prompt terminator at the
-        ;; end.
-        (if (ends-with-p value prompt-suffix)
-          (let ((start (search prompt-prefix value)))
-            ;; If there is a prompt start also then print the prompt and remove it
-            ;; from the buffer.
-            (when start
-              ;; If there is data before the prompt then send it now.
-              (unless (zerop start)
-                (send-stream channel parent-msg name (subseq value 0 start)))
-              (write-string (subseq value
-                                    (+ start (length prompt-prefix))
-                                    (- (length value) (length prompt-suffix)))
-                            *query-io*)
-              (finish-output *query-io*)
-              (adjust-array value (array-total-size value)
-                            :fill-pointer 0))))))))
+    (with-slots (channel parent-msg name value prompt-prefix prompt-suffix) stream
+      (vector-push-extend char value)
+      ;; After the character has been added look for a prompt terminator at the
+      ;; end.
+      (if (ends-with-p value prompt-suffix)
+        (let ((start (search prompt-prefix value)))
+          ;; If there is a prompt start also then print the prompt and remove it
+          ;; from the buffer.
+          (when start
+            ;; If there is data before the prompt then send it now.
+            (unless (zerop start)
+              (send-stream channel parent-msg name (subseq value 0 start)))
+            (write-string (subseq value
+                                  (+ start (length prompt-prefix))
+                                  (- (length value) (length prompt-suffix)))
+                          *query-io*)
+            (finish-output *query-io*)
+            (adjust-array value (array-total-size value)
+                          :fill-pointer 0)))))))
 
 (defmethod trivial-gray-streams:stream-finish-output ((stream iopub-stream))
   (with-slots (channel parent-msg name value) stream
