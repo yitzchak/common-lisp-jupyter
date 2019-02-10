@@ -65,13 +65,17 @@ args = ap.parse_args()
 
 KERNEL_SPEC = {
     "argv": [
-        'sbcl',
-        '--noinform',
-        '--non-interactive',
-        '--load',
-        format(os.path.join(args.root, 'load-cl-jupyter.lisp')),
-        '--eval',
-        '(jupyter:kernel-start \'cl-jupyter:kernel "{connection_file}")'
+        'ros',
+        'exec',
+        os.path.join(args.root, 'roswell/cl-jupyter.ros'),
+        '{connection_file}'
+        # 'sbcl',
+        # '--noinform',
+        # '--non-interactive',
+        # '--load',
+        # format(os.path.join(args.root, 'load-cl-jupyter.lisp')),
+        # '--eval',
+        # '(jupyter:kernel-start \'cl-jupyter:kernel "{connection_file}")'
     ],
     "display_name": "Lisp",
     "language": "lisp"

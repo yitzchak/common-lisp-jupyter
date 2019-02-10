@@ -1,0 +1,22 @@
+#!/bin/sh
+#|-*- mode:lisp -*-|#
+#|
+exec ros -Q -- $0 "$@"
+|#
+(progn ;;init forms
+  (ros:ensure-asdf)
+  ; (pushnew (make-pathname :device (pathname-device *load-truename*)
+  ;                         :directory (reverse (cdr (reverse (pathname-directory *load-truename*)))))
+  ;          ql:*local-project-directories*)
+  ; (format t "~A~%" ql:*local-project-directories*)
+  ; (ql:register-local-projects)
+  ; (unless (find-package :jupyter)
+  #+quicklisp (ql:quickload :cl-jupyter :silent t))
+
+(defpackage :ros.script.cl-jupyter.3758812737
+  (:use :cl))
+(in-package :ros.script.cl-jupyter.3758812737)
+
+(defun main (connection-file)
+  (jupyter:kernel-start 'cl-jupyter:kernel connection-file))
+;;; vim: set ft=lisp lisp:
