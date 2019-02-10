@@ -1,19 +1,29 @@
 (in-package #:cl-jupyter)
 
-(defclass kernel (jupyter-kernel:kernel)
-  ())
+(defclass kernel (jupyter:kernel)
+  ()
+  (:default-initargs :name "cl-jupyter"
+                     :version "0.7"
+                     :banner "cl-jupyter: a Common Lisp Jupyter kernel
+(C) 2019 Tarn Burton (BSD)"
+                     :language-name "common-lisp"
+                     :language-version (uiop:lisp-version-string)
+                     :mime-type "text/x-common-lisp"
+                     :file-extension ".lisp"
+                     :pygments-lexer "common-lisp"
+                     :codemirror-mode "text/x-common-lisp"
+                     :help-links '(("Common Lisp Documentation" . "https://common-lisp.net/documentation")
+                                   ("Common Lisp HyperSpec" . "http://www.lispworks.com/documentation/HyperSpec/Front/index.htm"))))
 
-(defmethod jupyter-kernel:is-complete ((k kernel) code)
+(defmethod jupyter:is-complete ((k kernel) code)
   "complete")
 
-(defmethod jupyter-kernel:evaluate ((k kernel) code)
+(defmethod jupyter:evaluate ((k kernel) page-output code)
   (iter
     (for sexpr in-stream (make-string-input-stream code))
-    (for result = (jupyter-kernel:make-lisp-result
-                    (jupyter-kernel:handling-errors
+    (for result = (jupyter:make-lisp-result
+                    (jupyter:handling-errors
                       (eval sexpr))))
     (when result
       (collect result))
-    (until (jupyter-kernel:quit-eval-error-p result))))
-    ; (finally
-    ;   (return results))))
+    (until (jupyter:quit-eval-error-p result))))

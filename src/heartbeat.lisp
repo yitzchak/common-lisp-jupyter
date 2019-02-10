@@ -1,4 +1,4 @@
-(in-package #:jupyter-kernel)
+(in-package #:jupyter)
 
 #|
 
@@ -11,12 +11,6 @@
               :initform nil
               :accessor hb-thread-id))
   (:documentation "Heartbeat channel class."))
-
-(defun make-hb-channel (config ctx)
-  (make-channel 'hb-channel
-                config
-                (pzmq:socket ctx :rep)
-                (config-hb-port config)))
 
 (defmethod start ((hb hb-channel))
   (start-channel hb)

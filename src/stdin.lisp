@@ -1,4 +1,4 @@
-(in-package #:jupyter-kernel)
+(in-package #:jupyter)
 
 #|
 
@@ -11,12 +11,6 @@ See: http://jupyter-client.readthedocs.org/en/latest/messaging.html#messages-on-
 (defclass stdin-channel (channel)
   ()
   (:documentation "STDIN channel class."))
-
-(defun make-stdin-channel (config ctx)
-  (make-channel 'stdin-channel
-                config
-                (pzmq:socket ctx :dealer)
-                (config-stdin-port config)))
 
 #|
 

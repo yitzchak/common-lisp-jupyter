@@ -1,4 +1,4 @@
-(in-package #:jupyter-kernel)
+(in-package #:jupyter)
 
 #|
 
@@ -28,15 +28,7 @@ Jupyter protocol constants
          :type fixnum))
   (:documentation "Common channel class."))
 
-(defun make-channel (class config socket port)
-  (make-instance class
-                 :key (config-key config)
-                 :socket socket
-                 :transport (config-transport config)
-                 :ip (config-ip config)
-                 :port port))
-
-(defgeneric stop (ch)
+(defgeneric start (ch)
   (:documentation "Start the resource."))
 
 (defun start-channel (ch)

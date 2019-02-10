@@ -1,4 +1,4 @@
-(in-package #:jupyter-kernel)
+(in-package #:jupyter)
 
 #|
 
@@ -12,77 +12,17 @@ Standard MIME types
 (defvar *jpeg-mime-type* "image/jpeg")
 (defvar *json-mime-type* "application/json")
 (defvar *latex-mime-type* "text/latex")
+(defvar *lisp-mime-type* "text/x-common-lisp")
 (defvar *markdown-mime-type* "text/markdown")
-(defvar *maxima-mime-type* "text/x-maxima")
 (defvar *pdf-mime-type* "application/pdf")
-(defvar *ps-mime-type* "application/postscript")
 (defvar *plain-text-mime-type* "text/plain")
 (defvar *png-mime-type* "image/png")
+(defvar *ps-mime-type* "application/postscript")
 (defvar *svg-mime-type* "image/svg+xml")
 
 
-(defun keyword-result-p (code)
-  (and (listp code)
-       (listp (car code))
-       (keywordp (caar code))))
-
-(defun lisp-result-p (code)
-  (and (listp code)
-       (listp (car code))
-       (eq (caar code) ':lisp)))
-
-; (defun mlabel-result-p (code)
-;   (and (listp code)
-;        (listp (car code))
-;        (eq (caar code) 'maxima::displayinput)))
-
-; (defun displayinput-result-p (code)
-;   (and (listp code)
-;        (listp (car code))
-;        (eq (caar code) 'maxima::displayinput)))
-;
-; (defun mlabel-input-result-p (code)
-;   (and (listp code)
-;        (listp (car code))
-;        (eq (caar code) 'maxima::mlabel)
-;        (starts-with-p (string (second code)) (string maxima::$inchar))))
-
-; (defun mtext-result-p (code)
-;   (and (listp code)
-;          (listp (car code))
-;          (eq (caar code) 'maxima::mtext)))
-;
-; (defun plot-p (value)
-;   (and (listp value)
-;        (eq (caar value) 'maxima::mlist)
-;        (eq (list-length value) 3)
-;        (stringp (second value))
-;        (stringp (third value))
-;        (or (ends-with-p (second value) ".gnuplot")
-;            (ends-with-p (second value) ".gnuplot_pipes"))))
-
 (defun sexpr-to-text (value)
   (format nil "~S" value))
-
-; (defun mexpr-to-text (value)
-;   (string-trim '(#\Newline)
-;                (with-output-to-string (*standard-output*)
-;                  (let ((maxima::*alt-display1d* nil)
-;                        (maxima::*alt-display2d* nil))
-;                    (maxima::displa value)))))
-
-; (defun mexpr-to-latex (value)
-;   (let ((env (maxima::get-tex-environment value)))
-;     (apply #'concatenate 'string
-;            (mapcar #'string
-;                    (maxima::tex value
-;                                 (list (car env)) (list (cdr env))
-;                                 'maxima::mparen 'maxima::mparen)))))
-
-; (defun mexpr-to-maxima (value)
-;   (let ((maxima::*display-labels-p* nil))
-;     (with-output-to-string (f)
-;       (maxima::mgrind value f))))
 
 (defgeneric render (results)
   (:documentation "Render results."))
@@ -101,21 +41,6 @@ Standard MIME types
 (defmethod render ((res sexpr-result))
   (jsown:new-js
     (*plain-text-mime-type* (sexpr-to-text (sexpr-result-value res)))))
-
-; (defclass mexpr-result (result)
-;   ((value :initarg :value
-;           :reader mexpr-result-value)))
-;
-; (defmethod render ((res mexpr-result))
-;   (let ((value (mexpr-result-value res)))
-;     (if (mlabel-input-result-p value)
-;       (jsown:new-js
-;         (*plain-text-mime-type* (mexpr-to-text value))
-;         (*maxima-mime-type* (mexpr-to-maxima value)))
-;       (jsown:new-js
-;         (*plain-text-mime-type* (mexpr-to-text value))
-;         (*latex-mime-type* (mexpr-to-latex value))
-;         (*maxima-mime-type* (mexpr-to-maxima value))))))
 
 (defclass inline-result (result)
   ((value :initarg :value
@@ -193,28 +118,91 @@ Standard MIME types
                                :quit quit
                                :traceback traceback))
 
-; (defun make-maxima-result (value &key (display nil) (handle nil))
-;   (let ((result (cond ((typep value 'result)
-;                         value)
-;                       ((eq value 'maxima::maxima-error)
-;                         (make-error-result "maxima-error" (second maxima::$error)))
-;                       ((lisp-result-p value)
-;                         (make-lisp-result (second value)))
-;                       ((and (mlabel-result-p value) (typep (third value) 'result))
-;                         (third value))
-;                       (t
-;                         (make-instance 'mexpr-result :value value :display display)))))
-;     (if (and handle display)
-;       (progn
-;         (send-result result)
-;         t)
-;       result)))
-
 (defun make-lisp-result (value &key (display nil))
   (cond ((typep value 'result)
          value)
         ((not (eq 'no-output value))
          (make-instance 'sexpr-result :value value :display display))))
+
+(defun file (path &optional (display nil))
+  (make-file-result path :display display :handle t))
+
+(defun gif-file (path &optional (display nil))
+  (make-file-result path
+                    :display display :handle t
+                    :mime-type *gif-mime-type*))
+
+(defun jpeg-file (path &optional (display nil))
+  (make-file-result path
+                    :display display :handle t
+                    :mime-type *jpeg-mime-type*))
+
+(defun pdf-file (path &optional (display nil))
+  (make-file-result path
+                    :display display :handle t
+                    :mime-type *pdf-mime-type*))
+
+(defun png-file (path &optional (display nil))
+  (make-file-result path
+                    :display display :handle t
+                    :mime-type *png-mime-type*))
+
+(defun ps-file (path &optional (display nil))
+  (make-file-result path
+                    :display display :handle t
+                    :mime-type *ps-mime-type*))
+
+(defun svg-file (path &optional (display nil))
+  (make-file-result path
+                    :display display :handle t
+                    :mime-type *svg-mime-type*))
+
+; (defun inline (value mime-type &optional (display nil))
+;   (make-inline-result value
+;                       :mime-type mime-type
+;                       :display display
+;                       :handle t))
+
+(defun text (value &optional (display nil))
+  (make-inline-result value
+                      :display display
+                      :handle t))
+
+(defun html (value &optional (display nil))
+  (make-inline-result value
+                      :mime-type *html-mime-type*
+                      :display display
+                      :handle t))
+
+(defun jpeg (value &optional (display nil))
+  (make-inline-result value
+                      :mime-type *jpeg-mime-type*
+                      :display display
+                      :handle t))
+
+(defun latex (value &optional (display nil))
+  (make-inline-result value
+                      :mime-type *latex-mime-type*
+                      :display display
+                      :handle t))
+
+(defun markdown (value &optional (display nil))
+  (make-inline-result value
+                      :mime-type *markdown-mime-type*
+                      :display display
+                      :handle t))
+
+(defun png (value &optional (display nil))
+  (make-inline-result value
+                      :mime-type *png-mime-type*
+                      :display display
+                      :handle t))
+
+(defun svg (value &optional (display nil))
+  (make-inline-result value
+                      :mime-type *svg-mime-type*
+                      :display display
+                      :handle t))
 
 #|
 

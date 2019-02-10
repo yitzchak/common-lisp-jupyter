@@ -1,13 +1,72 @@
-(in-package #:jupyter-kernel)
+(in-package #:jupyter)
 
 (defvar *kernel* nil)
 (defvar *message* nil)
 (defvar *payload* nil)
-(defvar *page-output* nil)
 
 (defclass kernel ()
-  ((config :initarg :config
-           :reader kernel-config)
+  ((name :initarg :name
+         :initform ""
+         :reader kernel-name)
+   (version :initarg :version
+            :initform ""
+            :reader kernel-version)
+   (banner :initarg :banner
+           :initform ""
+           :reader kernel-banner)
+   (language-name :initarg :language-name
+                  :initform ""
+                  :reader kernel-language-name)
+   (language-version :initarg :language-version
+                     :initform ""
+                     :reader kernel-language-version)
+   (mime-type :initarg :mime-type
+              :initform ""
+              :reader kernel-mime-type)
+   (file-extension :initarg :file-extension
+                   :initform ""
+                   :reader kernel-file-extension)
+   (pygments-lexer :initarg :pygments-lexer
+                   :initform ""
+                   :reader kernel-pygments-lexer)
+   (codemirror-mode :initarg :codemirror-mode
+                    :initform ""
+                    :reader kernel-codemirror-mode)
+   (help-links :initarg :help-links
+               :initform nil
+               :reader kernel-help-links)
+   (transport :initarg :transport
+              :reader kernel-transport
+              :type string)
+   (ip :initarg :ip
+       :reader kernel-ip
+       :type string)
+   (shell-port :initarg :shell-port
+               :reader kernel-shell-port
+               :type fixnum)
+   (stdin-port :initarg :stdin-port
+               :reader kernel-stdin-port
+               :type fixnum)
+   (iopub-port :initarg :iopub-port
+               :reader kernel-iopub-port
+               :type fixnum)
+   (control-port :initarg :control-port
+                 :reader kernel-control-port
+                 :type fixnum)
+   (hb-port :initarg :hb-port
+            :reader kernel-hb-port
+            :type fixnum)
+   (signature-scheme :initarg :signature-scheme
+                     :reader kernel-signature-scheme
+                     :type string)
+   (key :initarg :key
+        :reader kernel-key)
+   (prompt-prefix :initarg :prompt-prefix
+                  :initform (coerce '(#\Escape #\X) 'string)
+                  :reader kernel-prompt-prefix)
+   (prompt-suffix :initarg :prompt-suffix
+                  :initform (coerce '(#\Escape #\\) 'string)
+                  :reader kernel-prompt-suffix)
    (ctx :initform nil
         :accessor kernel-ctx)
    (hb :initform nil
@@ -29,11 +88,7 @@
                 :reader kernel-history-out))
   (:documentation "Kernel state representation."))
 
-(defun make-kernel (config)
-  (make-instance 'kernel
-                 :config config))
-
-(defgeneric evaluate (kernel input))
+(defgeneric evaluate (kernel page-output input))
 
 (defgeneric is-complete (kernel code))
 
@@ -50,54 +105,42 @@
   #-(or sbcl clozure gcl ecl cmu allegro lispworks clisp)
   (error "get-argv not supported for your implementation"))
 
-(defun banner (stream)
-  (format stream (concatenate 'string
-                              "~A: an enhanced interactive Maxima REPL~%"
-                              "(Version ~A - Jupyter protocol v.~A)~%"
-                              "--> (C) 2014-2015 Frederic Peschanski (cf. LICENSE)~%")
-          +KERNEL-IMPLEMENTATION-NAME+
-          +KERNEL-IMPLEMENTATION-VERSION+
-          +KERNEL-PROTOCOL-VERSION+))
-
-(defclass kernel-config ()
-  ((transport :initarg :transport :reader config-transport :type string)
-   (ip :initarg :ip :reader config-ip :type string)
-   (shell-port :initarg :shell-port :reader config-shell-port :type fixnum)
-   (stdin-port :initarg :stdin-port :reader config-stdin-port :type fixnum)
-   (iopub-port :initarg :iopub-port :reader config-iopub-port :type fixnum)
-   (control-port :initarg :control-port :reader config-control-port :type fixnum)
-   (hb-port :initarg :hb-port :reader config-hb-port :type fixnum)
-   (signature-scheme :initarg :signature-scheme :reader config-signature-scheme :type string)
-   (key :initarg :key :reader config-key)))
-
-(defun make-kernel-config (connection-file-name)
-  (let ((config-js (jsown:parse (read-string-file connection-file-name))))
-    (make-instance 'kernel-config
-                   :transport (jsown:val config-js "transport")
-                   :ip (jsown:val config-js "ip")
-                   :shell-port (jsown:val config-js "shell_port")
-                   :stdin-port (jsown:val config-js "stdin_port")
-                   :iopub-port (jsown:val config-js "iopub_port")
-                   :control-port (jsown:val config-js "control_port")
-                   :hb-port (jsown:val config-js "hb_port")
-                   :signature-scheme (jsown:val config-js "signature_scheme")
-                   :key (let ((str-key (jsown:val config-js "key")))
-                          (if (string= str-key "")
-                              nil
-                              (babel:string-to-octets str-key :encoding :ASCII))))))
-
 ;; Start all channels.
 (defmethod start ((k kernel))
   (info "[kernel] Starting...~%")
   ; (setq maxima::$linenum 0)
   ; (setq maxima::*display-labels-p* t)
-  (with-slots (config ctx hb shell stdin iopub session) k
+  (with-slots (ctx key transport ip hb-port hb shell-port shell stdin-port stdin
+               iopub-port iopub session prompt-prefix prompt-suffix)
+              k
     (setq session (format nil "~W" (uuid:make-v4-uuid)))
     (setq ctx (pzmq:ctx-new))
-    (setq hb (make-hb-channel config ctx))
-    (setq iopub (make-iopub-channel config ctx))
-    (setq shell (make-shell-channel config ctx))
-    (setq stdin (make-stdin-channel config ctx))
+    (setq hb (make-instance 'hb-channel
+                            :key key
+                            :socket (pzmq:socket ctx :rep)
+                            :transport transport
+                            :ip ip
+                            :port hb-port))
+    (setq iopub (make-instance 'iopub-channel
+                               :key key
+                               :socket (pzmq:socket ctx :pub)
+                               :transport transport
+                               :ip ip
+                               :port iopub-port
+                               :prompt-prefix prompt-prefix
+                               :prompt-suffix prompt-suffix))
+    (setq shell (make-instance 'iopub-channel
+                               :key key
+                               :socket (pzmq:socket ctx :router)
+                               :transport transport
+                               :ip ip
+                               :port shell-port))
+    (setq stdin (make-instance 'iopub-channel
+                               :key key
+                               :socket (pzmq:socket ctx :dealer)
+                               :transport transport
+                               :ip ip
+                               :port stdin-port))
     (start hb)
     (start iopub)
     (start shell)
@@ -116,17 +159,34 @@
     (pzmq:ctx-destroy ctx)))
 
 (defun kernel-start (kernel-class connection-file-name)
-  (info (banner nil))
   (info "[kernel] Connection file = ~A~%" connection-file-name)
   (unless (stringp connection-file-name)
     (error "[kernel] Wrong connection file argument (expecting a string)"))
-  (let ((config (make-kernel-config connection-file-name)))
-    (when (not (string= (config-signature-scheme config) "hmac-sha256"))
-      ;; XXX: only hmac-sha256 supported
-      (error "[kernel] Signature scheme 'hmac-sha256' required, was provided ~S." (config-signature-scheme config)))
-      ;;(inspect config)
+  (let* ((config-js (jsown:parse (read-string-file connection-file-name)))
+         (transport (jsown:val config-js "transport"))
+         (ip (jsown:val config-js "ip"))
+         (shell-port (jsown:val config-js "shell_port"))
+         (stdin-port (jsown:val config-js "stdin_port"))
+         (iopub-port (jsown:val config-js "iopub_port"))
+         (control-port (jsown:val config-js "control_port"))
+         (hb-port (jsown:val config-js "hb_port"))
+         (key (jsown:val config-js "key"))
+         (signature-scheme (jsown:val config-js "signature_scheme")))
+    (when (not (string= signature-scheme "hmac-sha256"))
+      (error "[kernel] Signature scheme 'hmac-sha256' required, was provided ~S." signature-scheme))
     (iter
-      (with kernel = (make-instance kernel-class :config config))
+      (with kernel = (make-instance kernel-class
+                                    :transport transport
+                                    :ip ip
+                                    :shell-port shell-port
+                                    :stdin-port stdin-port
+                                    :iopub-port iopub-port
+                                    :control-port control-port
+                                    :hb-port hb-port
+                                    :signature-scheme signature-scheme
+                                    :key (if (string= key "")
+                                           nil
+                                           (babel:string-to-octets key :encoding :ASCII))))
       (initially
         (start kernel))
       (for msg = (message-recv (kernel-shell kernel)))
@@ -172,29 +232,30 @@
 
 (defun handle-kernel-info-request (kernel msg)
   (info "[kernel] Handling 'kernel_info_request'~%")
-  (message-send (kernel-shell kernel)
-    (make-message msg "kernel_info_reply"
-      (jsown:new-js
-        ("protocol_version" (jsown:val (message-header msg) "version"))
-        ("implementation" +KERNEL-IMPLEMENTATION-NAME+)
-        ("implementation_version" +KERNEL-IMPLEMENTATION-VERSION+)
-        ("banner" (banner nil))
-        ("help_links"
-          (list
+  (with-slots (name version language-name language-version mime-type
+               file-extension pygments-lexer codemirror-mode help-links banner
+               shell)
+              kernel
+    (message-send shell
+      (make-message msg "kernel_info_reply"
+        (jsown:new-js
+          ("protocol_version" +KERNEL-PROTOCOL-VERSION+)
+          ("implementation" name)
+          ("implementation_version" version)
+          ("banner" banner)
+          ("help_links"
+            (mapcar
+              (lambda (p)
+                (list :obj (cons "text" (car p)) (cons "url" (cdr p))))
+              help-links))
+          ("language_info"
             (jsown:new-js
-              ("text" "Maxima Reference Manual")
-              ("url" "http://maxima.sourceforge.net/docs/manual/maxima.html"))
-            (jsown:new-js
-              ("text" "Maxima Documentation")
-              ("url" "http://maxima.sourceforge.net/documentation.html"))))
-        ("language_info"
-          (jsown:new-js
-            ("name" "common-lisp")
-            ; ("version" maxima::*autoconf-version*)
-            ("mimetype" *maxima-mime-type*)
-            ("file_extension" ".lisp")
-            ("pygments_lexer" "lisp")
-            ("codemirror_mode" "lisp")))))))
+              ("name" language-name)
+              ("version" language-version)
+              ("mimetype" mime-type)
+              ("file_extension" file-extension)
+              ("pygments_lexer" pygments-lexer)
+              ("codemirror_mode" codemirror-mode))))))))
 
 #|
 
@@ -204,9 +265,6 @@
 
 ; (setq maxima::*prompt-prefix* (coerce '(#\Escape #\X) 'string))
 ; (setq maxima::*prompt-suffix* (coerce '(#\Escape #\\) 'string))
-
-(defvar *prompt-prefix* (coerce '(#\Escape #\X) 'string))
-(defvar *prompt-suffix* (coerce '(#\Escape #\\) 'string))
 
 (defun handle-execute-request (kernel msg)
   (info "[kernel] Handling 'execute_request'~%")
@@ -219,7 +277,7 @@
              ; (maxima::*alt-display1d* #'my-displa)
              ; (maxima::*alt-display2d* #'my-displa)
              (*payload* (make-array 16 :adjustable t :fill-pointer 0))
-             (*page-output* (make-string-output-stream))
+             (page-output (make-string-output-stream))
              (*query-io* (make-stdin-stream stdin msg))
              (*standard-input* *query-io*)
              ; (maxima::$stdin *query-io*)
@@ -230,7 +288,7 @@
              ; (maxima::$stdout *standard-output*)
              ; (content (message-content msg))
              ; (code (jsown:val content "code"))
-             (results (evaluate kernel code)))
+             (results (evaluate kernel page-output code)))
         (dolist (result results)
           (send-result result)
           (vector-push result history-out))
@@ -247,7 +305,7 @@
                   (evalue (format nil "~{~A~^, ~}" (mapcar #'error-result-evalue errors))))
               (send-execute-reply-error shell msg execution-count ename evalue))
             (let ((input-queue (kernel-input-queue kernel))
-                  (p (get-output-stream-string *page-output*)))
+                  (p (get-output-stream-string page-output)))
               (unless (cl-containers:empty-p input-queue)
                 (set-next-input (cl-containers:dequeue input-queue)))
               (unless (zerop (length p))

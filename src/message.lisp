@@ -1,50 +1,10 @@
-(in-package #:jupyter-kernel)
+(in-package #:jupyter)
 
 #|
 
 # Representation and manipulation of kernel messages #
 
 |#
-
-#|
-
-## Message header ##
-
-|#
-
-(example-progn
- (defparameter *header1* (jsown:new-js
-                           ("msg_id" "XXX-YYY-ZZZ-TTT")
-                           ("username" "fredokun")
-                           ("session" "AAA-BBB-CCC-DDD")
-                           ("msg_type" "execute_request")
-                           ("version" "5.0"))))
-
-(example
- (jsown:to-json *header1*)
- => "{\"msg_id\":\"XXX-YYY-ZZZ-TTT\",\"username\":\"fredokun\",\"session\":\"AAA-BBB-CCC-DDD\",\"msg_type\":\"execute_request\",\"version\":\"5.0\"}")
-
-#|
-
-### JSon decoding ###
-
-|#
-
-(example (jsown:parse (jsown:to-json *header1*))
-         => '(:obj
-              ("msg_id" . "XXX-YYY-ZZZ-TTT")
-              ("username" . "fredokun")
-              ("session" . "AAA-BBB-CCC-DDD")
-              ("msg_type" . "execute_request")
-              ("version" . "5.0")))
-
-(example
- (jsown:val (jsown:parse (jsown:to-json *header1*)) "msg_id")
- => "XXX-YYY-ZZZ-TTT")
-
-(example
- (jsown:val (jsown:parse (jsown:to-json *header1*)) "username")
- => "fredokun")
 
 #|
 
@@ -98,12 +58,6 @@
                  :identities identities
                  :content content))
 
-(example-progn
-  (defparameter *msg1* (make-instance 'message
-                                      :header *header1*
-                                      :identities '("XXX-YYY-ZZZ-TTT" "AAA-BBB-CCC-DDD"))))
-
-
 #|
 
 ## Wire-serialization ##
@@ -123,10 +77,6 @@ The wire-serialization of IPython kernel messages uses multi-parts ZMQ messages.
             (ironclad:update-hmac hmac part-bin)))
     ;; digest
     (octets-to-hex-string (ironclad:hmac-digest hmac))))
-
-(example
- (message-signing (babel:string-to-octets "toto") '("titi" "tata" "tutu" "tonton"))
- => "d32d091b5aabeb59b4291a8c5d70e0c20302a8bf9f642956b6affe5a16d9e134")
 
 ;; XXX: should be a defconstant but  strings are not EQL-able...
 (defvar +WIRE-IDS-MSG-DELIMITER+ "<IDS|MSG>")
@@ -149,10 +99,6 @@ The wire-serialization of IPython kernel messages uses multi-parts ZMQ messages.
           content-json)
         buffers))))
 
-(example-progn
- (defparameter *wire1* (wire-serialize *msg1*)))
-
-
 #|
 
 ## Wire-deserialization ##
@@ -160,27 +106,6 @@ The wire-serialization of IPython kernel messages uses multi-parts ZMQ messages.
 The wire-deserialization part follows.
 
 |#
-
-(example (position +WIRE-IDS-MSG-DELIMITER+ *wire1*)
-         => 2)
-
-(example (nth (position +WIRE-IDS-MSG-DELIMITER+ *wire1*) *wire1*)
-         => +WIRE-IDS-MSG-DELIMITER+)
-
-(example
- (subseq *wire1* 0 (position +WIRE-IDS-MSG-DELIMITER+ *wire1*))
- => '("XXX-YYY-ZZZ-TTT" "AAA-BBB-CCC-DDD"))
-
-(example
- (subseq *wire1* (+ 6 (position +WIRE-IDS-MSG-DELIMITER+ *wire1*)))
- => nil)
-
-(example
- (let ((delim-index (position +WIRE-IDS-MSG-DELIMITER+ *wire1*)))
-   (subseq *wire1* (+ 2 delim-index) (+ 6 delim-index)))
- => '("{\"msg_id\":\"XXX-YYY-ZZZ-TTT\",\"username\":\"fredokun\",\"session\":\"AAA-BBB-CCC-DDD\",\"msg_type\":\"execute_request\",\"version\":\"5.0\"}"
-      "{}" "{}" "{}"))
-
 
 (defun wire-deserialize (parts &key (key nil))
   (let ((delim-index (position +WIRE-IDS-MSG-DELIMITER+ parts :test  #'equal)))
@@ -202,13 +127,6 @@ The wire-deserialization part follows.
                        :content (jsown:parse content)
                        :buffers buffers)))))
 
-
-(example-progn
- (defparameter *dewire-1* (wire-deserialize *wire1*)))
-
-(example
- (jsown:val (message-header *dewire-1*) "username")
- => "fredokun")
 
 #|
 

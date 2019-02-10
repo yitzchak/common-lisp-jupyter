@@ -1,39 +1,43 @@
-(defpackage #:fredokun-utilities
-  (:nicknames #:fredo-utils)
-  (:use #:cl)
-  (:export #:*example-enabled*
-           #:*example-equal-predicate*
-           #:example
-           #:example-progn
-           #:info
-           #:vbinds
-           #:add-terminator
-           #:starts-with-p
-           #:ends-with-p
-           #:ends-with-terminator
-           #:file-to-base64-string
-           #:read-file-lines
-           #:read-string-file
-           #:read-binary-file))
-
-(defpackage #:jupyter-kernel
-  (:use #:cl #:fredo-utils #:iterate)
+(defpackage #:jupyter
+  (:use #:cl #:iterate)
   (:export
+    #:file
+    #:gif-file
+    #:jpeg-file
+    #:pdf-file
+    #:png-file
+    #:ps-file
+    #:svg-file
+    #:inline
+    #:text
+    #:html
+    #:jpeg
+    #:latex
+    #:markdown
+    #:png
+    #:svg
+    #:enqueue-input
+    #:evaluate
+    #:handling-errors
+    #:info
+    #:is-complete
     #:kernel
     #:kernel-start
     #:kernel-start-exec
-    #:is-complete
-    #:evaluate
-    #:quit-eval-error-p
-    #:handling-errors
     #:make-error-result
+    #:make-eval-error
     #:make-file-result
     #:make-inline-result
-    #:make-lisp-result))
+    #:make-lisp-result
+    #:quit
+    #:quit-eval-error-p
+    #:render
+    #:result
+    #:send-result))
 
 (defpackage #:cl-jupyter
   (:use #:cl #:iterate)
   (:export
     #:kernel))
 
-(in-package #:jupyter-kernel)
+(in-package #:jupyter)
