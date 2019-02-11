@@ -1,4 +1,4 @@
-# Maxima-Jupyter
+# Common-Lisp-Jupyter
 
 [![Binder][mybinder-badge]][mybinder]
 
@@ -280,7 +280,7 @@ robert-dodier @ github
 [MaximaJupyterExample.ipynb]: http://nbviewer.jupyter.org/github/robert-dodier/maxima-jupyter/blob/master/examples/MaximaJupyterExample.ipynb
 [MaximaJupyterTalk.ipynb]: http://nbviewer.jupyter.org/github/robert-dodier/maxima-jupyter/blob/master/examples/MaximaJupyterTalk.ipynb
 [mybinder-badge]: https://mybinder.org/badge_logo.svg
-[mybinder]: https://mybinder.org/v2/gh/robert-dodier/maxima-jupyter/master
+[mybinder]: https://mybinder.org/v2/gh/yitzchak/cl-jupyter/master
 [nbviewer]: http://nbviewer.jupyter.org
 [Plots.ipynb]: http://nbviewer.jupyter.org/github/robert-dodier/maxima-jupyter/blob/master/examples/Plots.ipynb
 [pygments-mapping-patch]: https://github.com/robert-dodier/maxima-jupyter/blob/master/pygments-mapping-patch
