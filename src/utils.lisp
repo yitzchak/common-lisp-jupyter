@@ -9,7 +9,7 @@
 ; (defvar maxima::$kernel_info nil)
 
 (defun info (&rest args)
-  (when t;maxima::$kernel_info
+  (when f;maxima::$kernel_info
     (apply #'format *trace-output* args)))
 
 (defun read-file-lines (filename)
