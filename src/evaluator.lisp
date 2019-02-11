@@ -19,7 +19,7 @@ The history of evaluations is also saved by the evaluator.
 (define-condition quit (error)
   ()
   (:documentation "A quit condition for identifying a request for kernel shutdown.")
-  (:report (lambda (c stream))))
+  (:report (lambda (c stream) (declare (ignore c stream)))))
 
 ;;; Based on macro taken from: http://www.cliki.net/REPL
 (defmacro handling-errors (&body body)
@@ -67,6 +67,7 @@ The history of evaluations is also saved by the evaluator.
             (send-execute-result iopub *message* execute-count data)))))))
 
 (defun set-next-input (text &optional (replace nil))
+  (declare (ignore replace))
   (vector-push-extend (jsown:new-js
                         ("source" "set_next_input")
                         ("text" text))
