@@ -19,15 +19,15 @@
   "complete")
 
 (defmethod jupyter:evaluate ((k kernel) page-output code)
-  (iter
-    (for sexpr in-stream (make-string-input-stream code))
-    (for result = (jupyter:make-lisp-result
-                    (jupyter:handling-errors
-                      (let ((*package* (find-package :common-lisp-user)))
-                        (eval sexpr)))))
-    (when result
-      (collect result))
-    (until (jupyter:quit-eval-error-p result))))
+  (let ((*package* (find-package :common-lisp-user)))
+    (iter
+      (for sexpr in-stream (make-string-input-stream code))
+      (for result = (jupyter:make-lisp-result
+                      (jupyter:handling-errors
+                          (eval sexpr))))
+      (when result
+        (collect result))
+      (until (jupyter:quit-eval-error-p result)))))
 
 #+ros.installing
 (eval-when (:compile-toplevel)
