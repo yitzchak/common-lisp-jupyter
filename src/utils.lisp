@@ -43,3 +43,23 @@
 (defun ends-with-p (str1 str2)
   (let ((p (mismatch str2 str1 :from-end T)))
     (or (not p) (= 0 p))))
+
+(defun install-kernel (argv name language)
+  (let* ((data-dir (uiop:ensure-directory-pathname
+                     (string-trim '(#\Space #\Tab #\Newline)
+                                  (uiop:run-program "jupyter --data-dir"
+                                                    :output :string))))
+         (kernel-path (merge-pathnames
+                        (make-pathname :directory (list :relative "kernels" language)
+                                       :name "kernel"
+                                       :type "json")
+                        data-dir)))
+  (ensure-directories-exist kernel-path)
+  (with-open-file (stream kernel-path :direction :output :if-exists :supersede)
+    (write-string
+      (jsown:to-json
+        (jsown:new-js
+          ("argv" argv)
+          ("display_name" name)
+          ("language" language)))
+      stream))))

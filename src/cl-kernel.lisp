@@ -27,3 +27,11 @@
     (when result
       (collect result))
     (until (jupyter:quit-eval-error-p result))))
+
+#+ros.installing
+(eval-when (:compile-toplevel)
+  (defparameter roswell.install::*build-hook*
+    (lambda ()
+      (jupyter:install-kernel '("cl-jupyter" "{connection_file}")
+                              "Lisp"
+                              "lisp"))))

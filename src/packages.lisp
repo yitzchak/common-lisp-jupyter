@@ -20,6 +20,7 @@
     #:evaluate
     #:handling-errors
     #:info
+    #:install-kernel
     #:is-complete
     #:kernel
     #:kernel-start

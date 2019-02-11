@@ -65,9 +65,10 @@ args = ap.parse_args()
 
 KERNEL_SPEC = {
     "argv": [
-        'ros',
-        'exec',
-        os.path.join(args.root, 'roswell/cl-jupyter.ros'),
+        'cl-jupyter'
+        # 'ros',
+        # 'exec',
+        # os.path.join(args.root, 'roswell/cl-jupyter.ros'),
         '{connection_file}'
         # 'sbcl',
         # '--noinform',

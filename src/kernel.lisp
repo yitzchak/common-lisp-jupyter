@@ -197,10 +197,10 @@
 
 ;; This is the entry point for a saved lisp image created by
 ;; trivial-dump-core:save-executable or equivalent.
-(defun kernel-start-exec ()
-  ;; IS THERE OTHER STUFF HANDLED BY MAXIMA INIT-CL.LISP THAT WE NEED TO DUPLICATE HERE ??
-  (setq *read-default-float-format* 'double-float)
-  (kernel-start (car (last (get-argv)))))
+; (defun kernel-start-exec ()
+;   ;; IS THERE OTHER STUFF HANDLED BY MAXIMA INIT-CL.LISP THAT WE NEED TO DUPLICATE HERE ??
+;   (setq *read-default-float-format* 'double-float)
+;   (kernel-start (car (last (get-argv)))))
 
 #|
 
