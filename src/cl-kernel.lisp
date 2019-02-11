@@ -23,7 +23,8 @@
     (for sexpr in-stream (make-string-input-stream code))
     (for result = (jupyter:make-lisp-result
                     (jupyter:handling-errors
-                      (eval sexpr))))
+                      (let ((*package* (find-package :common-lisp-user)))
+                        (eval sexpr)))))
     (when result
       (collect result))
     (until (jupyter:quit-eval-error-p result))))
