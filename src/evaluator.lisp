@@ -54,17 +54,18 @@ The history of evaluations is also saved by the evaluator.
   (and (typep result 'error-result) (error-result-quit result)))
 
 (defun send-result (result)
-  (let ((iopub (kernel-iopub *kernel*))
-        (execute-count (+ 1 (length (kernel-history-in *kernel*)))))
-    (if (typep result 'error-result)
-      (send-execute-error iopub *message* execute-count
-                          (error-result-ename result)
-                          (error-result-evalue result))
-      (let ((data (render result)))
-        (when data
-          (if (result-display result)
-            (send-display-data iopub *message* data)
-            (send-execute-result iopub *message* execute-count data)))))))
+  (with-slots (iopub package history-in) *kernel*
+    (let ((execute-count (+ 1 (length history-in))))
+      (if (typep result 'error-result)
+        (send-execute-error iopub *message* execute-count
+                            (error-result-ename result)
+                            (error-result-evalue result))
+        (let ((data (let ((*package* (find-package package)))
+                      (render result))))
+          (when data
+            (if (result-display result)
+              (send-display-data iopub *message* data)
+              (send-execute-result iopub *message* execute-count data))))))))
 
 (defun set-next-input (text &optional (replace nil))
   (declare (ignore replace))

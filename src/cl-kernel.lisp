@@ -3,6 +3,7 @@
 (defclass kernel (jupyter:kernel)
   ()
   (:default-initargs :name "cl-jupyter"
+                     :package :common-lisp-user
                      :version "0.7"
                      :banner "cl-jupyter: a Common Lisp Jupyter kernel
 (C) 2019 Tarn Burton (BSD)"
@@ -16,10 +17,17 @@
                                    ("Common Lisp HyperSpec" . "http://www.lispworks.com/documentation/HyperSpec/Front/index.htm"))))
 
 (defmethod jupyter:is-complete ((k kernel) code)
-  "complete")
+  (handler-case
+    (iter
+      (for sexpr in-stream (make-string-input-stream code)))
+    (end-of-file () "incomplete")
+    #+sbcl (sb-int:simple-reader-error () "incomplete")
+    (:no-error (val)
+      (declare (ignore val))
+      "complete")))
 
 (defmethod jupyter:evaluate ((k kernel) page-output code)
-  (let ((*package* (find-package :common-lisp-user)))
+  ; (let ((*package* (find-package :common-lisp-user)))
     (iter
       (for sexpr in-stream (make-string-input-stream code))
       (for result = (jupyter:make-lisp-result
@@ -27,7 +35,7 @@
                           (eval sexpr))))
       (when result
         (collect result))
-      (until (jupyter:quit-eval-error-p result)))))
+      (until (jupyter:quit-eval-error-p result))));)
 
 #+ros.installing
 (eval-when (:compile-toplevel)

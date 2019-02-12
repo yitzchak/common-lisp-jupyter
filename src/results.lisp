@@ -22,7 +22,9 @@ Standard MIME types
 
 
 (defun sexpr-to-text (value)
-  (format nil "~S" value))
+  (string-trim '(#\Newline)
+    (with-output-to-string (s)
+      (pprint value s))))
 
 (defgeneric render (results)
   (:documentation "Render results."))

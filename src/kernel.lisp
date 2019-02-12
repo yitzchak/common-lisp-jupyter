@@ -35,6 +35,9 @@
    (help-links :initarg :help-links
                :initform nil
                :reader kernel-help-links)
+   (package :initarg :package
+            :initform nil
+            :reader kernel-package)
    (transport :initarg :transport
               :reader kernel-transport
               :type string)
@@ -265,7 +268,7 @@
   (info "[kernel] Handling 'execute_request'~%")
   (let ((code (jsown:val (message-content msg) "code")))
     (with-slots (shell iopub stdin history-in history-out prompt-prefix
-                 prompt-suffix)
+                 prompt-suffix package)
                 kernel
       (vector-push code history-in)
       (let* ((execution-count (length history-in))
@@ -280,7 +283,8 @@
              (*standard-output* (make-iopub-stream iopub msg "stdout"
                                                    prompt-prefix prompt-suffix))
              (*debug-io* *standard-output*)
-             (results (evaluate kernel page-output code)))
+             (results (let ((*package* (find-package package)))
+                        (evaluate kernel page-output code))))
         (dolist (result results)
           (send-result result)
           (vector-push result history-out))
