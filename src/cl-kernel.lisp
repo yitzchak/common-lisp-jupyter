@@ -6,7 +6,7 @@
                      :package :common-lisp-user
                      :version "0.7"
                      :banner "common-lisp-jupyter: a Common Lisp Jupyter kernel
-(C) 2019 Tarn Burton (BSD)"
+(C) 2019 Tarn Burton (MIT)"
                      :language-name "common-lisp"
                      :language-version (uiop:lisp-version-string)
                      :mime-type "text/x-common-lisp"
