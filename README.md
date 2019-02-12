@@ -111,5 +111,5 @@ docker run -it common-lisp-jupyter jupyter console --kernel=common-lisp
 [mybinder]: https://mybinder.org/v2/gh/yitzchak/common-lisp-jupyter/master
 [nbviewer]: http://nbviewer.jupyter.org
 [repo2docker]: https://repo2docker.readthedocs.io/en/latest/
-[travis-badge]: https://travis-ci.org/yitzchak/common-lisp-jupyter.svg?branch=master
-[travis]: https://travis-ci.org/yitzchak/common-lisp-jupyter
+[travis-badge]: https://travis-ci.com/yitzchak/common-lisp-jupyter.svg?branch=master
+[travis]: https://travis-ci.com/yitzchak/common-lisp-jupyter
