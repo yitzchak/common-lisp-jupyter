@@ -45,15 +45,12 @@
     (or (not p) (= 0 p))))
 
 (defun install-kernel (argv name language)
-  (let* ((data-dir (uiop:ensure-directory-pathname
-                     (string-trim '(#\Space #\Tab #\Newline)
-                                  (uiop:run-program "jupyter --data-dir"
-                                                    :output :string))))
-         (kernel-path (merge-pathnames
-                        (make-pathname :directory (list :relative "kernels" language)
-                                       :name "kernel"
-                                       :type "json")
-                        data-dir)))
+  (let ((kernel-path (merge-pathnames
+                       (make-pathname :directory (list :relative "jupyter" "kernels" language)
+                                      :name "kernel"
+                                      :type "json")
+                       (uiop:xdg-data-home))))
+  (format t "Installing kernel spec file ~A~%" kernel-path)
   (ensure-directories-exist kernel-path)
   (with-open-file (stream kernel-path :direction :output :if-exists :supersede)
     (write-string
