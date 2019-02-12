@@ -1,6 +1,7 @@
 # Common-Lisp-Jupyter
 
 [![Binder][mybinder-badge]][mybinder]
+[![Build Status](https://travis-ci.org/yitzchak/cl-jupyter.svg?branch=master)](https://travis-ci.org/yitzchak/cl-jupyter)
 
 A Common Lisp kernel for Jupyter, based on maxima-jupyter by Robert Dodier which
 was based on CL-Jupyter, a Jupyter kernel for Common Lisp, by Frederic
