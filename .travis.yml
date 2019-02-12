@@ -3,6 +3,10 @@ sudo: false
 language: c
 compiler: gcc
 
+branches:
+  only:
+    - master
+
 addons:
   apt:
     update: true
@@ -17,8 +21,8 @@ env:
     - PATH=~/.roswell/bin:$PATH
     - ROSWELL_INSTALL_DIR=$HOME/.roswell
   matrix:
-      - LISP=sbcl-bin
-      - LISP=ccl-bin
+    - LISP=sbcl-bin
+    - LISP=ccl-bin
 
 install:
   - pip3 install --user jupyter jupyter_kernel_test
