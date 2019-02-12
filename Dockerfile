@@ -1,6 +1,6 @@
 FROM archlinux/base:latest
 
-RUN pacman -Sy --noconfirm base-devel jupyter git readline
+RUN pacman -Sy --noconfirm base-devel jupyter git readline libidn2 
 
 ARG NB_USER=jupyter
 ARG NB_UID=1000
