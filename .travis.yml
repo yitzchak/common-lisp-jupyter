@@ -1,0 +1,14 @@
+language: common-lisp
+sudo: required
+
+env:
+  matrix:
+    - LISP=sbcl-bin
+    - LISP=ccl-bin
+
+install:
+  - curl -L https://raw.githubusercontent.com/snmsts/roswell/release/scripts/install-for-ci.sh | sh
+  - ros install ./cl-jupyter.asd
+
+script:
+  - python tests/client.py
