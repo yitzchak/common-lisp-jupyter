@@ -16,9 +16,9 @@ env:
   global:
     - PATH=~/.roswell/bin:$PATH
     - ROSWELL_INSTALL_DIR=$HOME/.roswell
-matrix:
-    - LISP=sbcl-bin
-    - LISP=ccl-bin
+  matrix:
+      - LISP=sbcl-bin
+      - LISP=ccl-bin
 
 install:
   - pip3 install --user jupyter jupyter_kernel_test
