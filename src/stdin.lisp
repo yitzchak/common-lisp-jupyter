@@ -62,9 +62,9 @@ most cases of *query-io* usage. Makes overloading y-or-no-p unnecessary.
 
 (defmethod trivial-gray-streams:stream-finish-output ((stream stdin-stream))
   (with-slots (channel parent-msg output input) stream
-    (let ((trimmed-output (copy-seq (string-trim '(#\Newline #\Bel) output))))
+    (let ((trimmed-output (copy-seq (string-trim '(#\Bel) output))))
       (adjust-array output *stdin-stream-size* :fill-pointer 0)
-      (unless (zerop (length trimmed-output))
+      (unless (zerop (length (string-trim '(#\Newline) trimmed-output)))
         (send-input-request channel parent-msg trimmed-output)
         (let ((value (jsown:val (message-content (message-recv channel)) "value")))
           (adjust-array input (length value)
