@@ -24,7 +24,11 @@
     #:is-complete
     #:kernel
     #:kernel-start
-    #:kernel-start-exec
+    ; #:kernel-start-exec
+    #:kernel-name
+    #:kernel-version
+    #:kernel-prompt-prefix
+    #:kernel-prompt-suffix
     #:make-error-result
     #:make-eval-error
     #:make-file-result
