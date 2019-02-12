@@ -2,11 +2,11 @@
 
 (defclass kernel (jupyter:kernel)
   ()
-  (:default-initargs :name "cl-jupyter"
+  (:default-initargs :name "common-lisp"
                      :package :common-lisp-user
                      :version "0.7"
-                     :banner "cl-jupyter: a Common Lisp Jupyter kernel
-(C) 2019 Tarn Burton (BSD)"
+                     :banner "common-lisp-jupyter: a Common Lisp Jupyter kernel
+(C) 2019 Tarn Burton (MIT)"
                      :language-name "common-lisp"
                      :language-version (uiop:lisp-version-string)
                      :mime-type "text/x-common-lisp"
@@ -42,5 +42,5 @@
   (defparameter roswell.install::*build-hook*
     (lambda ()
       (jupyter:install-kernel '("cl-jupyter" "{connection_file}")
-                              "Lisp"
-                              "lisp"))))
+                              "Common Lisp"
+                              "common-lisp"))))

@@ -6,7 +6,7 @@ class MyKernelTests(jupyter_kernel_test.KernelTests):
     # Required --------------------------------------
 
     # The name identifying an installed kernel to run the tests against
-    kernel_name = "lisp"
+    kernel_name = "common-lisp"
 
     # language_info.name in a kernel_info_reply should match this
     language_name = "common-lisp"
