@@ -21,7 +21,8 @@
     (iter
       (for sexpr in-stream (make-string-input-stream code)))
     (end-of-file () "incomplete")
-    #+sbcl (sb-int:simple-reader-error () "invalid")
+    (serious-condition () "invalid")
+    (condition () "invalid")
     (:no-error (val)
       (declare (ignore val))
       "complete")))

@@ -7,6 +7,10 @@ branches:
   only:
     - master
 
+os:
+  - linux
+  - osx
+
 addons:
   apt:
     update: true
@@ -15,14 +19,17 @@ addons:
       - python3
       - python3-pip
       - python3-setuptools
+  homebrew:
+    packages:
+      - czmq
 
 env:
   global:
     - PATH=~/.roswell/bin:$PATH
     - ROSWELL_INSTALL_DIR=$HOME/.roswell
   matrix:
-    - LISP=sbcl-bin
     - LISP=ccl-bin
+    - LISP=sbcl-bin
 
 install:
   - pip3 install --user jupyter jupyter_kernel_test

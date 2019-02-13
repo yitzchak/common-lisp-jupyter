@@ -46,10 +46,21 @@
 
 (defun install-kernel (argv name language)
   (let ((kernel-path (merge-pathnames
-                       (make-pathname :directory (list :relative "jupyter" "kernels" language)
+                       (make-pathname :directory (list :relative
+                                                       ; Just in case HFS+ is
+                                                       ; case-sensitive
+                                                       (if (uiop:os-macosx-p)
+                                                         "Jupyter"
+                                                         "jupyter")
+                                                       "kernels"
+                                                       language)
                                       :name "kernel"
                                       :type "json")
-                       (uiop:xdg-data-home))))
+                       (if (uiop:os-macosx-p)
+                         (merge-pathnames
+                           (make-pathname :directory '(:relative "Library"))
+                           (uiop:getenv-pathname "HOME" :ensure-directory t))
+                         (uiop:xdg-data-home)))))
   (format t "Installing kernel spec file ~A~%" kernel-path)
   (ensure-directories-exist kernel-path)
   (with-open-file (stream kernel-path :direction :output :if-exists :supersede)

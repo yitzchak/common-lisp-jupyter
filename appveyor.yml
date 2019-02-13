@@ -1,0 +1,28 @@
+image: Visual Studio 2017
+
+branches:
+  only:
+    - master
+
+platform:
+    - x64
+
+environment:
+  PYTHON: "C:\\Python35"
+  matrix:
+    - LISP: sbcl-bin
+    - LISP: ccl-bin
+
+install:
+  - pip install --user jupyter jupyter_kernel_test
+  - ps: appveyor DownloadFile 'https://ci.appveyor.com/api/projects/snmsts/roswell-en89n/artifacts/Roswell-x86_64.zip?branch=master&job=Environment%3A%20MSYS2_ARCH%3Dx86_64,%20MSYS2_BITS%3D64,%20MSYSTEM%3DMINGW64,%20METHOD%3Dcross' -FileName Roswell-x86_64.zip
+  - 7z x Roswell-x86_64.zip
+  - set PATH=%CD%/roswell;%PATH%
+  - ros install %LISP%
+  - ps: ros run -e '(format t \"~a ~a~%\" (lisp-implementation-type) (lisp-implementation-version))' -q
+  - ros install cl-jupyter.asd
+
+build: false
+
+test_script:
+  - python3 tests/client.py

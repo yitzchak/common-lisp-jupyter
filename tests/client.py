@@ -67,7 +67,7 @@ class MyKernelTests(jupyter_kernel_test.KernelTests):
         'mime': 'text/markdown'
     }, {
         'code': '(jupyter:svg "<svg/>" t)',
-        'mime': 'xml/text+svg'
+        'mime': 'image/svg+xml'
     }]
 
     # def test_maxima_latex(self):
