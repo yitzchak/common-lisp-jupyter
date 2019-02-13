@@ -35,7 +35,7 @@ class MyKernelTests(jupyter_kernel_test.KernelTests):
         '(+ 1'
     ]
     invalid_code_samples = [
-        # 'foo(;',
+        '(+ 1 2))'
     ]
 
     # Pager: code that should display something (anything) in the pager
@@ -53,9 +53,21 @@ class MyKernelTests(jupyter_kernel_test.KernelTests):
 
     # Samples of code which should generate a rich display output, and
     # the expected MIME type
-    code_display_data = [{  # plot2d tests
+    code_display_data = [{
+        'code': '(jupyter:text "wibble" t)',
+        'mime': 'text/plain'
+    }, {
+        'code': '(jupyter:html "<html/>" t)',
+        'mime': 'text/html'
+    }, {
+        'code': '(jupyter:latex "$r^2$" t)',
+        'mime': 'text/latex'
+    }, {
         'code': '(jupyter:markdown "wibble" t)',
         'mime': 'text/markdown'
+    }, {
+        'code': '(jupyter:svg "<svg/>" t)',
+        'mime': 'xml/text+svg'
     }]
 
     # def test_maxima_latex(self):
