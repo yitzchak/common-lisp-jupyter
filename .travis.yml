@@ -7,6 +7,10 @@ branches:
   only:
     - master
 
+os:
+  - linux
+  - osx
+
 addons:
   apt:
     update: true
@@ -15,6 +19,9 @@ addons:
       - python3
       - python3-pip
       - python3-setuptools
+  homebrew:
+    packages:
+      - czmq
 
 env:
   global:
