@@ -1,6 +1,6 @@
 (asdf:defsystem #:common-lisp-jupyter
   :description "An Enhanced Interactive Shell for Common Lisp (based on the Jupyter protocol)."
-  :version "0.7"
+  :version "0.1"
   :author "Tarn W. Burton"
   :license "MIT"
   :depends-on (:pzmq
