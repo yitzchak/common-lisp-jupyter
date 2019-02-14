@@ -22,7 +22,6 @@ environment:
   PYTHON: "C:\\Python36-x64"
   matrix:
     - LISP: sbcl-bin
-    - LISP: ccl-bin
 
 install:
   - bash -lc "pacman -Sy --noconfirm mingw64/mingw-w64-x86_64-zeromq"
