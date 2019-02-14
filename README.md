@@ -5,8 +5,9 @@
 [![Build Status][travis-badge]][travis]
 [![Build status][appveyor-badge]][appveyor]
 
-A Common Lisp kernel for Jupyter, based on [Maxima-Jupyter][] by Robert Dodier
-which was based on [cl-jupyter][] by Frederic Peschanski.
+A Common Lisp kernel for Jupyter along with a library for building Jupyter
+kernels, based on [Maxima-Jupyter][] by Robert Dodier which was based on
+[cl-jupyter][] by Frederic Peschanski.
 
 This file describes the installation and usage of common-lisp-jupyter on a local
 machine, but you can try out common-lisp-jupyter without installing anything by
