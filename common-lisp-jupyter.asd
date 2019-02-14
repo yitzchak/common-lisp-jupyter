@@ -2,7 +2,7 @@
   :description "An Enhanced Interactive Shell for Common Lisp (based on the Jupyter protocol)."
   :version "0.7"
   :author "Tarn W. Burton"
-  :license "BSD 2-Clause. See LICENSE."
+  :license "MIT"
   :depends-on (:pzmq
                :bordeaux-threads
                :uuid
