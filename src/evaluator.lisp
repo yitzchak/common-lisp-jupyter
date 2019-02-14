@@ -16,7 +16,7 @@ The history of evaluations is also saved by the evaluator.
     (write-string msg *error-output*)
     (make-error-result name msg :quit quit)))
 
-(define-condition quit (error)
+(define-condition quit-condition (error)
   ()
   (:documentation "A condition for identifying a request for kernel shutdown.")
   (:report (lambda (c stream) (declare (ignore c stream)))))
@@ -26,6 +26,34 @@ The history of evaluations is also saved by the evaluator.
 
 (defun quit-eval-error-p (result)
   (and (typep result 'error-result) (error-result-quit result)))
+
+;;; Based on macro taken from: http://www.cliki.net/REPL
+(defmacro handling-errors (&body body)
+  "Macro for catching any conditions including quit-conditions during code
+  evaluation."
+  `(handler-case
+    (handler-bind
+      ((simple-warning
+        (lambda (wrn)
+          (apply (function format) *standard-output*
+                (simple-condition-format-control   wrn)
+                (simple-condition-format-arguments wrn))
+          (format *standard-output* "~&")
+          (muffle-warning)))
+      (warning
+        (lambda (wrn)
+          (format *standard-output* "~&~A: ~%  ~A~%"
+                  (class-name (class-of wrn)) wrn)
+          (muffle-warning))))
+    	 (progn ,@body))
+     (quit-condition (err)
+       (make-eval-error err (format nil "~A" err) :quit t))
+     (simple-condition (err)
+       (make-eval-error err
+         (apply #'format nil (simple-condition-format-control err)
+                             (simple-condition-format-arguments err))))
+     (condition (err)
+       (make-eval-error err (format nil "~A" err)))))
 
 (defun send-result (result)
   (with-slots (iopub package history-in) *kernel*

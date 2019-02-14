@@ -17,6 +17,7 @@
     #:markdown
     #:png
     #:svg
+    #:handling-errors
     #:enqueue-input
     #:evaluate
     #:is-complete
@@ -27,11 +28,10 @@
     #:kernel-prompt-prefix
     #:kernel-prompt-suffix
     #:make-error-result
-    #:make-eval-error
     #:make-file-result
     #:make-inline-result
     #:make-lisp-result
-    #:quit
+    #:quit-condition
     #:quit-eval-error-p
     #:render
     #:result

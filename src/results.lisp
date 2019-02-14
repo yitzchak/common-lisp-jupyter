@@ -126,6 +126,8 @@ Standard MIME types
         ((not (eq 'no-output value))
          (make-instance 'sexpr-result :value value :display display))))
 
+; Convienence functions
+
 (defun file (path &optional (display nil))
   (make-file-result path :display display :handle t))
 
