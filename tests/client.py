@@ -39,7 +39,7 @@ class MyKernelTests(jupyter_kernel_test.KernelTests):
     ]
 
     # Pager: code that should display something (anything) in the pager
-    # code_page_something = "??erfc"
+    code_page_something = "(format jupyter:*page-output* \"foo\")"
 
     # code which should generate a (user-level) error in the kernel, and send
     # a traceback to the client
