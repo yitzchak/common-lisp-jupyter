@@ -27,7 +27,7 @@ common-lisp-jupyter may be installed on a machine using a local installation, a
 ### Requirements
 
 - [Roswell][] with a supported Common Lisp implementation. Currently
-  [SBCL][Steel Bank Common Lisp] and [CCL][Clozure Common Lisp] are known to
+  [Steel Bank Common Lisp][SBCL] and [Clozure Common Lisp][CCL] are known to
   work. Other implementations which support the [Bordeaux Threads][] package
   might work.
 
