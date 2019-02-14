@@ -42,7 +42,12 @@
   (defparameter roswell.install::*build-hook*
     (lambda ()
       (jupyter:install-kernel (if (uiop:os-windows-p)
-                                '("ros" "%USERPROFILE%/.roswell/bin/cl-jupyter" "{connection_file}")
+                                (list "ros"
+                                      (namestring (merge-pathnames
+                                        (make-pathname :directory '(:relative ".roswell" "bin")
+                                                       :name "cl-jupyter")
+                                        (uiop:getenv-absolute-directory "USERPROFILE")))
+                                      "{connection_file}")
                                 '("cl-jupyter" "{connection_file}"))
                               "Common Lisp"
                               "common-lisp"))))

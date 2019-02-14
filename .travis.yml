@@ -37,4 +37,4 @@ install:
   - ros install ./common-lisp-jupyter.asd
 
 script:
-  - python3 tests/client.py
+  - python3 tests/client.py --verbose

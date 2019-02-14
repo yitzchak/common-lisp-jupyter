@@ -3,12 +3,12 @@ import jupyter_kernel_test
 
 
 class MyKernelTests(jupyter_kernel_test.KernelTests):
-    # Required --------------------------------------
+    @classmethod
+    def tearDownClass(cls):
+        cls.kc.shutdown()
 
-    # The name identifying an installed kernel to run the tests against
     kernel_name = "common-lisp"
 
-    # language_info.name in a kernel_info_reply should match this
     language_name = "common-lisp"
 
     # the normal file extension (including the leading dot) for this language
