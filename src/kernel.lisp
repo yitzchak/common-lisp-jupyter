@@ -4,115 +4,155 @@
 (defvar *message* nil)
 (defvar *payload* nil)
 
+(defvar *page-output* nil
+  "Output stream sent to Jupyter pager. Available during calls to evaluate.")
+
 (defclass kernel ()
   ((name :initarg :name
          :initform ""
-         :reader kernel-name)
+         :reader kernel-name
+         :documentation "Kernel name. Used as a unique identifier in kernel
+         description.")
    (version :initarg :version
             :initform ""
-            :reader kernel-version)
+            :reader kernel-version
+            :documentation "Kernel version.")
    (banner :initarg :banner
            :initform ""
-           :reader kernel-banner)
+           :reader kernel-banner
+           :documentation "Banner text used to describe kernel. Used in
+           kernel_info_reply messages.")
    (language-name :initarg :language-name
                   :initform ""
-                  :reader kernel-language-name)
+                  :reader kernel-language-name
+                  :documentation "Display name of implementation language. Used
+                  in kernel_info_reply messages.")
    (language-version :initarg :language-version
                      :initform ""
-                     :reader kernel-language-version)
+                     :reader kernel-language-version
+                     :documentation "Version of implementation language. Used in
+                     kernel_info_reply messages.")
    (mime-type :initarg :mime-type
               :initform ""
-              :reader kernel-mime-type)
+              :reader kernel-mime-type
+              :documentation "Default MIME type for source files. Used in
+              kernel_info_reply messages.")
    (file-extension :initarg :file-extension
                    :initform ""
-                   :reader kernel-file-extension)
+                   :reader kernel-file-extension
+                   :documentation "Default file extension for source files. Used
+                   in kernel_info_reply messages.")
    (pygments-lexer :initarg :pygments-lexer
                    :initform ""
-                   :reader kernel-pygments-lexer)
+                   :reader kernel-pygments-lexer
+                   :documentation "Name of Pygments lexer for source files. Used
+                   in kernel_info_reply messages.")
    (codemirror-mode :initarg :codemirror-mode
                     :initform ""
-                    :reader kernel-codemirror-mode)
+                    :reader kernel-codemirror-mode
+                    :documentation "CodeMirror mode for source files. Used in
+                    kernel_info_reply messages.")
    (help-links :initarg :help-links
                :initform nil
-               :reader kernel-help-links)
+               :reader kernel-help-links
+               :documentation "An association list of help links. The car is the
+               description and the cdr is URL. Used in kernel_info_reply
+               messages.")
    (package :initarg :package
             :initform nil
-            :reader kernel-package)
+            :reader kernel-package
+            :documentation "The name of the package in which evaluate,
+            is-complete and others are called.")
    (transport :initarg :transport
               :reader kernel-transport
-              :type string)
+              :type string
+              :documentation "Transport protocol from connection file.")
    (ip :initarg :ip
        :reader kernel-ip
-       :type string)
+       :type string
+       :documentation "IP address from connection file.")
    (shell-port :initarg :shell-port
                :reader kernel-shell-port
-               :type fixnum)
+               :type fixnum
+               :documentation "SHELL port from connection file.")
    (stdin-port :initarg :stdin-port
                :reader kernel-stdin-port
-               :type fixnum)
+               :type fixnum
+               :documentation "STDIN port from connection file.")
    (iopub-port :initarg :iopub-port
                :reader kernel-iopub-port
-               :type fixnum)
+               :type fixnum
+               :documentation "IOPUB port from connection file.")
    (control-port :initarg :control-port
                  :reader kernel-control-port
-                 :type fixnum)
+                 :type fixnum
+                 :documentation "CONTROL port from connection file.")
    (hb-port :initarg :hb-port
             :reader kernel-hb-port
-            :type fixnum)
+            :type fixnum
+            :documentation "HB port from connection file.")
    (signature-scheme :initarg :signature-scheme
                      :reader kernel-signature-scheme
-                     :type string)
+                     :type string
+                     :documentation "Signature scheme from connection file.")
    (key :initarg :key
-        :reader kernel-key)
+        :reader kernel-key
+        :documentation "Signing key from connection file.")
    (prompt-prefix :initarg :prompt-prefix
                   :initform (coerce '(#\Escape #\X) 'string)
-                  :reader kernel-prompt-prefix)
+                  :reader kernel-prompt-prefix
+                  :documentation "String prefix using in *standard-output* to
+                  indicate the start of prompt.")
    (prompt-suffix :initarg :prompt-suffix
                   :initform (coerce '(#\Escape #\\) 'string)
-                  :reader kernel-prompt-suffix)
+                  :reader kernel-prompt-suffix
+                  :documentation "String suffix using in *standard-output* to
+                  indicate the end of prompt.")
    (ctx :initform nil
-        :accessor kernel-ctx)
+        :accessor kernel-ctx
+        :documentation "pzmq ctx handle.")
    (hb :initform nil
-       :accessor kernel-hb)
+       :accessor kernel-hb
+       :documentation "Heartbeat channel.")
    (shell :initform nil
-          :accessor kernel-shell)
+          :accessor kernel-shell
+          :documentation "SHELL channel.")
    (stdin :initform nil
-          :accessor kernel-stdin)
+          :accessor kernel-stdin
+          :documentation "STDIN channel.")
    (iopub :initform nil
-          :accessor kernel-iopub)
+          :accessor kernel-iopub
+          :documentation "IOPUB channel.")
    (session :initform nil
-            :accessor kernel-session)
+            :accessor kernel-session
+            :documentation "Session identifier.")
    (input-queue :initarg :input-queue
                 :initform (make-instance 'cl-containers:basic-queue)
-                :reader kernel-input-queue)
+                :reader kernel-input-queue
+                :documentation "Input queue used to feed values into
+                execute_result payloads.")
    (history-in :initform (make-array 64 :fill-pointer 0 :adjustable t)
-               :reader kernel-history-in)
+               :reader kernel-history-in
+               :documentation "History of execute_request input values.")
    (history-out :initform (make-array 64 :fill-pointer 0 :adjustable t)
-                :reader kernel-history-out))
+                :reader kernel-history-out
+                :documentation "History of execute_result output values."))
   (:documentation "Kernel state representation."))
 
-(defgeneric evaluate (kernel page-output input))
+(defgeneric evaluate (kernel input)
+  (:documentation "Evaluate input along with paged output. Kernel
+  implementations must return a list of evaluated results. Each result should be
+  wrapped with an appropriate `result` class instance. Sending the results to
+  the client will be handled by the calling method."))
 
-(defgeneric is-complete (kernel code))
-
-(defun get-argv ()
-  ;; Borrowed from apply-argv, command-line-arguments.  Temporary solution (?)
-  #+sbcl (cdr sb-ext:*posix-argv*)
-  #+clozure (cdr ccl:*command-line-argument-list*)
-  #+gcl si:*command-args*
-  #+ecl (loop for i from 0 below (si:argc) collect (si:argv i))
-  #+cmu extensions:*command-line-strings*
-  #+allegro (sys:command-line-arguments)
-  #+lispworks sys:*line-arguments-list*
-  #+clisp ext:*args*
-  #-(or sbcl clozure gcl ecl cmu allegro lispworks clisp)
-  (error "get-argv not supported for your implementation"))
+(defgeneric is-complete (kernel input)
+  (:documentation "Check input for code completeness. Kernel implementations
+  should result one of the permitted values of complete, incomplete or
+  invalid."))
 
 ;; Start all channels.
 (defmethod start ((k kernel))
   (info "[kernel] Starting...~%")
-  ; (setq maxima::$linenum 0)
-  ; (setq maxima::*display-labels-p* t)
   (with-slots (ctx key transport ip hb-port hb shell-port shell stdin-port stdin
                iopub-port iopub session prompt-prefix prompt-suffix)
               k
@@ -159,7 +199,7 @@
     (stop stdin)
     (pzmq:ctx-destroy ctx)))
 
-(defun kernel-start (kernel-class connection-file-name)
+(defun run-kernel (kernel-class connection-file-name)
   (info "[kernel] Connection file = ~A~%" connection-file-name)
   (unless (stringp connection-file-name)
     (error "[kernel] Wrong connection file argument (expecting a string)"))
@@ -197,13 +237,6 @@
         (send-status-update (kernel-iopub kernel) msg "idle"))
       (finally-protected
         (stop kernel)))))
-
-;; This is the entry point for a saved lisp image created by
-;; trivial-dump-core:save-executable or equivalent.
-; (defun kernel-start-exec ()
-;   ;; IS THERE OTHER STUFF HANDLED BY MAXIMA INIT-CL.LISP THAT WE NEED TO DUPLICATE HERE ??
-;   (setq *read-default-float-format* 'double-float)
-;   (kernel-start (car (last (get-argv)))))
 
 #|
 
@@ -275,7 +308,7 @@
              (*kernel* kernel)
              (*message* msg)
              (*payload* (make-array 16 :adjustable t :fill-pointer 0))
-             (page-output (make-string-output-stream))
+             (*page-output* (make-string-output-stream))
              (*query-io* (make-stdin-stream stdin msg))
              (*standard-input* *query-io*)
              (*error-output* (make-iopub-stream iopub msg "stderr"
@@ -284,7 +317,7 @@
                                                    prompt-prefix prompt-suffix))
              (*debug-io* *standard-output*)
              (results (let ((*package* (find-package package)))
-                        (evaluate kernel page-output code))))
+                        (evaluate kernel code))))
         (dolist (result results)
           (send-result result)
           (vector-push result history-out))
@@ -301,7 +334,7 @@
                   (evalue (format nil "~{~A~^, ~}" (mapcar #'error-result-evalue errors))))
               (send-execute-reply-error shell msg execution-count ename evalue))
             (let ((input-queue (kernel-input-queue kernel))
-                  (p (get-output-stream-string page-output)))
+                  (p (get-output-stream-string *page-output*)))
               (unless (cl-containers:empty-p input-queue)
                 (set-next-input (cl-containers:dequeue input-queue)))
               (unless (zerop (length p))

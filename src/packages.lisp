@@ -1,6 +1,7 @@
 (defpackage #:jupyter
   (:use #:cl #:iterate)
   (:export
+    #:*page-output*
     #:file
     #:gif-file
     #:jpeg-file
@@ -18,15 +19,11 @@
     #:svg
     #:enqueue-input
     #:evaluate
-    #:handling-errors
+    #:is-complete
     #:info
     #:install-kernel
-    #:is-complete
     #:kernel
-    #:kernel-start
-    ; #:kernel-start-exec
-    #:kernel-name
-    #:kernel-version
+    #:run-kernel
     #:kernel-prompt-prefix
     #:kernel-prompt-suffix
     #:make-error-result

@@ -18,34 +18,8 @@ The history of evaluations is also saved by the evaluator.
 
 (define-condition quit (error)
   ()
-  (:documentation "A quit condition for identifying a request for kernel shutdown.")
+  (:documentation "A condition for identifying a request for kernel shutdown.")
   (:report (lambda (c stream) (declare (ignore c stream)))))
-
-;;; Based on macro taken from: http://www.cliki.net/REPL
-(defmacro handling-errors (&body body)
-  `(handler-case
-    (handler-bind
-      ((simple-warning
-        (lambda (wrn)
-          (apply (function format) *standard-output*
-                (simple-condition-format-control   wrn)
-                (simple-condition-format-arguments wrn))
-          (format *standard-output* "~&")
-          (muffle-warning)))
-      (warning
-        (lambda (wrn)
-          (format *standard-output* "~&~A: ~%  ~A~%"
-                  (class-name (class-of wrn)) wrn)
-          (muffle-warning))))
-    	 (progn ,@body))
-     (quit (err)
-       (make-eval-error err (format nil "~A" err) :quit t))
-     (simple-condition (err)
-       (make-eval-error err
-         (apply #'format nil (simple-condition-format-control err)
-                             (simple-condition-format-arguments err))))
-     (condition (err)
-       (make-eval-error err (format nil "~A" err)))))
 
 (defun eval-error-p (result)
   (typep result 'error-result))
