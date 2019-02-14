@@ -5,17 +5,45 @@
 [![Build Status][travis-badge]][travis]
 [![Build status][appveyor-badge]][appveyor]
 
-A Common Lisp kernel for Jupyter, based on Maxima-Jupyter by Robert Dodier which
-was based on cl-jupyter, a Jupyter kernel for Common Lisp, by Frederic
-Peschanski.
+A Common Lisp kernel for Jupyter, based on [Maxima-Jupyter][] by Robert Dodier
+which was based on [cl-jupyter][] by Frederic Peschanski.
 
 This file describes the installation and usage of common-lisp-jupyter on a local
 machine, but you can try out common-lisp-jupyter without installing anything by
 clicking on the Binder badge above.
 
+## Motivation
+
+In developing Maxima-Jupyter there were a number of enhancements and features
+added that cl-jupyter does not support. Because the structure of Maxima-Jupyter
+is significantly different from cl-jupyter back-porting these changes would
+probably be difficult. Therefore common-lisp-jupyter was created as library to
+support both Maxima-Jupyter and the included Common Lisp kernel. The library
+component handles all Jupyter messaging and most of the common kernel management
+tasks. This leaves only code evaluation and completion testing left to the
+derived kernel.
+
 ## Examples
 
 [about.ipynb][]
+
+## Comparison to cl-jupyter
+
+In comparison to cl-jupyter the included kernel `common-lisp` has the following
+features.
+
+- Markdown and PDF rendering
+
+- Automatic detection of MIME types for files
+
+- `is_complete_request` and `shutdown_request` messages
+
+- Improved JSON serialization via [jsown][]
+
+- Improved message handling
+
+- Automatic detection of prompts on `*query-io*` and use `input_request` message
+  to facilitate responses.
 
 ## Installation
 
@@ -150,7 +178,10 @@ during the installation phase of Roswell.
 [Bordeaux Threads]: https://common-lisp.net/project/bordeaux-threads/
 [CCL]: https://ccl.clozure.com/
 [cl-jupyter.lisp]: https://github.com/yitzchak/common-lisp-jupyter/blob/master/src/cl-kernel.lisp
+[cl-jupyter]: https://github.com/fredokun/cl-jupyter/
+[jsown]: http://quickdocs.org/jsown/
 [Jupyter]: https://jupyter.org/
+[Maxima-Jupyter]: https://github.com/robert-dodier/maxima-jupyter/
 [mybinder-badge]: https://mybinder.org/badge_logo.svg
 [mybinder]: https://mybinder.org/v2/gh/yitzchak/common-lisp-jupyter/master
 [nbviewer]: http://nbviewer.jupyter.org
