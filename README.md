@@ -2,6 +2,7 @@
 
 [![Binder][mybinder-badge]][mybinder]
 [![Build Status][travis-badge]][travis]
+[![Build status][appveyor-badge]][appveyor]
 
 A Common Lisp kernel for Jupyter, based on Maxima-Jupyter by Robert Dodier which
 was based on cl-jupyter, a Jupyter kernel for Common Lisp, by Frederic
@@ -85,7 +86,7 @@ server. Directions on accessing the server will be displayed once the image
 is built.
 
 ```sh
-jupyter-repo2docker --user-id=1000 --user-name=mj https://github.com/yitzchak/common-lisp-jupyter
+jupyter-repo2docker --user-id=1000 --user-name=jupyter https://github.com/yitzchak/common-lisp-jupyter
 ```
 
 ## Docker Image
@@ -107,6 +108,8 @@ docker run -it common-lisp-jupyter jupyter console --kernel=common-lisp
 <!--refs-->
 
 [about.ipynb]: http://nbviewer.jupyter.org/github/yitzchak/common-lisp-jupyter/blob/master/examples/about.ipynb
+[appveyor-badge]: https://ci.appveyor.com/api/projects/status/j2voo262b2v9qq3t/branch/master?svg=true
+[appveyor]: https://ci.appveyor.com/project/yitzchak/common-lisp-jupyter/branch/master
 [mybinder-badge]: https://mybinder.org/badge_logo.svg
 [mybinder]: https://mybinder.org/v2/gh/yitzchak/common-lisp-jupyter/master
 [nbviewer]: http://nbviewer.jupyter.org
