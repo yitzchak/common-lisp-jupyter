@@ -5,7 +5,7 @@ exec ros -Q -- $0 "$@"
 |#
 (progn ;;init forms
   (ros:ensure-asdf)
-  #+quicklisp (ql:quickload :cl-jupyter :silent t))
+  #+quicklisp (ql:quickload :common-lisp-jupyter :silent t))
 
 (defpackage :ros.script.cl-jupyter.3758812737
   (:use :cl))
@@ -14,6 +14,6 @@ exec ros -Q -- $0 "$@"
 (defun main (&optional connection-file &rest argv)
   (declare (ignore argv))
   (if connection-file
-    (jupyter:run-kernel 'cl-jupyter:kernel connection-file)
+    (jupyter:run-kernel 'common-lisp-jupyter:kernel connection-file)
     (format *error-output* "give me connection file!~%")))
 ;;; vim: set ft=lisp lisp:

@@ -1,4 +1,4 @@
-(in-package #:cl-jupyter)
+(in-package #:common-lisp-jupyter)
 
 (defclass kernel (jupyter:kernel)
   ()

@@ -1,6 +1,6 @@
 FROM archlinux/base:latest
 
-RUN pacman -Syu --noconfirm base-devel jupyter git readline  
+RUN pacman -Syu --noconfirm base-devel jupyter git readline
 
 ARG NB_USER=jupyter
 ARG NB_UID=1000
@@ -29,7 +29,7 @@ RUN chown -R ${NB_UID} ${HOME} && chgrp -R ${NB_USER} ${HOME}
 USER ${NB_USER}
 
 RUN ros install sbcl-bin
-RUN ros install ./cl-jupyter.asd; exit 0
-RUN ros install ./cl-jupyter.asd
+RUN ros install ./common-lisp-jupyter.asd; exit 0
+RUN ros install ./common-lisp-jupyter.asd
 
 WORKDIR ${HOME}/common-lisp-jupyter/examples

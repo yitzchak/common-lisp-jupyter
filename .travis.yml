@@ -34,7 +34,7 @@ env:
 install:
   - pip3 install --user jupyter jupyter_kernel_test
   - curl -L https://raw.githubusercontent.com/snmsts/roswell/release/scripts/install-for-ci.sh | sh
-  - ros install ./cl-jupyter.asd
+  - ros install ./common-lisp-jupyter.asd
 
 script:
   - python3 tests/client.py

@@ -37,7 +37,8 @@
     #:result
     #:send-result))
 
-(defpackage #:cl-jupyter
+(defpackage #:common-lisp-jupyter
+  (:nicknames :cl-jupyter)
   (:use #:cl #:iterate)
   (:export
     #:kernel))

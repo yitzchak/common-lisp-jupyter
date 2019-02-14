@@ -1,4 +1,4 @@
-Common-Lisp-Jupyter Authors/Contributors
+common-lisp-jupyter Authors/Contributors
 ===============================
 - Tarn W. Burton -- creator and maintainer
 

@@ -1,4 +1,4 @@
-(asdf:defsystem #:cl-jupyter
+(asdf:defsystem #:common-lisp-jupyter
   :description "An Enhanced Interactive Shell for Common Lisp (based on the Jupyter protocol)."
   :version "0.7"
   :author "Tarn W. Burton"

@@ -20,7 +20,7 @@ install:
   - set PATH=%CD%/roswell;%PATH%
   - ros install %LISP%
   - ps: ros run -e '(format t \"~a ~a~%\" (lisp-implementation-type) (lisp-implementation-version))' -q
-  - ros install cl-jupyter.asd
+  - ros install common-lisp-jupyter.asd
 
 build: false
 
