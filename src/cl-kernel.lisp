@@ -41,6 +41,8 @@
 (eval-when (:compile-toplevel)
   (defparameter roswell.install::*build-hook*
     (lambda ()
-      (jupyter:install-kernel '("ros" "exec" "cl-jupyter" "{connection_file}")
+      (jupyter:install-kernel (if (uiop:os-windows-p)
+                                '("ros" "%USERPROFILE%/.roswell/bin/cl-jupyter" "{connection_file}")
+                                '("cl-jupyter" "{connection_file}"))
                               "Common Lisp"
                               "common-lisp"))))
