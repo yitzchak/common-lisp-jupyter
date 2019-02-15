@@ -58,11 +58,15 @@
                                                        language)
                                       :name "kernel"
                                       :type "json")
-                       (if (uiop:os-macosx-p)
-                         (merge-pathnames
-                           (make-pathname :directory '(:relative "Library"))
-                           (uiop:getenv-pathname "HOME" :ensure-directory t))
-                         (uiop:xdg-data-home)))))
+                       (cond
+                         ((uiop:os-macosx-p)
+                           (merge-pathnames
+                             (make-pathname :directory '(:relative "Library"))
+                             (uiop:getenv-pathname "HOME" :ensure-directory t)))
+                         ((uiop:os-windows-p)
+                           (uiop:get-folder-path :appdata))
+                         (t
+                           (uiop:xdg-data-home))))))
   (format t "Installing kernel spec file ~A~%" kernel-path)
   (ensure-directories-exist kernel-path)
   (with-open-file (stream kernel-path :direction :output :if-exists :supersede)
