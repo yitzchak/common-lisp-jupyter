@@ -1,40 +1,43 @@
 (defpackage #:jupyter
   (:use #:cl #:iterate)
   (:export
-    #:*page-output*
-    #:file
-    #:gif-file
-    #:jpeg-file
-    #:pdf-file
-    #:png-file
-    #:ps-file
-    #:svg-file
-    #:inline
-    #:text
-    #:html
-    #:jpeg
-    #:latex
-    #:markdown
-    #:png
-    #:svg
-    #:handling-errors
-    #:enqueue-input
-    #:evaluate
-    #:is-complete
+    ; utils
     #:info
     #:install-kernel
-    #:kernel
-    #:run-kernel
-    #:kernel-prompt-prefix
-    #:kernel-prompt-suffix
+    ; results
+    #:file
+    #:gif-file
+    #:html
+    #:inline-result
+    #:jpeg
+    #:jpeg-file
+    #:latex
     #:make-error-result
     #:make-file-result
     #:make-inline-result
     #:make-lisp-result
-    #:quit-condition
+    #:markdown
+    #:pdf-file
+    #:png
+    #:png-file
+    #:ps-file
     #:quit-eval-error-p
     #:render
     #:result
+    #:svg
+    #:svg-file
+    #:text
+    ; kernel
+    #:*page-output*
+    #:enqueue-input
+    #:evaluate
+    #:handling-errors
+    #:is-complete
+    #:kernel
+    #:kernel-prompt-prefix
+    #:kernel-prompt-suffix
+    #:quit-condition
+    #:run-kernel
     #:send-result))
 
 (defpackage #:common-lisp-jupyter

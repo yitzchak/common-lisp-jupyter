@@ -27,5 +27,4 @@
                              (:file "iopub")
                              (:file "results")
                              (:file "kernel")
-                             (:file "evaluator")
                              (:file "cl-kernel")))))

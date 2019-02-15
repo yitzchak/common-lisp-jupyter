@@ -9,6 +9,7 @@
 ; (defvar maxima::$kernel_info nil)
 
 (defun info (&rest args)
+  "Display informational message regarding kernel status."
   (when nil;maxima::$kernel_info
     (apply #'format *trace-output* args)))
 
@@ -45,6 +46,7 @@
     (or (not p) (= 0 p))))
 
 (defun install-kernel (argv name language)
+  "Install a kernel spec file given a kernel name and a language name."
   (let ((kernel-path (merge-pathnames
                        (make-pathname :directory (list :relative
                                                        ; Just in case HFS+ is
