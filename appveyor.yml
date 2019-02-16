@@ -7,22 +7,31 @@ branches:
 platform:
     - x64
 
+clone_folder: c:\Users\appveyor\.roswell\local-projects\common-lisp-jupyter
+
 environment:
-  PYTHON: "C:\\Python35"
+  BIT: 64
+  COMPILER: msys2
+  MSYS2_ARCH: x86_64
+  MSYS2_DIR: msys64
+  MSYSTEM: MINGW64
+  PATH: C:\\Python36-x64;C:\\Python36-x64\Scripts;c:\msys64\usr\bin;c:\msys64\mingw64\bin;%USERPROFILE%\roswell;%PATH%
+  PLATFORM: x64
+  PYTHON_ARCH: "64"
+  PYTHON_VERSION: "3.6.x" # currently 3.6.5
+  PYTHON: "C:\\Python36-x64"
   matrix:
     - LISP: sbcl-bin
-    - LISP: ccl-bin
 
 install:
+  - bash -lc "pacman -Sy --noconfirm mingw64/mingw-w64-x86_64-zeromq"
   - pip install --user jupyter jupyter_kernel_test
   - ps: appveyor DownloadFile 'https://ci.appveyor.com/api/projects/snmsts/roswell-en89n/artifacts/Roswell-x86_64.zip?branch=master&job=Environment%3A%20MSYS2_ARCH%3Dx86_64,%20MSYS2_BITS%3D64,%20MSYSTEM%3DMINGW64,%20METHOD%3Dcross' -FileName Roswell-x86_64.zip
-  - 7z x Roswell-x86_64.zip
-  - set PATH=%CD%/roswell;%PATH%
+  - 7z x -o%USERPROFILE% Roswell-x86_64.zip
   - ros install %LISP%
-  - ps: ros run -e '(format t \"~a ~a~%\" (lisp-implementation-type) (lisp-implementation-version))' -q
-  - ros install common-lisp-jupyter.asd
+  - bash -lc "ros install common-lisp-jupyter"
 
-build: false
+build: off
 
 test_script:
-  - python3 tests/client.py
+  - python tests/client.py --verbose
