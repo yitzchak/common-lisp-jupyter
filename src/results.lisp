@@ -134,7 +134,7 @@ Standard MIME types
   "Make a lisp result based on an inline value."
   (cond ((typep value 'result)
          value)
-        ((not (eq 'no-output value))
+        ((not (eq :no-output value))
          (make-instance 'sexpr-result :value value :display display))))
 
 (defun eval-error-p (result)
