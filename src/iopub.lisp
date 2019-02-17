@@ -22,6 +22,12 @@
                                      (jsown:new-js
                                        ("execution_state" status)))))
 
+(defun send-clear-output (iopub parent-msg wait)
+  (message-send iopub
+                (make-message parent-msg "clear_output"
+                              (jsown:new-js
+                                ("wait" (if wait :true :false))))))
+
 (defun send-status-update (iopub parent-msg status)
   (message-send iopub
                 (make-message parent-msg "status"

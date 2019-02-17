@@ -29,6 +29,7 @@
     #:text
     ; kernel
     #:*page-output*
+    #:clear
     #:enqueue-input
     #:evaluate-code
     #:handling-errors

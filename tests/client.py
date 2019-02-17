@@ -55,6 +55,8 @@ class MyKernelTests(jupyter_kernel_test.KernelTests):
 
     code_inspect_sample = "format"
 
+    code_clear_output = "(jupyter:clear)"
+
 
 if __name__ == '__main__':
     unittest.main()

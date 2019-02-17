@@ -473,3 +473,7 @@
 (defun enqueue-input (kernel code)
   "Add code to input queue."
   (cl-containers:enqueue (kernel-input-queue kernel) code))
+
+(defun clear (&optional (wait nil))
+  "Send clear output message to frontend."
+  (send-clear-output (kernel-iopub *kernel*) *message* wait))
