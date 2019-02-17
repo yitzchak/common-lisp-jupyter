@@ -47,3 +47,21 @@
                                 ("ename" ename)
                                 ("evalue" evalue)
                                 ("traceback" nil)))))
+
+(defun send-inspect-reply-error (shell parent-msg ename evalue)
+  (message-send shell
+                (make-message parent-msg "inspect_reply"
+                              (jsown:new-js
+                                ("status" "error")
+                                ("ename" ename)
+                                ("evalue" evalue)
+                                ("traceback" nil)))))
+
+(defun send-inspect-reply-ok (shell parent-msg data)
+  (message-send shell
+                (make-message parent-msg "inspect_reply"
+                              (jsown:new-js
+                                ("status" "ok")
+                                ("found" (if data t nil))
+                                ("data" data)
+                                ("metadata" (jsown:new-js))))))

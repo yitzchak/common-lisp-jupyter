@@ -37,7 +37,7 @@ features.
 
 - Automatic detection of MIME types for files
 
-- `is_complete_request` and `shutdown_request` messages
+- `is_complete_request`, `inspect_request` and `shutdown_request` messages
 
 - Improved JSON serialization via [jsown][]
 
@@ -136,8 +136,9 @@ docker run -it common-lisp-jupyter jupyter console --kernel=common-lisp
 
 New Jupyter kernels can be created by defining a new sub-class of
 `jupyter:kernel` and by defining methods for the generic functions
-`jupyter:evaluate` and `jupyter:is-complete`. For reference, please see
-[cl-jupyter.lisp][] for the Common Lisp kernel that is included in the package.
+`jupyter:evaluate-code` and `jupyter:code-is-complete`. For reference, please
+see [cl-jupyter.lisp][] for the Common Lisp kernel that is included in the
+package.
 
 The derived class of `jupyter:kernel` should initialize the following slots.
 Most of these slots are used to reply to `kernel_info` messages. Documentation
@@ -155,16 +156,16 @@ for each can be found in the declaration of `jupyter:kernel`.
 - `codemirror-mode`
 - `help-links`
 
-The method `jupyter:evaluate` should evaluate all code included in the `input`
-argument and return a list of evaluation results. Each result should be wrapped
-in an appropriate sub-class of `jupyter:result`. For instance, to return a S-Expr
-result one would call `jupyter:make-lisp-result`. `jupyter:evaluate` will be
-called with the package declared in the kernel class as the current default.
-For example, the Common Lisp kernel evaluates code in the `COMMON-LISP-USER`
-package.
+The method `jupyter:evaluate-code` should evaluate all code included in the
+`input` argument and return a list of evaluation results. Each result should be
+wrapped in an appropriate sub-class of `jupyter:result`. For instance, to return
+a S-Expr result one would call `jupyter:make-lisp-result`.
+`jupyter:evaluate-code` will be called with the package declared in the kernel
+class as the current default. For example, the Common Lisp kernel evaluates code
+in the `COMMON-LISP-USER` package.
 
 The Jupyter message `is_complete_request` is also supported via the
-`is-complete` method. The return result should be one of allowed status
+`code-is-complete` method. The return result should be one of allowed status
 messages, i.e. `"complete"`, `"incomplete"`, `"invalid"`, or `"unknown"`.
 
 User level installation of kernels can be accomplished by a call to

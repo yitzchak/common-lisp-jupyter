@@ -5,7 +5,7 @@
 (defvar *payload* nil)
 
 (defvar *page-output* nil
-  "Output stream sent to Jupyter pager. Available during calls to evaluate.")
+  "Output stream sent to Jupyter pager. Available during calls to evaluate-code.")
 
 (defclass kernel ()
   ((name :initarg :name
@@ -61,8 +61,8 @@
    (package :initarg :package
             :initform nil
             :reader kernel-package
-            :documentation "The name of the package in which evaluate,
-            is-complete and others are called.")
+            :documentation "The name of the package in which evaluate-code,
+            code-is-complete and others are called.")
    (transport :initarg :transport
               :reader kernel-transport
               :type string
@@ -139,16 +139,27 @@
                 :documentation "History of execute_result output values."))
   (:documentation "Kernel state representation."))
 
-(defgeneric evaluate (kernel input)
-  (:documentation "Evaluate input along with paged output. Kernel
-  implementations must return a list of evaluated results. Each result should be
-  wrapped with an appropriate `result` class instance. Sending the results to
-  the client will be handled by the calling method."))
+(defgeneric evaluate-code (kernel code)
+  (:documentation "Evaluate code along with paged output. Kernel implementations
+  must return a list of evaluated results. Each result should be wrapped with an
+  appropriate `result` class instance. Sending the results to the client will be
+  handled by the calling method."))
 
-(defgeneric is-complete (kernel input)
-  (:documentation "Check input for code completeness. Kernel implementations
-  should result one of the permitted values of complete, incomplete or
+(defmethod evaluate-code (kernel code))
+
+(defgeneric code-is-complete (kernel code)
+  (:documentation "Check code for completeness. Kernel implementations should
+  result one of the permitted values of complete, incomplete, unknown or
   invalid."))
+
+(defmethod code-is-complete (kernel code)
+  "unknown")
+
+(defgeneric inspect-code (kernel code cursor-pos detail-level)
+  (:documentation "Inspect code at cursor-pos with detail-level. Successful
+  inspection should return a single wrapped result."))
+
+(defmethod inspect-code (kernel code cursor-pos detail-level))
 
 ;; Start all channels.
 (defmethod start ((k kernel))
@@ -255,6 +266,8 @@
            (handle-shutdown-request kernel msg))
           ((equal msg-type "is_complete_request")
            (handle-is-complete-request kernel msg))
+          ((equal msg-type "inspect_request")
+           (handle-inspect-request kernel msg))
           (t
            (warn "[Shell] message type '~A' not supported, skipping..." msg-type)
            t))))
@@ -318,7 +331,7 @@
                                                    prompt-prefix prompt-suffix))
              (*debug-io* *standard-output*)
              (results (let ((*package* (find-package package)))
-                        (evaluate kernel code))))
+                        (evaluate-code kernel code))))
         (dolist (result results)
           (send-result result)
           (vector-push result history-out))
@@ -369,9 +382,26 @@
   (let* ((shell (kernel-shell kernel))
          (content (message-content msg))
          (code (jsown:val content "code"))
-         (status (is-complete kernel code)))
+         (status (code-is-complete kernel code)))
     (send-is-complete-reply shell msg status)
     t))
+
+(defun handle-inspect-request (kernel msg)
+  (info "[kernel] Handling 'inspect_request'~%")
+  (with-slots (shell package) kernel
+  (let* ((content (message-content msg))
+         (code (jsown:val content "code"))
+         (result (let ((*package* (find-package package)))
+                   (inspect-code kernel
+                            code
+                            (min (1- (length code)) (jsown:val content "cursor_pos"))
+                            (jsown:val content "detail_level")))))
+    (if (eval-error-p result)
+      (with-slots (ename evalue) result
+        (send-inspect-reply-error shell msg ename evalue))
+      (send-inspect-reply-ok shell msg
+        (let ((*package* (find-package package)))
+          (render result)))))))
 
 (defun make-eval-error (err msg &key (quit nil))
   (let ((name (symbol-name (class-name (class-of err)))))
