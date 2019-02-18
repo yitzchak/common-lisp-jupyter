@@ -134,7 +134,8 @@
   (let* ((normalized-name (normalize-symbol-case name))
          (pos (position-if #'package-char-p normalized-name))
          (start (if pos
-                  (position-if-not #'package-char-p normalized-name :start pos)
+                  (or (position-if-not #'package-char-p normalized-name :start pos)
+                      (length name))
                   0)))
     (values
       (subseq normalized-name start)
@@ -146,9 +147,9 @@
 (defun find-qualified-symbol (name default-package)
   (multiple-value-bind (name package)
                        (split-qualified-name name)
-    (if name
-      (find-symbol name (or package default-package))
-      (values nil nil))))
+    (if (or (not name) (zerop (length name)))
+      (values nil nil)
+      (find-symbol name (or package default-package)))))
 
 (defmethod jupyter:inspect-code ((k kernel) code cursor-pos detail-level)
   (jupyter:handling-errors
