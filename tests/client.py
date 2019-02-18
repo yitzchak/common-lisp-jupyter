@@ -44,8 +44,7 @@ class MyKernelTests(jupyter_kernel_test.KernelTests):
     # code_generate_error = '(/ 1 0)'
 
     code_execute_result = [
-        {'code': '(+ 1 2)', 'result': '3'},
-        {'code': '`(list ,-)', 'result': '(LIST `(LIST ,-))'}
+        {'code': '(+ 1 2)', 'result': '3'}
     ]
 
     code_display_data = [{
