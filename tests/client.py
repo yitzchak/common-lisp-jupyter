@@ -44,7 +44,8 @@ class MyKernelTests(jupyter_kernel_test.KernelTests):
     # code_generate_error = '(/ 1 0)'
 
     code_execute_result = [
-        {'code': '(+ 1 2)', 'result': '3'}
+        {'code': '(+ 1 2)', 'result': '3'},
+        {'code': '`(list ,-)', 'result': '(LIST `(LIST ,-))'}
     ]
 
     code_display_data = [{
@@ -67,6 +68,33 @@ class MyKernelTests(jupyter_kernel_test.KernelTests):
     code_inspect_sample = "format"
 
     code_clear_output = "(jupyter:clear)"
+
+    def test_repl_previous_results(self):
+        reply, output_msgs = self.execute_helper(
+            code="(values 'a1 'a2) 'b (values 'c1 'c2 'c3) (list / // ///)")
+        self.assertEqual(len(output_msgs), 7, "Did not receive 7 execution results.")
+        self.assertEqual(output_msgs[-1]['msg_type'], 'execute_result')
+        self.assertIn('data', output_msgs[-1]['content'])
+        self.assertIn('text/plain', output_msgs[-1]['content']['data'])
+        self.assertEqual(output_msgs[-1]['content']['data']['text/plain'], '((C1 C2 C3) (B) (A1 A2))')
+
+    def test_repl_previous_primary_result(self):
+        reply, output_msgs = self.execute_helper(
+            code="(values 'a1 'a2) 'b (values 'c1 'c2 'c3) (list * ** ***)")
+        self.assertEqual(len(output_msgs), 7, "Did not receive 7 execution results.")
+        self.assertEqual(output_msgs[-1]['msg_type'], 'execute_result')
+        self.assertIn('data', output_msgs[-1]['content'])
+        self.assertIn('text/plain', output_msgs[-1]['content']['data'])
+        self.assertEqual(output_msgs[-1]['content']['data']['text/plain'], '(C1 B A1)')
+
+    def test_repl_previous_eval_form(self):
+        reply, output_msgs = self.execute_helper(
+            code="(+ 0 1) (- 4 2) (/ 9 3) (list + ++ +++)")
+        self.assertEqual(len(output_msgs), 4, "Did not receive 4 execution results.")
+        self.assertEqual(output_msgs[-1]['msg_type'], 'execute_result')
+        self.assertIn('data', output_msgs[-1]['content'])
+        self.assertIn('text/plain', output_msgs[-1]['content']['data'])
+        self.assertEqual(output_msgs[-1]['content']['data']['text/plain'], '((/ 9 3) (- 4 2) (+ 0 1))')
 
 
 if __name__ == '__main__':

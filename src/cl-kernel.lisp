@@ -27,13 +27,27 @@
       (declare (ignore val))
       "complete")))
 
+(defun my-eval (expr)
+  (setq common-lisp-user::- expr)
+  (let ((evaluated-expr (multiple-value-list (eval expr))))
+    (setq common-lisp-user::*** common-lisp-user::**)
+    (setq common-lisp-user::** common-lisp-user::*)
+    (setq common-lisp-user::* (car evaluated-expr))
+    (setq common-lisp-user::/// common-lisp-user:://)
+    (setq common-lisp-user::// common-lisp-user::/)
+    (setq common-lisp-user::/ evaluated-expr)
+    (setq common-lisp-user::+++ common-lisp-user::++)
+    (setq common-lisp-user::++ common-lisp-user::+)
+    (setq common-lisp-user::+ expr)
+    (remove nil (mapcar #'jupyter:make-lisp-result evaluated-expr))))
+
 (defmethod jupyter:evaluate-code ((k kernel) code)
   (iter
     (for sexpr in-stream (make-string-input-stream code))
-    (for result = (jupyter:make-lisp-result
-                    (jupyter:handling-errors
-                      (eval sexpr))))
-    (when result
+    (for common-lisp-user::- next sexpr)
+    (for result = (jupyter:handling-errors (my-eval sexpr)))
+    (if (listp result)
+      (appending result)
       (collect result))
     (until (jupyter:quit-eval-error-p result))))
 
