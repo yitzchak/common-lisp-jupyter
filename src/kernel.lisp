@@ -161,6 +161,13 @@
 
 (defmethod inspect-code (kernel code cursor-pos detail-level))
 
+(defgeneric complete-code (kernel code cursor-pos)
+  (:documentation "Complete code at cursor-pos. Successful completion should
+  return three values, first a list of strings, then the cursor start position
+  and finally the cursor end position."))
+
+(defmethod complete-code (kernel code cursor-pos))
+
 ;; Start all channels.
 (defmethod start ((k kernel))
   (info "[kernel] Starting...~%")
@@ -268,6 +275,8 @@
            (handle-is-complete-request kernel msg))
           ((equal msg-type "inspect_request")
            (handle-inspect-request kernel msg))
+          ((equal msg-type "complete_request")
+           (handle-complete-request kernel msg))
           (t
            (warn "[Shell] message type '~A' not supported, skipping..." msg-type)
            t))))
@@ -386,22 +395,53 @@
     (send-is-complete-reply shell msg status)
     t))
 
+#|
+
+### Message type: inspect_request ###
+
+|#
+
 (defun handle-inspect-request (kernel msg)
   (info "[kernel] Handling 'inspect_request'~%")
   (with-slots (shell package) kernel
-  (let* ((content (message-content msg))
-         (code (jsown:val content "code"))
-         (result (let ((*package* (find-package package)))
-                   (inspect-code kernel
-                            code
-                            (min (1- (length code)) (jsown:val content "cursor_pos"))
-                            (jsown:val content "detail_level")))))
-    (if (eval-error-p result)
-      (with-slots (ename evalue) result
-        (send-inspect-reply-error shell msg ename evalue))
-      (send-inspect-reply-ok shell msg
-        (let ((*package* (find-package package)))
-          (render result)))))))
+    (let* ((content (message-content msg))
+           (code (jsown:val content "code"))
+           (result (let ((*package* (find-package package)))
+                     (inspect-code kernel
+                              code
+                              (min (1- (length code)) (jsown:val content "cursor_pos"))
+                              (jsown:val content "detail_level")))))
+      (if (eval-error-p result)
+        (with-slots (ename evalue) result
+          (send-inspect-reply-error shell msg ename evalue))
+        (send-inspect-reply-ok shell msg
+          (let ((*package* (find-package package)))
+            (render result)))))))
+
+#|
+
+### Message type: complete_request ###
+
+|#
+
+(defun handle-complete-request (kernel msg)
+  (info "[kernel] Handling 'complete_request'~%")
+  (with-slots (shell package) kernel
+    (let* ((content (message-content msg))
+           (code (jsown:val content "code"))
+           (cursor-pos (jsown:val content "cursor_pos")))
+      (multiple-value-bind (result start end)
+                           (let ((*package* (find-package package)))
+                              (complete-code kernel code
+                               (min (1- (length code)) cursor-pos)))
+        (cond
+          ((eval-error-p result)
+            (with-slots (ename evalue) result
+              (send-complete-reply-error shell msg ename evalue)))
+          (result
+            (send-complete-reply-ok shell msg result start end))
+          (t
+            (send-complete-reply-ok shell msg nil cursor-pos cursor-pos)))))))
 
 (defun make-eval-error (err msg &key (quit nil))
   (let ((name (symbol-name (class-name (class-of err)))))

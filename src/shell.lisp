@@ -65,3 +65,22 @@
                                 ("found" (if data t nil))
                                 ("data" data)
                                 ("metadata" (jsown:new-js))))))
+
+(defun send-complete-reply-error (shell parent-msg ename evalue)
+  (message-send shell
+                (make-message parent-msg "complete_reply"
+                              (jsown:new-js
+                                ("status" "error")
+                                ("ename" ename)
+                                ("evalue" evalue)
+                                ("traceback" nil)))))
+
+(defun send-complete-reply-ok (shell parent-msg matches start end)
+  (message-send shell
+                (make-message parent-msg "complete_reply"
+                              (jsown:new-js
+                                ("status" "ok")
+                                ("matches" matches)
+                                ("cursor_start" start)
+                                ("cursor_end" end)
+                                ("metadata" (jsown:new-js))))))
