@@ -30,11 +30,12 @@
     ; kernel
     #:*page-output*
     #:clear
+    #:code-is-complete
+    #:complete-code
     #:enqueue-input
     #:evaluate-code
     #:handling-errors
     #:inspect-code
-    #:code-is-complete
     #:kernel
     #:kernel-prompt-prefix
     #:kernel-prompt-suffix

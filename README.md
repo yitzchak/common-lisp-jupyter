@@ -37,7 +37,10 @@ features.
 
 - Automatic detection of MIME types for files
 
-- `is_complete_request`, `inspect_request` and `shutdown_request` messages
+- Handles code inspection, code completeness checking, code completion and
+  shutdown requests.
+
+- Can send clear output requests.
 
 - Improved JSON serialization via [jsown][]
 

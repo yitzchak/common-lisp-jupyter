@@ -28,6 +28,17 @@ class MyKernelTests(jupyter_kernel_test.KernelTests):
         '(+ 1 2))'
     ]
 
+    completion_samples = [
+        {
+            'text': 'format',
+            'matches': {'formatter', 'format'},
+        },
+        {
+            'text': 'cl:car',
+            'matches': {'cl:car'},
+        },
+    ]
+
     code_page_something = "(format jupyter:*page-output* \"foo\")"
 
     # code_generate_error = '(/ 1 0)'
