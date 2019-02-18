@@ -181,28 +181,29 @@
       name)))
 
 (defmethod jupyter:complete-code ((k kernel) code cursor-pos)
-  (multiple-value-bind (word start end) (symbol-string-at-position code cursor-pos)
-    (when word
-      (values
-        (multiple-value-bind (name package-name ext) (split-qualified-name word)
-          (with-slots (package) k
-            (let ((pkg (find-package (or package-name package))))
-              (when pkg
-                (if ext
-                  (iter
-                    (for sym in-package pkg external-only t)
-                    (for sym-name next (symbol-name sym))
-                    (when (starts-with-p sym-name name)
-                      (collect
-                        (symbol-name-to-qualified-name sym-name package-name pkg))))
-                  (iter
-                    (for sym in-package pkg)
-                    (for sym-name next (symbol-name sym))
-                    (when (starts-with-p sym-name name)
-                      (collect
-                        (symbol-name-to-qualified-name sym-name package-name pkg)))))))))
-        start
-        end))))
+  (jupyter:handling-errors
+    (multiple-value-bind (word start end) (symbol-string-at-position code cursor-pos)
+      (when word
+        (values
+          (multiple-value-bind (name package-name ext) (split-qualified-name word)
+            (with-slots (package) k
+              (let ((pkg (find-package (or package-name package))))
+                (when pkg
+                  (if ext
+                    (iter
+                      (for sym in-package pkg external-only t)
+                      (for sym-name next (symbol-name sym))
+                      (when (starts-with-p sym-name name)
+                        (collect
+                          (symbol-name-to-qualified-name sym-name package-name pkg))))
+                    (iter
+                      (for sym in-package pkg)
+                      (for sym-name next (symbol-name sym))
+                      (when (starts-with-p sym-name name)
+                        (collect
+                          (symbol-name-to-qualified-name sym-name package-name pkg)))))))))
+          start
+          end)))))
 
 #+ros.installing
 (eval-when (:compile-toplevel)
