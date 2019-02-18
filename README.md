@@ -35,6 +35,11 @@ features.
 
 - Markdown and PDF rendering
 
+- Handling and rendering of multiple value return
+
+- Correct setting of the REPL variables `-`, `+`, `++`, `+++`, `*`, `**`, `**`,
+  `/`, `//` and `///`
+
 - Automatic detection of MIME types for files
 
 - Handles code inspection, code completeness checking, code completion and
