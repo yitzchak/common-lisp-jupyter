@@ -444,7 +444,7 @@
 (defun send-result (result)
   "Send a result either as display data or an execute result."
   (with-slots (iopub package history-in) *kernel*
-    (let ((execute-count (+ 1 (length history-in))))
+    (let ((execute-count (length history-in)))
       (if (typep result 'error-result)
         (send-execute-error iopub *message* execute-count
                             (error-result-ename result)
