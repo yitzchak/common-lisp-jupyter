@@ -31,7 +31,10 @@
     #:*page-output*
     #:clear
     #:code-is-complete
+    #:comm
+    #:comm-id
     #:complete-code
+    #:create-comm
     #:enqueue-input
     #:evaluate-code
     #:handling-errors
@@ -39,9 +42,24 @@
     #:kernel
     #:kernel-prompt-prefix
     #:kernel-prompt-suffix
+    #:on-comm-close
+    #:on-comm-message
+    #:on-comm-open
     #:quit-condition
     #:run-kernel
+    #:send-comm-close
+    #:send-comm-message
+    #:send-comm-open
     #:send-result))
+
+(defpackage #:jupyter-widgets
+  (:use #:cl #:iterate)
+  (:export
+    #:button-description
+    #:dom-widget
+    #:make-button
+    #:on-button-click
+    #:widget))
 
 (defpackage #:common-lisp-jupyter
   (:nicknames :cl-jupyter)

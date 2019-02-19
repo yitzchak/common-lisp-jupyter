@@ -4,10 +4,12 @@
   :author "Tarn W. Burton"
   :license "MIT"
   :depends-on (
+    :alexandria
     :babel
     :bordeaux-threads
     :cl-base64
     :cl-containers
+    :closer-mop
     :ironclad
     :iterate
     :jsown
@@ -30,5 +32,13 @@
          (:file "stdin")
          (:file "iopub")
          (:file "results")
+         (:file "comm")
+         (:module widgets
+          :serial t
+          :components
+            ((:file "traits")
+             (:file "widget")
+             (:file "dom-widget")
+             (:file "button")))
          (:file "kernel")
          (:file "cl-kernel")))))

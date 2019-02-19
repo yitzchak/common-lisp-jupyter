@@ -33,7 +33,7 @@
             :accessor message-buffers))
   (:documentation "Representation of IPython messages"))
 
-(defun make-message (parent-msg msg-type content)
+(defun make-message (parent-msg msg-type content &optional metadata)
   (let ((hdr (message-header parent-msg))
         (identities (message-identities parent-msg)))
     (make-instance 'message
@@ -45,9 +45,10 @@
                              ("version" +KERNEL-PROTOCOL-VERSION+))
                    :parent-header hdr
                    :identities identities
-                   :content content)))
+                   :content content
+                   :metadata (or metadata (jsown:new-js)))))
 
-(defun make-orphan-message (session-id msg-type identities content)
+(defun make-orphan-message (session-id msg-type identities content &optional metadata)
   (make-instance 'message
                  :header (jsown:new-js
                            ("msg_id" (format nil "~W" (uuid:make-v4-uuid)))
@@ -56,7 +57,8 @@
                            ("msg_type" msg-type)
                            ("version" +KERNEL-PROTOCOL-VERSION+))
                  :identities identities
-                 :content content))
+                 :content content
+                 :metadata (or metadata (jsown:new-js))))
 
 #|
 

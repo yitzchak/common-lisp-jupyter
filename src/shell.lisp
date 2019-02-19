@@ -84,3 +84,14 @@
                                 ("cursor_start" start)
                                 ("cursor_end" end)
                                 ("metadata" (jsown:new-js))))))
+
+(defun send-comm-info-reply (shell parent-msg comms)
+  (message-send shell
+                (make-message parent-msg "comm_info_reply"
+                              (jsown:new-js
+                                ("comms" (mapcar (lambda (p)
+                                                   (cons
+                                                     (car p)
+                                                     (jsown:new-js
+                                                       ("target_name" (cdr p)))))
+                                           comms))))))
