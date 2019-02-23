@@ -7,7 +7,7 @@
 (defparameter +view-module-version+ "1.4.0")
 (defparameter +target-name+ "jupyter.widget")
 
-(defvar *state-lock* (bordeaux-threads:make-lock))
+(defvar *state-lock* nil)
 
 (defclass widget (jupyter:comm jupyter:result)
   ((%model-name :initarg :%model-name
@@ -63,29 +63,27 @@
     (finally (return state))))
 
 (defun send-state (w)
-  (when (bordeaux-threads:acquire-lock *state-lock* nil)
-    (unwind-protect
-      (let* ((state (to-json-state w))
-             (data (jsown:new-js
-                     ("method" "update")
-                     ("state" state)
-                     ("buffer_paths" nil))))
-        (jupyter:send-comm-message w data
-          (jsown:new-js ("version" +protocol-version+))))
-      (bordeaux-threads:release-lock *state-lock*))))
+  (when (not *state-lock*)
+    (let* ((state (to-json-state w))
+           (data (jsown:new-js
+                   ("method" "update")
+                   ("state" state)
+                   ("buffer_paths" nil))))
+      (jupyter:send-comm-message w data
+        (jsown:new-js ("version" +protocol-version+))))))
 
 (defun update-state (w data)
-  (bordeaux-threads:with-lock-held (*state-lock*)
+  (let ((*state-lock* t))
     (iter
       (for state next (jsown:val data "state"))
       (for keywords next (jsown:keywords state))
       (for def in (closer-mop:class-slots (class-of w)))
       (for name next (closer-mop:slot-definition-name def))
       (for key next (symbol-to-key name))
-      (when (position key keywords)
+      (when (position key keywords :test #'equal)
         (setf (slot-value w name) (jsown:val state key))))))
 
-(defmethod jupyter:on-comm-message (w data metadata)
+(defmethod jupyter:on-comm-message ((w widget) data metadata)
   (declare (ignore metadata))
   (let ((method (jsown:val data "method")))
     (cond

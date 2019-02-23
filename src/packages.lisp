@@ -55,10 +55,23 @@
 (defpackage #:jupyter-widgets
   (:use #:cl #:iterate)
   (:export
-    #:button-description
     #:dom-widget
     #:make-button
+    #:make-int-slider
     #:on-button-click
+    #:widget-continuous-update
+    #:widget-description
+    #:widget-description-tooltip
+    #:widget-disabled
+    #:widget-icon
+    #:widget-max
+    #:widget-min
+    #:widget-orientation
+    #:widget-readout
+    #:widget-readout-format
+    #:widget-step
+    #:widget-tooltip
+    #:widget-value
     #:widget))
 
 (defpackage #:common-lisp-jupyter

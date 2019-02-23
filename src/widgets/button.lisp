@@ -2,21 +2,21 @@
 
 (defclass button (dom-widget)
   ((description :initarg :description
-                :accessor button-description
+                :accessor widget-description
                 :documentation "Button label."
                 :sync t)
    (tooltip :initarg :tooltip
-            :accessor button-tooltip
+            :accessor widget-tooltip
             :documentation "Tooltip caption of the button."
             :sync t)
    (disabled :initarg :disabled
              :initform :false
-             :accessor button-disabled
+             :accessor widget-disabled
              :documentation "Enable or disable user changes."
              :sync t)
    (icon :initarg :icon
          :initform ""
-         :accessor button-icon
+         :accessor widget-icon
          :documentation "Font-awesome icon name, without the 'fa-' prefix."
          :sync t))
   (:metaclass trait-metaclass)

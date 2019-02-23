@@ -39,6 +39,7 @@
             ((:file "traits")
              (:file "widget")
              (:file "dom-widget")
-             (:file "button")))
+             (:file "button")
+             (:file "int-slider")))
          (:file "kernel")
          (:file "cl-kernel")))))
