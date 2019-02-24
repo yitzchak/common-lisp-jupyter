@@ -6,72 +6,72 @@
     :initform t
     :accessor widget-continuous-update
     :documentation "Update the value of the widget as the user is holding the slider."
-    :sync t)
+    :trait :boolean)
    (description
     :initarg :description
     :initform ""
     :accessor widget-description
     :documentation "Description of the control."
-    :sync t)
+    :trait :unicode)
    (description-tooltip
     :initarg :description-tooltip
     :accessor widget-description-tooltip
     :documentation "Tooltip for the description (defaults to description)."
-    :sync t)
+    :trait :unicode)
    (disabled
     :initarg :disabled
-    :initform :false
+    :initform nil
     :accessor widget-disabled
     :documentation "Enable or disable user changes."
-    :sync t)
+    :trait :boolean)
    (max
     :initarg :max
     :initform 100
     :accessor widget-max
     :documentation "Max value"
-    :sync t)
+    :trait :integer)
    (min
     :initarg :min
     :initform 0
     :accessor widget-min
     :documentation "Min value"
-    :sync t)
+    :trait :integer)
    (orientation
     :initarg :orientation
     :initform "horizontal"
     :accessor widget-orientation
     :documentation "Vertical or horizontal."
-    :sync t)
+    :trait :unicode)
    (readout
     :initarg :readout
     :initform t
     :accessor widget-readout
     :documentation "Display the current value of the slider next to it."
-    :sync t)
+    :trait :boolean)
    (readout-format
     :initarg :readout-format
     :initform "d"
     :accessor widget-readout-format
     :documentation "Format for the readout"
-    :sync t)
+    :trait :unicode)
    (step
     :initarg :step
     :initform 1
     :accessor widget-step
     :documentation "Minimum step to increment the value"
-    :sync t)
+    :trait :integer)
    (style
     :initarg :style
     :initform (make-widget 'slider-style)
     :accessor widget-style
     :documentation "Reference to slider style widget."
-    :sync t)
+    :trait :widget)
    (value
     :initarg :value
     :initform 0
     :accessor widget-value
     :documentation "Int value"
-    :sync t))
+    :trait :integer))
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "IntSliderModel"
@@ -80,14 +80,3 @@
     :%view-name "IntSliderView"
     :%view-module +controls-module+
     :%view-module-version +controls-module-version+))
-
-(defun make-int-slider ()
-  (with-trait-silence
-    (let* ((inst (make-instance 'int-slider))
-           (state (to-json-state inst))
-           (data (jsown:new-js
-                  ("state" state)
-                  ("buffer_paths" nil))))
-      (jupyter:send-comm-open inst data
-        (jsown:new-js ("version" +protocol-version+)))
-      inst)))

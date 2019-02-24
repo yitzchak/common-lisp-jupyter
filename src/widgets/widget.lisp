@@ -15,32 +15,32 @@
     :initarg :%model-name
     :reader widget-%module-name
     :documentation "Name of the model."
-    :sync t)
+    :trait :unicode)
    (%model-module
     :initarg :%model-module
     :reader widget-%module-module
     :documentation "The namespace for the model."
-    :sync t)
+    :trait :unicode)
    (%model-module-version
     :initarg :%model-module-version
     :reader widget-%module-module-version
     :documentation "A semver requirement for namespace version containing the model."
-    :sync t)
+    :trait :unicode)
    (%view-name
     :initarg :%view-name
     :reader widget-%view-name
     :documentation "Name of the view."
-    :sync t)
+    :trait :unicode)
    (%view-module
     :initarg :%view-module
     :reader widget-%view-module
     :documentation "The namespace for the view."
-    :sync t)
+    :trait :unicode)
    (%view-module-version
     :initarg :%view-module-version
     :reader widget-%view-module-version
     :documentation "A semver requirement for namespace version containing the view."
-    :sync t))
+    :trait :unicode))
   (:metaclass trait-metaclass)
   (:default-initargs :display t
                      :target-name +target-name+))
@@ -64,12 +64,13 @@
     (with state = (jsown:new-js))
     (for def in (closer-mop:class-slots (class-of w)))
     (for name next (closer-mop:slot-definition-name def))
+    (for type next (trait-type def))
     (when (and (or (not nm) (equal name nm))
                (slot-boundp w name)
-               (trait-sync def))
+               type)
       (jsown:extend-js state
         ((symbol-to-key name)
-          (serialize-trait w name nil (slot-value w name)))))
+          (serialize-trait w name type (slot-value w name)))))
     (finally (return state))))
 
 (defun send-state (w &optional name)
@@ -79,6 +80,7 @@
                    ("method" "update")
                    ("state" state)
                    ("buffer_paths" nil))))
+      (jupyter:info "state ~S~%" state)
       (jupyter:send-comm-message w data
         (jsown:new-js ("version" +protocol-version+))))))
 
@@ -90,8 +92,10 @@
       (for def in (closer-mop:class-slots (class-of w)))
       (for name next (closer-mop:slot-definition-name def))
       (for key next (symbol-to-key name))
+      (for type next (trait-type def))
       (when (position key keywords :test #'equal)
-        (setf (slot-value w name) (jsown:val state key))))))
+        (setf (slot-value w name)
+          (deserialize-trait w name type (jsown:val state key)))))))
 
 (defmethod jupyter:on-comm-message ((w widget) data metadata)
   (declare (ignore metadata))
@@ -110,9 +114,6 @@
 (defmethod jupyter:create-comm ((target-name (eql :|jupyter.widget|)) id data metadata)
   (jupyter:info "create-comm ~A ~A ~A ~A~%" target-name id data metadata))
 
-(defmethod serialize-trait (object type name (value widget))
-  (format nil "IPY_MODEL_~A" (jupyter:comm-id value)))
-
 (defun make-widget (class &rest rest &key &allow-other-keys)
   (with-trait-silence
     (let* ((inst (apply 'make-instance class rest))
@@ -120,6 +121,7 @@
            (data (jsown:new-js
                   ("state" state)
                   ("buffer_paths" nil))))
+      (jupyter:info "make-widget ~S~%" state)
       (jupyter:send-comm-open inst data
         (jsown:new-js ("version" +protocol-version+)))
       inst)))

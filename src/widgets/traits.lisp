@@ -35,9 +35,9 @@
   value)
 
 (defclass trait (closer-mop:slot-definition)
-  ((sync :initarg :sync
-         :initform nil
-         :accessor trait-sync)))
+  ((trait :initarg :trait
+          :initform nil
+          :accessor trait-type)))
 
 (defclass direct-trait
   (trait closer-mop:standard-direct-slot-definition)
@@ -63,11 +63,11 @@
            :around ((class trait-metaclass) name direct-slot-definitions)
   (declare (ignore name))
   (let ((result (call-next-method)))
-    (setf (trait-sync result)
-      (some #'trait-sync direct-slot-definitions))
+    (setf (trait-type result)
+      (some #'trait-type direct-slot-definitions))
     result))
 
-(defmethod trait-sync ((slot closer-mop:direct-slot-definition)))
+(defmethod trait-type ((slot closer-mop:direct-slot-definition)))
 
 (defmethod closer-mop:direct-slot-definition-class
            ((class trait-metaclass) &rest initargs)
@@ -85,7 +85,7 @@
 
 (defmethod (setf closer-mop:slot-value-using-class)
            :around (value (mc trait-metaclass) object (slot effective-trait))
-  (if (and (not *trait-silence*) (trait-sync slot))
+  (if (and (not *trait-silence*) (trait-type slot))
     (let* ((name (closer-mop:slot-definition-name slot))
            (old-value (if (slot-boundp object name) (slot-value object name) :unbound))
            (new-value (call-next-method)))

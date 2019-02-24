@@ -38,6 +38,7 @@
           :components
             ((:file "traits")
              (:file "widget")
+             (:file "trait-types")
              (:file "dom-widget")
              (:file "button-style")
              (:file "layout")

@@ -6,12 +6,12 @@
     :initform nil
     :accessor widget-button-color
     :documentation "Color of the button"
-    :sync t)
+    :trait :unicode)
    (font-weight
     :initarg :font-weight
     :accessor widget-font-weight
     :documentation "Button text font weight."
-    :sync t))
+    :trait :unicode))
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "ButtonStyleModel"

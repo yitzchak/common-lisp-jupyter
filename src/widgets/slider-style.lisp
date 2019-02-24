@@ -6,12 +6,12 @@
     :initform nil
     :accessor widget-description-width
     :documentation "Width of the description to the side of the control."
-    :sync t)
+    :trait :unicode)
    (handle-color
     :initarg :handle-color
     :accessor widget-handle-color
     :documentation "Color of the slider handle."
-    :sync t))
+    :trait :color))
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "SliderStyleModel"

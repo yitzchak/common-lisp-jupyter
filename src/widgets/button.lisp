@@ -6,35 +6,35 @@
     :initform ""
     :accessor widget-button-style
     :documentation "Use a predefined styling for the button."
-    :sync t)
+    :trait :unicode)
    (description
     :initarg :description
     :accessor widget-description
     :documentation "Button label."
-    :sync t)
+    :trait :unicode)
    (disabled
     :initarg :disabled
-    :initform :false
+    :initform nil
     :accessor widget-disabled
     :documentation "Enable or disable user changes."
-    :sync t)
+    :trait :boolean)
    (icon
     :initarg :icon
     :initform ""
     :accessor widget-icon
     :documentation "Font-awesome icon name, without the 'fa-' prefix."
-    :sync t)
+    :trait :unicode)
    (style
     :initarg :style
     :initform (make-widget 'button-style)
     :accessor widget-style
     :documentation "Reference to button style widget."
-    :sync t)
+    :trait :widget)
    (tooltip
     :initarg :tooltip
     :accessor widget-tooltip
     :documentation "Tooltip caption of the button."
-    :sync t))
+    :trait :unicode))
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "ButtonModel"
@@ -54,14 +54,3 @@
            (equal (jsown:val (jsown:val data "content") "event") "click"))
     (on-button-click w)
     (call-next-method)))
-
-(defun make-button (description)
-  (with-trait-silence
-    (let* ((inst (make-instance 'button :description description))
-           (state (to-json-state inst))
-           (data (jsown:new-js
-                  ("state" state)
-                  ("buffer_paths" nil))))
-      (jupyter:send-comm-open inst data
-        (jsown:new-js ("version" +protocol-version+)))
-      inst)))
