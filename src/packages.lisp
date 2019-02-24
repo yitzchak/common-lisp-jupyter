@@ -55,6 +55,8 @@
 (defpackage #:jupyter-widgets
   (:use #:cl #:iterate)
   (:export
+    #:bounded-float-text
+    #:bounded-int-text
     #:button
     #:button-style
     #:checkbox
@@ -63,14 +65,18 @@
     #:float-log-slider
     #:float-range-slider
     #:float-slider
+    #:float-text
     #:int-range-slider
     #:int-slider
+    #:int-text
     #:layout
     #:make-widget
     #:on-button-click
     #:selection-range-slider
     #:selection-slider
     #:slider-style
+    #:text
+    #:text-area
     #:widget-%dom-classes
     #:widget-%module-module
     #:widget-%module-module-version
@@ -125,9 +131,11 @@
     #:widget-overflow-x
     #:widget-overflow-y
     #:widget-padding
+    #:widget-placeholder
     #:widget-readout
     #:widget-readout-format
     #:widget-right
+    #:widget-rows
     #:widget-step
     #:widget-style
     #:widget-tooltip
