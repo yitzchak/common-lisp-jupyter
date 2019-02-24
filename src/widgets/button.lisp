@@ -1,31 +1,48 @@
 (in-package #:jupyter-widgets)
 
 (defclass button (dom-widget)
-  ((description :initarg :description
-                :accessor widget-description
-                :documentation "Button label."
-                :sync t)
-   (tooltip :initarg :tooltip
-            :accessor widget-tooltip
-            :documentation "Tooltip caption of the button."
-            :sync t)
-   (disabled :initarg :disabled
-             :initform :false
-             :accessor widget-disabled
-             :documentation "Enable or disable user changes."
-             :sync t)
-   (icon :initarg :icon
-         :initform ""
-         :accessor widget-icon
-         :documentation "Font-awesome icon name, without the 'fa-' prefix."
-         :sync t))
+  ((button-style
+    :initarg :button-style
+    :initform ""
+    :accessor widget-button-style
+    :documentation "Use a predefined styling for the button."
+    :sync t)
+   (description
+    :initarg :description
+    :accessor widget-description
+    :documentation "Button label."
+    :sync t)
+   (disabled
+    :initarg :disabled
+    :initform :false
+    :accessor widget-disabled
+    :documentation "Enable or disable user changes."
+    :sync t)
+   (icon
+    :initarg :icon
+    :initform ""
+    :accessor widget-icon
+    :documentation "Font-awesome icon name, without the 'fa-' prefix."
+    :sync t)
+   (style
+    :initarg :style
+    :initform (make-widget 'button-style)
+    :accessor widget-style
+    :documentation "Reference to button style widget."
+    :sync t)
+   (tooltip
+    :initarg :tooltip
+    :accessor widget-tooltip
+    :documentation "Tooltip caption of the button."
+    :sync t))
   (:metaclass trait-metaclass)
-  (:default-initargs :%model-name "ButtonModel"
-                     :%model-module +model-module+
-                     :%model-module-version +model-module-version+
-                     :%view-name "ButtonView"
-                     :%view-module +view-module+
-                     :%view-module-version +view-module-version+))
+  (:default-initargs
+    :%model-name "ButtonModel"
+    :%model-module +controls-module+
+    :%model-module-version +controls-module-version+
+    :%view-name "ButtonView"
+    :%view-module +controls-module+
+    :%view-module-version +controls-module-version+))
 
 (defgeneric on-button-click (w))
 

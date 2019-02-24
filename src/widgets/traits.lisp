@@ -24,6 +24,16 @@
 (defmethod validate-trait (object type name value)
   value)
 
+(defgeneric serialize-trait (object type name value))
+
+(defmethod serialize-trait (object type name value)
+  value)
+
+(defgeneric deserialize-trait (object type name value))
+
+(defmethod deserialize-trait (object type name value)
+  value)
+
 (defclass trait (closer-mop:slot-definition)
   ((sync :initarg :sync
          :initform nil

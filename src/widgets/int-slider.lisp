@@ -60,6 +60,12 @@
     :accessor widget-step
     :documentation "Minimum step to increment the value"
     :sync t)
+   (style
+    :initarg :style
+    :initform (make-widget 'slider-style)
+    :accessor widget-style
+    :documentation "Reference to slider style widget."
+    :sync t)
    (value
     :initarg :value
     :initform 0
@@ -69,11 +75,11 @@
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "IntSliderModel"
-    :%model-module +model-module+
-    :%model-module-version +model-module-version+
+    :%model-module +controls-module+
+    :%model-module-version +controls-module-version+
     :%view-name "IntSliderView"
-    :%view-module +view-module+
-    :%view-module-version +view-module-version+))
+    :%view-module +controls-module+
+    :%view-module-version +controls-module-version+))
 
 (defun make-int-slider ()
   (with-trait-silence

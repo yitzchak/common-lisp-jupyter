@@ -55,23 +55,74 @@
 (defpackage #:jupyter-widgets
   (:use #:cl #:iterate)
   (:export
+    #:button
+    #:button-style
     #:dom-widget
-    #:make-button
-    #:make-int-slider
+    #:int-slider
+    #:layout
+    #:make-widget
     #:on-button-click
+    #:slider-style
+    #:widget-%dom-classes
+    #:widget-%module-module
+    #:widget-%module-module-version
+    #:widget-%module-name
+    #:widget-%view-module
+    #:widget-%view-module-version
+    #:widget-%view-name
+    #:widget-align-content
+    #:widget-align-items
+    #:widget-align-self
+    #:widget-border
+    #:widget-bottom
+    #:widget-button-color
+    #:widget-button-style
     #:widget-continuous-update
     #:widget-description
     #:widget-description-tooltip
+    #:widget-description-width
     #:widget-disabled
+    #:widget-display
+    #:widget-flex
+    #:widget-flex-flow
+    #:widget-font-weight
+    #:widget-grid-area
+    #:widget-grid-auto-columns
+    #:widget-grid-auto-flow
+    #:widget-grid-column
+    #:widget-grid-gap
+    #:widget-grid-template-areas
+    #:widget-grid-template-columns
+    #:widget-grid-template-rows
+    #:widget-handle-color
+    #:widget-height
     #:widget-icon
+    #:widget-justify-content
+    #:widget-layout
+    #:widget-left
+    #:widget-margin
     #:widget-max
+    #:widget-max-height
+    #:widget-max-width
     #:widget-min
+    #:widget-min-height
+    #:widget-min-width
+    #:widget-order
     #:widget-orientation
+    #:widget-overflow
+    #:widget-overflow-x
+    #:widget-overflow-y
+    #:widget-padding
     #:widget-readout
     #:widget-readout-format
+    #:widget-right
     #:widget-step
+    #:widget-style
     #:widget-tooltip
+    #:widget-top
     #:widget-value
+    #:widget-visibility
+    #:widget-width
     #:widget))
 
 (defpackage #:common-lisp-jupyter

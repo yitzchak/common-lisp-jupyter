@@ -1,39 +1,46 @@
 (in-package #:jupyter-widgets)
 
 (defparameter +protocol-version+ "2.0.0")
-(defparameter +model-module+ "@jupyter-widgets/controls")
-(defparameter +model-module-version+ "1.4.0")
-(defparameter +view-module+ "@jupyter-widgets/controls")
-(defparameter +view-module-version+ "1.4.0")
+(defparameter +base-module+ "@jupyter-widgets/base")
+(defparameter +base-module-version+ "1.1.0")
+(defparameter +controls-module+ "@jupyter-widgets/controls")
+(defparameter +controls-module-version+ "1.4.0")
+
 (defparameter +target-name+ "jupyter.widget")
 
 (defvar *state-lock* nil)
 
 (defclass widget (jupyter:comm jupyter:result)
-  ((%model-name :initarg :%model-name
-                :reader widget-%module-name
-                :documentation "Name of the model."
-                :sync t)
-   (%model-module :initarg :%model-module
-                  :reader widget-%module-module
-                  :documentation "The namespace for the model."
-                  :sync t)
-   (%model-module-version :initarg :%model-module-version
-                          :reader widget-%module-module-version
-                          :documentation "A semver requirement for namespace version containing the model."
-                          :sync t)
-   (%view-name :initarg :%view-name
-               :reader widget-%view-name
-               :documentation "Name of the view."
-               :sync t)
-   (%view-module :initarg :%view-module
-                 :reader widget-%view-module
-                 :documentation "The namespace for the view."
-                 :sync t)
-   (%view-module-version :initarg :%view-module-version
-                         :reader widget-%view-module-version
-                         :documentation "A semver requirement for namespace version containing the view."
-                         :sync t))
+  ((%model-name
+    :initarg :%model-name
+    :reader widget-%module-name
+    :documentation "Name of the model."
+    :sync t)
+   (%model-module
+    :initarg :%model-module
+    :reader widget-%module-module
+    :documentation "The namespace for the model."
+    :sync t)
+   (%model-module-version
+    :initarg :%model-module-version
+    :reader widget-%module-module-version
+    :documentation "A semver requirement for namespace version containing the model."
+    :sync t)
+   (%view-name
+    :initarg :%view-name
+    :reader widget-%view-name
+    :documentation "Name of the view."
+    :sync t)
+   (%view-module
+    :initarg :%view-module
+    :reader widget-%view-module
+    :documentation "The namespace for the view."
+    :sync t)
+   (%view-module-version
+    :initarg :%view-module-version
+    :reader widget-%view-module-version
+    :documentation "A semver requirement for namespace version containing the view."
+    :sync t))
   (:metaclass trait-metaclass)
   (:default-initargs :display t
                      :target-name +target-name+))
@@ -52,19 +59,22 @@
     (substitute #\_ #\-
       (string-downcase (symbol-name s)))))
 
-(defmethod to-json-state (w)
+(defmethod to-json-state (w &optional nm)
   (iter
     (with state = (jsown:new-js))
     (for def in (closer-mop:class-slots (class-of w)))
     (for name next (closer-mop:slot-definition-name def))
-    (when (and (slot-boundp w name) (trait-sync def))
+    (when (and (or (not nm) (equal name nm))
+               (slot-boundp w name)
+               (trait-sync def))
       (jsown:extend-js state
-        ((symbol-to-key name) (slot-value w name))))
+        ((symbol-to-key name)
+          (serialize-trait w name nil (slot-value w name)))))
     (finally (return state))))
 
-(defun send-state (w)
+(defun send-state (w &optional name)
   (when (not *state-lock*)
-    (let* ((state (to-json-state w))
+    (let* ((state (to-json-state w name))
            (data (jsown:new-js
                    ("method" "update")
                    ("state" state)
@@ -94,8 +104,22 @@
       (t (call-next-method)))))
 
 (defmethod on-trait-change ((w widget) name old-value new-value)
-  (declare (ignore name old-value new-value))
-  (send-state w))
+  (declare (ignore old-value new-value))
+  (send-state w name))
 
 (defmethod jupyter:create-comm ((target-name (eql :|jupyter.widget|)) id data metadata)
   (jupyter:info "create-comm ~A ~A ~A ~A~%" target-name id data metadata))
+
+(defmethod serialize-trait (object type name (value widget))
+  (format nil "IPY_MODEL_~A" (jupyter:comm-id value)))
+
+(defun make-widget (class &rest rest &key &allow-other-keys)
+  (with-trait-silence
+    (let* ((inst (apply 'make-instance class rest))
+           (state (to-json-state inst))
+           (data (jsown:new-js
+                  ("state" state)
+                  ("buffer_paths" nil))))
+      (jupyter:send-comm-open inst data
+        (jsown:new-js ("version" +protocol-version+)))
+      inst)))
