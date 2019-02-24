@@ -42,7 +42,7 @@
     :documentation "A semver requirement for namespace version containing the view."
     :trait :unicode))
   (:metaclass trait-metaclass)
-  (:default-initargs :display t
+  (:default-initargs :display-data t
                      :target-name +target-name+))
 
 (defmethod jupyter:render ((w widget))

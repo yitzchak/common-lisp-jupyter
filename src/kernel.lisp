@@ -558,7 +558,7 @@
         (let ((data (let ((*package* (find-package package)))
                       (render result))))
           (when data
-            (if (result-display result)
+            (if (result-display-data result)
               (send-display-data iopub *message* data)
               (send-execute-result iopub *message* execute-count data))))))))
 
