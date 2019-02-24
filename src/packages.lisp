@@ -57,6 +57,8 @@
   (:export
     #:button
     #:button-style
+    #:checkbox
+    #:description-style
     #:dom-widget
     #:int-slider
     #:layout
@@ -97,6 +99,7 @@
     #:widget-handle-color
     #:widget-height
     #:widget-icon
+    #:widget-indent
     #:widget-justify-content
     #:widget-layout
     #:widget-left

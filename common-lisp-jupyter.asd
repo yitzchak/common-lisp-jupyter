@@ -41,6 +41,8 @@
              (:file "trait-types")
              (:file "dom-widget")
              (:file "button-style")
+             (:file "checkbox")
+             (:file "description-style")
              (:file "layout")
              (:file "slider-style")
              (:file "button")
