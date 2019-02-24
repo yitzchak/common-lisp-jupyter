@@ -60,21 +60,29 @@
     #:checkbox
     #:description-style
     #:dom-widget
+    #:float-log-slider
+    #:float-range-slider
+    #:float-slider
+    #:int-range-slider
     #:int-slider
     #:layout
     #:make-widget
     #:on-button-click
+    #:selection-range-slider
+    #:selection-slider
     #:slider-style
     #:widget-%dom-classes
     #:widget-%module-module
     #:widget-%module-module-version
     #:widget-%module-name
+    #:widget-%options-labels
     #:widget-%view-module
     #:widget-%view-module-version
     #:widget-%view-name
     #:widget-align-content
     #:widget-align-items
     #:widget-align-self
+    #:widget-base
     #:widget-border
     #:widget-bottom
     #:widget-button-color
@@ -100,6 +108,7 @@
     #:widget-height
     #:widget-icon
     #:widget-indent
+    #:widget-index
     #:widget-justify-content
     #:widget-layout
     #:widget-left

@@ -10,6 +10,16 @@
 (defmethod serialize-trait (object name (type (eql :integer)) (value (eql nil)))
   :null)
 
+; Float
+
+(defmethod deserialize-trait (object name (type (eql :float)) value)
+  (coerce value 'double-float))
+
+; Float List
+
+(defmethod deserialize-trait (object name (type (eql :float-list)) value)
+  (mapcar (lambda (x) (coerce x 'double-float)) value))
+
 ; Unicode
 
 (defmethod serialize-trait (object name (type (eql :unicode)) (value (eql nil)))

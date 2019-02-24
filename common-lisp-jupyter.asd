@@ -46,6 +46,6 @@
              (:file "layout")
              (:file "slider-style")
              (:file "button")
-             (:file "int-slider")))
+             (:file "sliders")))
          (:file "kernel")
          (:file "cl-kernel")))))
