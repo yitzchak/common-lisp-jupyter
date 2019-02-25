@@ -49,6 +49,7 @@
              (:file "button")
              (:file "controller")
              (:file "progress")
+             (:file "select")
              (:file "slider")
              (:file "text")))
          (:file "kernel")

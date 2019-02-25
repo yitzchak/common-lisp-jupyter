@@ -80,6 +80,8 @@
     #:on-button-click
     #:password
     #:progress-style
+    #:select
+    #:select-multiple
     #:selection-range-slider
     #:selection-slider
     #:slider-style
