@@ -61,6 +61,7 @@
     #:button
     #:button-style
     #:checkbox
+    #:color-picker
     #:controller
     #:controller-axis
     #:controller-button
@@ -107,6 +108,7 @@
     #:widget-button-color
     #:widget-button-style
     #:widget-buttons
+    #:widget-concise
     #:widget-connected
     #:widget-continuous-update
     #:widget-description
