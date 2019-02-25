@@ -73,7 +73,7 @@ Standard MIME types
         (mime-type value))
       (jsown:new-js
         (*plain-text-mime-type* "inline-value")
-        (mime-type (if (stringp value)
+        (mime-type (if (or (stringp value) (ends-with-p mime-type "json"))
                        value
                        (cl-base64:usb8-array-to-base64-string value)))))))
 

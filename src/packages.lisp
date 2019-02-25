@@ -47,6 +47,7 @@
     #:on-comm-open
     #:quit-condition
     #:run-kernel
+    #:get-comm
     #:send-comm-close
     #:send-comm-message
     #:send-comm-open
@@ -60,6 +61,9 @@
     #:button
     #:button-style
     #:checkbox
+    #:controller
+    #:controller-axis
+    #:controller-button
     #:description-style
     #:dom-widget
     #:float-log-slider
@@ -88,11 +92,14 @@
     #:widget-align-content
     #:widget-align-items
     #:widget-align-self
+    #:widget-axes
     #:widget-base
     #:widget-border
     #:widget-bottom
     #:widget-button-color
     #:widget-button-style
+    #:widget-buttons
+    #:widget-connected
     #:widget-continuous-update
     #:widget-description
     #:widget-description-tooltip
@@ -118,6 +125,7 @@
     #:widget-justify-content
     #:widget-layout
     #:widget-left
+    #:widget-mapping
     #:widget-margin
     #:widget-max
     #:widget-max-height
@@ -125,6 +133,7 @@
     #:widget-min
     #:widget-min-height
     #:widget-min-width
+    #:widget-name
     #:widget-order
     #:widget-orientation
     #:widget-overflow
@@ -132,12 +141,14 @@
     #:widget-overflow-y
     #:widget-padding
     #:widget-placeholder
+    #:widget-pressed
     #:widget-readout
     #:widget-readout-format
     #:widget-right
     #:widget-rows
     #:widget-step
     #:widget-style
+    #:widget-timestamp
     #:widget-tooltip
     #:widget-top
     #:widget-value

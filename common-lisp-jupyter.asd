@@ -46,6 +46,7 @@
              (:file "layout")
              (:file "slider-style")
              (:file "button")
+             (:file "controller")
              (:file "slider")
              (:file "text")))
          (:file "kernel")

@@ -10,6 +10,9 @@
            :initform *kernel*
            :reader comm-kernel)))
 
+(defun get-comm (id)
+  (gethash id (kernel-comms *kernel*)))
+
 (defgeneric create-comm (target-name id data metadata))
 
 (defmethod create-comm (target-name id data metadata))

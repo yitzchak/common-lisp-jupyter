@@ -267,7 +267,9 @@
 |#
 
 (defun handle-message (kernel msg)
-  (let ((msg-type (jsown:val (message-header msg) "msg_type")))
+  (let ((msg-type (jsown:val (message-header msg) "msg_type"))
+        (*kernel* kernel)
+        (*message* msg))
     (cond ((equal msg-type "kernel_info_request")
            (handle-kernel-info-request kernel msg))
           ((equal msg-type "execute_request")
@@ -339,8 +341,6 @@
                 kernel
       (vector-push code history-in)
       (let* ((execution-count (length history-in))
-             (*kernel* kernel)
-             (*message* msg)
              (*payload* (make-array 16 :adjustable t :fill-pointer 0))
              (*page-output* (make-string-output-stream))
              (*query-io* (make-stdin-stream stdin msg))
@@ -476,7 +476,8 @@
            (id (jsown:val content "comm_id"))
            (target-name (jsown:val content "target_name"))
            (data (jsown:val content "data"))
-           (inst (create-comm (intern target-name) id data metadata)))
+           (inst (create-comm (intern target-name 'keyword) id data metadata)))
+      (info "~A ~%" target-name)
       (if inst
         (progn
           (setf (gethash id comms) inst)

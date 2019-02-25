@@ -9,6 +9,20 @@
 (defparameter +target-name+ "jupyter.widget")
 
 (defvar *state-lock* nil)
+(defvar *widgets* (make-hash-table :test 'equal))
+
+
+
+(defmacro register-widget (name)
+  `(let ((class (find-class (quote ,name))))
+    (closer-mop:finalize-inheritance class)
+
+    (setf
+      (gethash
+        (second
+          (assoc :%model-name (closer-mop:compute-default-initargs class)))
+        *widgets*)
+      (quote ,name))))
 
 (defclass widget (jupyter:comm jupyter:result)
   ((%model-name
@@ -80,7 +94,6 @@
                    ("method" "update")
                    ("state" state)
                    ("buffer_paths" nil))))
-      (jupyter:info "state ~S~%" state)
       (jupyter:send-comm-message w data
         (jsown:new-js ("version" +protocol-version+))))))
 
@@ -111,9 +124,6 @@
   (declare (ignore old-value new-value))
   (send-state w name))
 
-(defmethod jupyter:create-comm ((target-name (eql :|jupyter.widget|)) id data metadata)
-  (jupyter:info "create-comm ~A ~A ~A ~A~%" target-name id data metadata))
-
 (defun make-widget (class &rest rest &key &allow-other-keys)
   (with-trait-silence
     (let* ((inst (apply 'make-instance class rest))
@@ -121,7 +131,13 @@
            (data (jsown:new-js
                   ("state" state)
                   ("buffer_paths" nil))))
-      (jupyter:info "make-widget ~S~%" state)
       (jupyter:send-comm-open inst data
         (jsown:new-js ("version" +protocol-version+)))
       inst)))
+
+(defmethod jupyter:create-comm ((target-name (eql :|jupyter.widget|)) id data metadata)
+  (let* ((state (jsown:val data "state"))
+         (model-name (jsown:val state "_model_name"))
+         (class (gethash model-name *widgets*)))
+    (when class
+      (make-widget class))))
