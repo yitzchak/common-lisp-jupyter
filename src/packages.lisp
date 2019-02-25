@@ -76,6 +76,7 @@
     #:layout
     #:make-widget
     #:on-button-click
+    #:password
     #:selection-range-slider
     #:selection-slider
     #:slider-style

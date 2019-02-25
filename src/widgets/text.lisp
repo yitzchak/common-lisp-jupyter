@@ -75,6 +75,16 @@
 (register-widget text-area)
 
 
+(defclass password (text)
+  ()
+  (:metaclass trait-metaclass)
+  (:default-initargs
+    :%model-name "PasswordModel"
+    :%view-name "PasswordView"))
+
+(register-widget password)
+
+
 (defclass float-text (base-text)
   ((step
     :initarg :step
