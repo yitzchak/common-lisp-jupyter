@@ -11,18 +11,37 @@
 (defvar *state-lock* nil)
 (defvar *widgets* (make-hash-table :test 'equal))
 
+(defun extract-major-version (semver)
+  (let* ((v (string-left-trim '(#\0) semver)))
+    (subseq v 0 (position #\. v :start (if (equal (char v 0) #\.) 1 0)))))
 
+(defun widget-registry-name (model-module model-module-version model-name
+                             view-module view-module-version view-name)
+  (when (and model-module model-module-version model-name view-module
+             view-module-version view-name)
+    (format nil "~A+~A+~A+~A+~A+~A"
+      model-module
+      (extract-major-version model-module-version)
+      model-name
+      view-module
+      (extract-major-version view-module-version)
+      view-name)))
 
 (defmacro register-widget (name)
   `(let ((class (find-class (quote ,name))))
     (closer-mop:finalize-inheritance class)
-
-    (setf
-      (gethash
-        (second
-          (assoc :%model-name (closer-mop:compute-default-initargs class)))
-        *widgets*)
-      (quote ,name))))
+    (let* ((initargs (closer-mop:compute-default-initargs class))
+           (model-module (eval (second (assoc :%model-module initargs))))
+           (model-module-version (eval (second (assoc :%model-module-version initargs))))
+           (model-name (eval (second (assoc :%model-name initargs))))
+           (view-module (eval (second (assoc :%view-module initargs))))
+           (view-module-version (eval (second (assoc :%view-module-version initargs))))
+           (view-name (eval (second (assoc :%view-name initargs))))
+           (name (widget-registry-name model-module model-module-version
+                                       model-name view-module
+                                       view-module-version view-name)))
+      (when name
+        (setf (gethash name *widgets*) (quote ,name))))))
 
 (defclass widget (jupyter:comm jupyter:result)
   ((%model-name
@@ -138,6 +157,15 @@
 (defmethod jupyter:create-comm ((target-name (eql :|jupyter.widget|)) id data metadata)
   (let* ((state (jsown:val data "state"))
          (model-name (jsown:val state "_model_name"))
-         (class (gethash model-name *widgets*)))
+         (model-module (jsown:val state "_model_module"))
+         (model-module-version (jsown:val state "_model_module_version"))
+         (view-name (jsown:val state "_view_name"))
+         (view-module (jsown:val state "_view_module"))
+         (view-module-version (jsown:val state "_view_module_version"))
+         (name (widget-registry-name model-module model-module-version
+                                     model-name view-module
+                                     view-module-version view-name))
+         (class (gethash name *widgets*)))
+    (jupyter:info "~A~%" name)
     (when class
       (make-widget class))))

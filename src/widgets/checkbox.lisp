@@ -43,3 +43,5 @@
     :%view-name "CheckboxView"
     :%view-module +controls-module+
     :%view-module-version +controls-module-version+))
+
+(register-widget checkbox)

@@ -15,3 +15,5 @@
     :%view-name "StyleView"
     :%view-module +base-module+
     :%view-module-version +base-module-version+))
+
+(register-widget description-style)

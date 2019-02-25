@@ -102,6 +102,8 @@
     :%view-name "FloatLogSliderView"
     :readout-format ".3g"))
 
+(register-widget float-log-slider)
+
 
 (defclass float-range-slider (number-slider)
   ((max
@@ -133,6 +135,8 @@
     :%model-name "FloatRangeSliderModel"
     :%view-name "FloatRangeSliderView"
     :readout-format ".2f"))
+
+(register-widget float-range-slider)
 
 
 (defclass float-slider (number-slider)
@@ -166,6 +170,8 @@
     :%view-name "FloatSliderView"
     :readout-format ".2f"))
 
+(register-widget float-slider)
+
 
 (defclass int-range-slider (number-slider)
   ((max
@@ -197,6 +203,8 @@
     :%model-name "IntRangeSliderModel"
     :%view-name "IntRangeSliderView"
     :readout-format "d"))
+
+(register-widget int-range-slider)
 
 
 (defclass int-slider (number-slider)
@@ -230,6 +238,8 @@
     :%view-name "IntSliderView"
     :readout-format "d"))
 
+(register-widget int-slider)
+
 
 (defclass label-slider (base-slider)
   ((%options-labels
@@ -253,6 +263,8 @@
     :%model-name "SelectionRangeSliderModel"
     :%view-name "SelectionRangeSliderView"))
 
+(register-widget selection-range-slider)
+
 
 (defclass selection-slider (label-slider)
   ((index
@@ -265,3 +277,5 @@
   (:default-initargs
     :%model-name "SelectionSliderModel"
     :%view-name "SelectionSliderView"))
+
+(register-widget selection-slider)

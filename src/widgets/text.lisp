@@ -57,6 +57,8 @@
     :%model-name "TextModel"
     :%view-name "TextView"))
 
+(register-widget text)
+
 
 (defclass text-area (text)
   ((rows
@@ -69,6 +71,8 @@
   (:default-initargs
     :%model-name "TextareaModel"
     :%view-name "TextareaView"))
+
+(register-widget text-area)
 
 
 (defclass float-text (base-text)
@@ -89,6 +93,8 @@
     :%model-name "FloatTextModel"
     :%view-name "FloatTextView"))
 
+(register-widget float-text)
+
 
 (defclass bounded-float-text (float-text)
   ((max
@@ -107,6 +113,8 @@
   (:default-initargs
     :%model-name "BoundedFloatTextModel"
     :%view-name "BoundedFloatTextView"))
+
+(register-widget bounded-float-text)
 
 
 (defclass int-text (base-text)
@@ -127,6 +135,8 @@
     :%model-name "IntTextModel"
     :%view-name "IntTextView"))
 
+(register-widget int-text)
+
 
 (defclass bounded-int-text (int-text)
   ((max
@@ -145,3 +155,5 @@
   (:default-initargs
     :%model-name "BoundedIntTextModel"
     :%view-name "BoundedIntTextView"))
+
+(register-widget bounded-int-text)

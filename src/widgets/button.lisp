@@ -44,6 +44,8 @@
     :%view-module +controls-module+
     :%view-module-version +controls-module-version+))
 
+(register-widget button)
+
 (defgeneric on-button-click (w))
 
 (defmethod on-button-click (w))

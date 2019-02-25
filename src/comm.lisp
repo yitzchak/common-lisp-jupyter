@@ -2,7 +2,7 @@
 
 (defclass comm ()
   ((id :initarg :id
-       :initform (format nil "~W" (uuid:make-v4-uuid))
+       :initform (make-uuid)
        :reader comm-id)
    (target-name :initarg :target-name
                 :reader comm-target-name)

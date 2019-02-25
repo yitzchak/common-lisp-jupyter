@@ -177,7 +177,7 @@
   (with-slots (ctx key transport ip hb-port hb shell-port shell stdin-port stdin
                iopub-port iopub session prompt-prefix prompt-suffix)
               k
-    (setq session (format nil "~W" (uuid:make-v4-uuid)))
+    (setq session (make-uuid))
     (setq ctx (pzmq:ctx-new))
     (setq hb (make-instance 'hb-channel
                             :key key

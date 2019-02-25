@@ -38,7 +38,7 @@
         (identities (message-identities parent-msg)))
     (make-instance 'message
                    :header (jsown:new-js
-                             ("msg_id" (format nil "~W" (uuid:make-v4-uuid)))
+                             ("msg_id" (make-uuid))
                              ("username" (jsown:val hdr "username"))
                              ("session" (jsown:val hdr "session"))
                              ("msg_type" msg-type)
@@ -51,7 +51,7 @@
 (defun make-orphan-message (session-id msg-type identities content &optional metadata)
   (make-instance 'message
                  :header (jsown:new-js
-                           ("msg_id" (format nil "~W" (uuid:make-v4-uuid)))
+                           ("msg_id" (make-uuid))
                            ("username" "kernel")
                            ("session" session-id)
                            ("msg_type" msg-type)

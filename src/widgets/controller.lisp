@@ -92,3 +92,5 @@
     :%view-name "ControllerView"
     :%view-module +controls-module+
     :%view-module-version +controls-module-version+))
+
+(register-widget controller)
