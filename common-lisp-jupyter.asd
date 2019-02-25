@@ -49,6 +49,7 @@
              (:file "button")
              (:file "color-picker")
              (:file "controller")
+             (:file "date-picker")
              (:file "progress")
              (:file "select")
              (:file "slider")

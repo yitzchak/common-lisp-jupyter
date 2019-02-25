@@ -65,6 +65,7 @@
     #:controller
     #:controller-axis
     #:controller-button
+    #:date-picker
     #:description-style
     #:dom-widget
     #:float-log-slider
