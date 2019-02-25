@@ -56,8 +56,10 @@
 (defpackage #:jupyter-widgets
   (:use #:cl #:iterate)
   (:export
+    #:accordion
     #:bounded-float-text
     #:bounded-int-text
+    #:box
     #:button
     #:button-style
     #:checkbox
@@ -73,6 +75,8 @@
     #:float-range-slider
     #:float-slider
     #:float-text
+    #:grid-box
+    #:h-box
     #:int-progress
     #:int-range-slider
     #:int-slider
@@ -87,13 +91,16 @@
     #:selection-range-slider
     #:selection-slider
     #:slider-style
+    #:tab
     #:text
     #:text-area
+    #:v-box
     #:widget-%dom-classes
     #:widget-%module-module
     #:widget-%module-module-version
     #:widget-%module-name
     #:widget-%options-labels
+    #:widget-%titles
     #:widget-%view-module
     #:widget-%view-module-version
     #:widget-%view-name
@@ -106,9 +113,11 @@
     #:widget-base
     #:widget-border
     #:widget-bottom
+    #:widget-box-style
     #:widget-button-color
     #:widget-button-style
     #:widget-buttons
+    #:widget-children
     #:widget-concise
     #:widget-connected
     #:widget-continuous-update
@@ -157,6 +166,7 @@
     #:widget-readout-format
     #:widget-right
     #:widget-rows
+    #:widget-selected-index
     #:widget-step
     #:widget-style
     #:widget-timestamp

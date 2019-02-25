@@ -46,6 +46,7 @@
              (:file "layout")
              (:file "progress-style")
              (:file "slider-style")
+             (:file "box")
              (:file "button")
              (:file "color-picker")
              (:file "controller")
