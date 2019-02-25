@@ -7,7 +7,7 @@
     :initform t
     :accessor widget-continuous-update
     :documentation "Update the value of the widget as the user is holding the slider."
-    :trait :boolean)
+    :trait :bool)
    (description
     :initarg :description
     :initform ""
@@ -24,7 +24,7 @@
     :initform nil
     :accessor widget-disabled
     :documentation "Enable or disable user changes."
-    :trait :boolean)
+    :trait :bool)
    (style
     :initarg :style
     :initform (make-widget 'description-style)
@@ -66,7 +66,7 @@
     :initform nil
     :accessor widget-rows
     :documentation "The number of rows to display."
-    :trait :integer))
+    :trait :int))
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "TextareaModel"
@@ -133,13 +133,13 @@
     :initform nil
     :accessor widget-step
     :documentation "Minimum step to increment the value"
-    :trait :integer)
+    :trait :int)
    (value
     :initarg :value
     :initform 0.0d0
     :accessor widget-value
     :documentation "Int value"
-    :trait :integer))
+    :trait :int))
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "IntTextModel"
@@ -154,13 +154,13 @@
     :initform 100.0d0
     :accessor widget-max
     :documentation "Max value"
-    :trait :integer)
+    :trait :int)
    (min
     :initarg :min
     :initform 0.0d0
     :accessor widget-min
     :documentation "Min value"
-    :trait :integer))
+    :trait :int))
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "BoundedIntTextModel"

@@ -4,12 +4,12 @@
 
 ; Bool
 
-(defmethod serialize-trait (object name (type (eql :boolean)) (value (eql nil)))
+(defmethod serialize-trait (object name (type (eql :bool)) (value (eql nil)))
   :false)
 
 ; Integer
 
-(defmethod serialize-trait (object name (type (eql :integer)) (value (eql nil)))
+(defmethod serialize-trait (object name (type (eql :int)) (value (eql nil)))
   :null)
 
 ; Float

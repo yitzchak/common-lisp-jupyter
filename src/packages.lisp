@@ -67,9 +67,11 @@
     #:description-style
     #:dom-widget
     #:float-log-slider
+    #:float-progress
     #:float-range-slider
     #:float-slider
     #:float-text
+    #:int-progress
     #:int-range-slider
     #:int-slider
     #:int-text
@@ -77,6 +79,7 @@
     #:make-widget
     #:on-button-click
     #:password
+    #:progress-style
     #:selection-range-slider
     #:selection-slider
     #:slider-style
@@ -94,6 +97,8 @@
     #:widget-align-items
     #:widget-align-self
     #:widget-axes
+    #:widget-bar-color
+    #:widget-bar-style
     #:widget-base
     #:widget-border
     #:widget-bottom

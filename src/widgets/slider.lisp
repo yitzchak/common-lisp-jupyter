@@ -7,7 +7,7 @@
     :initform t
     :accessor widget-continuous-update
     :documentation "Update the value of the widget as the user is holding the slider."
-    :trait :boolean)
+    :trait :bool)
    (description
     :initarg :description
     :initform ""
@@ -24,7 +24,7 @@
     :initform nil
     :accessor widget-disabled
     :documentation "Enable or disable user changes."
-    :trait :boolean)
+    :trait :bool)
    (orientation
     :initarg :orientation
     :initform "horizontal"
@@ -36,7 +36,7 @@
     :initform t
     :accessor widget-readout
     :documentation "Display the current value of the slider next to it."
-    :trait :boolean)
+    :trait :bool)
    (readout-format
     :initarg :readout-format
     :accessor widget-readout-format
@@ -179,25 +179,25 @@
     :initform 100
     :accessor widget-max
     :documentation "Max value"
-    :trait :integer)
+    :trait :int)
    (min
     :initarg :min
     :initform 0
     :accessor widget-min
     :documentation "Min value"
-    :trait :integer)
+    :trait :int)
    (step
     :initarg :step
     :initform 1
     :accessor widget-step
     :documentation "Minimum step to increment the value"
-    :trait :integer)
+    :trait :int)
    (value
     :initarg :value
     :initform '(0 1)
     :accessor widget-value
     :documentation "Int range value"
-    :trait :integer-list))
+    :trait :int-list))
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "IntRangeSliderModel"
@@ -213,25 +213,25 @@
     :initform 100
     :accessor widget-max
     :documentation "Max value"
-    :trait :integer)
+    :trait :int)
    (min
     :initarg :min
     :initform 0
     :accessor widget-min
     :documentation "Min value"
-    :trait :integer)
+    :trait :int)
    (step
     :initarg :step
     :initform 1
     :accessor widget-step
     :documentation "Minimum step to increment the value"
-    :trait :integer)
+    :trait :int)
    (value
     :initarg :value
     :initform 0
     :accessor widget-value
     :documentation "Int value"
-    :trait :integer))
+    :trait :int))
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "IntSliderModel"
@@ -257,7 +257,7 @@
     :initform '(0 0)
     :accessor widget-index
     :documentation "Min and max selected indices"
-    :trait :integer-list))
+    :trait :int-list))
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "SelectionRangeSliderModel"
@@ -272,7 +272,7 @@
     :initform 0
     :accessor widget-index
     :documentation "Selected index"
-    :trait :integer))
+    :trait :int))
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "SelectionSliderModel"

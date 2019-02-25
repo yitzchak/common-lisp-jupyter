@@ -16,13 +16,13 @@
     :initform nil
     :accessor widget-disabled
     :documentation "Enable or disable user changes."
-    :trait :boolean)
+    :trait :bool)
    (indent
     :initarg :indent
     :initform t
     :accessor widget-indent
     :documentation "Indent the control to align with other controls with a description."
-    :trait :boolean)
+    :trait :bool)
    (style
     :initarg :style
     :initform (make-widget 'description-style)
@@ -34,7 +34,7 @@
     :initform nil
     :accessor widget-value
     :documentation "Bool value"
-    :trait :boolean))
+    :trait :bool))
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "CheckboxModel"

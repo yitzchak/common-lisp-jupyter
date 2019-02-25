@@ -30,7 +30,7 @@
     :initform nil
     :accessor widget-pressed
     :documentation "Whether the button is pressed."
-    :trait :boolean))
+    :trait :bool))
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "ControllerButtonModel"
@@ -59,13 +59,13 @@
     :initform nil
     :accessor widget-connected
     :documentation "Whether the gamepad is connected."
-    :trait :boolean)
+    :trait :bool)
    (index
     :initarg :index
     :initform 0
     :accessor widget-index
     :documentation "The id number of the controller."
-    :trait :integer)
+    :trait :int)
    (mapping
     :initarg :mapping
     :initform ""

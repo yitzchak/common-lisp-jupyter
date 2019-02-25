@@ -17,7 +17,7 @@
     :initform nil
     :accessor widget-disabled
     :documentation "Enable or disable user changes."
-    :trait :boolean)
+    :trait :bool)
    (icon
     :initarg :icon
     :initform ""
