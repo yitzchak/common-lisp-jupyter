@@ -70,6 +70,31 @@
 (register-widget slider-style)
 
 
+(defclass toggle-buttons-style (style)
+  ((button-width
+    :initarg :button-width
+    :initform nil
+    :accessor widget-button-width
+    :documentation "The width of each button."
+    :trait :unicode)
+   (description-width
+    :initarg :description-width
+    :initform nil
+    :accessor widget-description-width
+    :documentation "Width of the description to the side of the control."
+    :trait :unicode)
+   (font-weight
+    :initarg :font-weight
+    :accessor widget-font-weight
+    :documentation "Text font weight of each button."
+    :trait :unicode))
+  (:metaclass trait-metaclass)
+  (:default-initargs
+    :%model-name "ToggleButtonsStyleModel"))
+
+(register-widget toggle-buttons-style)
+
+
 (defclass styled-widget (dom-widget)
   ((style
     :initarg :style

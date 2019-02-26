@@ -51,6 +51,7 @@
              (:file "radio-buttons")
              (:file "select")
              (:file "slider")
-             (:file "text")))
+             (:file "text")
+             (:file "toggle-button")))
          (:file "kernel")
          (:file "cl-kernel")))))

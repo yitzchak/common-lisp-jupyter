@@ -96,6 +96,9 @@
     #:tab
     #:text
     #:text-area
+    #:toggle-button
+    #:toggle-button-style
+    #:toggle-buttons
     #:v-box
     #:widget-%dom-classes
     #:widget-%module-module
@@ -118,6 +121,7 @@
     #:widget-box-style
     #:widget-button-color
     #:widget-button-style
+    #:widget-button-width
     #:widget-buttons
     #:widget-children
     #:widget-concise
@@ -142,6 +146,7 @@
     #:widget-handle-color
     #:widget-height
     #:widget-icon
+    #:widget-icons
     #:widget-indent
     #:widget-index
     #:widget-justify-content
@@ -173,6 +178,7 @@
     #:widget-style
     #:widget-timestamp
     #:widget-tooltip
+    #:widget-tooltips
     #:widget-top
     #:widget-value
     #:widget-visibility
