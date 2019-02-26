@@ -90,6 +90,7 @@
     #:layout
     #:make-widget
     #:on-button-click
+    #:output
     #:password
     #:play
     #:progress-style
@@ -106,7 +107,9 @@
     #:toggle-button-style
     #:toggle-buttons
     #:v-box
+    #:valid
     #:video
+    #:widget
     #:widget-%dom-classes
     #:widget-%module-module
     #:widget-%module-module-version
@@ -174,9 +177,11 @@
     #:widget-min
     #:widget-min-height
     #:widget-min-width
+    #:widget-msg-id
     #:widget-name
     #:widget-order
     #:widget-orientation
+    #:widget-outputs
     #:widget-overflow
     #:widget-overflow-x
     #:widget-overflow-y
@@ -198,7 +203,7 @@
     #:widget-value
     #:widget-visibility
     #:widget-width
-    #:widget))
+    #:with-output))
 
 (defpackage #:common-lisp-jupyter
   (:nicknames :cl-jupyter)
