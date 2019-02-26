@@ -57,6 +57,7 @@
   (:use #:cl #:iterate)
   (:export
     #:accordion
+    #:audio
     #:bounded-float-text
     #:bounded-int-text
     #:box
@@ -100,6 +101,7 @@
     #:toggle-button-style
     #:toggle-buttons
     #:v-box
+    #:video
     #:widget-%dom-classes
     #:widget-%module-module
     #:widget-%module-module-version
@@ -112,6 +114,7 @@
     #:widget-align-content
     #:widget-align-items
     #:widget-align-self
+    #:widget-autoplay
     #:widget-axes
     #:widget-bar-color
     #:widget-bar-style
@@ -127,6 +130,7 @@
     #:widget-concise
     #:widget-connected
     #:widget-continuous-update
+    #:widget-controls
     #:widget-description
     #:widget-description-tooltip
     #:widget-description-width
@@ -135,6 +139,7 @@
     #:widget-flex
     #:widget-flex-flow
     #:widget-font-weight
+    #:widget-format
     #:widget-grid-area
     #:widget-grid-auto-columns
     #:widget-grid-auto-flow
@@ -152,6 +157,7 @@
     #:widget-justify-content
     #:widget-layout
     #:widget-left
+    #:widget-loop
     #:widget-mapping
     #:widget-margin
     #:widget-max
