@@ -1,13 +1,7 @@
 (in-package #:jupyter-widgets)
 
-(defclass date-picker (description-widget)
-  ((disabled
-    :initarg :disabled
-    :initform nil
-    :accessor widget-disabled
-    :documentation "Enable or disable user changes."
-    :trait :bool)
-   (value
+(defclass date-picker (description-widget disabled-slot)
+  ((value
     :initarg :value
     :initform nil
     :accessor widget-value

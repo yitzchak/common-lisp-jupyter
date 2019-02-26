@@ -1,13 +1,7 @@
 (in-package #:jupyter-widgets)
 
-(defclass checkbox (description-widget)
-  ((disabled
-    :initarg :disabled
-    :initform nil
-    :accessor widget-disabled
-    :documentation "Enable or disable user changes."
-    :trait :bool)
-   (indent
+(defclass checkbox (description-widget disabled-slot)
+  ((indent
     :initarg :indent
     :initform t
     :accessor widget-indent

@@ -1,25 +1,9 @@
 (in-package #:jupyter-widgets)
 
 
-(defclass base-text (description-widget)
-  ((continuous-update
-    :initarg :continuous-update
-    :initform t
-    :accessor widget-continuous-update
-    :documentation "Update the value of the widget as the user is holding the slider."
-    :trait :bool)
-   (disabled
-    :initarg :disabled
-    :initform nil
-    :accessor widget-disabled
-    :documentation "Enable or disable user changes."
-    :trait :bool))
-  (:metaclass trait-metaclass)
-  (:default-initargs
-    :%model-module +controls-module+
-    :%model-module-version +controls-module-version+
-    :%view-module +controls-module+
-    :%view-module-version +controls-module-version+))
+(defclass base-text (description-widget disabled-slot continuous-update-slot)
+  ()
+  (:metaclass trait-metaclass))
 
 
 (defclass text (base-text)

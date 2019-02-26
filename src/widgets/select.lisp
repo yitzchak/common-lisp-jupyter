@@ -1,20 +1,8 @@
 (in-package #:jupyter-widgets)
 
 
-(defclass base-select (description-widget)
-  ((%options-labels
-    :initarg :%options-labels
-    :initform nil
-    :accessor widget-%options-labels
-    :documentation "The labels for the options."
-    :trait :unicode-list)
-   (disabled
-    :initarg :disabled
-    :initform nil
-    :accessor widget-disabled
-    :documentation "Enable or disable user changes."
-    :trait :bool)
-   (rows
+(defclass base-select (description-widget %options-labels-slot disabled-slot)
+  ((rows
     :initarg :rows
     :initform 5
     :accessor widget-rows
@@ -23,13 +11,8 @@
   (:metaclass trait-metaclass))
 
 
-(defclass select (base-select)
-  ((index
-    :initarg :index
-    :initform nil
-    :accessor widget-index
-    :documentation "Selected index"
-    :trait :int))
+(defclass select (base-select index-slot)
+  ()
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "SelectModel"

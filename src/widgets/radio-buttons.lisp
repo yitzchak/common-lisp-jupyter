@@ -1,25 +1,9 @@
 (in-package #:jupyter-widgets)
 
 
-(defclass radio-buttons (description-widget)
-  ((%options-labels
-    :initarg :%options-labels
-    :initform nil
-    :accessor widget-%options-labels
-    :documentation "The labels for the options."
-    :trait :unicode-list)
-   (disabled
-    :initarg :disabled
-    :initform nil
-    :accessor widget-disabled
-    :documentation "Enable or disable user changes."
-    :trait :bool)
-   (index
-    :initarg :index
-    :initform nil
-    :accessor widget-index
-    :documentation "Selected index"
-    :trait :int))
+(defclass radio-buttons (description-widget %options-labels-slot disabled-slot
+                         index-slot)
+  ()
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "RadioButtonsModel"

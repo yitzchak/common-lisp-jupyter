@@ -1,19 +1,13 @@
 (in-package #:jupyter-widgets)
 
 
-(defclass base-progress (description-widget)
+(defclass base-progress (description-widget orientation-slot)
   ((bar-style
     :initarg :bar-style
     :initform ""
     :accessor widget-bar-style
     :documentation "Use a predefined styling for the progess bar."
-    :trait :bool)
-   (orientation
-    :initarg :orientation
-    :initform "horizontal"
-    :accessor widget-orientation
-    :documentation "Vertical or horizontal."
-    :trait :unicode))
+    :trait :bool))
   (:metaclass trait-metaclass)
   (:default-initargs
     :%view-name "ProgressView"

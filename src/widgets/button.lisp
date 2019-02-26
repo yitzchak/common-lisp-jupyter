@@ -1,33 +1,11 @@
 (in-package #:jupyter-widgets)
 
-(defclass button (styled-widget)
-  ((button-style
-    :initarg :button-style
-    :initform ""
-    :accessor widget-button-style
-    :documentation "Use a predefined styling for the button."
-    :trait :unicode)
-   (description
+(defclass button (styled-widget button-style-slot disabled-slot icon-slot
+                  tooltip-slot)
+  ((description
     :initarg :description
     :accessor widget-description
     :documentation "Button label."
-    :trait :unicode)
-   (disabled
-    :initarg :disabled
-    :initform nil
-    :accessor widget-disabled
-    :documentation "Enable or disable user changes."
-    :trait :bool)
-   (icon
-    :initarg :icon
-    :initform ""
-    :accessor widget-icon
-    :documentation "Font-awesome icon name, without the 'fa-' prefix."
-    :trait :unicode)
-   (tooltip
-    :initarg :tooltip
-    :accessor widget-tooltip
-    :documentation "Tooltip caption of the button."
     :trait :unicode))
   (:metaclass trait-metaclass)
   (:default-initargs

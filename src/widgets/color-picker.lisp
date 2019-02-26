@@ -1,17 +1,11 @@
 (in-package #:jupyter-widgets)
 
-(defclass color-picker (description-widget)
+(defclass color-picker (description-widget disabled-slot)
   ((concise
     :initarg :concise
     :initform nil
     :accessor widget-concise
     :documentation "Display short version with just a color selector."
-    :trait :bool)
-   (disabled
-    :initarg :disabled
-    :initform nil
-    :accessor widget-disabled
-    :documentation "Enable or disable user changes."
     :trait :bool)
    (value
     :initarg :value

@@ -1,26 +1,9 @@
 (in-package #:jupyter-widgets)
 
 
-(defclass base-slider (description-widget)
-  ((continuous-update
-    :initarg :continuous-update
-    :initform t
-    :accessor widget-continuous-update
-    :documentation "Update the value of the widget as the user is holding the slider."
-    :trait :bool)
-   (disabled
-    :initarg :disabled
-    :initform nil
-    :accessor widget-disabled
-    :documentation "Enable or disable user changes."
-    :trait :bool)
-   (orientation
-    :initarg :orientation
-    :initform "horizontal"
-    :accessor widget-orientation
-    :documentation "Vertical or horizontal."
-    :trait :unicode)
-   (readout
+(defclass base-slider (description-widget disabled-slot orientation-slot
+                       continuous-update-slot)
+  ((readout
     :initarg :readout
     :initform t
     :accessor widget-readout
@@ -221,13 +204,8 @@
 (register-widget int-slider)
 
 
-(defclass label-slider (base-slider)
-  ((%options-labels
-    :initarg :%options-labels
-    :initform nil
-    :accessor widget-%options-labels
-    :documentation "The labels for the options."
-    :trait :unicode-list))
+(defclass label-slider (base-slider %options-labels-slot)
+  ()
   (:metaclass trait-metaclass))
 
 
@@ -246,13 +224,8 @@
 (register-widget selection-range-slider)
 
 
-(defclass selection-slider (label-slider)
-  ((index
-    :initarg :index
-    :initform 0
-    :accessor widget-index
-    :documentation "Selected index"
-    :trait :int))
+(defclass selection-slider (label-slider index-slot)
+  ()
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "SelectionSliderModel"

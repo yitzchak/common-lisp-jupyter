@@ -39,6 +39,7 @@
             ((:file "traits")
              (:file "widget")
              (:file "trait-types")
+             (:file "shared-slots")
              (:file "dom-widget")
              (:file "style")
              (:file "checkbox")
