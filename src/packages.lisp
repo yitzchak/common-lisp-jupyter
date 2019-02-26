@@ -86,6 +86,7 @@
     #:on-button-click
     #:password
     #:progress-style
+    #:radio-buttons
     #:select
     #:select-multiple
     #:selection-range-slider

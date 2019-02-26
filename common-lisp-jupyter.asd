@@ -52,6 +52,7 @@
              (:file "controller")
              (:file "date-picker")
              (:file "progress")
+             (:file "radio-buttons")
              (:file "select")
              (:file "slider")
              (:file "text")))
