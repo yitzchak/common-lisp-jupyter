@@ -1,6 +1,6 @@
 (in-package #:jupyter-widgets)
 
-(defclass audio (dom-widget)
+(defclass audio (dom-widget format-slot byte-value-slot)
   ((autoplay
     :initarg :autoplay
     :initform t
@@ -13,45 +13,23 @@
     :accessor widget-controls
     :documentation "Specifies that media controls should be displayed (such as a play/pause button etc)"
     :trait :bool)
-   (format
-    :initarg :format
-    :initform "mp3"
-    :accessor widget-format
-    :documentation "The format of the media."
-    :trait :bool)
    (loop
     :initarg :loop
     :initform t
     :accessor widget-loop
     :documentation "When true, the audio will start from the beginning after finishing"
-    :trait :bool)
-   (value
-    :initarg :value
-    :initform nil
-    :accessor widget-value
-    :documentation "The media data as a byte string."
-    :trait :byte))
+    :trait :bool))
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "AudioModel"
-    :%view-name "AudioView"))
+    :%view-name "AudioView"
+    :format "mp3"))
 
 (register-widget audio)
 
 
-(defclass video (audio)
-  ((height
-    :initarg :height
-    :initform ""
-    :accessor widget-height
-    :documentation "Height of the video in pixels."
-    :trait :string)
-   (width
-    :initarg :width
-    :initform ""
-    :accessor widget-width
-    :documentation "Width of the video in pixels."
-    :trait :string))
+(defclass video (audio height-slot width-slot)
+  ()
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "VideoModel"
@@ -59,3 +37,14 @@
     :format "mp4"))
 
 (register-widget video)
+
+
+(defclass image (dom-widget format-slot height-slot width-slot byte-value-slot)
+  ()
+  (:metaclass trait-metaclass)
+  (:default-initargs
+    :%model-name "ImageModel"
+    :%view-name "ImageView"
+    :format "png"))
+
+(register-widget image)

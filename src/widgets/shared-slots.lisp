@@ -21,6 +21,16 @@
   (:metaclass trait-metaclass))
 
 
+(defclass byte-value-slot ()
+  ((value
+    :initarg :value
+    :initform nil
+    :accessor widget-value
+    :documentation "The value as a byte string."
+    :trait :byte))
+  (:metaclass trait-metaclass))
+
+
 (defclass continuous-update-slot ()
   ((continuous-update
     :initarg :continuous-update
@@ -38,6 +48,25 @@
     :accessor widget-disabled
     :documentation "Enable or disable user changes."
     :trait :bool))
+  (:metaclass trait-metaclass))
+
+
+(defclass format-slot ()
+  ((format
+    :initarg :format
+    :accessor widget-format
+    :documentation "The format of the media."
+    :trait :string))
+  (:metaclass trait-metaclass))
+
+
+(defclass height-slot ()
+  ((height
+    :initarg :height
+    :initform ""
+    :accessor widget-height
+    :documentation "Height of the media in pixels."
+    :trait :string))
   (:metaclass trait-metaclass))
 
 
@@ -97,4 +126,14 @@
     :accessor widget-tooltip
     :documentation "Tooltip caption."
     :trait :unicode))
+  (:metaclass trait-metaclass))
+
+
+(defclass width-slot ()
+  ((width
+    :initarg :width
+    :initform ""
+    :accessor widget-width
+    :documentation "Width of the media in pixels."
+    :trait :string))
   (:metaclass trait-metaclass))

@@ -81,6 +81,7 @@
     #:h-box
     #:html
     #:html-math
+    #:image
     #:int-progress
     #:int-range-slider
     #:int-slider
