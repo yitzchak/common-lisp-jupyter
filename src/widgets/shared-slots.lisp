@@ -11,6 +11,16 @@
   (:metaclass trait-metaclass))
 
 
+(defclass bool-value-slot ()
+  ((value
+    :initarg :value
+    :initform nil
+    :accessor widget-value
+    :documentation "Bool value"
+    :trait :bool))
+  (:metaclass trait-metaclass))
+
+
 (defclass button-style-slot ()
   ((button-style
     :initarg :button-style
@@ -51,6 +61,42 @@
   (:metaclass trait-metaclass))
 
 
+(defclass float-min-max-slots ()
+  ((max
+    :initarg :max
+    :initform 100d0
+    :accessor widget-max
+    :documentation "Max value"
+    :trait :float)
+   (min
+    :initarg :min
+    :initform 0d0
+    :accessor widget-min
+    :documentation "Min value"
+    :trait :float))
+  (:metaclass trait-metaclass))
+
+
+(defclass float-step-slot ()
+  ((step
+    :initarg :step
+    :initform 0.1d0
+    :accessor widget-step
+    :documentation "Minimum step to increment the value"
+    :trait :float))
+  (:metaclass trait-metaclass))
+
+
+(defclass float-value-slot ()
+  ((value
+    :initarg :value
+    :initform 0d0
+    :accessor widget-value
+    :documentation "Float value"
+    :trait :float))
+  (:metaclass trait-metaclass))
+
+
 (defclass format-slot ()
   ((format
     :initarg :format
@@ -86,6 +132,42 @@
     :initform nil
     :accessor widget-index
     :documentation "Selected index"
+    :trait :int))
+  (:metaclass trait-metaclass))
+
+
+(defclass int-min-max-slots ()
+  ((max
+    :initarg :max
+    :initform 100
+    :accessor widget-max
+    :documentation "Max value"
+    :trait :int)
+   (min
+    :initarg :min
+    :initform 0
+    :accessor widget-min
+    :documentation "Min value"
+    :trait :int))
+  (:metaclass trait-metaclass))
+
+
+(defclass int-step-slot ()
+  ((step
+    :initarg :step
+    :initform 1
+    :accessor widget-step
+    :documentation "Minimum step to increment the value"
+    :trait :int))
+  (:metaclass trait-metaclass))
+
+
+(defclass int-value-slot ()
+  ((value
+    :initarg :value
+    :initform 0
+    :accessor widget-value
+    :documentation "Int value"
     :trait :int))
   (:metaclass trait-metaclass))
 

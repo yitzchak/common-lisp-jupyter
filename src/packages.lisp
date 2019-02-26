@@ -91,6 +91,7 @@
     #:make-widget
     #:on-button-click
     #:password
+    #:play
     #:progress-style
     #:radio-buttons
     #:select
@@ -111,6 +112,8 @@
     #:widget-%module-module-version
     #:widget-%module-name
     #:widget-%options-labels
+    #:widget-%playing
+    #:widget-%repeat
     #:widget-%titles
     #:widget-%view-module
     #:widget-%view-module-version
@@ -158,6 +161,7 @@
     #:widget-icons
     #:widget-indent
     #:widget-index
+    #:widget-interval
     #:widget-justify-content
     #:widget-layout
     #:widget-left
@@ -184,6 +188,7 @@
     #:widget-right
     #:widget-rows
     #:widget-selected-index
+    #:widget-show-repeat
     #:widget-step
     #:widget-style
     #:widget-timestamp

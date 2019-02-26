@@ -1,13 +1,8 @@
 (in-package #:jupyter-widgets)
 
 (defclass toggle-button (description-widget button-style-slot disabled-slot
-                         icon-slot tooltip-slot)
-  ((value
-    :initarg :value
-    :initform nil
-    :accessor widget-value
-    :documentation "Bool value"
-    :trait :bool))
+                         icon-slot tooltip-slot bool-value-slot)
+  ()
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "ToggleButtonModel"

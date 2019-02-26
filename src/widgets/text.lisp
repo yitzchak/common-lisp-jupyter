@@ -41,19 +41,8 @@
 (register-widget password)
 
 
-(defclass float-text (base-text)
-  ((step
-    :initarg :step
-    :initform nil
-    :accessor widget-step
-    :documentation "Minimum step to increment the value"
-    :trait :float)
-   (value
-    :initarg :value
-    :initform 0.0d0
-    :accessor widget-value
-    :documentation "Float value"
-    :trait :float))
+(defclass float-text (base-text float-step-slot float-value-slot)
+  ()
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "FloatTextModel"
@@ -62,19 +51,8 @@
 (register-widget float-text)
 
 
-(defclass bounded-float-text (float-text)
-  ((max
-    :initarg :max
-    :initform 100.0d0
-    :accessor widget-max
-    :documentation "Max value"
-    :trait :float)
-   (min
-    :initarg :min
-    :initform 0.0d0
-    :accessor widget-min
-    :documentation "Min value"
-    :trait :float))
+(defclass bounded-float-text (float-text float-min-max-slots)
+  ()
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "BoundedFloatTextModel"
@@ -83,19 +61,8 @@
 (register-widget bounded-float-text)
 
 
-(defclass int-text (base-text)
-  ((step
-    :initarg :step
-    :initform nil
-    :accessor widget-step
-    :documentation "Minimum step to increment the value"
-    :trait :int)
-   (value
-    :initarg :value
-    :initform 0.0d0
-    :accessor widget-value
-    :documentation "Int value"
-    :trait :int))
+(defclass int-text (base-text int-step-slot int-value-slot)
+  ()
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "IntTextModel"
@@ -104,19 +71,8 @@
 (register-widget int-text)
 
 
-(defclass bounded-int-text (int-text)
-  ((max
-    :initarg :max
-    :initform 100.0d0
-    :accessor widget-max
-    :documentation "Max value"
-    :trait :int)
-   (min
-    :initarg :min
-    :initform 0.0d0
-    :accessor widget-min
-    :documentation "Min value"
-    :trait :int))
+(defclass bounded-int-text (int-text int-min-max-slots)
+  ()
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "BoundedIntTextModel"

@@ -15,11 +15,7 @@
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "BoxModel"
-    :%model-module +controls-module+
-    :%model-module-version +controls-module-version+
-    :%view-name "BoxView"
-    :%view-module +controls-module+
-    :%view-module-version +controls-module-version+))
+    :%view-name "BoxView"))
 
 (register-widget box)
 

@@ -1,31 +1,18 @@
 (in-package #:jupyter-widgets)
 
 
-(defclass controller-axis (dom-widget)
-  ((value
-    :initarg :value
-    :accessor widget-value
-    :documentation "The value of the axis."
-    :trait :float))
+(defclass controller-axis (dom-widget float-value-slot)
+  ()
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "ControllerAxisModel"
-    :%model-module +controls-module+
-    :%model-module-version +controls-module-version+
-    :%view-name "ControllerAxisView"
-    :%view-module +controls-module+
-    :%view-module-version +controls-module-version+))
+    :%view-name "ControllerAxisView"))
 
 (register-widget controller-axis)
 
 
-(defclass controller-button (dom-widget)
-  ((value
-    :initarg :value
-    :accessor widget-value
-    :documentation "The value of the button."
-    :trait :float)
-   (pressed
+(defclass controller-button (dom-widget float-value-slot)
+  ((pressed
     :initarg :pressed
     :initform nil
     :accessor widget-pressed
@@ -34,11 +21,7 @@
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "ControllerButtonModel"
-    :%model-module +controls-module+
-    :%model-module-version +controls-module-version+
-    :%view-name "ControllerButtonView"
-    :%view-module +controls-module+
-    :%view-module-version +controls-module-version+))
+    :%view-name "ControllerButtonView"))
 
 (register-widget controller-button)
 
@@ -87,10 +70,6 @@
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "ControllerModel"
-    :%model-module +controls-module+
-    :%model-module-version +controls-module-version+
-    :%view-name "ControllerView"
-    :%view-module +controls-module+
-    :%view-module-version +controls-module-version+))
+    :%view-name "ControllerView"))
 
 (register-widget controller)

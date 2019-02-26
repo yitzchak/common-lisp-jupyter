@@ -101,12 +101,7 @@
     :accessor widget-style
     :documentation "Reference to style widget."
     :trait :widget))
-  (:metaclass trait-metaclass)
-  (:default-initargs
-    :%model-module +controls-module+
-    :%model-module-version +controls-module-version+
-    :%view-module +controls-module+
-    :%view-module-version +controls-module-version+))
+  (:metaclass trait-metaclass))
 
 
 (defclass description-widget (styled-widget)

@@ -28,66 +28,26 @@
   (:metaclass trait-metaclass))
 
 
-(defclass float-log-slider (number-slider)
+(defclass float-log-slider (number-slider float-min-max-slots float-step-slot
+                            float-value-slot)
   ((base
     :initarg :base
     :initform 10.0d0
     :accessor widget-base
     :documentation "Base for the logarithm"
-    :trait :float)
-   (max
-    :initarg :max
-    :initform 4.0d0
-    :accessor widget-max
-    :documentation "Max value for the exponent"
-    :trait :float)
-   (min
-    :initarg :min
-    :initform 0.0d0
-    :accessor widget-min
-    :documentation "Min value for the exponent"
-    :trait :float)
-   (step
-    :initarg :step
-    :initform 0.1d0
-    :accessor widget-step
-    :documentation "Minimum step in the exponent to increment the value"
-    :trait :float)
-   (value
-    :initarg :value
-    :initform 1.0d0
-    :accessor widget-value
-    :documentation "Float value"
     :trait :float))
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "FloatLogSliderModel"
     :%view-name "FloatLogSliderView"
-    :readout-format ".3g"))
+    :readout-format ".3g"
+    :max 4.0d0))
 
 (register-widget float-log-slider)
 
 
-(defclass float-range-slider (number-slider)
-  ((max
-    :initarg :max
-    :initform 100.0d0
-    :accessor widget-max
-    :documentation "Max value"
-    :trait :float)
-   (min
-    :initarg :min
-    :initform 0.0d0
-    :accessor widget-min
-    :documentation "Min value"
-    :trait :float)
-   (step
-    :initarg :step
-    :initform 0.1d0
-    :accessor widget-step
-    :documentation "Minimum step to increment the value"
-    :trait :float)
-   (value
+(defclass float-range-slider (number-slider float-min-max-slots float-step-slot)
+  ((value
     :initarg :value
     :initform '(0.0d0 1.0d0)
     :accessor widget-value
@@ -102,31 +62,9 @@
 (register-widget float-range-slider)
 
 
-(defclass float-slider (number-slider)
-  ((max
-    :initarg :max
-    :initform 100.0d0
-    :accessor widget-max
-    :documentation "Max value"
-    :trait :float)
-   (min
-    :initarg :min
-    :initform 0.0d0
-    :accessor widget-min
-    :documentation "Min value"
-    :trait :float)
-   (step
-    :initarg :step
-    :initform 0.1d0
-    :accessor widget-step
-    :documentation "Minimum step to increment the value"
-    :trait :float)
-   (value
-    :initarg :value
-    :initform 0.0d0
-    :accessor widget-value
-    :documentation "Float value"
-    :trait :float))
+(defclass float-slider (number-slider float-min-max-slots float-step-slot
+                        float-value-slot)
+  ()
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "FloatSliderModel"
@@ -136,26 +74,8 @@
 (register-widget float-slider)
 
 
-(defclass int-range-slider (number-slider)
-  ((max
-    :initarg :max
-    :initform 100
-    :accessor widget-max
-    :documentation "Max value"
-    :trait :int)
-   (min
-    :initarg :min
-    :initform 0
-    :accessor widget-min
-    :documentation "Min value"
-    :trait :int)
-   (step
-    :initarg :step
-    :initform 1
-    :accessor widget-step
-    :documentation "Minimum step to increment the value"
-    :trait :int)
-   (value
+(defclass int-range-slider (number-slider int-min-max-slots int-step-slot)
+  ((value
     :initarg :value
     :initform '(0 1)
     :accessor widget-value
@@ -170,31 +90,9 @@
 (register-widget int-range-slider)
 
 
-(defclass int-slider (number-slider)
-  ((max
-    :initarg :max
-    :initform 100
-    :accessor widget-max
-    :documentation "Max value"
-    :trait :int)
-   (min
-    :initarg :min
-    :initform 0
-    :accessor widget-min
-    :documentation "Min value"
-    :trait :int)
-   (step
-    :initarg :step
-    :initform 1
-    :accessor widget-step
-    :documentation "Minimum step to increment the value"
-    :trait :int)
-   (value
-    :initarg :value
-    :initform 0
-    :accessor widget-value
-    :documentation "Int value"
-    :trait :int))
+(defclass int-slider (number-slider int-min-max-slots int-step-slot
+                      int-value-slot)
+  ()
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "IntSliderModel"

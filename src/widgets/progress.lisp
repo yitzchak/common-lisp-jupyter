@@ -14,25 +14,8 @@
     :style (make-widget 'progress-style)))
 
 
-(defclass float-progress (base-progress)
-  ((max
-    :initarg :max
-    :initform 100.0d0
-    :accessor widget-max
-    :documentation "Max value"
-    :trait :float)
-   (min
-    :initarg :min
-    :initform 0.0d0
-    :accessor widget-min
-    :documentation "Min value"
-    :trait :float)
-   (value
-    :initarg :value
-    :initform 0.0d0
-    :accessor widget-value
-    :documentation "Float value"
-    :trait :float))
+(defclass float-progress (base-progress float-min-max-slots float-value-slot)
+  ()
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "FloatProgressModel"))
@@ -40,25 +23,8 @@
 (register-widget float-progress)
 
 
-(defclass int-progress (base-progress)
-  ((max
-    :initarg :max
-    :initform 100
-    :accessor widget-max
-    :documentation "Max value"
-    :trait :int)
-   (min
-    :initarg :min
-    :initform 0
-    :accessor widget-min
-    :documentation "Min value"
-    :trait :int)
-   (value
-    :initarg :value
-    :initform 0
-    :accessor widget-value
-    :documentation "Int value"
-    :trait :int))
+(defclass int-progress (base-progress int-min-max-slots int-value-slot)
+  ()
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "IntProgressModel"))

@@ -48,3 +48,37 @@
     :format "png"))
 
 (register-widget image)
+
+
+(defclass play (description-widget disabled-slot int-min-max-slots int-step-slot
+                int-value-slot)
+  ((%playing
+    :initarg :%playing
+    :initform nil
+    :accessor widget-%playing
+    :documentation "Whether the control is currently playing."
+    :trait :bool)
+   (%repeat
+    :initarg :%repeat
+    :initform nil
+    :accessor widget-%repeat
+    :documentation "Whether the control will repeat in a continous loop."
+    :trait :bool)
+   (interval
+    :initarg :interval
+    :initform 100
+    :accessor widget-interval
+    :documentation "The maximum value for the play control."
+    :trait :int)
+   (show-repeat
+    :initarg :show-repeat
+    :initform t
+    :accessor widget-show-repeat
+    :documentation "Show the repeat toggle button in the widget."
+    :trait :bool))
+  (:metaclass trait-metaclass)
+  (:default-initargs
+    :%model-name "PlayModel"
+    :%view-name "PlayView"))
+
+(register-widget play)

@@ -224,4 +224,9 @@
     :documentation "Reference to layout widget."
     :trait :widget))
   (:metaclass trait-metaclass)
-  (:default-initargs :%model-name "DOMWidgetModel"))
+  (:default-initargs
+    :%model-name "DOMWidgetModel"
+    :%model-module +controls-module+
+    :%model-module-version +controls-module-version+
+    :%view-module +controls-module+
+    :%view-module-version +controls-module-version+))
