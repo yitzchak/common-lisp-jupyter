@@ -51,6 +51,16 @@
   (:metaclass trait-metaclass))
 
 
+(defclass index-slot ()
+  ((index
+    :initarg :index
+    :initform nil
+    :accessor widget-index
+    :documentation "Selected index"
+    :trait :int))
+  (:metaclass trait-metaclass))
+
+
 (defclass orientation-slot ()
   ((orientation
     :initarg :orientation
@@ -61,13 +71,23 @@
   (:metaclass trait-metaclass))
 
 
-(defclass index-slot ()
-  ((index
-    :initarg :index
-    :initform nil
-    :accessor widget-index
-    :documentation "Selected index"
-    :trait :int))
+(defclass placeholder-slot ()
+  ((placeholder
+    :initarg :placeholder
+    :initform (coerce '(#\U200B) 'string)
+    :accessor widget-placeholder
+    :documentation "Placeholder text to display when nothing has been typed."
+    :trait :unicode))
+  (:metaclass trait-metaclass))
+
+
+(defclass string-value-slot ()
+  ((value
+    :initarg :value
+    :initform ""
+    :accessor widget-value
+    :documentation "String value"
+    :trait :unicode))
   (:metaclass trait-metaclass))
 
 

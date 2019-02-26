@@ -6,19 +6,8 @@
   (:metaclass trait-metaclass))
 
 
-(defclass text (base-text)
-  ((placeholder
-    :initarg :placeholder
-    :initform (coerce '(#\U200B) 'string)
-    :accessor widget-placeholder
-    :documentation "Placeholder text to display when nothing has been typed."
-    :trait :unicode)
-   (value
-    :initarg :value
-    :initform ""
-    :accessor widget-value
-    :documentation "string value"
-    :trait :unicode))
+(defclass text (base-text placeholder-slot string-value-slot)
+  ()
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "TextModel"

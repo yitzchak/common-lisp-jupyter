@@ -79,10 +79,13 @@
     #:float-text
     #:grid-box
     #:h-box
+    #:html
+    #:html-math
     #:int-progress
     #:int-range-slider
     #:int-slider
     #:int-text
+    #:label
     #:layout
     #:make-widget
     #:on-button-click

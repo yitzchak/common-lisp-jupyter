@@ -48,6 +48,7 @@
              (:file "color-picker")
              (:file "controller")
              (:file "date-picker")
+             (:file "label")
              (:file "media")
              (:file "progress")
              (:file "radio-buttons")
