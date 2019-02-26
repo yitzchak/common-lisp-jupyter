@@ -48,3 +48,13 @@
 
 
 (register-widget radio-buttons)
+
+
+(defclass dropdown (radio-buttons)
+  ()
+  (:metaclass trait-metaclass)
+  (:default-initargs
+    :%model-name "DropdownModel"
+    :%view-name "DropdownView"))
+
+(register-widget dropdown)

@@ -70,6 +70,7 @@
     #:date-picker
     #:description-style
     #:dom-widget
+    #:dropdown
     #:float-log-slider
     #:float-progress
     #:float-range-slider
