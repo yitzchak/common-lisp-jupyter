@@ -1,43 +1,23 @@
 (in-package #:jupyter-widgets)
 
 
-(defclass base-progress (dom-widget)
+(defclass base-progress (description-widget)
   ((bar-style
     :initarg :bar-style
     :initform ""
     :accessor widget-bar-style
     :documentation "Use a predefined styling for the progess bar."
     :trait :bool)
-   (description
-    :initarg :description
-    :initform ""
-    :accessor widget-description
-    :documentation "Description of the control."
-    :trait :unicode)
-   (description-tooltip
-    :initarg :description-tooltip
-    :accessor widget-description-tooltip
-    :documentation "Tooltip for the description (defaults to description)."
-    :trait :unicode)
    (orientation
     :initarg :orientation
     :initform "horizontal"
     :accessor widget-orientation
     :documentation "Vertical or horizontal."
-    :trait :unicode)
-   (style
-    :initarg :style
-    :initform (make-widget 'progress-style)
-    :accessor widget-style
-    :documentation "Reference to progress style widget."
-    :trait :widget))
+    :trait :unicode))
   (:metaclass trait-metaclass)
   (:default-initargs
-    :%model-module +controls-module+
-    :%model-module-version +controls-module-version+
     :%view-name "ProgressView"
-    :%view-module +controls-module+
-    :%view-module-version +controls-module-version+))
+    :style (make-widget 'progress-style)))
 
 
 (defclass float-progress (base-progress)

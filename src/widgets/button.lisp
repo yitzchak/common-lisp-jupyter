@@ -1,6 +1,6 @@
 (in-package #:jupyter-widgets)
 
-(defclass button (dom-widget)
+(defclass button (styled-widget)
   ((button-style
     :initarg :button-style
     :initform ""
@@ -24,12 +24,6 @@
     :accessor widget-icon
     :documentation "Font-awesome icon name, without the 'fa-' prefix."
     :trait :unicode)
-   (style
-    :initarg :style
-    :initform (make-widget 'button-style)
-    :accessor widget-style
-    :documentation "Reference to button style widget."
-    :trait :widget)
    (tooltip
     :initarg :tooltip
     :accessor widget-tooltip
@@ -38,11 +32,8 @@
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "ButtonModel"
-    :%model-module +controls-module+
-    :%model-module-version +controls-module-version+
     :%view-name "ButtonView"
-    :%view-module +controls-module+
-    :%view-module-version +controls-module-version+))
+    :style (make-widget 'button-style)))
 
 (register-widget button)
 

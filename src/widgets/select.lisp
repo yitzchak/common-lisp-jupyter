@@ -1,24 +1,13 @@
 (in-package #:jupyter-widgets)
 
 
-(defclass base-select (dom-widget)
+(defclass base-select (description-widget)
   ((%options-labels
     :initarg :%options-labels
     :initform nil
     :accessor widget-%options-labels
     :documentation "The labels for the options."
     :trait :unicode-list)
-   (description
-    :initarg :description
-    :initform ""
-    :accessor widget-description
-    :documentation "Description of the control."
-    :trait :unicode)
-   (description-tooltip
-    :initarg :description-tooltip
-    :accessor widget-description-tooltip
-    :documentation "Tooltip for the description (defaults to description)."
-    :trait :unicode)
    (disabled
     :initarg :disabled
     :initform nil
@@ -30,19 +19,8 @@
     :initform 5
     :accessor widget-rows
     :documentation "The number of rows to display."
-    :trait :int)
-   (style
-    :initarg :style
-    :initform (make-widget 'description-style)
-    :accessor widget-style
-    :documentation "Reference to description style widget."
-    :trait :widget))
-  (:metaclass trait-metaclass)
-  (:default-initargs
-    :%model-module +controls-module+
-    :%model-module-version +controls-module-version+
-    :%view-module +controls-module+
-    :%view-module-version +controls-module-version+))
+    :trait :int))
+  (:metaclass trait-metaclass))
 
 
 (defclass select (base-select)

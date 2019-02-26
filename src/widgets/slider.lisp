@@ -1,24 +1,13 @@
 (in-package #:jupyter-widgets)
 
 
-(defclass base-slider (dom-widget)
+(defclass base-slider (description-widget)
   ((continuous-update
     :initarg :continuous-update
     :initform t
     :accessor widget-continuous-update
     :documentation "Update the value of the widget as the user is holding the slider."
     :trait :bool)
-   (description
-    :initarg :description
-    :initform ""
-    :accessor widget-description
-    :documentation "Description of the control."
-    :trait :unicode)
-   (description-tooltip
-    :initarg :description-tooltip
-    :accessor widget-description-tooltip
-    :documentation "Tooltip for the description (defaults to description)."
-    :trait :unicode)
    (disabled
     :initarg :disabled
     :initform nil
@@ -41,19 +30,10 @@
     :initarg :readout-format
     :accessor widget-readout-format
     :documentation "Format for the readout"
-    :trait :unicode)
-   (style
-    :initarg :style
-    :initform (make-widget 'slider-style)
-    :accessor widget-style
-    :documentation "Reference to slider style widget."
-    :trait :widget))
+    :trait :unicode))
   (:metaclass trait-metaclass)
   (:default-initargs
-    :%model-module +controls-module+
-    :%model-module-version +controls-module-version+
-    :%view-module +controls-module+
-    :%view-module-version +controls-module-version+))
+    :style (make-widget 'slider-style)))
 
 
 (defclass number-slider (base-slider)

@@ -1,36 +1,19 @@
 (in-package #:jupyter-widgets)
 
 
-(defclass base-text (dom-widget)
+(defclass base-text (description-widget)
   ((continuous-update
     :initarg :continuous-update
     :initform t
     :accessor widget-continuous-update
     :documentation "Update the value of the widget as the user is holding the slider."
     :trait :bool)
-   (description
-    :initarg :description
-    :initform ""
-    :accessor widget-description
-    :documentation "Description of the control."
-    :trait :unicode)
-   (description-tooltip
-    :initarg :description-tooltip
-    :accessor widget-description-tooltip
-    :documentation "Tooltip for the description (defaults to description)."
-    :trait :unicode)
    (disabled
     :initarg :disabled
     :initform nil
     :accessor widget-disabled
     :documentation "Enable or disable user changes."
-    :trait :bool)
-   (style
-    :initarg :style
-    :initform (make-widget 'description-style)
-    :accessor widget-style
-    :documentation "Reference to description style widget."
-    :trait :widget))
+    :trait :bool))
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-module +controls-module+
