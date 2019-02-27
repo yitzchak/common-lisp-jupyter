@@ -42,14 +42,18 @@
     (remove nil (mapcar #'jupyter:make-lisp-result evaluated-expr))))
 
 (defmethod jupyter:evaluate-code ((k kernel) code)
-  (iter
-    (for sexpr in-stream (make-string-input-stream code))
-    (for common-lisp-user::- next sexpr)
-    (for result = (jupyter:handling-errors (my-eval sexpr)))
-    (if (listp result)
-      (appending result)
-      (collect result))
-    (until (jupyter:quit-eval-error-p result))))
+  (let ((results (jupyter:handling-errors
+                   (iter
+                     (for sexpr in-stream (make-string-input-stream code))
+                     (for common-lisp-user::- next sexpr)
+                     (for result = (jupyter:handling-errors (my-eval sexpr)))
+                     (if (listp result)
+                       (appending result)
+                       (collect result))
+                     (until (jupyter:quit-eval-error-p result))))))
+    (if (listp results)
+      results
+      (list results))))
 
 (defun symbol-char-p (c)
   (and (characterp c)
