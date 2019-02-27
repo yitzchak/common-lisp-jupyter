@@ -486,7 +486,7 @@
   t)
 
 (defun handle-comm-message (kernel msg)
-  (info "[kernel] Handling 'comm_msg' ~A~%" (message-content msg))
+  (info "[kernel] Handling 'comm_msg'~%")
   (with-slots (comms) kernel
     (let* ((content (message-content msg))
            (metadata (message-metadata msg))
