@@ -16,14 +16,17 @@
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "OutputModel"
-    :%view-name "OutputView"))
+    :%model-module +output-module+
+    :%model-module-version +output-module-version+
+    :%view-name "OutputView"
+    :%view-module +output-module+
+    :%view-module-version +output-module-version+))
 
 (register-widget output)
 
 
+; We should clean up after ourselves, but the messages are processed outside of this lexigraphic context.
 (defmacro with-output (o &body body)
   `(with-slots (msg-id) ,o
     (setf msg-id (jsown:val (jupyter::message-header jupyter::*message*) "msg_id"))
-    (unwind-protect
-      (progn ,@body)
-      (setf msg-id ""))))
+    ,@body))

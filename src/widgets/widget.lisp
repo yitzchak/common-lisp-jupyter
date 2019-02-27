@@ -5,6 +5,8 @@
 (defparameter +base-module-version+ "1.1.0")
 (defparameter +controls-module+ "@jupyter-widgets/controls")
 (defparameter +controls-module-version+ "1.4.0")
+(defparameter +output-module+ "@jupyter-widgets/output")
+(defparameter +output-module-version+ "1.0.0")
 
 (defparameter +target-name+ "jupyter.widget")
 
