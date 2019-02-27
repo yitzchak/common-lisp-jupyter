@@ -39,6 +39,18 @@
 (defmethod deserialize-trait (object name (type (eql :float-list)) value)
   (mapcar (lambda (x) (coerce x 'double-float)) value))
 
+; Link
+
+(defmethod serialize-trait (object name (type (eql :link)) value)
+  (when value
+    (list (serialize-trait object name :widget (first value))
+          (serialize-trait object name :unicode (first value)))))
+
+(defmethod deserialize-trait (object name (type (eql :link)) value)
+  (when value
+    (list (deserialize-trait object name :widget (first value))
+          (deserialize-trait object name :unicode (first value)))))
+
 ; Unicode
 
 (defmethod serialize-trait (object name (type (eql :unicode)) (value (eql nil)))

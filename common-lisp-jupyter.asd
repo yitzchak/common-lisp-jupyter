@@ -49,6 +49,7 @@
              (:file "controller")
              (:file "date-picker")
              (:file "label")
+             (:file "link")
              (:file "media")
              (:file "output")
              (:file "progress")

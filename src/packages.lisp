@@ -70,6 +70,7 @@
     #:controller-button
     #:date-picker
     #:description-style
+    #:directional-link
     #:dom-widget
     #:dropdown
     #:float-log-slider
@@ -88,6 +89,7 @@
     #:int-text
     #:label
     #:layout
+    #:link
     #:make-widget
     #:on-button-click
     #:output
@@ -194,8 +196,10 @@
     #:widget-rows
     #:widget-selected-index
     #:widget-show-repeat
+    #:widget-source
     #:widget-step
     #:widget-style
+    #:widget-target
     #:widget-timestamp
     #:widget-tooltip
     #:widget-tooltips
