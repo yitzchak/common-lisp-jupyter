@@ -4,10 +4,9 @@
 (defvar *trait-hold* nil)
 (defvar *trait-notifications* nil)
 
-(defgeneric on-trait-change (object name old-value new-value))
+(defgeneric on-trait-change (object name type old-value new-value))
 
-(defmethod on-trait-change (object name old-value new-value)
-  (jupyter:info "Change ~A ~A ~A ~A~%" object name old-value new-value))
+(defmethod on-trait-change (object name type old-value new-value))
 
 (defmacro with-trait-silence (&body body)
   `(let ((*trait-silence* t)) ,@body))
@@ -87,11 +86,12 @@
            :around (value (mc trait-metaclass) object (slot effective-trait))
   (if (and (not *trait-silence*) (trait-type slot))
     (let* ((name (closer-mop:slot-definition-name slot))
+           (type (trait-type slot))
            (old-value (if (slot-boundp object name) (slot-value object name) :unbound))
            (new-value (call-next-method)))
       (when (not (equal old-value new-value))
         (if *trait-hold*
-          (push (list object name old-value new-value) *trait-notifications*)
-          (on-trait-change object name old-value new-value)))
+          (push (list object name type old-value new-value) *trait-notifications*)
+          (on-trait-change object name type old-value new-value)))
       new-value)
     (call-next-method)))

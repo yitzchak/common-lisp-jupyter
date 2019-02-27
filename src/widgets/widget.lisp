@@ -141,7 +141,7 @@
         (send-state w))
       (t (call-next-method)))))
 
-(defmethod on-trait-change :after ((w widget) name old-value new-value)
+(defmethod on-trait-change :after ((w widget) name type old-value new-value)
   (declare (ignore old-value new-value))
   (send-state w name))
 
