@@ -126,9 +126,16 @@ jupyter-repo2docker --user-id=1000 --user-name=jupyter https://github.com/yitzch
 
 ## Docker Image
 
-A Docker image of common-lisp-jupyter may be built using the following command
-(`sudo` may be required). This image is based on the docker image
-`archlinux/base`.
+A prebuilt docker image is available via Docker Hub. This image maybe run run
+the following command.
+
+```sh
+docker run --network=host -it yitzchak/common-lisp-jupyter jupyter notebook --ip=127.0.0.1
+```
+
+A local Docker image of common-lisp-jupyter may be built after this repo has
+been cloned using the following command (`sudo` may be required). This image is
+based on the docker image `archlinux/base`.
 
 ```sh
 docker build --tag=common-lisp-jupyter .
