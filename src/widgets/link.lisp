@@ -15,11 +15,11 @@
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "LinkModel"
-    :%model-module +base-module+
-    :%model-module-version +base-module-version+
+    :%model-module +controls-module+
+    :%model-module-version +controls-module-version+
     :%view-name ""
-    :%view-module +base-module+
-    :%view-module-version +base-module-version+))
+    :%view-module +controls-module+
+    :%view-module-version +controls-module-version+))
 
 (register-widget link)
 

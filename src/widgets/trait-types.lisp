@@ -44,12 +44,12 @@
 (defmethod serialize-trait (object name (type (eql :link)) value)
   (when value
     (list (serialize-trait object name :widget (first value))
-          (serialize-trait object name :unicode (first value)))))
+          (serialize-trait object name :unicode (second value)))))
 
 (defmethod deserialize-trait (object name (type (eql :link)) value)
   (when value
     (list (deserialize-trait object name :widget (first value))
-          (deserialize-trait object name :unicode (first value)))))
+          (deserialize-trait object name :unicode (second value)))))
 
 ; Unicode
 
