@@ -76,7 +76,7 @@
     :trait :float))
   (:metaclass trait-metaclass))
 
-(defmethod validate-trait ((w int-min-max-slots) (type (eql :float)) name value)
+(defmethod validate-trait ((w float-min-max-slots) (type (eql :float)) name value)
   (cond
     ((and (numberp value) (equal name 'value))
       (let* ((min (when (slot-boundp w 'min) (widget-min w)))
@@ -85,7 +85,7 @@
         (call-next-method w type name (if (numberp min) (max min v) v))))
     (t (call-next-method))))
 
-(defmethod validate-trait ((w int-min-max-slots) (type (eql :float-list)) name value)
+(defmethod validate-trait ((w float-min-max-slots) (type (eql :float-list)) name value)
   (cond
     ((equal name 'value)
       (mapcar (lambda (v) (validate-trait w :float name v)) value))
