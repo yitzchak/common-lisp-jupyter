@@ -79,3 +79,13 @@
     :%view-name "BoundedIntTextView"))
 
 (register-widget bounded-int-text)
+
+(defmethod validate-trait ((w bounded-int-text) (type (eql :int)) name value)
+  (cond
+    ((equal name 'value)
+      (if (slot-boundp w 'min)
+        (let ((min (widget-min w)))
+          (if min
+            (max min value)
+            value))
+        value))))

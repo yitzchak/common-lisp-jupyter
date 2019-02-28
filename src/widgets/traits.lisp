@@ -4,9 +4,9 @@
 (defvar *trait-hold* nil)
 (defvar *trait-notifications* nil)
 
-(defgeneric on-trait-change (object name type old-value new-value))
+(defgeneric on-trait-change (object type name old-value new-value))
 
-(defmethod on-trait-change (object name type old-value new-value))
+(defmethod on-trait-change (object type name old-value new-value))
 
 (defmacro with-trait-silence (&body body)
   `(let ((*trait-silence* t)) ,@body))
@@ -73,25 +73,25 @@
   (declare (ignore initargs))
   (find-class 'direct-trait))
 
-; (defmethod (setf closer-mop:slot-value-using-class)
-;            (value (class trait-metaclass) object (slot effective-trait))
-;   (call-next-method
-;     (reduce (lambda (value validator)
-;               (funcall validator object value))
-;       (trait-validators slot)
-;       :initial-value value)
-;     class object slot))
+(defmethod (setf closer-mop:slot-value-using-class)
+           (value (class trait-metaclass) object (slot effective-trait))
+  (call-next-method
+    (let ((type (trait-type slot)))
+      (if type
+        (validate-trait object type (closer-mop:slot-definition-name slot) value)
+        value))
+    class object slot))
 
 (defmethod (setf closer-mop:slot-value-using-class)
            :around (value (mc trait-metaclass) object (slot effective-trait))
-  (if (and (not *trait-silence*) (trait-type slot))
-    (let* ((name (closer-mop:slot-definition-name slot))
-           (type (trait-type slot))
-           (old-value (if (slot-boundp object name) (slot-value object name) :unbound))
-           (new-value (call-next-method)))
-      (when (not (equal old-value new-value))
-        (if *trait-hold*
-          (push (list object name type old-value new-value) *trait-notifications*)
-          (on-trait-change object name type old-value new-value)))
-      new-value)
-    (call-next-method)))
+  (let ((type (trait-type slot)))
+    (if (and (not *trait-silence*) type)
+      (let* ((name (closer-mop:slot-definition-name slot))
+             (old-value (if (slot-boundp object name) (slot-value object name) :unbound))
+             (new-value (call-next-method)))
+        (when (not (equal old-value new-value))
+          (if *trait-hold*
+            (push (list object type name old-value new-value) *trait-notifications*)
+            (on-trait-change object type name old-value new-value)))
+        new-value)
+      (call-next-method))))

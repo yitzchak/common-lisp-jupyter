@@ -205,6 +205,7 @@
 (defclass tooltip-slot ()
   ((tooltip
     :initarg :tooltip
+    :initform nil
     :accessor widget-tooltip
     :documentation "Tooltip caption."
     :trait :unicode))
