@@ -1,5 +1,10 @@
 (in-package #:jupyter-widgets)
 
+(defun outside-closed-interval (value left right)
+  (not (<= left value right)))
+
+(defun outside-left-closed-interval (value left right)
+  (or (< value left) (>= value right)))
 
 (defclass %options-labels-slot ()
   ((%options-labels
@@ -9,6 +14,29 @@
     :documentation "The labels for the options."
     :trait :unicode-list))
   (:metaclass trait-metaclass))
+
+(defmethod validate-trait ((w %options-labels-slot) (type (eql :int)) name value)
+  (cond
+    ((and (integerp value)
+          (equal name 'index)
+          (outside-left-closed-interval value
+                                        0
+                                        (if (slot-boundp w '%options-labels)
+                                          (length (widget-%options-labels w))
+                                          0)))
+      (error 'trait-error :format-control "Invalid selection: index out of bounds"))
+    (t (call-next-method))))
+
+(defmethod validate-trait ((w %options-labels-slot) (type (eql :int-list)) name value)
+  (cond
+    ((equal name 'index)
+      (let ((len (if (slot-boundp w '%options-labels)
+                   (length (widget-%options-labels w))
+                   0)))
+        (if (and (listp value) (some (lambda (v) (outside-left-closed-interval v 0 len)) value))
+          (error 'trait-error :format-control "Invalid selection: index out of bounds")
+          (call-next-method))))
+    (t (call-next-method))))
 
 
 (defclass bool-value-slot ()
