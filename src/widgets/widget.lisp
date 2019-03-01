@@ -105,7 +105,7 @@
                type)
       (jsown:extend-js state
         ((symbol-to-key name)
-          (serialize-trait w name type (slot-value w name)))))
+          (serialize-trait w type name (slot-value w name)))))
     (finally (return state))))
 
 (defun send-state (w &optional name)
@@ -129,7 +129,7 @@
       (for type next (trait-type def))
       (when (position key keywords :test #'equal)
         (setf (slot-value w name)
-          (deserialize-trait w name type (jsown:val state key)))))))
+          (deserialize-trait w type name (jsown:val state key)))))))
 
 (defmethod jupyter:on-comm-message ((w widget) data metadata)
   (declare (ignore metadata))

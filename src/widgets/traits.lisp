@@ -33,6 +33,9 @@
 (defmethod deserialize-trait (object type name value)
   value)
 
+(define-condition trait-error (simple-error)
+  ())
+
 (defclass trait (closer-mop:slot-definition)
   ((trait :initarg :trait
           :initform nil
