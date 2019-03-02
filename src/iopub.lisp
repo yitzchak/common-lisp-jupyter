@@ -72,6 +72,13 @@
                                 ("name" stream-name)
                                 ("text" data)))))
 
+(defun send-comm-close-orphan (iopub session comm-id &optional data)
+  (message-send iopub
+                (make-orphan-message session "comm_close" '("comm_close")
+                                     (jsown:new-js
+                                       ("comm_id" comm-id)
+                                       ("data" (or data (jsown:new-js)))))))
+
 (defvar *iopub-stream-size* 1024)
 
 (defclass iopub-stream (trivial-gray-streams:fundamental-character-output-stream

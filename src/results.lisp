@@ -33,10 +33,10 @@ Standard MIME types
 (defmethod render (res))
 
 (defclass result ()
-  ((display :initarg :display
-            :initform nil
-            :accessor result-display
-            :documentation "Display result in client."))
+  ((display-data :initarg :display-data
+                 :initform nil
+                 :accessor result-display-data
+                 :documentation "Show result as display_data in client."))
   (:documentation "Base class for encapsulation of evaluation result."))
 
 (defclass sexpr-result (result)
@@ -53,13 +53,13 @@ Standard MIME types
    (mime-type :initarg :mime-type
               :reader inline-result-mime-type)))
 
-(defun make-inline-result (value &key (mime-type *plain-text-mime-type*) (display nil) (handle nil))
+(defun make-inline-result (value &key (mime-type *plain-text-mime-type*) (display-data nil) (handle nil))
   "Make a result based on an inline value. The handle argument is used by the
   convenience functions to instantly process the result."
   (let ((result (make-instance 'inline-result :value value
                                               :mime-type mime-type
-                                              :display display)))
-    (if (and handle display)
+                                              :display-data display-data)))
+    (if (and handle display-data)
       (progn
         (send-result result)
         t)
@@ -73,7 +73,7 @@ Standard MIME types
         (mime-type value))
       (jsown:new-js
         (*plain-text-mime-type* "inline-value")
-        (mime-type (if (stringp value)
+        (mime-type (if (or (stringp value) (ends-with-p mime-type "json"))
                        value
                        (cl-base64:usb8-array-to-base64-string value)))))))
 
@@ -84,13 +84,13 @@ Standard MIME types
               :initform nil
               :reader file-result-mime-type)))
 
-(defun make-file-result (path &key (mime-type nil) (display nil) (handle nil))
+(defun make-file-result (path &key (mime-type nil) (display-data nil) (handle nil))
   "Make a result based on a file. The handle argument is used by the convenience
   functions to instantly process the result."
   (let ((result (make-instance 'file-result :path path
                                             :mime-type mime-type
-                                            :display display)))
-    (if (and handle display)
+                                            :display-data display-data)))
+    (if (and handle display-data)
       (progn
         (send-result result)
         t)
@@ -130,12 +130,12 @@ Standard MIME types
                                :quit quit
                                :traceback traceback))
 
-(defun make-lisp-result (value &key (display nil))
+(defun make-lisp-result (value &key (display-data nil))
   "Make a lisp result based on an inline value."
   (cond ((typep value 'result)
          value)
         ((not (eq :no-output value))
-         (make-instance 'sexpr-result :value value :display display))))
+         (make-instance 'sexpr-result :value value :display-data display-data))))
 
 (defun eval-error-p (result)
   "Predicate to determine if result is an error result."
@@ -147,100 +147,100 @@ Standard MIME types
 
 ; Convienence functions
 
-(defun file (path &optional (display nil))
+(defun file (path &optional (display-data nil))
   "Create a result based on a file path. The mime type with automatically be
   determined from the file extension."
-  (make-file-result path :display display :handle t))
+  (make-file-result path :display-data display-data :handle t))
 
-(defun gif-file (path &optional (display nil))
+(defun gif-file (path &optional (display-data nil))
   "Create a GIF image result based on a file path."
   (make-file-result path
-                    :display display :handle t
+                    :display-data display-data :handle t
                     :mime-type *gif-mime-type*))
 
-(defun jpeg-file (path &optional (display nil))
+(defun jpeg-file (path &optional (display-data nil))
   "Create a JPEG image result based on a file path."
   (make-file-result path
-                    :display display :handle t
+                    :display-data display-data :handle t
                     :mime-type *jpeg-mime-type*))
 
-(defun pdf-file (path &optional (display nil))
+(defun pdf-file (path &optional (display-data nil))
   "Create a PDF result based on a file path."
   (make-file-result path
-                    :display display :handle t
+                    :display-data display-data :handle t
                     :mime-type *pdf-mime-type*))
 
-(defun png-file (path &optional (display nil))
+(defun png-file (path &optional (display-data nil))
   "Create a PNG image result based on a file path."
   (make-file-result path
-                    :display display :handle t
+                    :display-data display-data :handle t
                     :mime-type *png-mime-type*))
 
-(defun ps-file (path &optional (display nil))
+(defun ps-file (path &optional (display-data nil))
   "Create a PostScript result based on a file path."
   (make-file-result path
-                    :display display :handle t
+                    :display-data display-data :handle t
                     :mime-type *ps-mime-type*))
 
-(defun svg-file (path &optional (display nil))
+(defun svg-file (path &optional (display-data nil))
   "Create a SVG result based on a file path."
   (make-file-result path
-                    :display display :handle t
+                    :display-data display-data :handle t
                     :mime-type *svg-mime-type*))
 
-(defun inline-result (value mime-type &optional (display nil))
+(defun inline-result (value mime-type &optional (display-data nil))
   "Create a result based on an inline value."
   (make-inline-result value
                       :mime-type mime-type
-                      :display display
+                      :display-data display-data
                       :handle t))
 
-(defun text (value &optional (display nil))
+(defun text (value &optional (display-data nil))
   "Create a plain text result based on an inline value."
   (make-inline-result value
-                      :display display
+                      :display-data display-data
                       :handle t))
 
-(defun html (value &optional (display nil))
+(defun html (value &optional (display-data nil))
   "Create a HTML result based on an inline value."
   (make-inline-result value
                       :mime-type *html-mime-type*
-                      :display display
+                      :display-data display-data
                       :handle t))
 
-(defun jpeg (value &optional (display nil))
+(defun jpeg (value &optional (display-data nil))
   "Create a JPEG image result based on an inline value."
   (make-inline-result value
                       :mime-type *jpeg-mime-type*
-                      :display display
+                      :display-data display-data
                       :handle t))
 
-(defun latex (value &optional (display nil))
+(defun latex (value &optional (display-data nil))
   "Create a LaTeX result based on an inline value."
   (make-inline-result value
                       :mime-type *latex-mime-type*
-                      :display display
+                      :display-data display-data
                       :handle t))
 
-(defun markdown (value &optional (display nil))
+(defun markdown (value &optional (display-data nil))
   "Create a Markdown result based on an inline value."
   (make-inline-result value
                       :mime-type *markdown-mime-type*
-                      :display display
+                      :display-data display-data
                       :handle t))
 
-(defun png (value &optional (display nil))
+(defun png (value &optional (display-data nil))
   "Create a PNG image result based on an inline value."
   (make-inline-result value
                       :mime-type *png-mime-type*
-                      :display display
+                      :display-data display-data
                       :handle t))
 
-(defun svg (value &optional (display nil))
+(defun svg (value &optional (display-data nil))
   "Create a SVG result based on an inline value."
   (make-inline-result value
                       :mime-type *svg-mime-type*
-                      :display display
+                      :display-data display-data
                       :handle t))
 
 #|

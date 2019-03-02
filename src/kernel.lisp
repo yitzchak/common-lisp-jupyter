@@ -136,7 +136,10 @@
                :documentation "History of execute_request input values.")
    (history-out :initform (make-array 64 :fill-pointer 0 :adjustable t)
                 :reader kernel-history-out
-                :documentation "History of execute_result output values."))
+                :documentation "History of execute_result output values.")
+   (comms :initform (make-hash-table :test #'equal)
+          :reader kernel-comms
+          :documentation "Currently open comms."))
   (:documentation "Kernel state representation."))
 
 (defgeneric evaluate-code (kernel code)
@@ -174,7 +177,7 @@
   (with-slots (ctx key transport ip hb-port hb shell-port shell stdin-port stdin
                iopub-port iopub session prompt-prefix prompt-suffix)
               k
-    (setq session (format nil "~W" (uuid:make-v4-uuid)))
+    (setq session (make-uuid))
     (setq ctx (pzmq:ctx-new))
     (setq hb (make-instance 'hb-channel
                             :key key
@@ -264,7 +267,9 @@
 |#
 
 (defun handle-message (kernel msg)
-  (let ((msg-type (jsown:val (message-header msg) "msg_type")))
+  (let ((msg-type (jsown:val (message-header msg) "msg_type"))
+        (*kernel* kernel)
+        (*message* msg))
     (cond ((equal msg-type "kernel_info_request")
            (handle-kernel-info-request kernel msg))
           ((equal msg-type "execute_request")
@@ -277,6 +282,14 @@
            (handle-inspect-request kernel msg))
           ((equal msg-type "complete_request")
            (handle-complete-request kernel msg))
+          ((equal msg-type "comm_info_request")
+           (handle-comm-info-request kernel msg))
+          ((equal msg-type "comm_open")
+           (handle-comm-open kernel msg))
+          ((equal msg-type "comm_msg")
+           (handle-comm-message kernel msg))
+          ((equal msg-type "comm_close")
+           (handle-comm-close kernel msg))
           (t
            (warn "[Shell] message type '~A' not supported, skipping..." msg-type)
            t))))
@@ -328,8 +341,6 @@
                 kernel
       (vector-push code history-in)
       (let* ((execution-count (length history-in))
-             (*kernel* kernel)
-             (*message* msg)
              (*payload* (make-array 16 :adjustable t :fill-pointer 0))
              (*page-output* (make-string-output-stream))
              (*query-io* (make-stdin-stream stdin msg))
@@ -443,6 +454,62 @@
           (t
             (send-complete-reply-ok shell msg nil cursor-pos cursor-pos)))))))
 
+
+(defun handle-comm-info-request (kernel msg)
+  (info "[kernel] Handling 'comm_info_request'~%")
+  (with-slots (shell comms) kernel
+    (let* ((content (message-content msg))
+           (target-name (jsown:val content "target_name"))
+           (comms-alist (alexandria:hash-table-alist comms)))
+      (send-comm-info-reply shell msg
+                            (if target-name
+                              (remove-if-not (lambda (p) (equal target-name (cdr p)))
+                                comms-alist)
+                              comms-alist))))
+  t)
+
+(defun handle-comm-open (kernel msg)
+  (info "[kernel] Handling 'comm_open'~%")
+  (with-slots (iopub session comms) kernel
+    (let* ((content (message-content msg))
+           (metadata (message-metadata msg))
+           (id (jsown:val content "comm_id"))
+           (target-name (jsown:val content "target_name"))
+           (data (jsown:val content "data"))
+           (inst (create-comm (intern target-name 'keyword) id data metadata)))
+      (info "~A ~%" target-name)
+      (if inst
+        (progn
+          (setf (gethash id comms) inst)
+          (on-comm-open inst data metadata))
+        (send-comm-close-orphan iopub session id))))
+  t)
+
+(defun handle-comm-message (kernel msg)
+  (info "[kernel] Handling 'comm_msg'~%")
+  (with-slots (comms) kernel
+    (let* ((content (message-content msg))
+           (metadata (message-metadata msg))
+           (id (jsown:val content "comm_id"))
+           (data (jsown:val content "data"))
+           (inst (gethash id comms)))
+      (when inst
+        (on-comm-message inst data metadata))))
+  t)
+
+(defun handle-comm-close (kernel msg)
+  (info "[kernel] Handling 'comm_close'~%")
+  (with-slots (comms) kernel
+    (let* ((content (message-content msg))
+           (metadata (message-metadata msg))
+           (id (jsown:val content "comm_id"))
+           (data (jsown:val content "data"))
+           (inst (gethash id comms)))
+      (when inst
+        (on-comm-close inst data metadata)
+        (remhash id comms))))
+  t)
+
 (defun make-eval-error (err msg &key (quit nil))
   (let ((name (symbol-name (class-name (class-of err)))))
     (write-string msg *error-output*)
@@ -495,7 +562,7 @@
         (let ((data (let ((*package* (find-package package)))
                       (render result))))
           (when data
-            (if (result-display result)
+            (if (result-display-data result)
               (send-display-data iopub *message* data)
               (send-execute-result iopub *message* execute-count data))))))))
 

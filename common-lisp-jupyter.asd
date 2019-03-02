@@ -4,10 +4,12 @@
   :author "Tarn W. Burton"
   :license "MIT"
   :depends-on (
+    :alexandria
     :babel
     :bordeaux-threads
     :cl-base64
     :cl-containers
+    :closer-mop
     :ironclad
     :iterate
     :jsown
@@ -30,5 +32,32 @@
          (:file "stdin")
          (:file "iopub")
          (:file "results")
+         (:file "comm")
+         (:module widgets
+          :serial t
+          :components
+            ((:file "traits")
+             (:file "widget")
+             (:file "trait-types")
+             (:file "shared-slots")
+             (:file "dom-widget")
+             (:file "style")
+             (:file "checkbox")
+             (:file "box")
+             (:file "button")
+             (:file "color-picker")
+             (:file "controller")
+             (:file "date-picker")
+             (:file "label")
+             (:file "link")
+             (:file "media")
+             (:file "output")
+             (:file "progress")
+             (:file "radio-buttons")
+             (:file "select")
+             (:file "slider")
+             (:file "text")
+             (:file "toggle-button")
+             (:file "valid")))
          (:file "kernel")
          (:file "cl-kernel")))))

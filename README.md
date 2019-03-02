@@ -26,7 +26,8 @@ derived kernel.
 
 ## Examples
 
-[about.ipynb][]
+- [about.ipynb][]
+- [widgets.ipynb][]
 
 ## Comparison to cl-jupyter
 
@@ -53,6 +54,11 @@ features.
 
 - Automatic detection of prompts on `*query-io*` and use `input_request` message
   to facilitate responses.
+
+- Handles COMM message handling and registration.
+
+- Lisp interface to core IPython widgets are included in the `jupyter-widgets`
+  package.
 
 ## Installation
 
@@ -210,5 +216,6 @@ during the installation phase of Roswell.
 [SBCL]: http://www.sbcl.org/
 [travis-badge]: https://travis-ci.com/yitzchak/common-lisp-jupyter.svg?branch=master
 [travis]: https://travis-ci.com/yitzchak/common-lisp-jupyter
+[widgets.ipynb]: http://nbviewer.jupyter.org/github/yitzchak/common-lisp-jupyter/blob/master/examples/widgets.ipynb
 [Windows Installation]: https://github.com/yitzchak/common-lisp-jupyter/wiki/Windows-Installation
 [ZeroMQ]: http://zeromq.org/

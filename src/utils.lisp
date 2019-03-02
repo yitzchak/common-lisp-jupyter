@@ -10,7 +10,7 @@
 
 (defun info (&rest args)
   "Display informational message regarding kernel status."
-  (when nil;maxima::$kernel_info
+  (when t;maxima::$kernel_info
     (apply #'format *trace-output* args)))
 
 (defun read-file-lines (filename)
@@ -44,6 +44,9 @@
 (defun ends-with-p (str1 str2)
   (let ((p (mismatch str2 str1 :from-end T)))
     (or (not p) (= 0 p))))
+
+(defun make-uuid ()
+  (string-downcase (remove #\- (format nil "~W" (uuid:make-v4-uuid)))))
 
 (defun install-kernel (argv name language)
   "Install a kernel spec file given a kernel name and a language name."

@@ -31,7 +31,10 @@
     #:*page-output*
     #:clear
     #:code-is-complete
+    #:comm
+    #:comm-id
     #:complete-code
+    #:create-comm
     #:enqueue-input
     #:evaluate-code
     #:handling-errors
@@ -39,9 +42,173 @@
     #:kernel
     #:kernel-prompt-prefix
     #:kernel-prompt-suffix
+    #:on-comm-close
+    #:on-comm-message
+    #:on-comm-open
     #:quit-condition
     #:run-kernel
+    #:get-comm
+    #:send-comm-close
+    #:send-comm-message
+    #:send-comm-open
     #:send-result))
+
+(defpackage #:jupyter-widgets
+  (:use #:cl #:iterate)
+  (:export
+    #:accordion
+    #:audio
+    #:bounded-float-text
+    #:bounded-int-text
+    #:box
+    #:button
+    #:button-style
+    #:checkbox
+    #:color-picker
+    #:controller
+    #:controller-axis
+    #:controller-button
+    #:date-picker
+    #:description-style
+    #:directional-link
+    #:display
+    #:dom-widget
+    #:dropdown
+    #:float-log-slider
+    #:float-progress
+    #:float-range-slider
+    #:float-slider
+    #:float-text
+    #:grid-box
+    #:h-box
+    #:html
+    #:html-math
+    #:image
+    #:int-progress
+    #:int-range-slider
+    #:int-slider
+    #:int-text
+    #:label
+    #:layout
+    #:link
+    #:make-widget
+    #:on-button-click
+    #:output
+    #:password
+    #:play
+    #:progress-style
+    #:radio-buttons
+    #:select
+    #:select-multiple
+    #:selection-range-slider
+    #:selection-slider
+    #:slider-style
+    #:tab
+    #:text
+    #:text-area
+    #:toggle-button
+    #:toggle-button-style
+    #:toggle-buttons
+    #:v-box
+    #:valid
+    #:video
+    #:widget
+    #:widget-%dom-classes
+    #:widget-%module-module
+    #:widget-%module-module-version
+    #:widget-%module-name
+    #:widget-%options-labels
+    #:widget-%playing
+    #:widget-%repeat
+    #:widget-%titles
+    #:widget-%view-module
+    #:widget-%view-module-version
+    #:widget-%view-name
+    #:widget-align-content
+    #:widget-align-items
+    #:widget-align-self
+    #:widget-autoplay
+    #:widget-axes
+    #:widget-bar-color
+    #:widget-bar-style
+    #:widget-base
+    #:widget-border
+    #:widget-bottom
+    #:widget-box-style
+    #:widget-button-color
+    #:widget-button-style
+    #:widget-button-width
+    #:widget-buttons
+    #:widget-children
+    #:widget-concise
+    #:widget-connected
+    #:widget-continuous-update
+    #:widget-controls
+    #:widget-description
+    #:widget-description-tooltip
+    #:widget-description-width
+    #:widget-disabled
+    #:widget-display
+    #:widget-flex
+    #:widget-flex-flow
+    #:widget-font-weight
+    #:widget-format
+    #:widget-grid-area
+    #:widget-grid-auto-columns
+    #:widget-grid-auto-flow
+    #:widget-grid-column
+    #:widget-grid-gap
+    #:widget-grid-template-areas
+    #:widget-grid-template-columns
+    #:widget-grid-template-rows
+    #:widget-handle-color
+    #:widget-height
+    #:widget-icon
+    #:widget-icons
+    #:widget-indent
+    #:widget-index
+    #:widget-interval
+    #:widget-justify-content
+    #:widget-layout
+    #:widget-left
+    #:widget-loop
+    #:widget-mapping
+    #:widget-margin
+    #:widget-max
+    #:widget-max-height
+    #:widget-max-width
+    #:widget-min
+    #:widget-min-height
+    #:widget-min-width
+    #:widget-msg-id
+    #:widget-name
+    #:widget-order
+    #:widget-orientation
+    #:widget-outputs
+    #:widget-overflow
+    #:widget-overflow-x
+    #:widget-overflow-y
+    #:widget-padding
+    #:widget-placeholder
+    #:widget-pressed
+    #:widget-readout
+    #:widget-readout-format
+    #:widget-right
+    #:widget-rows
+    #:widget-selected-index
+    #:widget-show-repeat
+    #:widget-source
+    #:widget-step
+    #:widget-style
+    #:widget-target
+    #:widget-timestamp
+    #:widget-tooltip
+    #:widget-tooltips
+    #:widget-top
+    #:widget-value
+    #:widget-visibility
+    #:widget-width
+    #:with-output))
 
 (defpackage #:common-lisp-jupyter
   (:nicknames :cl-jupyter)
