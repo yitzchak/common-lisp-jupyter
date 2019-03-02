@@ -31,6 +31,11 @@ env:
     - LISP=ccl-bin
     - LISP=sbcl-bin
 
+matrix:
+  exclude:
+    - os: osx
+      env: LISP=ecl
+
 install:
   - if [[ "${TRAVIS_OS_NAME:-}" == "linux" ]]; then pyenv global 3.7.1; fi
   - pip3 install wheel jupyter jupyter_kernel_test
