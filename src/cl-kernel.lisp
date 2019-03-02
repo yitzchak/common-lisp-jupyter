@@ -1,5 +1,8 @@
 (in-package #:common-lisp-jupyter)
 
+(defvar +kernel-name+ "Common Lisp")
+(defvar +kernel-language+ "common-lisp")
+
 (defclass kernel (jupyter:kernel)
   ()
   (:default-initargs :name "common-lisp"
@@ -223,6 +226,20 @@
           start
           end)))))
 
+
+(defun install (&key bin-path (ev-flag #+clisp "-x" #+(or mkcl cmucl) "-eval" #-(or clisp cmucl mkcl) "--eval"))
+  "Install Common Lisp kernel based on implementation"
+  (jupyter:install-kernel
+    (list
+      (or bin-path (format nil "~(~A~)" (uiop:implementation-type)))
+      ev-flag
+      "(ql:quickload :common-lisp-jupyter)"
+      ev-flag
+      "(jupyter:run-kernel 'common-lisp-jupyter:kernel \"{connection_file}\")")
+    +kernel-name+
+    +kernel-language+))
+
+
 #+ros.installing
 (eval-when (:compile-toplevel)
   (defparameter roswell.install::*build-hook*
@@ -235,5 +252,5 @@
                                         (uiop:getenv-absolute-directory "USERPROFILE")))
                                       "{connection_file}")
                                 '("cl-jupyter" "{connection_file}"))
-                              "Common Lisp"
-                              "common-lisp"))))
+                              +kernel-name+
+                              +kernel-language+))))
