@@ -70,9 +70,9 @@ common-lisp-jupyter may be installed on a machine using a local installation, a
 ### Requirements
 
 - [Roswell][] with a supported Common Lisp implementation. Currently
-  [Steel Bank Common Lisp][SBCL] and [Clozure Common Lisp][CCL] are known to
-  work. Other implementations which support the [Bordeaux Threads][] package
-  might work.
+  [Clozure Common Lisp][CCL], [Embeddable Common Lisp][ECL] and
+  [Steel Bank Common Lisp][SBCL] are known to work. Other implementations which
+  support the [Bordeaux Threads][] package might work.
 
 - [Jupyter][]
 
@@ -202,6 +202,7 @@ during the installation phase of Roswell.
 [CCL]: https://ccl.clozure.com/
 [cl-jupyter.lisp]: https://github.com/yitzchak/common-lisp-jupyter/blob/master/src/cl-kernel.lisp
 [cl-jupyter]: https://github.com/fredokun/cl-jupyter/
+[ECL]: https://common-lisp.net/project/ecl/
 [jsown]: http://quickdocs.org/jsown/
 [Jupyter]: https://jupyter.org/
 [Maxima-Jupyter]: https://github.com/robert-dodier/maxima-jupyter/
