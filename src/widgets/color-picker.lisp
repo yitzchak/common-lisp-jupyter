@@ -16,6 +16,7 @@
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "ColorPickerModel"
-    :%view-name "ColorPickerView"))
+    :%view-name "ColorPickerView")
+  (:documentation "Color picker widget"))
 
 (register-widget color-picker)

@@ -11,11 +11,16 @@
   (:default-initargs
     :%model-name "ButtonModel"
     :%view-name "ButtonView"
-    :style (make-widget 'button-style)))
+    :style (make-widget 'button-style))
+  (:documentation "Button widget.
+This widget has an `on-button-click` method that allows you to listen for the
+user clicking on the button.  The click event itself is stateless."))
 
 (register-widget button)
 
-(defgeneric on-button-click (w))
+(defgeneric on-button-click (w)
+  (:documentation
+    "This method is called when the button receives a click message."))
 
 (defmethod on-button-click (w))
 

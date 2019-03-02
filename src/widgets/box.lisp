@@ -15,7 +15,16 @@
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "BoxModel"
-    :%view-name "BoxView"))
+    :%view-name "BoxView")
+  (:documentation
+"Displays multiple widgets in a group. The widgets are laid out horizontally.
+
+Example
+
+(use-package :jupyter-widgets)
+(defvar title-widget (make-widget 'html :value \"<em>Box Example</em>\"))
+(defvar slider (make-widget 'int-slider))
+(make-widget 'box :children (list title-widget slider))"))
 
 (register-widget box)
 
@@ -35,7 +44,8 @@
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "AccordionModel"
-    :%view-name "AccordionView"))
+    :%view-name "AccordionView")
+  (:documentation "Displays children each on a separate accordion page."))
 
 (register-widget accordion)
 
@@ -67,7 +77,16 @@
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "HBoxModel"
-    :%view-name "HBoxView"))
+    :%view-name "HBoxView")
+  (:documentation
+"Displays multiple widgets horizontally using the flexible box model.
+
+Example
+
+(use-package :jupyter-widgets)
+(defvar title-widget (make-widget 'html :value \"<em>Box Example</em>\"))
+(defvar slider (make-widget 'int-slider))
+(make-widget 'h-box :children (list title-widget slider))"))
 
 (register-widget h-box)
 
@@ -77,7 +96,8 @@
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "TabModel"
-    :%view-name "TabView"))
+    :%view-name "TabView")
+  (:documentation "Displays children each on a separate accordion tab."))
 
 (register-widget tab)
 
@@ -87,6 +107,15 @@
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "VBoxModel"
-    :%view-name "VBoxView"))
+    :%view-name "VBoxView")
+  (:documentation
+"Displays multiple widgets vertically using the flexible box model.
+
+Example
+
+(use-package :jupyter-widgets)
+(defvar title-widget (make-widget 'html :value \"<em>Box Example</em>\"))
+(defvar slider (make-widget 'int-slider))
+(make-widget 'v-box :children (list title-widget slider))"))
 
 (register-widget v-box)

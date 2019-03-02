@@ -10,6 +10,7 @@
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "CheckboxModel"
-    :%view-name "CheckboxView"))
+    :%view-name "CheckboxView")
+  (:documentation "Displays a boolean `value` in the form of a checkbox."))
 
 (register-widget checkbox)

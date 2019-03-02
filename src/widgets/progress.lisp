@@ -18,7 +18,8 @@
   ()
   (:metaclass trait-metaclass)
   (:default-initargs
-    :%model-name "FloatProgressModel"))
+    :%model-name "FloatProgressModel")
+  (:documentation "Displays a progress bar."))
 
 (register-widget float-progress)
 
@@ -27,6 +28,8 @@
   ()
   (:metaclass trait-metaclass)
   (:default-initargs
-    :%model-name "IntProgressModel"))
+    :%model-name "IntProgressModel")
+  (:documentation
+    "Progress bar that represents an integer bounded from above and below."))
 
 (register-widget int-progress)

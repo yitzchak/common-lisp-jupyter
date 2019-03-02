@@ -78,7 +78,8 @@
     :trait :unicode))
   (:metaclass trait-metaclass)
   (:default-initargs :display-data t
-                     :target-name +target-name+))
+                     :target-name +target-name+)
+  (:documentation "Base class for all Jupyter widgets."))
 
 (defmethod jupyter:render ((w widget))
   (jsown:new-js
@@ -146,6 +147,7 @@
   (send-state w name))
 
 (defun make-widget (class &rest rest &key &allow-other-keys)
+  "Create a Jupyter widget and inform the frontend to create a synchronized model."
   (with-trait-silence
     (let* ((inst (apply 'make-instance class rest))
            (state (to-json-state inst))

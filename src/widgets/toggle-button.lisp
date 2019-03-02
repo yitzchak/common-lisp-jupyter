@@ -6,7 +6,8 @@
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "ToggleButtonModel"
-    :%view-name "ToggleButtonView"))
+    :%view-name "ToggleButtonView")
+  (:documentation "Displays a boolean `value` in the form of a toggle button."))
 
 (register-widget toggle-button)
 
@@ -27,6 +28,9 @@
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "ToggleButtonsModel"
-    :%view-name "ToggleButtonsView"))
+    :%view-name "ToggleButtonsView")
+  (:documentation
+"Group of toggle buttons that represent an enumeration. Only one toggle button
+can be toggled at any point in time."))
 
 (register-widget toggle-buttons)

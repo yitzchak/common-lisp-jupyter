@@ -25,7 +25,8 @@
     :trait :unicode))
   (:metaclass trait-metaclass)
   (:default-initargs
-    :%model-name "ButtonStyleModel"))
+    :%model-name "ButtonStyleModel")
+  (:documentation "Button style widget"))
 
 (register-widget button-style)
 
@@ -52,7 +53,8 @@
     :trait :color))
   (:metaclass trait-metaclass)
   (:default-initargs
-    :%model-name "ProgressStyleModel"))
+    :%model-name "ProgressStyleModel")
+  (:documentation "Progress style widget."))
 
 (register-widget progress-style)
 
@@ -90,7 +92,8 @@
     :trait :unicode))
   (:metaclass trait-metaclass)
   (:default-initargs
-    :%model-name "ToggleButtonsStyleModel"))
+    :%model-name "ToggleButtonsStyleModel")
+  (:documentation "Toggle Button style widget."))
 
 (register-widget toggle-buttons-style)
 

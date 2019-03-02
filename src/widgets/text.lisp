@@ -11,7 +11,8 @@
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "TextModel"
-    :%view-name "TextView"))
+    :%view-name "TextView")
+  (:documentation "Single line textbox widget."))
 
 (register-widget text)
 
@@ -26,7 +27,8 @@
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "TextareaModel"
-    :%view-name "TextareaView"))
+    :%view-name "TextareaView")
+  (:documentation "Multiline text area widget."))
 
 (register-widget text-area)
 
@@ -36,7 +38,8 @@
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "PasswordModel"
-    :%view-name "PasswordView"))
+    :%view-name "PasswordView")
+  (:documentation "Single line textbox widget."))
 
 (register-widget password)
 
@@ -46,7 +49,10 @@
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "FloatTextModel"
-    :%view-name "FloatTextView"))
+    :%view-name "FloatTextView")
+  (:documentation
+"Displays a float value within a textbox. For a textbox in which the value must
+be within a specific range, use BoundedFloatText."))
 
 (register-widget float-text)
 
@@ -56,7 +62,11 @@
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "BoundedFloatTextModel"
-    :%view-name "FloatTextView"))
+    :%view-name "FloatTextView")
+  (:documentation
+"Displays a float value within a textbox. Value must be within the range
+specified. For a textbox in which the value doesn't need to be within a specific
+range, use float-text."))
 
 (register-widget bounded-float-text)
 
@@ -66,7 +76,8 @@
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "IntTextModel"
-    :%view-name "IntTextView"))
+    :%view-name "IntTextView")
+  (:documentation "Textbox widget that represents an integer."))
 
 (register-widget int-text)
 
@@ -75,6 +86,8 @@
   ()
   (:metaclass trait-metaclass)
   (:default-initargs
-    :%model-name "BoundedIntTextModel"))
+    :%model-name "BoundedIntTextModel")
+  (:documentation
+    "Textbox widget that represents an integer bounded from above and below."))
 
 (register-widget bounded-int-text)

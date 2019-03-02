@@ -19,7 +19,8 @@
     :%model-module-version +controls-module-version+
     :%view-name ""
     :%view-module +controls-module+
-    :%view-module-version +controls-module-version+))
+    :%view-module-version +controls-module-version+)
+  (:documentation "Link Widget"))
 
 (register-widget link)
 
@@ -28,6 +29,7 @@
   ()
   (:metaclass trait-metaclass)
   (:default-initargs
-    :%model-name "DirectionalLinkModel"))
+    :%model-name "DirectionalLinkModel")
+  (:documentation "A directional link"))
 
 (register-widget directional-link)

@@ -10,6 +10,7 @@
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "DatePickerModel"
-    :%view-name "DatePickerView"))
+    :%view-name "DatePickerView")
+  (:documentation "Date picker widget"))
 
 (register-widget date-picker)

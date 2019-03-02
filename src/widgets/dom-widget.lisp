@@ -206,7 +206,15 @@
     :%model-module-version +base-module-version+
     :%view-name "LayoutView"
     :%view-module +base-module+
-    :%view-module-version +base-module-version+))
+    :%view-module-version +base-module-version+)
+  (:documentation
+"Layout specification
+
+Defines a layout that can be expressed using CSS.  Supports a subset of
+https://developer.mozilla.org/en-US/docs/Web/CSS/Reference
+
+When a property is also accessible via a shorthand property, we only
+expose the shorthand."))
 
 (register-widget layout)
 
@@ -230,4 +238,5 @@
     :%model-module-version +controls-module-version+
     :%view-name ""
     :%view-module +controls-module+
-    :%view-module-version +controls-module-version+))
+    :%view-module-version +controls-module-version+)
+(:documentation "Base class for all Jupyter widgets which have DOM view."))

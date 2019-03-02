@@ -16,7 +16,9 @@
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "SelectModel"
-    :%view-name "SelectView"))
+    :%view-name "SelectView")
+  (:documentation
+    "Listbox that only allows one item to be selected at any given time."))
 
 (register-widget select)
 
@@ -31,6 +33,8 @@
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "SelectMultipleModel"
-    :%view-name "SelectMultipleView"))
+    :%view-name "SelectMultipleView")
+  (:documentation
+    "Listbox that allows many items to be selected at any given time."))
 
 (register-widget select-multiple)

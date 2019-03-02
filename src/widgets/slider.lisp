@@ -41,7 +41,9 @@
     :%model-name "FloatLogSliderModel"
     :%view-name "FloatLogSliderView"
     :readout-format ".3g"
-    :max 4.0d0))
+    :max 4.0d0)
+  (:documentation
+    "Slider/trackbar of logarithmic floating values with the specified range."))
 
 (register-widget float-log-slider)
 
@@ -57,7 +59,10 @@
   (:default-initargs
     :%model-name "FloatRangeSliderModel"
     :%view-name "FloatRangeSliderView"
-    :readout-format ".2f"))
+    :readout-format ".2f")
+  (:documentation
+"Slider/trackbar that represents a pair of floats bounded by minimum and maximum
+value."))
 
 (register-widget float-range-slider)
 
@@ -69,7 +74,8 @@
   (:default-initargs
     :%model-name "FloatSliderModel"
     :%view-name "FloatSliderView"
-    :readout-format ".2f"))
+    :readout-format ".2f")
+  (:documentation "Slider/trackbar of floating values with the specified range."))
 
 (register-widget float-slider)
 
@@ -85,7 +91,10 @@
   (:default-initargs
     :%model-name "IntRangeSliderModel"
     :%view-name "IntRangeSliderView"
-    :readout-format "d"))
+    :readout-format "d")
+  (:documentation
+"Slider/trackbar that represents a pair of ints bounded by minimum and maximum
+value."))
 
 (register-widget int-range-slider)
 
@@ -97,7 +106,9 @@
   (:default-initargs
     :%model-name "IntSliderModel"
     :%view-name "IntSliderView"
-    :readout-format "d"))
+    :readout-format "d")
+  (:documentation
+    "Slider widget that represents an integer bounded from above and below."))
 
 (register-widget int-slider)
 
@@ -117,7 +128,8 @@
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "SelectionRangeSliderModel"
-    :%view-name "SelectionRangeSliderView"))
+    :%view-name "SelectionRangeSliderView")
+  (:documentation "Slider to select multiple contiguous items from a list."))
 
 (register-widget selection-range-slider)
 
@@ -127,6 +139,7 @@
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "SelectionSliderModel"
-    :%view-name "SelectionSliderView"))
+    :%view-name "SelectionSliderView")
+  (:documentation "Slider to select a single item from a list or dictionary."))
 
 (register-widget selection-slider)
