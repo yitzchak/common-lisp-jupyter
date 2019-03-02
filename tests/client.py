@@ -1,5 +1,6 @@
 import unittest
 import jupyter_kernel_test
+from jupyter_client.manager import start_new_kernel
 
 
 class MyKernelTests(jupyter_kernel_test.KernelTests):
