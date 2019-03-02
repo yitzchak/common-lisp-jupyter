@@ -453,7 +453,6 @@
   (:documentation "A condition for identifying a request for kernel shutdown.")
   (:report (lambda (c stream) (declare (ignore c stream)))))
 
-;;; Based on macro taken from: http://www.cliki.net/REPL
 (defmacro handling-errors (&body body)
   "Macro for catching any conditions including quit-conditions during code
   evaluation."
@@ -474,11 +473,15 @@
     	 (progn ,@body))
      (quit-condition (err)
        (make-eval-error err (format nil "~A" err) :quit t))
-     (simple-condition (err)
+     (simple-error (err)
        (make-eval-error err
          (apply #'format nil (simple-condition-format-control err)
                              (simple-condition-format-arguments err))))
-     (condition (err)
+     (simple-type-error (err)
+       (make-eval-error err
+         (apply #'format nil (simple-condition-format-control err)
+                             (simple-condition-format-arguments err))))
+     (serious-condition (err)
        (make-eval-error err (format nil "~A" err)))))
 
 (defun send-result (result)
