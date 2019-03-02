@@ -173,3 +173,8 @@
     (jupyter:info "~A~%" name)
     (when class
       (make-widget class))))
+
+(defun display (widget)
+  "Display a widget in the notebook."
+  (jupyter:send-result widget)
+  nil)

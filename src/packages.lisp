@@ -71,6 +71,7 @@
     #:date-picker
     #:description-style
     #:directional-link
+    #:display
     #:dom-widget
     #:dropdown
     #:float-log-slider
