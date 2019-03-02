@@ -1,7 +1,7 @@
 # common-lisp-jupyter
 
 [![Binder][mybinder-badge]][mybinder]
-[![Quicklisp][quicklisp-badge]][quicklisp]
+[![Quicklisp][quicklisp-badge]][quicklisp-clj]
 [![Build Status][travis-badge]][travis]
 [![Build status][appveyor-badge]][appveyor]
 
@@ -69,7 +69,7 @@ common-lisp-jupyter may be installed on a machine using a local installation, a
 
 ### Requirements
 
-- [Roswell][] with a supported Common Lisp implementation. Currently
+- [Roswell][] or a system-wide installed Common Lisp implementation. Currently
   [Clozure Common Lisp][CCL], [Embeddable Common Lisp][ECL] and
   [Steel Bank Common Lisp][SBCL] are known to work. Other implementations which
   support the [Bordeaux Threads][] package might work.
@@ -82,18 +82,41 @@ common-lisp-jupyter may be installed on a machine using a local installation, a
   satisfy the requirement on Windows. For more details see the
   [Windows Installation][] instruction in the wiki.
 
-### Installing
+### Installing via Roswell
 
 - Install Roswell using the [Roswell Installation Guide][].
 
 - Install common-lisp-jupyter by roswell
-```
+```sh
 ros install yitzchak/common-lisp-jupyter
 ```
 - Add the PATH in the initialization file (such as `~/.bashrc`)
-```
+```sh
 export PATH=$PATH:~/.roswell/bin
 ```
+
+### Installing via Quicklisp
+
+- Install [Quicklisp][] and use `(ql:add-to-init-file)`
+
+- Clone this repo inside Quicklisp's `local-projects` directory.
+```sh
+cd ~/quicklisp/local-projects
+git clone https://github.com/yitzchak/common-lisp-jupyter.git
+```
+
+- Start your Lisp implementation and evaluate the following. The `install`
+  command will try to deduce the correct command line arguments for your
+  implementation. The keyword parameters `:bin-path` and `:ev-flag` can be
+  used to customize these arguments. For example, for SBCL `:bin-path` is `sbcl`
+  and `:ev-flag` is `--eval`
+```lisp
+(ql:quickload :common-lisp-jupyter)
+(cl-jupyter:install)
+```
+
+
+
 
 ### Running common-lisp-jupyter
 
@@ -210,7 +233,8 @@ during the installation phase of Roswell.
 [mybinder]: https://mybinder.org/v2/gh/yitzchak/common-lisp-jupyter/master
 [nbviewer]: http://nbviewer.jupyter.org
 [quicklisp-badge]: http://quickdocs.org/badge/common-lisp-jupyter.svg
-[quicklisp]: http://quickdocs.org/common-lisp-jupyter
+[quicklisp-clj]: http://quickdocs.org/common-lisp-jupyter
+[Quicklisp]: https://www.quicklisp.org/
 [repo2docker]: https://repo2docker.readthedocs.io/en/latest/
 [Roswell Installation Guide]: https://github.com/roswell/roswell/wiki/Installation
 [Roswell]: https://github.com/roswell/roswell
