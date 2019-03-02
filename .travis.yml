@@ -27,6 +27,7 @@ env:
     - PATH=~/.roswell/bin:$PATH
     - ROSWELL_INSTALL_DIR=$HOME/.roswell
   matrix:
+    - LISP=ecl
     - LISP=ccl-bin
     - LISP=sbcl-bin
 
@@ -35,6 +36,7 @@ install:
   - pip3 install wheel jupyter jupyter_kernel_test
   - curl -L https://raw.githubusercontent.com/snmsts/roswell/release/scripts/install-for-ci.sh | sh
   - ros install ./common-lisp-jupyter.asd
+  - ros run --eval "(ql:quickload :common-lisp-jupyter)" --quit
 
 script:
   - python3 tests/client.py --verbose
