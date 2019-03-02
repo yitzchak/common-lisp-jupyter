@@ -55,9 +55,9 @@ features.
 - Automatic detection of prompts on `*query-io*` and use `input_request` message
   to facilitate responses.
 
-- Handles COMM message handling and registration.
+- COMM message handling and registration.
 
-- Lisp interface to core IPython widgets are included in the `jupyter-widgets`
+- Lisp interface to core IPython widgets is included in the `jupyter-widgets`
   package.
 
 ## Installation
