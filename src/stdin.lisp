@@ -53,6 +53,10 @@ most cases of *query-io* usage. Makes overloading y-or-no-p unnecessary.
                                 :element-type 'character)
           :reader stdin-stream-input)))
 
+(defmethod interactive-stream-p ((stream stdin-stream))
+  (declare (ignore stream))
+  t)
+
 (defun make-stdin-stream (stdin parent-msg)
   (make-instance 'stdin-stream :channel stdin
                                :parent-msg parent-msg))
@@ -60,22 +64,29 @@ most cases of *query-io* usage. Makes overloading y-or-no-p unnecessary.
 (defmethod trivial-gray-streams:stream-write-char ((stream stdin-stream) char)
   (vector-push-extend char (stdin-stream-output stream)))
 
-(defmethod trivial-gray-streams:stream-finish-output ((stream stdin-stream))
+(defun prompt-and-read (stream)
   (with-slots (channel parent-msg output input) stream
     (let ((trimmed-output (copy-seq (string-trim '(#\Bel) output))))
       (adjust-array output *stdin-stream-size* :fill-pointer 0)
       (unless (zerop (length (string-trim '(#\Newline) trimmed-output)))
         (send-input-request channel parent-msg trimmed-output)
-        (let ((value (jsown:val (message-content (message-recv channel)) "value")))
+        (let ((value (concatenate 'string
+                       (jsown:val (message-content (message-recv channel)) "value")
+                       '(#\Newline))))
           (adjust-array input (length value)
                         :fill-pointer (length value)
                         :initial-contents (reverse value)))))))
+
+(defmethod trivial-gray-streams:stream-finish-output ((stream stdin-stream))
+  (prompt-and-read stream))
 
 (defmethod trivial-gray-streams:stream-listen ((stream stdin-stream))
   (> (length (stdin-stream-input stream)) 0))
 
 (defmethod trivial-gray-streams:stream-read-char ((stream stdin-stream))
   (let ((input (stdin-stream-input stream)))
+    (when (zerop (length input))
+      (prompt-and-read stream))
     (if (zerop (length input))
       :eof
       (vector-pop input))))
