@@ -214,6 +214,7 @@
   (:nicknames :cl-jupyter)
   (:use #:cl #:iterate)
   (:export
+    #:install
     #:kernel))
 
 (in-package #:jupyter)
