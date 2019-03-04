@@ -18,6 +18,7 @@ addons:
       - python3
       - python3-pip
       - python3-setuptools
+      - sbcl
   homebrew:
     packages:
       - czmq
@@ -27,21 +28,20 @@ env:
     - PATH=~/.roswell/bin:$PATH
     - ROSWELL_INSTALL_DIR=$HOME/.roswell
   matrix:
-    - LISP=ecl
-    - LISP=ccl-bin
-    - LISP=sbcl-bin
+    - METHOD=ros LISP=ccl-bin
+    - METHOD=ros LISP=ecl
+    - METHOD=ros LISP=sbcl-bin
+    - METHOD=sys LISP=sbcl
 
 matrix:
   exclude:
     - os: osx
-      env: LISP=ecl
+      env: METHOD=ros LISP=ecl
+    - os: osx
+      env: METHOD=sys LISP=sbcl
 
 install:
-  - if [[ "${TRAVIS_OS_NAME:-}" == "linux" ]]; then pyenv global 3.7.1; fi
-  - pip3 install wheel jupyter jupyter_kernel_test
-  - curl -L https://raw.githubusercontent.com/snmsts/roswell/release/scripts/install-for-ci.sh | sh
-  - ros install ./common-lisp-jupyter.asd
-  - ros run --eval "(ql:quickload :common-lisp-jupyter)" --quit
+  - bash scripts/ci-install
 
 script:
   - python3 tests/client.py --verbose
