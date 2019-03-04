@@ -76,11 +76,11 @@ common-lisp-jupyter may be installed on a machine using a local installation, a
 
 - [Jupyter][]
 
-- [ZeroMQ][] library including development headers. On debian-based systems, you can
-  satisfy this requirement by installing the package `libczmq-dev`. On
-  Arch-based systems the package is named `zeromq`. There are several ways to
-  satisfy the requirement on Windows. For more details see the
-  [Windows Installation][] instruction in the wiki.
+- [ZeroMQ][] library including development headers. On debian-based systems, you
+  can satisfy this requirement by installing the package `libczmq-dev`. On
+  Arch-based systems the package is named `zeromq`. In homebrew the package is
+  named `czmq`. There are several ways to satisfy the requirement on Windows.
+  For more details see the [Windows Installation][] instruction in the wiki.
 
 ### Installing via Roswell
 
