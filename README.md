@@ -38,7 +38,7 @@ features.
 
 - Handling and rendering of multiple value return
 
-- Correct setting of the REPL variables `-`, `+`, `++`, `+++`, `*`, `**`, `**`,
+- Correct setting of the REPL variables `-`, `+`, `++`, `+++`, `*`, `**`, `***`,
   `/`, `//` and `///`
 
 - Automatic detection of MIME types for files
@@ -84,7 +84,10 @@ common-lisp-jupyter may be installed on a machine using a local installation, a
 
 ### Installing via Roswell
 
-- Install Roswell using the [Roswell Installation Guide][].
+- Install Roswell using the [Roswell Installation Guide][]. If you already have
+  Roswell installed you may need to update your Quicklisp distribution with
+  `(ql:update-dist "quicklisp")` inside a `ros run` shell to resolve package
+  conflicts.
 
 - Install common-lisp-jupyter by roswell
 ```sh
@@ -97,7 +100,9 @@ export PATH=$PATH:~/.roswell/bin
 
 ### Installing via Quicklisp
 
-- Install [Quicklisp][] and use `(ql:add-to-init-file)`
+- Install [Quicklisp][] and use `(ql:add-to-init-file)`. If you already have
+  Quicklisp installed you may need to update your distribution with
+  `(ql:update-dist "quicklisp")` to resolve package conflicts.
 
 - Clone this repo inside Quicklisp's `local-projects` directory.
 ```sh
@@ -109,14 +114,11 @@ git clone https://github.com/yitzchak/common-lisp-jupyter.git
   command will try to deduce the correct command line arguments for your
   implementation. The keyword parameters `:bin-path` and `:ev-flag` can be
   used to customize these arguments. For example, for SBCL `:bin-path` is `sbcl`
-  and `:ev-flag` is `--eval`
+  and `:ev-flag` is `--eval`.
 ```lisp
 (ql:quickload :common-lisp-jupyter)
 (cl-jupyter:install)
 ```
-
-
-
 
 ### Running common-lisp-jupyter
 
