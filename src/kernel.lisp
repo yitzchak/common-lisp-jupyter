@@ -225,7 +225,7 @@
   (info "[kernel] Connection file = ~A~%" connection-file-name)
   (unless (stringp connection-file-name)
     (error "[kernel] Wrong connection file argument (expecting a string)"))
-  (let* ((config-js (jsown:parse (read-string-file connection-file-name)))
+  (let* ((config-js (jsown:parse (alexandria:read-file-into-string connection-file-name)))
          (transport (json-getf config-js "transport"))
          (ip (json-getf config-js "ip"))
          (shell-port (json-getf config-js "shell_port"))

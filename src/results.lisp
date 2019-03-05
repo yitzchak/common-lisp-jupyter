@@ -101,13 +101,15 @@ Standard MIME types
          (mime-type (or (file-result-mime-type res) (trivial-mimes:mime path))))
     (if (equal mime-type *plain-text-mime-type*)
       (jsown:new-js
-        (mime-type (read-string-file path)))
+        (mime-type (alexandria:read-file-into-string path)))
       (jsown:new-js
         (*plain-text-mime-type* path)
         (mime-type
-          (if (or (equal mime-type *svg-mime-type*) (uiop:string-prefix-p "text/" mime-type))
-            (read-string-file path)
-            (file-to-base64-string path)))))))
+          (if (or (equal mime-type *svg-mime-type*)
+                  (uiop:string-prefix-p "text/" mime-type))
+            (alexandria:read-file-into-string path)
+            (cl-base64:usb8-array-to-base64-string
+              (alexandria:read-file-into-byte-vector path))))))))
 
 (defclass error-result (result)
   ((ename :initarg :ename
