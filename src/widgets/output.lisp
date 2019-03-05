@@ -45,5 +45,5 @@ Example
 (defmacro with-output (o &body body)
   "Evaluate body with all output sent to the output widget."
   `(with-slots (msg-id) ,o
-    (setf msg-id (jsown:val (jupyter::message-header jupyter::*message*) "msg_id"))
+    (setf msg-id (jupyter:json-getf (jupyter::message-header jupyter::*message*) "msg_id"))
     ,@body))

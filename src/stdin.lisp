@@ -71,7 +71,7 @@ most cases of *query-io* usage. Makes overloading y-or-no-p unnecessary.
       (unless (zerop (length (string-trim '(#\Newline) trimmed-output)))
         (send-input-request channel parent-msg trimmed-output)
         (let ((value (concatenate 'string
-                       (jsown:val (message-content (message-recv channel)) "value")
+                       (json-getf (message-content (message-recv channel)) "value")
                        '(#\Newline))))
           (adjust-array input (length value)
                         :fill-pointer (length value)

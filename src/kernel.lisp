@@ -226,15 +226,15 @@
   (unless (stringp connection-file-name)
     (error "[kernel] Wrong connection file argument (expecting a string)"))
   (let* ((config-js (jsown:parse (read-string-file connection-file-name)))
-         (transport (jsown:val config-js "transport"))
-         (ip (jsown:val config-js "ip"))
-         (shell-port (jsown:val config-js "shell_port"))
-         (stdin-port (jsown:val config-js "stdin_port"))
-         (iopub-port (jsown:val config-js "iopub_port"))
-         (control-port (jsown:val config-js "control_port"))
-         (hb-port (jsown:val config-js "hb_port"))
-         (key (jsown:val config-js "key"))
-         (signature-scheme (jsown:val config-js "signature_scheme")))
+         (transport (json-getf config-js "transport"))
+         (ip (json-getf config-js "ip"))
+         (shell-port (json-getf config-js "shell_port"))
+         (stdin-port (json-getf config-js "stdin_port"))
+         (iopub-port (json-getf config-js "iopub_port"))
+         (control-port (json-getf config-js "control_port"))
+         (hb-port (json-getf config-js "hb_port"))
+         (key (json-getf config-js "key"))
+         (signature-scheme (json-getf config-js "signature_scheme")))
     (when (not (string= signature-scheme "hmac-sha256"))
       (error "[kernel] Signature scheme 'hmac-sha256' required, was provided ~S." signature-scheme))
     (iter
@@ -267,7 +267,7 @@
 |#
 
 (defun handle-message (kernel msg)
-  (let ((msg-type (jsown:val (message-header msg) "msg_type"))
+  (let ((msg-type (json-getf (message-header msg) "msg_type"))
         (*kernel* kernel)
         (*message* msg))
     (cond ((equal msg-type "kernel_info_request")
@@ -335,7 +335,7 @@
 
 (defun handle-execute-request (kernel msg)
   (info "[kernel] Handling 'execute_request'~%")
-  (let ((code (jsown:val (message-content msg) "code")))
+  (let ((code (json-getf (message-content msg) "code")))
     (with-slots (shell iopub stdin history-in history-out prompt-prefix
                  prompt-suffix package)
                 kernel
@@ -387,7 +387,7 @@
   (info "[kernel] Handling 'shutdown_request'~%")
   (let* ((shell (kernel-shell kernel))
          (content (message-content msg))
-         (restart (jsown:val content "restart")))
+         (restart (json-getf content "restart")))
     (send-shutdown-reply shell msg restart)
     nil))
 
@@ -401,7 +401,7 @@
   (info "[kernel] Handling 'is_complete_request'~%")
   (let* ((shell (kernel-shell kernel))
          (content (message-content msg))
-         (code (jsown:val content "code"))
+         (code (json-getf content "code"))
          (status (code-is-complete kernel code)))
     (send-is-complete-reply shell msg status)
     t))
@@ -416,12 +416,12 @@
   (info "[kernel] Handling 'inspect_request'~%")
   (with-slots (shell package) kernel
     (let* ((content (message-content msg))
-           (code (jsown:val content "code"))
+           (code (json-getf content "code"))
            (result (let ((*package* (find-package package)))
                      (inspect-code kernel
                               code
-                              (min (1- (length code)) (jsown:val content "cursor_pos"))
-                              (jsown:val content "detail_level")))))
+                              (min (1- (length code)) (json-getf content "cursor_pos"))
+                              (json-getf content "detail_level")))))
       (if (eval-error-p result)
         (with-slots (ename evalue) result
           (send-inspect-reply-error shell msg ename evalue))
@@ -439,8 +439,8 @@
   (info "[kernel] Handling 'complete_request'~%")
   (with-slots (shell package) kernel
     (let* ((content (message-content msg))
-           (code (jsown:val content "code"))
-           (cursor-pos (jsown:val content "cursor_pos")))
+           (code (json-getf content "code"))
+           (cursor-pos (json-getf content "cursor_pos")))
       (multiple-value-bind (result start end)
                            (let ((*package* (find-package package)))
                               (complete-code kernel code
@@ -459,7 +459,7 @@
   (info "[kernel] Handling 'comm_info_request'~%")
   (with-slots (shell comms) kernel
     (let* ((content (message-content msg))
-           (target-name (jsown:val content "target_name"))
+           (target-name (json-getf content "target_name"))
            (comms-alist (alexandria:hash-table-alist comms)))
       (send-comm-info-reply shell msg
                             (if target-name
@@ -473,9 +473,9 @@
   (with-slots (iopub session comms) kernel
     (let* ((content (message-content msg))
            (metadata (message-metadata msg))
-           (id (jsown:val content "comm_id"))
-           (target-name (jsown:val content "target_name"))
-           (data (jsown:val content "data"))
+           (id (json-getf content "comm_id"))
+           (target-name (json-getf content "target_name"))
+           (data (json-getf content "data"))
            (inst (create-comm (intern target-name 'keyword) id data metadata)))
       (info "~A ~%" target-name)
       (if inst
@@ -490,8 +490,8 @@
   (with-slots (comms) kernel
     (let* ((content (message-content msg))
            (metadata (message-metadata msg))
-           (id (jsown:val content "comm_id"))
-           (data (jsown:val content "data"))
+           (id (json-getf content "comm_id"))
+           (data (json-getf content "data"))
            (inst (gethash id comms)))
       (when inst
         (on-comm-message inst data metadata))))
@@ -502,8 +502,8 @@
   (with-slots (comms) kernel
     (let* ((content (message-content msg))
            (metadata (message-metadata msg))
-           (id (jsown:val content "comm_id"))
-           (data (jsown:val content "data"))
+           (id (json-getf content "comm_id"))
+           (data (json-getf content "data"))
            (inst (gethash id comms)))
       (when inst
         (on-comm-close inst data metadata)

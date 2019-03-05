@@ -81,3 +81,12 @@
           ("language" language)))
       stream))
   t))
+
+(defun json-getf (object indicator &optional default)
+  "Safe accessor for the internal JSON format that behaves like getf"
+  (iter
+    (for (key . value) in (cdr object))
+    (when (string= indicator key)
+      (leave value))
+    (finally
+      (return default))))

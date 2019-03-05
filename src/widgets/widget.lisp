@@ -122,7 +122,7 @@
 (defun update-state (w data)
   (let ((*state-lock* t))
     (iter
-      (for state next (jsown:val data "state"))
+      (for state next (jupyter:json-getf data "state"))
       (for keywords next (jsown:keywords state))
       (for def in (closer-mop:class-slots (class-of w)))
       (for name next (closer-mop:slot-definition-name def))
@@ -130,11 +130,11 @@
       (for type next (trait-type def))
       (when (position key keywords :test #'equal)
         (setf (slot-value w name)
-          (deserialize-trait w type name (jsown:val state key)))))))
+          (deserialize-trait w type name (jupyter:json-getf state key)))))))
 
 (defmethod jupyter:on-comm-message ((w widget) data metadata)
   (declare (ignore metadata))
-  (let ((method (jsown:val data "method")))
+  (let ((method (jupyter:json-getf data "method")))
     (cond
       ((equal "update" method)
         (update-state w data))
@@ -159,13 +159,13 @@
       inst)))
 
 (defmethod jupyter:create-comm ((target-name (eql :|jupyter.widget|)) id data metadata)
-  (let* ((state (jsown:val data "state"))
-         (model-name (jsown:val state "_model_name"))
-         (model-module (jsown:val state "_model_module"))
-         (model-module-version (jsown:val state "_model_module_version"))
-         (view-name (jsown:val state "_view_name"))
-         (view-module (jsown:val state "_view_module"))
-         (view-module-version (jsown:val state "_view_module_version"))
+  (let* ((state (jupyter:json-getf data "state"))
+         (model-name (jupyter:json-getf state "_model_name"))
+         (model-module (jupyter:json-getf state "_model_module"))
+         (model-module-version (jupyter:json-getf state "_model_module_version"))
+         (view-name (jupyter:json-getf state "_view_name"))
+         (view-module (jupyter:json-getf state "_view_module"))
+         (view-module-version (jupyter:json-getf state "_view_module_version"))
          (name (widget-registry-name model-module model-module-version
                                      model-name view-module
                                      view-module-version view-name))

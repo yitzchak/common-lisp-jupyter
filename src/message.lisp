@@ -39,8 +39,8 @@
     (make-instance 'message
                    :header (jsown:new-js
                              ("msg_id" (make-uuid))
-                             ("username" (jsown:val hdr "username"))
-                             ("session" (jsown:val hdr "session"))
+                             ("username" (json-getf hdr "username"))
+                             ("session" (json-getf hdr "session"))
                              ("msg_type" msg-type)
                              ("version" +KERNEL-PROTOCOL-VERSION+))
                    :parent-header hdr

@@ -64,9 +64,9 @@
 (defmethod deserialize-trait (object (type (eql :date)) name value)
   (when (cdr value)
     (format nil "~4,'0D-~2,'0D-~2,'0D"
-                (jsown:val value "year")
-                (1+ (jsown:val value "month"))
-                (jsown:val value "date"))))
+                (jupyter:json-getf value "year")
+                (1+ (jupyter:json-getf value "month"))
+                (jupyter:json-getf value "date"))))
 
 ; Integer
 

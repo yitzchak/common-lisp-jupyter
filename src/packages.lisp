@@ -4,6 +4,7 @@
     ; utils
     #:info
     #:install-kernel
+    #:json-getf
     ; results
     #:file
     #:gif-file
