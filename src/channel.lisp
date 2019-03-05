@@ -35,9 +35,9 @@ Jupyter protocol constants
   (info "[~(~A~)] Starting...~%" (class-name (class-of ch)))
   (pzmq:bind (channel-socket ch)
              (format nil "~A://~A:~A"
-                         (channel-transport ch)
-                         (channel-ip ch)
-                         (channel-port ch))))
+                     (channel-transport ch)
+                     (channel-ip ch)
+                     (channel-port ch))))
 
 (defmethod start ((ch channel))
   (start-channel ch))

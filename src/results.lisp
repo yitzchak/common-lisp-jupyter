@@ -73,7 +73,7 @@ Standard MIME types
         (mime-type value))
       (jsown:new-js
         (*plain-text-mime-type* "inline-value")
-        (mime-type (if (or (stringp value) (ends-with-p mime-type "json"))
+        (mime-type (if (or (stringp value) (uiop:string-suffix-p mime-type "json"))
                        value
                        (cl-base64:usb8-array-to-base64-string value)))))))
 
@@ -105,7 +105,7 @@ Standard MIME types
       (jsown:new-js
         (*plain-text-mime-type* path)
         (mime-type
-          (if (or (equal mime-type *svg-mime-type*) (starts-with-p mime-type "text/"))
+          (if (or (equal mime-type *svg-mime-type*) (uiop:string-prefix-p "text/" mime-type))
             (read-string-file path)
             (file-to-base64-string path)))))))
 

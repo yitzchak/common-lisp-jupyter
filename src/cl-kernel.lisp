@@ -189,11 +189,6 @@
             :status status
             :definitions (trivial-documentation:symbol-definitions sym)))))))
 
-;; nicked from: https://rosettacode.org/wiki/String_matching#Common_Lisp
-(defun starts-with-p (str1 str2)
-  (let ((p (search str2 str1)))
-    (and p (= 0 p))))
-
 (defun symbol-name-to-qualified-name (name package-name package)
   (mangle-symbol-case
     (if package-name
@@ -218,13 +213,13 @@
                     (iter
                       (for sym in-package pkg external-only t)
                       (for sym-name next (symbol-name sym))
-                      (when (starts-with-p sym-name name)
+                      (when (uiop:string-prefix-p name sym-name)
                         (collect
                           (symbol-name-to-qualified-name sym-name package-name pkg))))
                     (iter
                       (for sym in-package pkg)
                       (for sym-name next (symbol-name sym))
-                      (when (starts-with-p sym-name name)
+                      (when (uiop:string-prefix-p name sym-name)
                         (collect
                           (symbol-name-to-qualified-name sym-name package-name pkg)))))))))
           start
