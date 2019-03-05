@@ -28,7 +28,9 @@ env:
     - PATH=~/.roswell/bin:$PATH
     - ROSWELL_INSTALL_DIR=$HOME/.roswell
   matrix:
+    - METHOD=ros LISP=abcl-bin
     - METHOD=ros LISP=ccl-bin
+    - METHOD=ros LISP=cmu-bin
     - METHOD=ros LISP=ecl
     - METHOD=ros LISP=sbcl-bin
     - METHOD=sys LISP=sbcl
