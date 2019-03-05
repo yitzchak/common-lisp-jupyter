@@ -231,15 +231,18 @@
           end)))))
 
 
-(defun install (&key bin-path (ev-flag #+clisp "-x" #+(or mkcl cmucl) "-eval" #-(or clisp cmucl mkcl) "--eval"))
+(defun install (&key bin-path (ev-flag #+clisp "-x" #+(or mkcl cmucl) "-eval" #-(or clisp cmucl mkcl) "--eval") preamble)
   "Install Common Lisp kernel based on implementation"
   (jupyter:install-kernel
-    (list
-      (or bin-path (format nil "~(~A~)" (uiop:implementation-type)))
-      ev-flag
-      "(ql:quickload :common-lisp-jupyter)"
-      ev-flag
-      "(jupyter:run-kernel 'common-lisp-jupyter:kernel \"{connection_file}\")")
+    (iter
+      (for cmd in (append preamble
+                    '("(ql:quickload :common-lisp-jupyter)"
+                      "(jupyter:run-kernel 'common-lisp-jupyter:kernel \"{connection_file}\")")))
+      (if-first-time
+        (collect
+          (or bin-path (format nil "~(~A~)" (uiop:implementation-type)))))
+      (collect ev-flag)
+      (collect cmd))
     +kernel-name+
     +kernel-language+))
 

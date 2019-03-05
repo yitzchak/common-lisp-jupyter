@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+if [[ "${TRAVIS_OS_NAME:-}" == "linux" ]]; then
+  pyenv global 3.7.1
+fi
+
+pip3 install wheel jupyter jupyter_kernel_test
+
+if [ "${METHOD:-}" = "ros" ]; then
+  curl -L https://raw.githubusercontent.com/snmsts/roswell/release/scripts/install-for-ci.sh | sh
+  ros install ./common-lisp-jupyter.asd
+  ros run --eval "(ql:quickload :common-lisp-jupyter)" --quit
+else
+  curl -O https://beta.quicklisp.org/quicklisp.lisp
+  if [ "$LISP" = "clisp" ]; then
+    clisp scripts/ql-install.lisp
+  elif [ "$LISP" = "ecl" ]; then
+    ecl -shell scripts/ql-install.lisp
+  else
+    $LISP --load scripts/ql-install.lisp --quit
+  fi
+fi
