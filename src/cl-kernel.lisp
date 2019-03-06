@@ -213,13 +213,13 @@
                     (iter
                       (for sym in-package pkg external-only t)
                       (for sym-name next (symbol-name sym))
-                      (when (uiop:string-prefix-p name sym-name)
+                      (when (starts-with-subseq name sym-name)
                         (collect
                           (symbol-name-to-qualified-name sym-name package-name pkg))))
                     (iter
                       (for sym in-package pkg)
                       (for sym-name next (symbol-name sym))
-                      (when (uiop:string-prefix-p name sym-name)
+                      (when (starts-with-subseq name sym-name)
                         (collect
                           (symbol-name-to-qualified-name sym-name package-name pkg)))))))))
           start

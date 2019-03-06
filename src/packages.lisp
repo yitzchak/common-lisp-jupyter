@@ -1,5 +1,5 @@
 (defpackage #:jupyter
-  (:use #:cl #:iterate)
+  (:use #:common-lisp #:alexandria #:iterate)
   (:export
     ; utils
     #:info
@@ -55,7 +55,7 @@
     #:send-result))
 
 (defpackage #:jupyter-widgets
-  (:use #:cl #:iterate)
+  (:use #:common-lisp #:alexandria #:iterate)
   (:export
     #:accordion
     #:audio
@@ -213,7 +213,7 @@
 
 (defpackage #:common-lisp-jupyter
   (:nicknames :cl-jupyter)
-  (:use #:cl #:iterate)
+  (:use #:common-lisp #:alexandria #:iterate)
   (:export
     #:install
     #:kernel))

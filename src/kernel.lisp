@@ -225,7 +225,7 @@
   (info "[kernel] Connection file = ~A~%" connection-file-name)
   (unless (stringp connection-file-name)
     (error "[kernel] Wrong connection file argument (expecting a string)"))
-  (let* ((config-js (jsown:parse (alexandria:read-file-into-string connection-file-name)))
+  (let* ((config-js (jsown:parse (read-file-into-string connection-file-name)))
          (transport (json-getf config-js "transport"))
          (ip (json-getf config-js "ip"))
          (shell-port (json-getf config-js "shell_port"))
@@ -460,7 +460,7 @@
   (with-slots (shell comms) kernel
     (let* ((content (message-content msg))
            (target-name (json-getf content "target_name"))
-           (comms-alist (alexandria:hash-table-alist comms)))
+           (comms-alist (hash-table-alist comms)))
       (send-comm-info-reply shell msg
                             (if target-name
                               (remove-if-not (lambda (p) (equal target-name (cdr p)))

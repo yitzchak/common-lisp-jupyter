@@ -113,7 +113,7 @@
       (vector-push-extend char value)
       ;; After the character has been added look for a prompt terminator at the
       ;; end.
-      (if (uiop:string-suffix-p value prompt-suffix)
+      (if (ends-with-subseq prompt-suffix value)
         (let ((start (search prompt-prefix value)))
           ;; If there is a prompt start also then print the prompt and remove it
           ;; from the buffer.

@@ -73,7 +73,7 @@ Standard MIME types
         (mime-type value))
       (jsown:new-js
         (*plain-text-mime-type* "inline-value")
-        (mime-type (if (or (stringp value) (uiop:string-suffix-p mime-type "json"))
+        (mime-type (if (or (stringp value) (ends-with-subseq "json" mime-type))
                        value
                        (cl-base64:usb8-array-to-base64-string value)))))))
 
@@ -101,15 +101,15 @@ Standard MIME types
          (mime-type (or (file-result-mime-type res) (trivial-mimes:mime path))))
     (if (equal mime-type *plain-text-mime-type*)
       (jsown:new-js
-        (mime-type (alexandria:read-file-into-string path)))
+        (mime-type (read-file-into-string path)))
       (jsown:new-js
         (*plain-text-mime-type* path)
         (mime-type
           (if (or (equal mime-type *svg-mime-type*)
-                  (uiop:string-prefix-p "text/" mime-type))
-            (alexandria:read-file-into-string path)
+                  (starts-with-subseq "text/" mime-type))
+            (read-file-into-string path)
             (cl-base64:usb8-array-to-base64-string
-              (alexandria:read-file-into-byte-vector path))))))))
+              (read-file-into-byte-vector path))))))))
 
 (defclass error-result (result)
   ((ename :initarg :ename
