@@ -50,16 +50,15 @@ Example
 (register-widget accordion)
 
 (defmethod validate-trait ((w accordion) (type (eql :int)) name value)
-  (cond
-    ((and (integerp value)
-          (equal name 'selected-index)
-          (outside-left-closed-interval value
-                                        0
-                                        (if (slot-boundp w 'children)
-                                          (length (widget-children w))
-                                          0)))
-      (error 'trait-error :format-control "Invalid selection: selected-index out of bounds"))
-    (t (call-next-method))))
+  (if (and (integerp value)
+           (equal name 'selected-index)
+           (outside-left-closed-interval value
+             0
+             (if (slot-boundp w 'children)
+               (length (widget-children w))
+               0)))
+    (error 'trait-error :format-control "Invalid selection: selected-index out of bounds")
+    (call-next-method)))
 
 
 (defclass grid-box (box)

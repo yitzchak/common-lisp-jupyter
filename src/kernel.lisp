@@ -177,27 +177,27 @@
   (with-slots (ctx key transport ip hb-port hb shell-port shell stdin-port stdin
                iopub-port iopub session prompt-prefix prompt-suffix)
               k
-    (setq session (make-uuid))
-    (setq ctx (pzmq:ctx-new))
-    (setq hb (make-instance 'hb-channel
+    (setq session (make-uuid)
+          ctx (pzmq:ctx-new)
+          hb (make-instance 'hb-channel
                             :key key
                             :socket (pzmq:socket ctx :rep)
                             :transport transport
                             :ip ip
-                            :port hb-port))
-    (setq iopub (make-instance 'iopub-channel
+                            :port hb-port)
+          iopub (make-instance 'iopub-channel
                                :key key
                                :socket (pzmq:socket ctx :pub)
                                :transport transport
                                :ip ip
-                               :port iopub-port))
-    (setq shell (make-instance 'iopub-channel
+                               :port iopub-port)
+          shell (make-instance 'iopub-channel
                                :key key
                                :socket (pzmq:socket ctx :router)
                                :transport transport
                                :ip ip
-                               :port shell-port))
-    (setq stdin (make-instance 'iopub-channel
+                               :port shell-port)
+          stdin (make-instance 'iopub-channel
                                :key key
                                :socket (pzmq:socket ctx :dealer)
                                :transport transport
@@ -270,29 +270,19 @@
   (let ((msg-type (json-getf (message-header msg) "msg_type"))
         (*kernel* kernel)
         (*message* msg))
-    (cond ((equal msg-type "kernel_info_request")
-           (handle-kernel-info-request kernel msg))
-          ((equal msg-type "execute_request")
-           (handle-execute-request kernel msg))
-          ((equal msg-type "shutdown_request")
-           (handle-shutdown-request kernel msg))
-          ((equal msg-type "is_complete_request")
-           (handle-is-complete-request kernel msg))
-          ((equal msg-type "inspect_request")
-           (handle-inspect-request kernel msg))
-          ((equal msg-type "complete_request")
-           (handle-complete-request kernel msg))
-          ((equal msg-type "comm_info_request")
-           (handle-comm-info-request kernel msg))
-          ((equal msg-type "comm_open")
-           (handle-comm-open kernel msg))
-          ((equal msg-type "comm_msg")
-           (handle-comm-message kernel msg))
-          ((equal msg-type "comm_close")
-           (handle-comm-close kernel msg))
-          (t
-           (warn "[Shell] message type '~A' not supported, skipping..." msg-type)
-           t))))
+    (switch (msg-type :test #'equal)
+      ("kernel_info_request" (handle-kernel-info-request kernel msg))
+      ("execute_request" (handle-execute-request kernel msg))
+      ("shutdown_request" (handle-shutdown-request kernel msg))
+      ("is_complete_request" (handle-is-complete-request kernel msg))
+      ("inspect_request" (handle-inspect-request kernel msg))
+      ("complete_request" (handle-complete-request kernel msg))
+      ("comm_info_request" (handle-comm-info-request kernel msg))
+      ("comm_open" (handle-comm-open kernel msg))
+      ("comm_msg" (handle-comm-message kernel msg))
+      ("comm_close" (handle-comm-close kernel msg))
+      (otherwise (warn "[Shell] message type '~A' not supported, skipping..." msg-type)))
+    t))
 
 #|
 

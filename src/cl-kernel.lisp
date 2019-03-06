@@ -5,19 +5,20 @@
 
 (defclass kernel (jupyter:kernel)
   ()
-  (:default-initargs :name "common-lisp"
-                     :package :common-lisp-user
-                     :version "0.1"
-                     :banner "common-lisp-jupyter: a Common Lisp Jupyter kernel
+  (:default-initargs
+    :name "common-lisp"
+    :package :common-lisp-user
+    :version "0.1"
+    :banner "common-lisp-jupyter: a Common Lisp Jupyter kernel
 (C) 2019 Tarn Burton (MIT)"
-                     :language-name "common-lisp"
-                     :language-version (uiop:lisp-version-string)
-                     :mime-type "text/x-common-lisp"
-                     :file-extension ".lisp"
-                     :pygments-lexer "common-lisp"
-                     :codemirror-mode "text/x-common-lisp"
-                     :help-links '(("Common Lisp Documentation" . "https://common-lisp.net/documentation")
-                                   ("Common Lisp HyperSpec" . "http://www.lispworks.com/documentation/HyperSpec/Front/index.htm"))))
+    :language-name "common-lisp"
+    :language-version (uiop:lisp-version-string)
+    :mime-type "text/x-common-lisp"
+    :file-extension ".lisp"
+    :pygments-lexer "common-lisp"
+    :codemirror-mode "text/x-common-lisp"
+    :help-links '(("Common Lisp Documentation" . "https://common-lisp.net/documentation")
+                  ("Common Lisp HyperSpec" . "http://www.lispworks.com/documentation/HyperSpec/Front/index.htm"))))
 
 (defmethod jupyter:code-is-complete ((k kernel) code)
   (handler-case
@@ -38,15 +39,15 @@
   (jupyter:handling-errors
     (setq common-lisp-user::- expr)
     (let ((evaluated-expr (multiple-value-list (eval expr))))
-      (setq common-lisp-user::*** common-lisp-user::**)
-      (setq common-lisp-user::** common-lisp-user::*)
-      (setq common-lisp-user::* (car evaluated-expr))
-      (setq common-lisp-user::/// common-lisp-user:://)
-      (setq common-lisp-user::// common-lisp-user::/)
-      (setq common-lisp-user::/ evaluated-expr)
-      (setq common-lisp-user::+++ common-lisp-user::++)
-      (setq common-lisp-user::++ common-lisp-user::+)
-      (setq common-lisp-user::+ expr)
+      (setq common-lisp-user::*** common-lisp-user::**
+            common-lisp-user::** common-lisp-user::*
+            common-lisp-user::* (car evaluated-expr)
+            common-lisp-user::/// common-lisp-user:://
+            common-lisp-user::// common-lisp-user::/
+            common-lisp-user::/ evaluated-expr
+            common-lisp-user::+++ common-lisp-user::++
+            common-lisp-user::++ common-lisp-user::+
+            common-lisp-user::+ expr)
       (remove nil (mapcar #'jupyter:make-lisp-result evaluated-expr)))))
 
 (defmethod jupyter:evaluate-code ((k kernel) code)
@@ -55,7 +56,6 @@
     (when (typep sexpr 'jupyter:result)
       (collect sexpr)
       (finish))
-    (for common-lisp-user::- next sexpr)
     (for result next (my-eval sexpr))
     (if (listp result)
       (appending result)

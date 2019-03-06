@@ -16,27 +16,26 @@
   (:metaclass trait-metaclass))
 
 (defmethod validate-trait ((w %options-labels-slot) (type (eql :int)) name value)
-  (cond
-    ((and (integerp value)
-          (equal name 'index)
-          (outside-left-closed-interval value
-                                        0
-                                        (if (slot-boundp w '%options-labels)
-                                          (length (widget-%options-labels w))
-                                          0)))
-      (error 'trait-error :format-control "Invalid selection: index out of bounds"))
-    (t (call-next-method))))
+  (if (and (integerp value)
+           (equal name 'index)
+           (outside-left-closed-interval
+             value
+              0
+              (if (slot-boundp w '%options-labels)
+                (length (widget-%options-labels w))
+                0)))
+    (error 'trait-error :format-control "Invalid selection: index out of bounds")
+    (call-next-method)))
 
 (defmethod validate-trait ((w %options-labels-slot) (type (eql :int-list)) name value)
-  (cond
-    ((equal name 'index)
-      (let ((len (if (slot-boundp w '%options-labels)
-                   (length (widget-%options-labels w))
-                   0)))
-        (if (and (listp value) (some (lambda (v) (outside-left-closed-interval v 0 len)) value))
-          (error 'trait-error :format-control "Invalid selection: index out of bounds")
-          (call-next-method))))
-    (t (call-next-method))))
+  (if (equal name 'index)
+    (let ((len (if (slot-boundp w '%options-labels)
+                 (length (widget-%options-labels w))
+                 0)))
+      (if (and (listp value) (some (lambda (v) (outside-left-closed-interval v 0 len)) value))
+        (error 'trait-error :format-control "Invalid selection: index out of bounds")
+        (call-next-method)))
+    (call-next-method)))
 
 
 (defclass bool-value-slot ()
@@ -105,20 +104,17 @@
   (:metaclass trait-metaclass))
 
 (defmethod validate-trait ((w float-min-max-slots) (type (eql :float)) name value)
-  (cond
-    ((and (numberp value) (equal name 'value))
-      (let* ((min (when (slot-boundp w 'min) (widget-min w)))
-             (max (when (slot-boundp w 'max) (widget-max w)))
-             (v (if (numberp max) (min max value) value)))
-        (call-next-method w type name (if (numberp min) (max min v) v))))
-    (t (call-next-method))))
+  (if (and (numberp value) (equal name 'value))
+    (let* ((min (when (slot-boundp w 'min) (widget-min w)))
+           (max (when (slot-boundp w 'max) (widget-max w)))
+           (v (if (numberp max) (min max value) value)))
+      (call-next-method w type name (if (numberp min) (max min v) v)))
+    (call-next-method)))
 
 (defmethod validate-trait ((w float-min-max-slots) (type (eql :float-list)) name value)
-  (cond
-    ((equal name 'value)
-      (mapcar (lambda (v) (validate-trait w :float name v)) value))
-    (t (call-next-method))))
-
+  (if (equal name 'value)
+    (mapcar (lambda (v) (validate-trait w :float name v)) value)
+    (call-next-method)))
 
 (defclass float-step-slot ()
   ((step
@@ -195,19 +191,17 @@
   (:metaclass trait-metaclass))
 
 (defmethod validate-trait ((w int-min-max-slots) (type (eql :int)) name value)
-  (cond
-    ((and (numberp value) (equal name 'value))
-      (let* ((min (when (slot-boundp w 'min) (widget-min w)))
-             (max (when (slot-boundp w 'max) (widget-max w)))
-             (v (if (numberp max) (min max value) value)))
-        (call-next-method w type name (if (numberp min) (max min v) v))))
-    (t (call-next-method))))
+  (if (and (numberp value) (equal name 'value))
+    (let* ((min (when (slot-boundp w 'min) (widget-min w)))
+           (max (when (slot-boundp w 'max) (widget-max w)))
+           (v (if (numberp max) (min max value) value)))
+      (call-next-method w type name (if (numberp min) (max min v) v)))
+    (call-next-method)))
 
 (defmethod validate-trait ((w int-min-max-slots) (type (eql :int-list)) name value)
-  (cond
-    ((equal name 'value)
-      (mapcar (lambda (v) (validate-trait w :int name v)) value))
-    (t (call-next-method))))
+  (if (equal name 'value)
+    (mapcar (lambda (v) (validate-trait w :int name v)) value)
+    (call-next-method)))
 
 (defclass int-step-slot ()
   ((step

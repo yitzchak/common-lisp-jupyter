@@ -77,8 +77,9 @@
     :documentation "A semver requirement for namespace version containing the view."
     :trait :unicode))
   (:metaclass trait-metaclass)
-  (:default-initargs :display-data t
-                     :target-name +target-name+)
+  (:default-initargs
+    :display-data t
+    :target-name +target-name+)
   (:documentation "Base class for all Jupyter widgets."))
 
 (defmethod jupyter:render ((w widget))
@@ -134,13 +135,10 @@
 
 (defmethod jupyter:on-comm-message ((w widget) data metadata)
   (declare (ignore metadata))
-  (let ((method (jupyter:json-getf data "method")))
-    (cond
-      ((equal "update" method)
-        (update-state w data))
-      ((equal "request_state" method)
-        (send-state w))
-      (t (call-next-method)))))
+  (switch ((jupyter:json-getf data "method") :test #'equal)
+    ("update" (update-state w data))
+    ("request_state" (send-state w))
+    (otherwise (call-next-method))))
 
 (defmethod on-trait-change :after ((w widget) type name old-value new-value)
   (declare (ignore type old-value new-value))
