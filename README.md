@@ -91,7 +91,7 @@ common-lisp-jupyter may be installed on a machine using a local installation, a
 
 - Install common-lisp-jupyter by roswell
 ```sh
-ros install yitzchak/common-lisp-jupyter
+ros install common-lisp-jupyter
 ```
 - Add the PATH in the initialization file (such as `~/.bashrc`)
 ```sh
@@ -103,12 +103,6 @@ export PATH=$PATH:~/.roswell/bin
 - Install [Quicklisp][] and use `(ql:add-to-init-file)`. If you already have
   Quicklisp installed you may need to update your distribution with
   `(ql:update-dist "quicklisp")` to resolve package conflicts.
-
-- Clone this repo inside Quicklisp's `local-projects` directory.
-```sh
-cd ~/quicklisp/local-projects
-git clone https://github.com/yitzchak/common-lisp-jupyter.git
-```
 
 - Start your Lisp implementation and evaluate the following. The `install`
   command will try to deduce the correct command line arguments for your
