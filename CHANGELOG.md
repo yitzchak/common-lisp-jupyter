@@ -7,6 +7,8 @@ of how the versioning scheme that this project does not use is clearly superior
 to random natural numbers and how incrementing the minor version number
 indicates backward compatible changes, unless it does not.
 
+- 2019-03-08 &mdash; Preserve `*package*` after `execute_request` thus making
+  `in-package` work correctly.
 - 2019-03-03 &mdash; Add Quicklisp based install.
 - 2019-03-01 &mdash; Fix Quicklisp quickload.
 - 2019-02-24 &mdash; Add support for core IPython widgets.
