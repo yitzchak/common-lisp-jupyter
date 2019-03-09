@@ -59,9 +59,8 @@
                description and the cdr is URL. Used in kernel_info_reply
                messages.")
    (package :initarg :package
-            :initform nil
-            :reader kernel-package
-            :documentation "The name of the package in which evaluate-code,
+            :accessor kernel-package
+            :documentation "The package in which evaluate-code,
             code-is-complete and others are called.")
    (transport :initarg :transport
               :reader kernel-transport
@@ -340,8 +339,10 @@
              (*standard-output* (make-iopub-stream iopub msg "stdout"
                                                    prompt-prefix prompt-suffix))
              (*debug-io* *standard-output*)
-             (results (let ((*package* (find-package package)))
-                        (evaluate-code kernel code))))
+             (results (let* ((*package* package)
+                             (r (evaluate-code kernel code)))
+                        (setf package *package*)
+                        r)))
         (dolist (result results)
           (send-result result)
           (vector-push result history-out))
@@ -407,7 +408,7 @@
   (with-slots (shell package) kernel
     (let* ((content (message-content msg))
            (code (json-getf content "code"))
-           (result (let ((*package* (find-package package)))
+           (result (let ((*package* package))
                      (inspect-code kernel
                               code
                               (min (1- (length code)) (json-getf content "cursor_pos"))
@@ -416,7 +417,7 @@
         (with-slots (ename evalue) result
           (send-inspect-reply-error shell msg ename evalue))
         (send-inspect-reply-ok shell msg
-          (let ((*package* (find-package package)))
+          (let ((*package* package))
             (render result)))))))
 
 #|
@@ -432,7 +433,7 @@
            (code (json-getf content "code"))
            (cursor-pos (json-getf content "cursor_pos")))
       (multiple-value-bind (result start end)
-                           (let ((*package* (find-package package)))
+                           (let ((*package* package))
                               (complete-code kernel code
                                (min (1- (length code)) cursor-pos)))
         (cond
@@ -549,7 +550,7 @@
         (send-execute-error iopub *message* execute-count
                             (error-result-ename result)
                             (error-result-evalue result))
-        (let ((data (let ((*package* (find-package package)))
+        (let ((data (let ((*package* package))
                       (render result))))
           (when data
             (if (result-display-data result)
