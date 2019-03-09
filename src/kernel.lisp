@@ -526,13 +526,13 @@
                       ("tail" (history-tail history
                                             (json-getf content "n"))))))
       (send-history-reply shell msg
-        (map 'list
-             (lambda (item)
-               (list (first item)
-                     (second item)
-                     (if output
-                       (list (third item) (cdddr item))
-                       (third item))))
+        (if output
+          (map 'list
+               (lambda (item)
+                 (list (first item)
+                       (second item)
+                       (list (third item) :null)))
+            results)
           results)))))
 
 (defun make-eval-error (err msg &key (quit nil))
@@ -586,7 +586,6 @@
       (let ((data (let ((*package* package))
                     (render result))))
         (when data
-          (add-output history execution-count data)
           (if (result-display-data result)
             (send-display-data iopub *message* data)
             (send-execute-result iopub *message* execution-count data)))))))

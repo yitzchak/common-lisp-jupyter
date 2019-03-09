@@ -1,23 +1,25 @@
 (in-package #:jupyter)
 
-(defvar +history-size+ 1024)
+(defvar +history-size+ 1000)
 
 (defclass history ()
   ((path :initarg :path
          :accessor history-path)
-   (session :initform 0
-            :accessor history-session)
+   (session :accessor history-session)
    (cells :initform (make-array +history-size+ :fill-pointer 0 :adjustable t)
           :accessor history-cells)))
 
 (defun read-history (history)
-  (with-slots (path session cells) history
+  (with-slots (path cells) history
     (adjust-array cells +history-size+ :fill-pointer 0)
     (with-open-file (stream path :direction :input :if-does-not-exist nil)
       (when stream
         (iter
           (for cell in-stream stream)
-          (vector-push cell cells))))))
+          (vector-push cell cells))))
+    (unless (slot-boundp history 'session)
+      (setf (history-session history)
+        (1+ (reduce (lambda (x y) (max x (car y))) cells :initial-value 0))))))
 
 (defun write-history (history)
   (with-slots (path session cells) history
@@ -36,13 +38,6 @@
 (defun add-cell (history number input)
   (with-slots (cells session) history
     (vector-push (list session number input) cells)))
-
-(defun add-output (history number output)
-  (with-slots (cells session) history
-    (let ((cell (find-if (lambda (cell) (and (equal session (first cell)) (equal number (second cell))))
-                  cells :from-end t)))
-      (when cell
-        (nconc cell (list output))))))
 
 (defun history-range (history session start stop)
   (declare (ignore history session start stop)))
