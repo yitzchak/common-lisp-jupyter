@@ -21,6 +21,7 @@
 
 (defun write-history (history)
   (with-slots (path session cells) history
+    (uiop:ensure-all-directories-exist (list path))
     (with-open-file (stream path :direction :output :if-exists :supersede)
       (iter
         (for cell in-vector cells)
@@ -32,6 +33,23 @@
 (defmethod stop ((h history))
   (write-history h))
 
-(defun add-cell (history number input output)
+(defun add-cell (history number input)
   (with-slots (cells session) history
-    (vector-push (list session number input output) cells)))
+    (vector-push (list session number input) cells)))
+
+(defun add-output (history number output)
+  (with-slots (cells session) history
+    (let ((cell (find-if (lambda (cell) (and (equal session (first cell)) (equal number (second cell))))
+                  cells :from-end t)))
+      (when cell
+        (nconc cell (list output))))))
+
+(defun history-range (history session start stop)
+  (declare (ignore history session start stop)))
+
+(defun history-search (history n pattern unique)
+  (declare (ignore history n pattern unique)))
+
+(defun history-tail (history n)
+  (with-slots (cells) history
+    (subseq cells (max 0 (- (length cells) n)))))

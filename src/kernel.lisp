@@ -133,12 +133,9 @@
    (history :initform nil
             :accessor kernel-history
             :documentation "Kernel history manager.")
-   (history-in :initform (make-array 64 :fill-pointer 0 :adjustable t)
-               :reader kernel-history-in
-               :documentation "History of execute_request input values.")
-   (history-out :initform (make-array 64 :fill-pointer 0 :adjustable t)
-                :reader kernel-history-out
-                :documentation "History of execute_result output values.")
+   (execution-count :initform 0
+                    :accessor history-execution-count
+                    :documentation "Kernel execution count.")
    (comms :initform (make-hash-table :test #'equal)
           :reader kernel-comms
           :documentation "Currently open comms."))
@@ -206,8 +203,10 @@
                                :ip ip
                                :port stdin-port)
           history (make-instance 'history
-                                 :path (uiop:xdg-config-home "common-lisp-jupyter"
-                                                             (format nil "history-~A" language-name))))
+                                 :path (uiop:xdg-config-home
+                                         (make-pathname :directory '(:relative "common-lisp-jupyter")
+                                                        :name language-name
+                                                        :type "history"))))
     (start hb)
     (start iopub)
     (start shell)
@@ -278,16 +277,17 @@
         (*kernel* kernel)
         (*message* msg))
     (switch (msg-type :test #'equal)
-      ("kernel_info_request" (handle-kernel-info-request kernel msg))
-      ("execute_request" (handle-execute-request kernel msg))
-      ("shutdown_request" (handle-shutdown-request kernel msg))
-      ("is_complete_request" (handle-is-complete-request kernel msg))
-      ("inspect_request" (handle-inspect-request kernel msg))
-      ("complete_request" (handle-complete-request kernel msg))
-      ("comm_info_request" (handle-comm-info-request kernel msg))
-      ("comm_open" (handle-comm-open kernel msg))
-      ("comm_msg" (handle-comm-message kernel msg))
       ("comm_close" (handle-comm-close kernel msg))
+      ("comm_info_request" (handle-comm-info-request kernel msg))
+      ("comm_msg" (handle-comm-message kernel msg))
+      ("comm_open" (handle-comm-open kernel msg))
+      ("complete_request" (handle-complete-request kernel msg))
+      ("execute_request" (handle-execute-request kernel msg))
+      ("history_request" (handle-history-request kernel msg))
+      ("inspect_request" (handle-inspect-request kernel msg))
+      ("is_complete_request" (handle-is-complete-request kernel msg))
+      ("kernel_info_request" (handle-kernel-info-request kernel msg))
+      ("shutdown_request" (handle-shutdown-request kernel msg))
       (otherwise
         (warn "[Shell] message type '~A' not supported, skipping..." msg-type)
         t))))
@@ -334,13 +334,11 @@
 (defun handle-execute-request (kernel msg)
   (info "[kernel] Handling 'execute_request'~%")
   (let ((code (json-getf (message-content msg) "code")))
-    (with-slots (shell iopub stdin history-in history-out prompt-prefix
-                 prompt-suffix package history)
+    (with-slots (execution-count history iopub package prompt-prefix prompt-suffix shell stdin)
                 kernel
-      (vector-push code history-in)
-      (add-cell history (length history-in) code nil)
-      (let* ((execution-count (length history-in))
-             (*payload* (make-array 16 :adjustable t :fill-pointer 0))
+      (setq execution-count (1+ execution-count))
+      (add-cell history execution-count code)
+      (let* ((*payload* (make-array 16 :adjustable t :fill-pointer 0))
              (*page-output* (make-string-output-stream))
              (*query-io* (make-stdin-stream stdin msg))
              (*standard-input* *query-io*)
@@ -354,8 +352,7 @@
                         (setf package *package*)
                         r)))
         (dolist (result results)
-          (send-result result)
-          (vector-push result history-out))
+          (send-result result))
         ;broadcast the code to connected frontends
         (send-execute-code iopub msg execution-count code)
         ;; send any remaining stdout
@@ -511,6 +508,33 @@
         (remhash id comms))))
   t)
 
+(defun handle-history-request (kernel msg)
+  (info "[kernel] Handling 'history_request'~%")
+  (with-slots (shell history) kernel
+    (let* ((content (message-content msg))
+           (output (json-getf content "output"))
+           (history-type (json-getf content "hist_access_type"))
+           (results (switch (history-type :test #'equal)
+                      ("range" (history-range history
+                                              (json-getf content "session")
+                                              (json-getf content "start")
+                                              (json-getf content "stop")))
+                      ("search" (history-search history
+                                                (json-getf content "n")
+                                                (json-getf content "pattern")
+                                                (json-getf content "unique")))
+                      ("tail" (history-tail history
+                                            (json-getf content "n"))))))
+      (send-history-reply shell msg
+        (map 'list
+             (lambda (item)
+               (list (first item)
+                     (second item)
+                     (if output
+                       (list (third item) (cdddr item))
+                       (third item))))
+          results)))))
+
 (defun make-eval-error (err msg &key (quit nil))
   (let ((name (symbol-name (class-name (class-of err)))))
     (write-string msg *error-output*)
@@ -554,18 +578,18 @@
 
 (defun send-result (result)
   "Send a result either as display data or an execute result."
-  (with-slots (iopub package history-in) *kernel*
-    (let ((execute-count (length history-in)))
-      (if (typep result 'error-result)
-        (send-execute-error iopub *message* execute-count
-                            (error-result-ename result)
-                            (error-result-evalue result))
-        (let ((data (let ((*package* package))
-                      (render result))))
-          (when data
-            (if (result-display-data result)
-              (send-display-data iopub *message* data)
-              (send-execute-result iopub *message* execute-count data))))))))
+  (with-slots (iopub package execution-count history) *kernel*
+    (if (typep result 'error-result)
+      (send-execute-error iopub *message* execution-count
+                          (error-result-ename result)
+                          (error-result-evalue result))
+      (let ((data (let ((*package* package))
+                    (render result))))
+        (when data
+          (add-output history execution-count data)
+          (if (result-display-data result)
+            (send-display-data iopub *message* data)
+            (send-execute-result iopub *message* execution-count data)))))))
 
 (defun set-next-input (text &optional (replace nil))
   (declare (ignore replace))
