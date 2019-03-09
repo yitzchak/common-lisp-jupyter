@@ -280,8 +280,9 @@
       ("comm_open" (handle-comm-open kernel msg))
       ("comm_msg" (handle-comm-message kernel msg))
       ("comm_close" (handle-comm-close kernel msg))
-      (otherwise (warn "[Shell] message type '~A' not supported, skipping..." msg-type)))
-    t))
+      (otherwise
+        (warn "[Shell] message type '~A' not supported, skipping..." msg-type)
+        t))))
 
 #|
 
