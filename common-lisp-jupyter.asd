@@ -14,7 +14,6 @@
     :iterate
     :jsown
     :pzmq
-    :trivial-documentation
     :trivial-gray-streams
     :trivial-mimes
     :uuid)

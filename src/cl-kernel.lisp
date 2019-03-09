@@ -80,55 +80,18 @@
   ((symbol :initarg :symbol
            :reader inspect-result-symbol)
    (status :initarg :status
-           :reader inspect-result-status)
-   (definitions :initarg :definitions
-                :reader inspect-result-definitions)))
+           :reader inspect-result-status)))
 
 (defun sexpr-to-text (value)
   (string-trim '(#\Newline)
     (with-output-to-string (s)
       (pprint value s))))
 
-(defun format-definition (symbol status definition)
-  (let ((kind (getf definition :kind))
-        (documentation (getf definition :documentation)))
-     (format nil "~@[~A ~]~@[~A ~]~A~@[~%~%~A~]~@[~%~%~A~]~%"
-       (case status
-         (:inherited "Inherited")
-         (:internal "Internal")
-         (:external "External"))
-       (case kind
-         (:symbol "Symbol")
-         (:constant "Constant")
-         (:variable "Variable")
-         (:function "Function")
-         (:generic-function "Generic Function")
-         (:macro "Macro")
-         (:structure "Structure")
-         (:class "Class")
-         (:type "Type"))
-       (sexpr-to-text symbol)
-       (case kind
-         (:class
-           (let ((*package* (symbol-package symbol)))
-             (format nil "Superclasses~%~{~S ~}~%~%Initial Arguments~%~{~S ~}~%~%Slots~%~{~%~S~%  ~A~}"
-               (getf definition :precedence-list)
-               (getf definition :initargs)
-               (getf definition :slots))))
-         ((:constant :variable)
-          (sexpr-to-text (getf definition :value)))
-         ((:function :generic-function :macro)
-          (let ((*package* (symbol-package symbol)))
-            (sexpr-to-text (cons symbol (getf definition :lambda-list))))))
-       documentation)))
-
 (defmethod jupyter:render ((res inspect-result))
-  (with-slots (symbol status definitions) res
-    (jsown:new-js
-      ("text/plain"
-        (format nil "~{~a~^~%~%~}"
-          (mapcar (lambda (def) (format-definition symbol status def))
-            definitions))))))
+  (jsown:new-js
+    ("text/plain"
+      (with-output-to-string (stream)
+        (describe (inspect-result-symbol res) stream)))))
 
 (defun normalize-symbol-case (name)
   (case (readtable-case *readtable*)
@@ -186,8 +149,7 @@
         (when sym
           (make-instance 'inspect-result
             :symbol sym
-            :status status
-            :definitions (trivial-documentation:symbol-definitions sym)))))))
+            :status status))))))
 
 (defun symbol-name-to-qualified-name (name package-name package)
   (mangle-symbol-case
