@@ -7,7 +7,7 @@
   ()
   (:default-initargs
     :name "common-lisp"
-    :package :common-lisp-user
+    :package (find-package :common-lisp-user)
     :version "0.1"
     :banner "common-lisp-jupyter: a Common Lisp Jupyter kernel
 (C) 2019 Tarn Burton (MIT)"
