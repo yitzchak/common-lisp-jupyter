@@ -130,6 +130,9 @@
                 :reader kernel-input-queue
                 :documentation "Input queue used to feed values into
                 execute_result payloads.")
+   (history :initform nil
+            :accessor kernel-history
+            :documentation "Kernel history manager.")
    (history-in :initform (make-array 64 :fill-pointer 0 :adjustable t)
                :reader kernel-history-in
                :documentation "History of execute_request input values.")
@@ -173,8 +176,8 @@
 ;; Start all channels.
 (defmethod start ((k kernel))
   (info "[kernel] Starting...~%")
-  (with-slots (ctx key transport ip hb-port hb shell-port shell stdin-port stdin
-               iopub-port iopub session prompt-prefix prompt-suffix)
+  (with-slots (ctx key transport ip hb-port hb shell-port shell stdin-port stdin history
+               iopub-port iopub session prompt-prefix prompt-suffix language-name)
               k
     (setq session (make-uuid)
           ctx (pzmq:ctx-new)
@@ -201,22 +204,27 @@
                                :socket (pzmq:socket ctx :dealer)
                                :transport transport
                                :ip ip
-                               :port stdin-port))
+                               :port stdin-port)
+          history (make-instance 'history
+                                 :path (uiop:xdg-config-home "common-lisp-jupyter"
+                                                             (format nil "history-~A" language-name))))
     (start hb)
     (start iopub)
     (start shell)
     (start stdin)
+    (start history)
     (send-status iopub session "starting")
     (send-status iopub session "idle")))
 
 ;; Stop all channels and destroy the control.
 (defmethod stop ((k kernel))
   (info "[kernel] Stopped.~%")
-  (with-slots (ctx hb iopub shell stdin) k
+  (with-slots (ctx hb iopub shell stdin history) k
     (stop hb)
     (stop iopub)
     (stop shell)
     (stop stdin)
+    (stop history)
     (pzmq:ctx-destroy ctx)))
 
 (defun run-kernel (kernel-class connection-file-name)
@@ -327,9 +335,10 @@
   (info "[kernel] Handling 'execute_request'~%")
   (let ((code (json-getf (message-content msg) "code")))
     (with-slots (shell iopub stdin history-in history-out prompt-prefix
-                 prompt-suffix package)
+                 prompt-suffix package history)
                 kernel
       (vector-push code history-in)
+      (add-cell history (length history-in) code nil)
       (let* ((execution-count (length history-in))
              (*payload* (make-array 16 :adjustable t :fill-pointer 0))
              (*page-output* (make-string-output-stream))

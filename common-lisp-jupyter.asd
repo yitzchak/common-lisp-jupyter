@@ -59,5 +59,6 @@
              (:file "text")
              (:file "toggle-button")
              (:file "valid")))
+         (:file "history")
          (:file "kernel")
          (:file "cl-kernel")))))
