@@ -7,6 +7,7 @@ of how the versioning scheme that this project does not use is clearly superior
 to random natural numbers and how incrementing the minor version number
 indicates backward compatible changes, unless it does not.
 
+- 2019-03-09 — Use `describe` for code inspection versus trivial-documentation.
 - 2019-03-09 — Fix switch statement in handle-message which prevented kernel
   shutdown.
 - 2019-03-08 — Preserve `*package*` after `execute_request` thus making
