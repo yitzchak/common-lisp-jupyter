@@ -95,3 +95,10 @@
                                                      (jsown:new-js
                                                        ("target_name" (cdr p)))))
                                            comms))))))
+
+(defun send-history-reply (shell parent-msg history)
+  (info "~S~%" history)
+  (message-send shell
+                (make-message parent-msg "history_reply"
+                              (jsown:new-js
+                                ("history" history)))))
