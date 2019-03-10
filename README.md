@@ -43,8 +43,8 @@ features.
 
 - Automatic detection of MIME types for files
 
-- Handles code inspection, code completeness checking, code completion and
-  shutdown requests.
+- Handles code inspection, code completeness checking, code completion,
+  shutdown requests and history requests.
 
 - Can send clear output requests.
 
