@@ -36,7 +36,7 @@
     (uiop:ensure-all-directories-exist (list path))
     (with-open-file (stream path :direction :output :if-exists :supersede)
       (iter
-        (for cell in cells)
+        (for cell in (subseq cells (max 0 (- +history-size+ (length cells)))))
         (pprint cell stream)))
     (setf date (file-write-date path))))
 
@@ -62,20 +62,26 @@
       cells)))
 
 (defun string-match-p (value pattern)
-  (let ((empty-value (zerop (length value)))
-        (empty-pattern (zerop (length pattern)))
-        (single-star-pattern (equal "*" pattern)))
-    (or (and empty-value
-             (or empty-pattern single-star-pattern))
-        (unless (or empty-value empty-pattern)
-          (let ((v (char value 0))
-                (p (char pattern 0)))
-            (or (and (equal #\* p)
-                     (or (string-match-p value (subseq pattern 1))
-                         (string-match-p (subseq value 1) pattern)))
-                (and (or (equal #\? p)
-                         (equal v p))
-                     (string-match-p (subseq value 1) (subseq pattern 1)))))))))
+  (iter
+    (for v in-string value with-index v-i)
+    (generate p in-string pattern with-index p-i)
+    (unless p (next p))
+    (case p
+      (#\*
+        (when (string-match-p (subseq value v-i) (subseq pattern (1+ p-i)))
+          (leave t)))
+      (#\?
+        (next p))
+      (otherwise
+        (if (eql v p)
+          (next p)
+          (leave nil))))
+    (finally
+      (return
+        (and (or (= v-i (1- (length value))))
+             (or (< p-i 0)
+                 (= p-i (length pattern))
+                 (equal "*" (subseq pattern p-i))))))))
 
 (defun history-search (history n pattern unique)
   (with-slots (cells) history
