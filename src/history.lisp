@@ -12,33 +12,49 @@
    (cells :initform nil
           :accessor history-cells)))
 
+(defmacro lock-file (path &body body)
+  `(iter
+    (with lock-path = (merge-pathnames (make-pathname :type "lock") ,path))
+    (for i from 1 to 20)
+    (unless (probe-file lock-path)
+      (finish))
+    (sleep 0.1)
+    (finally
+      (open lock-path :direction :probe :if-does-not-exist :create)
+      ,@body)
+    (finally-protected
+      (when (probe-file lock-path)
+        (delete-file lock-path)))))
+
 (defun read-history (history)
   (with-slots (path date session cells) history
     (when (and (probe-file path) (or (not date) (or (< date (file-write-date path)))))
-      (let ((session-cells (remove-if-not (lambda (cell) (equal (car cell) session)) cells)))
-        (setf cells
-          (with-open-file (stream path :direction :input :if-does-not-exist nil)
-            (when stream
-              (iter
-                (for cell in-stream stream)
-                (collect cell)))))
-        (iter
-          (with new-session = (1+ (reduce (lambda (x y) (max x (car y))) cells :initial-value 0)))
-          (for cell in session-cells)
-          (setf cells (nconc cells (list (cons new-session (cdr cell)))))
-          (finally
-            (setf session new-session)
-            (setf date (file-write-date path))))))))
+      (lock-file path
+        (let ((session-cells (remove-if-not (lambda (cell) (equal (car cell) session)) cells)))
+          (setf cells
+            (with-open-file (stream path :direction :input :if-does-not-exist nil)
+              (when stream
+                (iter
+                  (for cell in-stream stream)
+                  (collect cell)))))
+          (iter
+            (with new-session = (1+ (reduce (lambda (x y) (max x (car y))) cells :initial-value 0)))
+            (for cell in session-cells)
+            (setf cells (nconc cells (list (cons new-session (cdr cell)))))
+            (finally
+              (setf session new-session)
+              (setf date (file-write-date path)))))))))
 
 (defun write-history (history)
   (read-history history)
   (with-slots (path date session cells) history
     (uiop:ensure-all-directories-exist (list path))
-    (with-open-file (stream path :direction :output :if-exists :supersede)
-      (iter
-        (for cell in (subseq cells (max 0 (- +history-size+ (length cells)))))
-        (pprint cell stream)))
-    (setf date (file-write-date path))))
+    (lock-file path
+      (with-open-file (stream path :direction :output :if-exists :supersede)
+        (iter
+          (for cell in (subseq cells (max 0 (- (length cells) +history-size+))))
+          (pprint cell stream)))
+      (setf date (file-write-date path)))))
 
 (defmethod start ((h history))
   (info "[history] Starting...~%"))
