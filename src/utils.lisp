@@ -10,7 +10,7 @@
 
 (defun info (&rest args)
   "Display informational message regarding kernel status."
-  (when t;maxima::$kernel_info
+  (when nil;maxima::$kernel_info
     (apply #'format *trace-output* args)))
 
 (defun make-uuid ()

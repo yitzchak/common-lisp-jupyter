@@ -527,7 +527,7 @@
                                             (json-getf content "n"))))))
       (send-history-reply shell msg
         (if output
-          (map 'list
+          (mapcar
                (lambda (item)
                  (list (first item)
                        (second item)
