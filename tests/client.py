@@ -69,8 +69,8 @@ class MyKernelTests(jupyter_kernel_test.KernelTests):
 
     code_clear_output = "(jupyter:clear)"
 
-    code_history_pattern = "1?2*"
-    supported_history_operations = ("tail", "range")
+    code_history_pattern = "?+ 1*"
+    supported_history_operations = ("tail", "range", "search")
 
     def test_repl_previous_results(self):
         reply, output_msgs = self.execute_helper(

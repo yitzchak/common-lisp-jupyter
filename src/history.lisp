@@ -61,9 +61,35 @@
                           (< (second cell) stop)))
       cells)))
 
-; Nobody is currently using search requests
+(defun string-match-p (value pattern)
+  (let ((empty-value (zerop (length value)))
+        (empty-pattern (zerop (length pattern)))
+        (single-star-pattern (equal "*" pattern)))
+    (or (and empty-value
+             (or empty-pattern single-star-pattern))
+        (unless (or empty-value empty-pattern)
+          (let ((v (char value 0))
+                (p (char pattern 0)))
+            (or (and (equal #\* p)
+                     (or (string-match-p value (subseq pattern 1))
+                         (string-match-p (subseq value 1) pattern)))
+                (and (or (equal #\? p)
+                         (equal v p))
+                     (string-match-p (subseq value 1) (subseq pattern 1)))))))))
+
 (defun history-search (history n pattern unique)
-  (declare (ignore history n pattern unique)))
+  (with-slots (cells) history
+    (info "~S" cells)
+    (iter
+      (for cell in cells)
+      (when (and (string-match-p (third cell) pattern)
+                 (or (not unique)
+                     (not (position-if (lambda (rc) (equal (third rc) (third cell))) results))))
+        (collect cell into results))
+      (finally
+        (return (if n
+          (subseq results (max 0 (- (length results) n)))
+          results))))))
 
 (defun history-tail (history n)
   (read-history history)
