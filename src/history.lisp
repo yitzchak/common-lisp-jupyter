@@ -51,9 +51,15 @@
   (with-slots (cells session) history
     (setf cells (nconc cells (list (list session number input))))))
 
-; Nobody is currently using range requests
-(defun history-range (history session start stop)
-  (declare (ignore history session start stop)))
+(defun history-range (history sess start stop)
+  (with-slots (cells session) history
+    (when (< sess 0)
+      (setq sess (+ session sess)))
+    (remove-if-not (lambda (cell)
+                     (and (equal sess (first cell))
+                          (<= start (second cell))
+                          (< (second cell) stop)))
+      cells)))
 
 ; Nobody is currently using search requests
 (defun history-search (history n pattern unique)
