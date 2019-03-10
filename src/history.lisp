@@ -101,7 +101,6 @@
 
 (defun history-search (history n pattern unique)
   (with-slots (cells) history
-    (info "~S" cells)
     (iter
       (for cell in cells)
       (when (and (string-match-p (third cell) pattern)
