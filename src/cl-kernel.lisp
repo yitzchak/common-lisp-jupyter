@@ -208,6 +208,7 @@
 (eval-when (:compile-toplevel)
   (defparameter roswell.install::*build-hook*
     (lambda ()
+      (format t "~A~%" *default-pathname-defaults*)
       (jupyter:install-kernel (if (uiop:os-windows-p)
                                 (list "ros"
                                       (namestring (merge-pathnames
@@ -217,4 +218,5 @@
                                       "{connection_file}")
                                 '("cl-jupyter" "{connection_file}"))
                               +kernel-name+
-                              +kernel-language+))))
+                              +kernel-language+
+                              :resources '("resources/logo-64x64.png")))))
