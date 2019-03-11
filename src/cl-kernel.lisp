@@ -201,7 +201,8 @@
       (collect ev-flag)
       (collect cmd))
     +kernel-name+
-    +kernel-language+))
+    +kernel-language+
+    :resources (list (asdf:component-pathname (asdf:find-component :common-lisp-jupyter '("res" "logo-64x64.png"))))))
 
 
 #+ros.installing
@@ -219,4 +220,4 @@
                                 '("cl-jupyter" "{connection_file}"))
                               +kernel-name+
                               +kernel-language+
-                              :resources '("resources/logo-64x64.png")))))
+                              :resources (list (asdf:component-pathname (asdf:find-component :common-lisp-jupyter '("res" "logo-64x64.png"))))))))
