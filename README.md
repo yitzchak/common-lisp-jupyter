@@ -89,13 +89,14 @@ common-lisp-jupyter may be installed on a machine using a local installation, a
   `(ql:update-dist "quicklisp")` inside a `ros run` shell to resolve package
   conflicts.
 
-- Install common-lisp-jupyter by roswell
-```sh
-ros install common-lisp-jupyter
-```
 - Add the PATH in the initialization file (such as `~/.bashrc`)
 ```sh
 export PATH=$PATH:~/.roswell/bin
+```
+
+- Install common-lisp-jupyter by roswell
+```sh
+ros install common-lisp-jupyter
 ```
 
 ### Installing via Quicklisp
