@@ -7,6 +7,8 @@ of how the versioning scheme that this project does not use is clearly superior
 to random natural numbers and how incrementing the minor version number
 indicates backward compatible changes, unless it does not.
 
+- 2019-03-12 — Add image option for kernel installation.
+- 2019-03-12 — Add install of icons and other resources.
 - 2019-03-10 — Add support for `history_request`.
 - 2019-03-09 — Use `describe` for code inspection versus trivial-documentation.
 - 2019-03-09 — Fix switch statement in handle-message which prevented kernel

@@ -18,7 +18,10 @@
     :trivial-mimes
     :uuid)
   :components
-    ((:module src
+    ((:module res
+      :components
+        ((:static-file "logo-64x64.png")))
+     (:module src
       :serial t
       :components
         ((:file "packages")

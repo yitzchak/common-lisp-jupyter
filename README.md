@@ -89,13 +89,14 @@ common-lisp-jupyter may be installed on a machine using a local installation, a
   `(ql:update-dist "quicklisp")` inside a `ros run` shell to resolve package
   conflicts.
 
-- Install common-lisp-jupyter by roswell
-```sh
-ros install common-lisp-jupyter
-```
 - Add the PATH in the initialization file (such as `~/.bashrc`)
 ```sh
 export PATH=$PATH:~/.roswell/bin
+```
+
+- Install common-lisp-jupyter by roswell
+```sh
+ros install common-lisp-jupyter
 ```
 
 ### Installing via Quicklisp
@@ -108,7 +109,9 @@ export PATH=$PATH:~/.roswell/bin
   command will try to deduce the correct command line arguments for your
   implementation. The keyword parameters `:bin-path` and `:ev-flag` can be
   used to customize these arguments. For example, for SBCL `:bin-path` is `sbcl`
-  and `:ev-flag` is `--eval`.
+  and `:ev-flag` is `--eval`. To install a kernel image using
+  [uiop:dump-image][] use `cl-jupyter:install-image` instead of
+  `cl-jupyter:install`. `install-image` takes no arguments.
 ```lisp
 (ql:quickload :common-lisp-jupyter)
 (cl-jupyter:install)
@@ -237,6 +240,7 @@ during the installation phase of Roswell.
 [SBCL]: http://www.sbcl.org/
 [travis-badge]: https://travis-ci.com/yitzchak/common-lisp-jupyter.svg?branch=master
 [travis]: https://travis-ci.com/yitzchak/common-lisp-jupyter
+[uiop:dump-image]: https://common-lisp.net/project/asdf/uiop.html#index-dump_002dimage
 [widgets.ipynb]: http://nbviewer.jupyter.org/github/yitzchak/common-lisp-jupyter/blob/master/examples/widgets.ipynb
 [Windows Installation]: https://github.com/yitzchak/common-lisp-jupyter/wiki/Windows-Installation
 [ZeroMQ]: http://zeromq.org/

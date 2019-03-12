@@ -2,6 +2,8 @@
 
 (defvar +kernel-name+ "Common Lisp")
 (defvar +kernel-language+ "common-lisp")
+(defvar +kernel-resources+
+  (list (asdf:component-pathname (asdf:find-component :common-lisp-jupyter '("res" "logo-64x64.png")))))
 
 (defclass kernel (jupyter:kernel)
   ()
@@ -191,7 +193,7 @@
 (defun install (&key bin-path (ev-flag #+clisp "-x" #+(or mkcl cmucl) "-eval" #-(or clisp cmucl mkcl) "--eval") preamble)
   "Install Common Lisp kernel based on implementation"
   (jupyter:install-kernel
-    (iter
+    :argv (iter
       (for cmd in (append preamble
                     '("(ql:quickload :common-lisp-jupyter)"
                       "(jupyter:run-kernel 'common-lisp-jupyter:kernel \"{connection_file}\")")))
@@ -200,15 +202,24 @@
           (or bin-path (format nil "~(~A~)" (uiop:implementation-type)))))
       (collect ev-flag)
       (collect cmd))
-    +kernel-name+
-    +kernel-language+))
+    :name +kernel-name+
+    :language +kernel-language+
+    :resources +kernel-resources+))
 
+(defun install-image ()
+  "Install Common Lisp kernel based on image of current implementation"
+  (jupyter:install-kernel
+    :class 'kernel
+    :name +kernel-name+
+    :language +kernel-language+
+    :resources +kernel-resources+))
 
 #+ros.installing
 (eval-when (:compile-toplevel)
   (defparameter roswell.install::*build-hook*
     (lambda ()
-      (jupyter:install-kernel (if (uiop:os-windows-p)
+      (format t "~A~%" *default-pathname-defaults*)
+      (jupyter:install-kernel :argv (if (uiop:os-windows-p)
                                 (list "ros"
                                       (namestring (merge-pathnames
                                         (make-pathname :directory '(:relative ".roswell" "bin")
@@ -216,5 +227,6 @@
                                         (uiop:getenv-absolute-directory "USERPROFILE")))
                                       "{connection_file}")
                                 '("cl-jupyter" "{connection_file}"))
-                              +kernel-name+
-                              +kernel-language+))))
+                              :name +kernel-name+
+                              :language +kernel-language+
+                              :resources +kernel-resources+))))
