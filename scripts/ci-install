@@ -13,10 +13,10 @@ if [ "${METHOD:-}" = "ros" ]; then
 else
   curl -O https://beta.quicklisp.org/quicklisp.lisp
   if [ "$LISP" = "clisp" ]; then
-    clisp scripts/ql-install.lisp
+    clisp scripts/$METHOD-install.lisp
   elif [ "$LISP" = "ecl" ]; then
-    ecl -shell scripts/ql-install.lisp
+    ecl -shell scripts/$METHOD-install.lisp
   else
-    $LISP --load scripts/ql-install.lisp --quit
+    $LISP --load scripts/$METHOD-install.lisp --quit
   fi
 fi
