@@ -16,17 +16,15 @@
 (defun make-uuid ()
   (string-downcase (remove #\- (format nil "~W" (uuid:make-v4-uuid)))))
 
-(defun install-kernel (argv name language &key resources)
+(defun install-kernel (&key argv class name language resources)
   "Install a kernel spec file given a kernel name and a language name."
-  (let* ((kernel-directory (merge-pathnames
-                       (make-pathname :directory (list :relative
-                                                       ; Just in case HFS+ is
-                                                       ; case-sensitive
-                                                       (if (uiop:os-macosx-p)
-                                                         "Jupyter"
-                                                         "jupyter")
-                                                       "kernels"
-                                                       language))
+  (let* ((kernel-directory
+           (merge-pathnames
+             (make-pathname :directory (list :relative
+                                             ; Just in case HFS+ is case-sensitive
+                                             (if (uiop:os-macosx-p) "Jupyter" "jupyter")
+                                             "kernels"
+                                             language))
                        (cond
                          ((uiop:os-macosx-p)
                            (merge-pathnames
@@ -36,14 +34,15 @@
                            (uiop:get-folder-path :appdata))
                          (t
                            (uiop:xdg-data-home)))))
-            (kernel-path (merge-pathnames (make-pathname :name "kernel" :type "json") kernel-directory)))
+            (kernel-path (merge-pathnames (make-pathname :name "kernel" :type "json") kernel-directory))
+            (image-path (merge-pathnames (make-pathname :name "image" :type (when (uiop:os-windows-p) "exe")) kernel-directory)))
   (format t "Installing kernel spec file ~A~%" kernel-path)
   (ensure-directories-exist kernel-path)
   (with-open-file (stream kernel-path :direction :output :if-exists :supersede)
     (write-string
       (jsown:to-json
         (jsown:new-js
-          ("argv" argv)
+          ("argv" (or argv (list (namestring image-path) "{connection_file}")))
           ("display_name" name)
           ("language" language)))
       stream))
@@ -52,6 +51,13 @@
     (for dest next (merge-pathnames kernel-directory src))
     (format t "Installing kernel resource ~A~%" dest)
     (copy-file src dest))
+  (unless argv
+    (setq uiop:*image-entry-point*
+      `(lambda ()
+        (run-kernel
+          (find-symbol ,(symbol-name class) ,(symbol-package class))
+          (first (uiop:command-line-arguments)))))
+    (uiop:dump-image image-path :executable t))
   t))
 
 (defun json-getf (object indicator &optional default)
