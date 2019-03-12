@@ -57,6 +57,7 @@
         (run-kernel
           (find-symbol ,(symbol-name class) ,(symbol-package class))
           (first (uiop:command-line-arguments)))))
+    (format t "Creating kernel image ~A~%" image-path)
     (uiop:dump-image image-path :executable t))
   t))
 
