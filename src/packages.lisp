@@ -216,6 +216,7 @@
   (:use #:common-lisp #:alexandria #:iterate)
   (:export
     #:install
+    #:install-image
     #:kernel))
 
 (in-package #:jupyter)
