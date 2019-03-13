@@ -233,7 +233,7 @@ output area.
 
 ### Example
 
-```lisp
+```common-lisp
 (use-package :jupyter-widgets)
 (defvar out (make-widget 'output))
 (with-output out
@@ -815,12 +815,14 @@ Displays a progress bar.
 
 Displays multiple widgets in a group. The widgets are laid out horizontally.
 
-Example
+### Example
 
+```common-lisp
 (use-package :jupyter-widgets)
 (defvar title-widget (make-widget 'html :value "<em>Box Example</em>"))
 (defvar slider (make-widget 'int-slider))
 (make-widget 'box :children (list title-widget slider))
+```
 
 ### Superclasses
 
@@ -1704,12 +1706,14 @@ $$ $$ and similar latex tags).
 
 Displays multiple widgets horizontally using the flexible box model.
 
-Example
+### Example
 
+```common-lisp
 (use-package :jupyter-widgets)
 (defvar title-widget (make-widget 'html :value "<em>Box Example</em>"))
 (defvar slider (make-widget 'int-slider))
 (make-widget 'h-box :children (list title-widget slider))
+```
 
 ### Superclasses
 
@@ -3162,12 +3166,14 @@ Slider to select a single item from a list or dictionary.
 
 Displays multiple widgets vertically using the flexible box model.
 
-Example
+### Example
 
+```common-lisp
 (use-package :jupyter-widgets)
 (defvar title-widget (make-widget 'html :value "<em>Box Example</em>"))
 (defvar slider (make-widget 'int-slider))
 (make-widget 'v-box :children (list title-widget slider))
+```
 
 ### Superclasses
 
