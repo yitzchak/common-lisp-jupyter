@@ -5,7 +5,7 @@
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-mapping sb-pcl::object)
 ```
 
@@ -13,7 +13,7 @@
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-mapping sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -57,7 +57,7 @@ Represents a gamepad or joystick button.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-bar-color sb-pcl::object)
 ```
 
@@ -65,7 +65,7 @@ Represents a gamepad or joystick button.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-bar-color sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -115,7 +115,7 @@ range, use float-text.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-button-style sb-pcl::object)
 ```
 
@@ -123,7 +123,7 @@ range, use float-text.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-button-style sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -178,7 +178,7 @@ Slider/trackbar of logarithmic floating values with the specified range.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-grid-gap sb-pcl::object)
 ```
 
@@ -186,7 +186,7 @@ Slider/trackbar of logarithmic floating values with the specified range.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-grid-gap sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -276,7 +276,7 @@ output area.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-height sb-pcl::object)
 ```
 
@@ -284,7 +284,7 @@ output area.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-height sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -293,7 +293,7 @@ output area.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-readout sb-pcl::object)
 ```
 
@@ -301,7 +301,7 @@ output area.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-readout sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -380,7 +380,7 @@ Renders the string `value` as HTML, and render mathematics.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-outputs sb-pcl::object)
 ```
 
@@ -388,7 +388,7 @@ Renders the string `value` as HTML, and render mathematics.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-outputs sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -471,7 +471,7 @@ Renders the string `value` as HTML.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-left sb-pcl::object)
 ```
 
@@ -479,7 +479,7 @@ Renders the string `value` as HTML.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-left sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -527,7 +527,7 @@ Displays children each on a separate accordion page.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-index sb-pcl::object)
 ```
 
@@ -535,7 +535,7 @@ Displays children each on a separate accordion page.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-index sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -544,7 +544,7 @@ Displays children each on a separate accordion page.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-%view-name sb-pcl::object)
 ```
 
@@ -553,7 +553,7 @@ Displays children each on a separate accordion page.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-loop sb-pcl::object)
 ```
 
@@ -561,7 +561,7 @@ Displays children each on a separate accordion page.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-loop sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -570,7 +570,7 @@ Displays children each on a separate accordion page.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-handle-color sb-pcl::object)
 ```
 
@@ -578,7 +578,7 @@ Displays children each on a separate accordion page.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-handle-color sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -624,7 +624,7 @@ Displays a boolean `value` in the form of a toggle button.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-icons sb-pcl::object)
 ```
 
@@ -632,7 +632,7 @@ Displays a boolean `value` in the form of a toggle button.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-icons sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -724,7 +724,7 @@ a URL as bytes encoded in UTF-8.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-name sb-pcl::object)
 ```
 
@@ -732,7 +732,7 @@ a URL as bytes encoded in UTF-8.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-name sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -858,7 +858,7 @@ Example
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-overflow-y sb-pcl::object)
 ```
 
@@ -866,7 +866,7 @@ Example
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-overflow-y sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -875,7 +875,7 @@ Example
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-icon sb-pcl::object)
 ```
 
@@ -883,7 +883,7 @@ Example
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-icon sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -931,7 +931,7 @@ Textbox widget that represents an integer bounded from above and below.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-%module-module sb-pcl::object)
 ```
 
@@ -980,7 +980,7 @@ a URL as bytes encoded in UTF-8.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-%module-module-version sb-pcl::object)
 ```
 
@@ -1035,7 +1035,7 @@ value.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-children sb-pcl::object)
 ```
 
@@ -1043,7 +1043,7 @@ value.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-children sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -1052,7 +1052,7 @@ value.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-bar-style sb-pcl::object)
 ```
 
@@ -1060,7 +1060,7 @@ value.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-bar-style sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -1071,7 +1071,7 @@ Display a widget in the notebook.
 
 ### Definition
 
-```lisp
+```common-lisp
 (display widget)
 ```
 
@@ -1080,7 +1080,7 @@ Display a widget in the notebook.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-font-weight sb-pcl::object)
 ```
 
@@ -1088,7 +1088,7 @@ Display a widget in the notebook.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-font-weight sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -1098,7 +1098,7 @@ Display a widget in the notebook.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-msg-id sb-pcl::object)
 ```
 
@@ -1106,7 +1106,7 @@ Display a widget in the notebook.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-msg-id sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -1157,7 +1157,7 @@ Multiline text area widget.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-grid-column sb-pcl::object)
 ```
 
@@ -1165,7 +1165,7 @@ Multiline text area widget.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-grid-column sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -1176,7 +1176,7 @@ This method is called when the button receives a click message.
 
 ### Definition
 
-```lisp
+```common-lisp
 (on-button-click w)
 ```
 
@@ -1185,7 +1185,7 @@ This method is called when the button receives a click message.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-padding sb-pcl::object)
 ```
 
@@ -1193,7 +1193,7 @@ This method is called when the button receives a click message.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-padding sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -1202,7 +1202,7 @@ This method is called when the button receives a click message.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-orientation sb-pcl::object)
 ```
 
@@ -1210,7 +1210,7 @@ This method is called when the button receives a click message.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-orientation sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -1219,7 +1219,7 @@ This method is called when the button receives a click message.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-style sb-pcl::object)
 ```
 
@@ -1227,7 +1227,7 @@ This method is called when the button receives a click message.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-style sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -1306,7 +1306,7 @@ Base class for all Jupyter widgets which have DOM view.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-align-content sb-pcl::object)
 ```
 
@@ -1314,7 +1314,7 @@ Base class for all Jupyter widgets which have DOM view.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-align-content sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -1356,7 +1356,7 @@ Progress style widget.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-margin sb-pcl::object)
 ```
 
@@ -1364,7 +1364,7 @@ Progress style widget.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-margin sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -1373,7 +1373,7 @@ Progress style widget.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-grid-template-areas sb-pcl::object)
 ```
 
@@ -1381,7 +1381,7 @@ Progress style widget.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-grid-template-areas sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -1515,7 +1515,7 @@ Slider/trackbar of floating values with the specified range.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-disabled sb-pcl::object)
 ```
 
@@ -1523,7 +1523,7 @@ Slider/trackbar of floating values with the specified range.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-disabled sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -1532,7 +1532,7 @@ Slider/trackbar of floating values with the specified range.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-layout sb-pcl::object)
 ```
 
@@ -1540,7 +1540,7 @@ Slider/trackbar of floating values with the specified range.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-layout sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -1549,7 +1549,7 @@ Slider/trackbar of floating values with the specified range.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-justify-content sb-pcl::object)
 ```
 
@@ -1557,7 +1557,7 @@ Slider/trackbar of floating values with the specified range.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-justify-content sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -1595,7 +1595,7 @@ Slider/trackbar of floating values with the specified range.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-%titles sb-pcl::object)
 ```
 
@@ -1603,7 +1603,7 @@ Slider/trackbar of floating values with the specified range.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-%titles sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -1612,7 +1612,7 @@ Slider/trackbar of floating values with the specified range.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-timestamp sb-pcl::object)
 ```
 
@@ -1620,7 +1620,7 @@ Slider/trackbar of floating values with the specified range.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-timestamp sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -1743,7 +1743,7 @@ Example
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-top sb-pcl::object)
 ```
 
@@ -1751,7 +1751,7 @@ Example
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-top sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -1760,7 +1760,7 @@ Example
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-selected-index sb-pcl::object)
 ```
 
@@ -1768,7 +1768,7 @@ Example
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-selected-index sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -1825,7 +1825,7 @@ Play/repeat buttons to step through values automatically, and optionally loop.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-grid-auto-columns sb-pcl::object)
 ```
 
@@ -1833,7 +1833,7 @@ Play/repeat buttons to step through values automatically, and optionally loop.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-grid-auto-columns sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -1842,7 +1842,7 @@ Play/repeat buttons to step through values automatically, and optionally loop.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-button-width sb-pcl::object)
 ```
 
@@ -1850,7 +1850,7 @@ Play/repeat buttons to step through values automatically, and optionally loop.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-button-width sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -1899,7 +1899,7 @@ Listbox that allows many items to be selected at any given time.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-border sb-pcl::object)
 ```
 
@@ -1907,7 +1907,7 @@ Listbox that allows many items to be selected at any given time.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-border sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -1916,7 +1916,7 @@ Listbox that allows many items to be selected at any given time.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-%module-name sb-pcl::object)
 ```
 
@@ -1925,7 +1925,7 @@ Listbox that allows many items to be selected at any given time.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-bottom sb-pcl::object)
 ```
 
@@ -1933,7 +1933,7 @@ Listbox that allows many items to be selected at any given time.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-bottom sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -1942,7 +1942,7 @@ Listbox that allows many items to be selected at any given time.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-value sb-pcl::object)
 ```
 
@@ -1950,7 +1950,7 @@ Listbox that allows many items to be selected at any given time.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-value sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -1959,7 +1959,7 @@ Listbox that allows many items to be selected at any given time.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-width sb-pcl::object)
 ```
 
@@ -1967,7 +1967,7 @@ Listbox that allows many items to be selected at any given time.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-width sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -1976,7 +1976,7 @@ Listbox that allows many items to be selected at any given time.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-target sb-pcl::object)
 ```
 
@@ -1984,7 +1984,7 @@ Listbox that allows many items to be selected at any given time.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-target sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -2023,7 +2023,7 @@ Represents a gamepad or joystick axis.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-controls sb-pcl::object)
 ```
 
@@ -2031,7 +2031,7 @@ Represents a gamepad or joystick axis.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-controls sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -2076,7 +2076,7 @@ Allows you to select a single item from a dropdown.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-connected sb-pcl::object)
 ```
 
@@ -2084,7 +2084,7 @@ Allows you to select a single item from a dropdown.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-connected sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -2093,7 +2093,7 @@ Allows you to select a single item from a dropdown.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-%view-module-version sb-pcl::object)
 ```
 
@@ -2138,7 +2138,7 @@ Listbox that only allows one item to be selected at any given time.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-align-self sb-pcl::object)
 ```
 
@@ -2146,7 +2146,7 @@ Listbox that only allows one item to be selected at any given time.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-align-self sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -2194,7 +2194,7 @@ Create a Jupyter widget and inform the frontend to create a synchronized model.
 
 ### Definition
 
-```lisp
+```common-lisp
 (make-widget class &rest rest &key &allow-other-keys)
 ```
 
@@ -2203,7 +2203,7 @@ Create a Jupyter widget and inform the frontend to create a synchronized model.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-format sb-pcl::object)
 ```
 
@@ -2211,7 +2211,7 @@ Create a Jupyter widget and inform the frontend to create a synchronized model.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-format sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -2220,7 +2220,7 @@ Create a Jupyter widget and inform the frontend to create a synchronized model.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-overflow-x sb-pcl::object)
 ```
 
@@ -2228,7 +2228,7 @@ Create a Jupyter widget and inform the frontend to create a synchronized model.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-overflow-x sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -2237,7 +2237,7 @@ Create a Jupyter widget and inform the frontend to create a synchronized model.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-tooltips sb-pcl::object)
 ```
 
@@ -2245,7 +2245,7 @@ Create a Jupyter widget and inform the frontend to create a synchronized model.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-tooltips sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -2254,7 +2254,7 @@ Create a Jupyter widget and inform the frontend to create a synchronized model.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-flex sb-pcl::object)
 ```
 
@@ -2262,7 +2262,7 @@ Create a Jupyter widget and inform the frontend to create a synchronized model.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-flex sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -2271,7 +2271,7 @@ Create a Jupyter widget and inform the frontend to create a synchronized model.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-overflow sb-pcl::object)
 ```
 
@@ -2279,7 +2279,7 @@ Create a Jupyter widget and inform the frontend to create a synchronized model.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-overflow sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -2288,7 +2288,7 @@ Create a Jupyter widget and inform the frontend to create a synchronized model.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-max-width sb-pcl::object)
 ```
 
@@ -2296,7 +2296,7 @@ Create a Jupyter widget and inform the frontend to create a synchronized model.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-max-width sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -2305,7 +2305,7 @@ Create a Jupyter widget and inform the frontend to create a synchronized model.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-source sb-pcl::object)
 ```
 
@@ -2313,7 +2313,7 @@ Create a Jupyter widget and inform the frontend to create a synchronized model.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-source sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -2322,7 +2322,7 @@ Create a Jupyter widget and inform the frontend to create a synchronized model.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-min sb-pcl::object)
 ```
 
@@ -2330,7 +2330,7 @@ Create a Jupyter widget and inform the frontend to create a synchronized model.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-min sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -2339,7 +2339,7 @@ Create a Jupyter widget and inform the frontend to create a synchronized model.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-continuous-update sb-pcl::object)
 ```
 
@@ -2347,7 +2347,7 @@ Create a Jupyter widget and inform the frontend to create a synchronized model.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-continuous-update sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -2356,7 +2356,7 @@ Create a Jupyter widget and inform the frontend to create a synchronized model.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-grid-area sb-pcl::object)
 ```
 
@@ -2364,7 +2364,7 @@ Create a Jupyter widget and inform the frontend to create a synchronized model.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-grid-area sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -2417,7 +2417,7 @@ a URL as bytes encoded in UTF-8.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-rows sb-pcl::object)
 ```
 
@@ -2425,7 +2425,7 @@ a URL as bytes encoded in UTF-8.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-rows sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -2434,7 +2434,7 @@ a URL as bytes encoded in UTF-8.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-grid-auto-flow sb-pcl::object)
 ```
 
@@ -2442,7 +2442,7 @@ a URL as bytes encoded in UTF-8.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-grid-auto-flow sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -2451,7 +2451,7 @@ a URL as bytes encoded in UTF-8.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-align-items sb-pcl::object)
 ```
 
@@ -2459,7 +2459,7 @@ a URL as bytes encoded in UTF-8.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-align-items sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -2468,7 +2468,7 @@ a URL as bytes encoded in UTF-8.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-autoplay sb-pcl::object)
 ```
 
@@ -2476,7 +2476,7 @@ a URL as bytes encoded in UTF-8.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-autoplay sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -2526,7 +2526,7 @@ user clicking on the button.  The click event itself is stateless.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-min-width sb-pcl::object)
 ```
 
@@ -2534,7 +2534,7 @@ user clicking on the button.  The click event itself is stateless.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-min-width sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -2543,7 +2543,7 @@ user clicking on the button.  The click event itself is stateless.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-max sb-pcl::object)
 ```
 
@@ -2551,7 +2551,7 @@ user clicking on the button.  The click event itself is stateless.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-max sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -2560,7 +2560,7 @@ user clicking on the button.  The click event itself is stateless.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-%view-module sb-pcl::object)
 ```
 
@@ -2670,7 +2670,7 @@ expose the shorthand.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-right sb-pcl::object)
 ```
 
@@ -2678,7 +2678,7 @@ expose the shorthand.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-right sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -2687,7 +2687,7 @@ expose the shorthand.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-show-repeat sb-pcl::object)
 ```
 
@@ -2695,7 +2695,7 @@ expose the shorthand.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-show-repeat sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -2704,7 +2704,7 @@ expose the shorthand.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-axes sb-pcl::object)
 ```
 
@@ -2712,7 +2712,7 @@ expose the shorthand.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-axes sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -2723,7 +2723,7 @@ Evaluate body with all output sent to the output widget.
 
 ### Definition
 
-```lisp
+```common-lisp
 (with-output o
   &body
   body)
@@ -2770,7 +2770,7 @@ Single line textbox widget.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-description sb-pcl::object)
 ```
 
@@ -2778,7 +2778,7 @@ Single line textbox widget.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-description sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -2787,7 +2787,7 @@ Single line textbox widget.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-step sb-pcl::object)
 ```
 
@@ -2795,7 +2795,7 @@ Single line textbox widget.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-step sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -2804,7 +2804,7 @@ Single line textbox widget.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-%dom-classes sb-pcl::object)
 ```
 
@@ -2812,7 +2812,7 @@ Single line textbox widget.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-%dom-classes sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -2885,7 +2885,7 @@ Textbox widget that represents an integer.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-visibility sb-pcl::object)
 ```
 
@@ -2893,7 +2893,7 @@ Textbox widget that represents an integer.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-visibility sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -2902,7 +2902,7 @@ Textbox widget that represents an integer.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-description-tooltip sb-pcl::object)
 ```
 
@@ -2910,7 +2910,7 @@ Textbox widget that represents an integer.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-description-tooltip sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -2919,7 +2919,7 @@ Textbox widget that represents an integer.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-flex-flow sb-pcl::object)
 ```
 
@@ -2927,7 +2927,7 @@ Textbox widget that represents an integer.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-flex-flow sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -2936,7 +2936,7 @@ Textbox widget that represents an integer.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-base sb-pcl::object)
 ```
 
@@ -2944,7 +2944,7 @@ Textbox widget that represents an integer.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-base sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -2953,7 +2953,7 @@ Textbox widget that represents an integer.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-interval sb-pcl::object)
 ```
 
@@ -2961,7 +2961,7 @@ Textbox widget that represents an integer.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-interval sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -2970,7 +2970,7 @@ Textbox widget that represents an integer.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-%playing sb-pcl::object)
 ```
 
@@ -2978,7 +2978,7 @@ Textbox widget that represents an integer.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-%playing sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -2987,7 +2987,7 @@ Textbox widget that represents an integer.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-description-width sb-pcl::object)
 ```
 
@@ -2995,7 +2995,7 @@ Textbox widget that represents an integer.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-description-width sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -3043,7 +3043,7 @@ Slider to select a single item from a list or dictionary.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-%repeat sb-pcl::object)
 ```
 
@@ -3051,7 +3051,7 @@ Slider to select a single item from a list or dictionary.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-%repeat sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -3060,7 +3060,7 @@ Slider to select a single item from a list or dictionary.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-%options-labels sb-pcl::object)
 ```
 
@@ -3068,7 +3068,7 @@ Slider to select a single item from a list or dictionary.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-%options-labels sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -3077,7 +3077,7 @@ Slider to select a single item from a list or dictionary.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-placeholder sb-pcl::object)
 ```
 
@@ -3085,7 +3085,7 @@ Slider to select a single item from a list or dictionary.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-placeholder sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -3094,7 +3094,7 @@ Slider to select a single item from a list or dictionary.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-max-height sb-pcl::object)
 ```
 
@@ -3102,7 +3102,7 @@ Slider to select a single item from a list or dictionary.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-max-height sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -3111,7 +3111,7 @@ Slider to select a single item from a list or dictionary.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-display sb-pcl::object)
 ```
 
@@ -3119,7 +3119,7 @@ Slider to select a single item from a list or dictionary.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-display sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -3128,7 +3128,7 @@ Slider to select a single item from a list or dictionary.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-readout-format sb-pcl::object)
 ```
 
@@ -3136,7 +3136,7 @@ Slider to select a single item from a list or dictionary.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-readout-format sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -3145,7 +3145,7 @@ Slider to select a single item from a list or dictionary.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-min-height sb-pcl::object)
 ```
 
@@ -3153,7 +3153,7 @@ Slider to select a single item from a list or dictionary.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-min-height sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -3288,7 +3288,7 @@ Slider widget that represents an integer bounded from above and below.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-order sb-pcl::object)
 ```
 
@@ -3296,7 +3296,7 @@ Slider widget that represents an integer bounded from above and below.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-order sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -3305,7 +3305,7 @@ Slider widget that represents an integer bounded from above and below.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-box-style sb-pcl::object)
 ```
 
@@ -3313,7 +3313,7 @@ Slider widget that represents an integer bounded from above and below.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-box-style sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -3322,7 +3322,7 @@ Slider widget that represents an integer bounded from above and below.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-grid-template-columns sb-pcl::object)
 ```
 
@@ -3330,7 +3330,7 @@ Slider widget that represents an integer bounded from above and below.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-grid-template-columns sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -3385,7 +3385,7 @@ Represents a game controller.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-buttons sb-pcl::object)
 ```
 
@@ -3393,7 +3393,7 @@ Represents a game controller.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-buttons sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -3402,7 +3402,7 @@ Represents a game controller.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-pressed sb-pcl::object)
 ```
 
@@ -3410,7 +3410,7 @@ Represents a game controller.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-pressed sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -3599,7 +3599,7 @@ Slider to select multiple contiguous items from a list.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-grid-template-rows sb-pcl::object)
 ```
 
@@ -3607,7 +3607,7 @@ Slider to select multiple contiguous items from a list.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-grid-template-rows sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -3616,7 +3616,7 @@ Slider to select multiple contiguous items from a list.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-indent sb-pcl::object)
 ```
 
@@ -3624,7 +3624,7 @@ Slider to select multiple contiguous items from a list.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-indent sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -3633,7 +3633,7 @@ Slider to select multiple contiguous items from a list.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-concise sb-pcl::object)
 ```
 
@@ -3641,7 +3641,7 @@ Slider to select multiple contiguous items from a list.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-concise sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -3650,7 +3650,7 @@ Slider to select multiple contiguous items from a list.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-button-color sb-pcl::object)
 ```
 
@@ -3658,7 +3658,7 @@ Slider to select multiple contiguous items from a list.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-button-color sb-pcl::new-value sb-pcl::object)
 ```
 
@@ -3667,7 +3667,7 @@ Slider to select multiple contiguous items from a list.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-tooltip sb-pcl::object)
 ```
 
@@ -3675,7 +3675,7 @@ Slider to select multiple contiguous items from a list.
 
 ### Definition
 
-```lisp
+```common-lisp
 (widget-tooltip sb-pcl::new-value sb-pcl::object)
 ```
 

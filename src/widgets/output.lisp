@@ -33,7 +33,7 @@ output area.
 
 ### Example
 
-```lisp
+```common-lisp
 (use-package :jupyter-widgets)
 (defvar out (make-widget 'output))
 (with-output out

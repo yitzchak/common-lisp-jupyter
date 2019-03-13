@@ -42,7 +42,7 @@ Install Common Lisp kernel based on implementation
 
 ### Definition
 
-```lisp
+```common-lisp
 (install &key bin-path ev-flag preamble)
 ```
 
@@ -53,6 +53,6 @@ Install Common Lisp kernel based on image of current implementation
 
 ### Definition
 
-```lisp
+```common-lisp
 (install-image)
 ```

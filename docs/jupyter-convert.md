@@ -7,6 +7,6 @@ Convert Lisp source to Jupyter notebook
 
 ### Definition
 
-```lisp
+```common-lisp
 (to-notebook src dest)
 ```

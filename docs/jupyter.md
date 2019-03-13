@@ -7,7 +7,7 @@ Run a kernel based on a kernel class and a connection file.
 
 ### Definition
 
-```lisp
+```common-lisp
 (run-kernel kernel-class connection-file-name)
 ```
 
@@ -19,7 +19,7 @@ Render evaluation result as a mime bundle for execute_result
 
 ### Definition
 
-```lisp
+```common-lisp
 (render result)
 ```
 
@@ -44,7 +44,7 @@ Create a JPEG image result based on an inline value.
 
 ### Definition
 
-```lisp
+```common-lisp
 (jpeg value &optional display-data)
 ```
 
@@ -55,7 +55,7 @@ Output stream sent to Jupyter pager. Available during calls to evaluate-code.
 
 ### Definition
 
-```lisp
+```common-lisp
 nil
 ```
 
@@ -64,7 +64,7 @@ nil
 
 ### Definition
 
-```lisp
+```common-lisp
 (send-comm-open comm &optional data metadata)
 ```
 
@@ -75,7 +75,7 @@ Create a PostScript result based on a file path.
 
 ### Definition
 
-```lisp
+```common-lisp
 (ps-file path &optional display-data)
 ```
 
@@ -84,7 +84,7 @@ Create a PostScript result based on a file path.
 
 ### Definition
 
-```lisp
+```common-lisp
 (get-comm id)
 ```
 
@@ -93,7 +93,7 @@ Create a PostScript result based on a file path.
 
 ### Definition
 
-```lisp
+```common-lisp
 (on-comm-message comm data metadata)
 ```
 
@@ -104,7 +104,7 @@ Create a JPEG image result based on a file path.
 
 ### Definition
 
-```lisp
+```common-lisp
 (jpeg-file path &optional display-data)
 ```
 
@@ -200,7 +200,7 @@ Create a result based on an inline value.
 
 ### Definition
 
-```lisp
+```common-lisp
 (inline-result value mime-type &optional display-data)
 ```
 
@@ -223,7 +223,7 @@ Create a result based on an inline value.
 
 ### Definition
 
-```lisp
+```common-lisp
 (send-comm-message comm &optional data metadata)
 ```
 
@@ -234,7 +234,7 @@ Create a Markdown result based on an inline value.
 
 ### Definition
 
-```lisp
+```common-lisp
 (markdown value &optional display-data)
 ```
 
@@ -245,7 +245,7 @@ Create a HTML result based on an inline value.
 
 ### Definition
 
-```lisp
+```common-lisp
 (html value &optional display-data)
 ```
 
@@ -256,7 +256,7 @@ Display informational message regarding kernel status.
 
 ### Definition
 
-```lisp
+```common-lisp
 (info &rest args)
 ```
 
@@ -267,7 +267,7 @@ Create a SVG result based on a file path.
 
 ### Definition
 
-```lisp
+```common-lisp
 (svg-file path &optional display-data)
 ```
 
@@ -276,7 +276,7 @@ Create a SVG result based on a file path.
 
 ### Definition
 
-```lisp
+```common-lisp
 (on-comm-close comm data metadata)
 ```
 
@@ -287,7 +287,7 @@ Send clear output message to frontend.
 
 ### Definition
 
-```lisp
+```common-lisp
 (clear &optional wait)
 ```
 
@@ -296,7 +296,7 @@ Send clear output message to frontend.
 
 ### Definition
 
-```lisp
+```common-lisp
 (kernel-prompt-suffix sb-pcl::object)
 ```
 
@@ -308,7 +308,7 @@ Make a result based on an inline value. The handle argument is used by the
 
 ### Definition
 
-```lisp
+```common-lisp
 (make-inline-result value &key mime-type display-data handle)
 ```
 
@@ -319,7 +319,7 @@ Create a LaTeX result based on an inline value.
 
 ### Definition
 
-```lisp
+```common-lisp
 (latex value &optional display-data)
 ```
 
@@ -330,7 +330,7 @@ Send a result either as display data or an execute result.
 
 ### Definition
 
-```lisp
+```common-lisp
 (send-result result)
 ```
 
@@ -356,7 +356,7 @@ Evaluate code along with paged output. Kernel implementations
 
 ### Definition
 
-```lisp
+```common-lisp
 (evaluate-code kernel code)
 ```
 
@@ -367,7 +367,7 @@ Safe accessor for the internal JSON format that behaves like getf
 
 ### Definition
 
-```lisp
+```common-lisp
 (json-getf object indicator &optional default)
 ```
 
@@ -378,7 +378,7 @@ Predicate to determine if result is an quit result.
 
 ### Definition
 
-```lisp
+```common-lisp
 (quit-eval-error-p result)
 ```
 
@@ -390,7 +390,7 @@ Inspect code at cursor-pos with detail-level. Successful
 
 ### Definition
 
-```lisp
+```common-lisp
 (inspect-code kernel code cursor-pos detail-level)
 ```
 
@@ -403,7 +403,7 @@ Complete code at cursor-pos. Successful completion should
 
 ### Definition
 
-```lisp
+```common-lisp
 (complete-code kernel code cursor-pos)
 ```
 
@@ -414,7 +414,7 @@ Create a PNG image result based on a file path.
 
 ### Definition
 
-```lisp
+```common-lisp
 (png-file path &optional display-data)
 ```
 
@@ -425,7 +425,7 @@ Create a plain text result based on an inline value.
 
 ### Definition
 
-```lisp
+```common-lisp
 (text value &optional display-data)
 ```
 
@@ -437,7 +437,7 @@ Create a result based on a file path. The mime type with automatically be
 
 ### Definition
 
-```lisp
+```common-lisp
 (file path &optional display-data)
 ```
 
@@ -448,7 +448,7 @@ Add code to input queue.
 
 ### Definition
 
-```lisp
+```common-lisp
 (enqueue-input kernel code)
 ```
 
@@ -457,7 +457,7 @@ Add code to input queue.
 
 ### Definition
 
-```lisp
+```common-lisp
 (create-comm target-name id data metadata)
 ```
 
@@ -468,7 +468,7 @@ Create a PDF result based on a file path.
 
 ### Definition
 
-```lisp
+```common-lisp
 (pdf-file path &optional display-data)
 ```
 
@@ -481,7 +481,7 @@ Make a result based on an error. The quit the parameter indicates that the
 
 ### Definition
 
-```lisp
+```common-lisp
 (make-error-result ename evalue &key quit traceback)
 ```
 
@@ -492,7 +492,7 @@ Create a GIF image result based on a file path.
 
 ### Definition
 
-```lisp
+```common-lisp
 (gif-file path &optional display-data)
 ```
 
@@ -505,7 +505,7 @@ Check code for completeness. Kernel implementations should
 
 ### Definition
 
-```lisp
+```common-lisp
 (code-is-complete kernel code)
 ```
 
@@ -516,7 +516,7 @@ Install a kernel spec file given a kernel name and a language name.
 
 ### Definition
 
-```lisp
+```common-lisp
 (install-kernel &key argv class name language resources)
 ```
 
@@ -527,7 +527,7 @@ Create a SVG result based on an inline value.
 
 ### Definition
 
-```lisp
+```common-lisp
 (svg value &optional display-data)
 ```
 
@@ -556,7 +556,7 @@ Make a lisp result based on an inline value.
 
 ### Definition
 
-```lisp
+```common-lisp
 (make-lisp-result value &key display-data)
 ```
 
@@ -568,7 +568,7 @@ Make a result based on a file. The handle argument is used by the convenience
 
 ### Definition
 
-```lisp
+```common-lisp
 (make-file-result path &key mime-type display-data handle)
 ```
 
@@ -580,7 +580,7 @@ Macro for catching any conditions including quit-conditions during code
 
 ### Definition
 
-```lisp
+```common-lisp
 (handling-errors
   &body
   body)
@@ -591,7 +591,7 @@ Macro for catching any conditions including quit-conditions during code
 
 ### Definition
 
-```lisp
+```common-lisp
 (on-comm-open comm data metadata)
 ```
 
@@ -600,7 +600,7 @@ Macro for catching any conditions including quit-conditions during code
 
 ### Definition
 
-```lisp
+```common-lisp
 (comm-id sb-pcl::object)
 ```
 
@@ -609,7 +609,7 @@ Macro for catching any conditions including quit-conditions during code
 
 ### Definition
 
-```lisp
+```common-lisp
 (kernel-prompt-prefix sb-pcl::object)
 ```
 
@@ -620,7 +620,7 @@ Create a PNG image result based on an inline value.
 
 ### Definition
 
-```lisp
+```common-lisp
 (png value &optional display-data)
 ```
 
@@ -629,6 +629,6 @@ Create a PNG image result based on an inline value.
 
 ### Definition
 
-```lisp
+```common-lisp
 (send-comm-close comm &optional data metadata)
 ```
