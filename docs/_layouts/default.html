@@ -39,11 +39,9 @@
         {% endif %}
 
         <h2>{{ site.data.nav.docs_list_title }}</h2>
-        <p>
-           {% for item in site.data.nav.docs %}
-              <a href="{{ item.url }}">{{ item.title }}</a>
-           {% endfor %}
-        </p>
+        {% for item in site.data.nav.docs %}
+           <p><a href="{{ item.url }}">{{ item.title }}</a></p>
+        {% endfor %}
       </header>
       <section>
 
