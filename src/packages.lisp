@@ -219,4 +219,9 @@
     #:install-image
     #:kernel))
 
+(defpackage #:jupyter-convert
+  (:use #:common-lisp #:alexandria #:iterate)
+  (:export
+    #:to-notebook))
+
 (in-package #:jupyter)

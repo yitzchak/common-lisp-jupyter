@@ -1,0 +1,18 @@
+#!/bin/sh
+#|-*- mode:lisp -*-|#
+#|
+exec ros -Q -- $0 "$@"
+|#
+(progn ;;init forms
+  (ros:ensure-asdf)
+  #+quicklisp(ql:quickload :common-lisp-jupyter :silent t)
+  )
+
+(defpackage :ros.script.lisp-to-nb.3761459104
+  (:use :cl))
+(in-package :ros.script.lisp-to-nb.3761459104)
+
+(defun main (src dest &rest argv)
+  (declare (ignorable argv))
+  (jupyter-convert:to-notebook src dest))
+;;; vim: set ft=lisp lisp:

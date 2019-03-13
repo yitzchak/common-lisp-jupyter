@@ -63,4 +63,5 @@
              (:file "valid")))
          (:file "history")
          (:file "kernel")
-         (:file "cl-kernel")))))
+         (:file "cl-kernel")
+         (:file "convert")))))
