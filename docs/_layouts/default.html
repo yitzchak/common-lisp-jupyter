@@ -39,11 +39,11 @@
         {% endif %}
 
         <h2>{{ site.data.nav.docs_list_title }}</h2>
-        <ul>
+        <p>
            {% for item in site.data.nav.docs %}
-              <li><a href="{{ item.url }}">{{ item.title }}</a></li>
+              <a href="{{ item.url }}">{{ item.title }}</a>
            {% endfor %}
-        </ul>
+        </p>
       </header>
       <section>
 
