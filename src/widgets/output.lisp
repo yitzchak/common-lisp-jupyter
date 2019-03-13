@@ -31,12 +31,14 @@ You can then use the widget as a context manager: any output produced while in
 the context will be captured and displayed in the widget instead of the standard
 output area.
 
-Example
+### Example
 
+```lisp
 (use-package :jupyter-widgets)
 (defvar out (make-widget 'output))
 (with-output out
-  (print \"prints to output area\")"))
+  (print \"prints to output area\")
+```"))
 
 (register-widget output)
 

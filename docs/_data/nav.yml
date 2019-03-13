@@ -1,0 +1,14 @@
+docs_list_title: Documentation
+docs:
+
+- title: jupyter package
+  url: jupyter
+
+- title: jupyter-widgets package
+  url: jupyter-widgets
+
+- title: jupyter-convert package
+  url: jupyter-convert
+
+- title: common-lisp-jupyter package
+  url: common-lisp-jupyter
