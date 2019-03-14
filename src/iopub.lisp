@@ -148,3 +148,6 @@
 
 (defmethod trivial-gray-streams:stream-unread-char ((stream iopub-stream) char)
   (trivial-gray-streams:stream-unread-char *query-io* char))
+
+(defmethod trivial-gray-streams:stream-line-column ((stream iopub-stream))
+   nil)

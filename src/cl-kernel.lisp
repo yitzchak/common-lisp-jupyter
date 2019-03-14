@@ -1,8 +1,8 @@
 (in-package #:common-lisp-jupyter)
 
-(defvar +kernel-name+ "Common Lisp")
-(defvar +kernel-language+ "common-lisp")
-(defvar +kernel-resources+
+(defvar +display-name+ "Common Lisp")
+(defvar +language+ "common-lisp")
+(defvar +resources+
   (list (asdf:component-pathname (asdf:find-component :common-lisp-jupyter '("res" "logo-64x64.png")))))
 
 (defclass kernel (jupyter:kernel)
@@ -202,30 +202,41 @@
           (or bin-path (format nil "~(~A~)" (uiop:implementation-type)))))
       (collect ev-flag)
       (collect cmd))
-    :name +kernel-name+
-    :language +kernel-language+
-    :resources +kernel-resources+))
+    :display-name +display-name+
+    :kernel-name +language+
+    :language +language+
+    :resources +resources+))
 
 (defun install-image ()
   "Install Common Lisp kernel based on image of current implementation"
   (jupyter:install-kernel
     :class 'kernel
-    :name +kernel-name+
-    :language +kernel-language+
-    :resources +kernel-resources+))
+    :display-name +display-name+
+    :kernel-name +language+
+    :language +language+
+    :resources +resources+))
 
-(defun install-roswell ()
+(defun install-roswell (&key implementation)
   "Install Common Lisp kernel using Roswell"
   (jupyter:install-kernel
-    :argv (if (uiop:os-windows-p)
-            (list "ros"
-              (namestring
-                (merge-pathnames
-                  (make-pathname :directory '(:relative ".roswell" "bin")
-                                 :name "cl-jupyter")
-                  (uiop:getenv-absolute-directory "USERPROFILE")))
-            "{connection_file}")
-          '("cl-jupyter" "{connection_file}"))
-    :name +kernel-name+
-    :language +kernel-language+
-    :resources +kernel-resources+))
+    :argv (append
+            (if (or implementation (uiop:os-windows-p))
+              '("ros")
+              '("cl-jupyter"))
+            (when implementation
+              (list "--lisp" implementation))
+            (when (or implementation (uiop:os-windows-p))
+              (list (namestring
+                      (merge-pathnames
+                        (make-pathname :directory '(:relative ".roswell" "bin")
+                                       :name "cl-jupyter")
+                        (user-homedir-pathname)))))
+            '("{connection_file}"))
+    :display-name (if implementation
+                    (format nil "~A (~A)" +display-name+ implementation)
+                    +display-name+)
+    :kernel-name (if implementation
+                   (format nil "~A_~A" +language+ (substitute #\_ #\/ implementation))
+                   +language+)
+    :language +language+
+    :resources +resources+))

@@ -16,7 +16,7 @@
 (defun make-uuid ()
   (string-downcase (remove #\- (format nil "~W" (uuid:make-v4-uuid)))))
 
-(defun install-kernel (&key argv class name language resources)
+(defun install-kernel (&key argv class display-name kernel-name language resources)
   "Install a kernel spec file given a kernel name and a language name."
   (let* ((kernel-directory
            (merge-pathnames
@@ -24,7 +24,7 @@
                                              ; Just in case HFS+ is case-sensitive
                                              (if (uiop:os-macosx-p) "Jupyter" "jupyter")
                                              "kernels"
-                                             language))
+                                             kernel-name))
                        (cond
                          ((uiop:os-macosx-p)
                            (merge-pathnames
@@ -43,7 +43,7 @@
       (jsown:to-json
         (jsown:new-js
           ("argv" (or argv (list (namestring image-path) "{connection_file}")))
-          ("display_name" name)
+          ("display_name" display-name)
           ("language" language)))
       stream))
   (iter
