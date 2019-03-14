@@ -191,7 +191,7 @@
 
 
 (defun install (&key bin-path (ev-flag #+clisp "-x" #+(or mkcl cmucl) "-eval" #-(or clisp cmucl mkcl) "--eval") preamble)
-  "Install Common Lisp kernel based on implementation"
+  "Install Common Lisp kernel based on the current implementation"
   (jupyter:install-kernel
     :argv (iter
       (for cmd in (append preamble
@@ -230,7 +230,9 @@
                       (merge-pathnames
                         (make-pathname :directory '(:relative ".roswell" "bin")
                                        :name "cl-jupyter")
-                        (user-homedir-pathname)))))
+                        (if (uiop:os-windows-p) ; Get the home from %USERPROFILE% if on Windows to avoid MSYS home
+                          (uiop:getenv-absolute-directory "USERPROFILE")
+                          (user-homedir-pathname))))))
             '("{connection_file}"))
     :display-name (if implementation
                     (format nil "~A (~A)" +display-name+ implementation)
