@@ -9,7 +9,7 @@ pip3 install wheel jupyter jupyter_kernel_test
 if [ "${METHOD:-}" = "ros" ]; then
   curl -L https://raw.githubusercontent.com/snmsts/roswell/release/scripts/install-for-ci.sh | sh
   ros install ./common-lisp-jupyter.asd
-  ros run --eval "(ql:quickload :common-lisp-jupyter)" --quit
+  ros run --eval "(ql:quickload '(:common-lisp-jupyter :jsown))" --quit
 else
   curl -O https://beta.quicklisp.org/quicklisp.lisp
   if [ "$LISP" = "clisp" ]; then

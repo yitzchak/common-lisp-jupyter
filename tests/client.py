@@ -99,6 +99,18 @@ class MyKernelTests(jupyter_kernel_test.KernelTests):
         self.assertIn('text/plain', output_msgs[-1]['content']['data'])
         self.assertEqual(output_msgs[-1]['content']['data']['text/plain'], '((/ 9 3) (- 4 2) (+ 0 1))')
 
+    def test_quickload(self):
+        reply, output_msgs = self.execute_helper(
+            code="(ql:quickload :jsown)")
+        for msg in output_msgs:
+            if msg['msg_type'] == 'execute_result':
+                self.assertIn('data', msg['content'])
+                self.assertIn('text/plain', msg['content']['data'])
+                self.assertEqual(msg['content']['data']['text/plain'], '(:JSOWN)')
+            else:
+                self.assertEqual(msg['msg_type'], "stream", "Output message must be stream or result")
+                self.assertEqual(msg['content']['name'], 'stdout', "Stream must be stdout")
+
 
 if __name__ == '__main__':
     unittest.main()
