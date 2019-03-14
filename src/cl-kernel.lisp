@@ -190,7 +190,7 @@
           end)))))
 
 
-(defun install (&key bin-path (ev-flag #+clisp "-x" #+(or mkcl cmucl) "-eval" #-(or clisp cmucl mkcl) "--eval") preamble)
+(defun install (&key bin-path (ev-flag #+clisp "-x" #+(or mkcl cmucl) "-eval" #-(or clisp cmucl mkcl) "--eval") preamble use-implementation)
   "Install Common Lisp kernel based on the current implementation"
   (jupyter:install-kernel
     :argv (iter
@@ -199,20 +199,34 @@
                       "(jupyter:run-kernel 'common-lisp-jupyter:kernel \"{connection_file}\")")))
       (if-first-time
         (collect
-          (or bin-path (format nil "~(~A~)" (uiop:implementation-type)))))
+          (or bin-path
+              (first (uiop:raw-command-line-arguments))
+              (format nil "~(~A~)" (uiop:implementation-type)))))
       (collect ev-flag)
       (collect cmd))
-    :display-name +display-name+
-    :kernel-name +language+
+    :display-name
+      (if use-implementation
+        (lisp-implementation-type)
+        +display-name+)
+    :kernel-name
+      (if use-implementation
+        (format nil "~A_~(~A~)" +language+ (uiop:implementation-type))
+        +language+)
     :language +language+
     :resources +resources+))
 
-(defun install-image ()
+(defun install-image (&key use-implementation)
   "Install Common Lisp kernel based on image of current implementation"
   (jupyter:install-kernel
     :class 'kernel
-    :display-name +display-name+
-    :kernel-name +language+
+    :display-name
+      (if use-implementation
+        (lisp-implementation-type)
+        +display-name+)
+    :kernel-name
+      (if use-implementation
+        (format nil "~A_~(~A~)" +language+ (uiop:implementation-type))
+        +language+)
     :language +language+
     :resources +resources+))
 

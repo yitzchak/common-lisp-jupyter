@@ -7,6 +7,9 @@ of how the versioning scheme that this project does not use is clearly superior
 to random natural numbers and how incrementing the minor version number
 indicates backward compatible changes, unless it does not.
 
+- 2019-03-14 — Add `trivial-gray-streams:stream-line-column` method for CCL in
+  order to fix `ql:quickload` failure.
+- 2019-03-14 — Add options to specify implementation during install.
 - 2019-03-12 — Add image option for kernel installation.
 - 2019-03-12 — Add install of icons and other resources.
 - 2019-03-10 — Add support for `history_request`.
