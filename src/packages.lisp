@@ -217,6 +217,7 @@
   (:export
     #:install
     #:install-image
+    #:install-roswell
     #:kernel))
 
 (defpackage #:jupyter-convert

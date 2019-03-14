@@ -214,19 +214,18 @@
     :language +kernel-language+
     :resources +kernel-resources+))
 
-#+ros.installing
-(eval-when (:compile-toplevel)
-  (defparameter roswell.install::*build-hook*
-    (lambda ()
-      (format t "~A~%" *default-pathname-defaults*)
-      (jupyter:install-kernel :argv (if (uiop:os-windows-p)
-                                (list "ros"
-                                      (namestring (merge-pathnames
-                                        (make-pathname :directory '(:relative ".roswell" "bin")
-                                                       :name "cl-jupyter")
-                                        (uiop:getenv-absolute-directory "USERPROFILE")))
-                                      "{connection_file}")
-                                '("cl-jupyter" "{connection_file}"))
-                              :name +kernel-name+
-                              :language +kernel-language+
-                              :resources +kernel-resources+))))
+(defun install-roswell ()
+  "Install Common Lisp kernel using Roswell"
+  (jupyter:install-kernel
+    :argv (if (uiop:os-windows-p)
+            (list "ros"
+              (namestring
+                (merge-pathnames
+                  (make-pathname :directory '(:relative ".roswell" "bin")
+                                 :name "cl-jupyter")
+                  (uiop:getenv-absolute-directory "USERPROFILE")))
+            "{connection_file}")
+          '("cl-jupyter" "{connection_file}"))
+    :name +kernel-name+
+    :language +kernel-language+
+    :resources +kernel-resources+))

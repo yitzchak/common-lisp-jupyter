@@ -64,4 +64,5 @@
          (:file "history")
          (:file "kernel")
          (:file "cl-kernel")
+         (:file "ros-install")
          (:file "convert")))))
