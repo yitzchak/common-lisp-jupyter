@@ -32,18 +32,17 @@
 (defmacro register-widget (name)
   `(let ((class (find-class (quote ,name))))
     (closer-mop:finalize-inheritance class)
-    (let* ((initargs (closer-mop:compute-default-initargs class))
-           (model-module (eval (second (assoc :%model-module initargs))))
-           (model-module-version (eval (second (assoc :%model-module-version initargs))))
-           (model-name (eval (second (assoc :%model-name initargs))))
-           (view-module (eval (second (assoc :%view-module initargs))))
-           (view-module-version (eval (second (assoc :%view-module-version initargs))))
-           (view-name (eval (second (assoc :%view-name initargs))))
-           (name (widget-registry-name model-module model-module-version
-                                       model-name view-module
-                                       view-module-version view-name)))
-      (when name
-        (setf (gethash name *widgets*) (quote ,name))))))
+    (let ((initargs (closer-mop:compute-default-initargs class)))
+      (flet ((def-initarg (slot-name)
+                ; CMUCL appears to have the default initarg list in a different order.
+                (eval (#+cmucl third #-cmucl second (assoc slot-name initargs)))))
+        (when-let ((name (widget-registry-name (def-initarg :%model-module)
+                                               (def-initarg :%model-module-version)
+                                               (def-initarg :%model-name)
+                                               (def-initarg :%view-module)
+                                               (def-initarg :%view-module-version)
+                                               (def-initarg :%view-name))))
+          (setf (gethash name *widgets*) (quote ,name)))))))
 
 (defclass widget (jupyter:comm jupyter:result)
   ((%model-name

@@ -246,7 +246,7 @@
                                        :name "cl-jupyter")
                         (if (uiop:os-windows-p) ; Get the home from %USERPROFILE% if on Windows to avoid MSYS home
                           (uiop:getenv-absolute-directory "USERPROFILE")
-                          (user-homedir-pathname))))))
+                          (truename (user-homedir-pathname)))))))
             '("{connection_file}"))
     :display-name (if implementation
                     (format nil "~A (~A)" +display-name+ implementation)

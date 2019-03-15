@@ -12,16 +12,16 @@
               :accessor hb-thread-id))
   (:documentation "Heartbeat channel class."))
 
-(defmethod start ((hb hb-channel))
-  (start-channel hb)
-  (let ((socket (channel-socket hb)))
-    (setf (hb-thread-id hb)
+#-cmucl
+(defmethod start :after ((hb hb-channel))
+  (with-slots (socket thread-id) hb
+    (setf thread-id
           (bordeaux-threads:make-thread
             (lambda ()
               (info "[hb-channel] Thread starting...~%")
               (pzmq:proxy socket socket (cffi:null-pointer)))))))
 
-(defmethod stop ((hb hb-channel))
+#-cmucl
+(defmethod stop :before ((hb hb-channel))
   (info "[hb-channel] Thread stopped.~%")
-  (bordeaux-threads:destroy-thread (hb-thread-id hb))
-  (stop-channel hb))
+  (bordeaux-threads:destroy-thread (hb-thread-id hb)))

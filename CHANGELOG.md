@@ -7,8 +7,11 @@ of how the versioning scheme that this project does not use is clearly superior
 to random natural numbers and how incrementing the minor version number
 indicates backward compatible changes, unless it does not.
 
-- 2019-03-14 — Add `trivial-gray-streams:stream-line-column` method for CCL in
-  order to fix `ql:quickload` failure.
+- 2019-03-15 — Add `trivial-gray-streams:stream-line-column` method for
+  `stdin-stream` in order to fix `*query-io*` failure in CMUCL.
+- 2019-03-15 — Add support for CMUCL Roswell based installation.
+- 2019-03-14 — Add `trivial-gray-streams:stream-line-column` method for
+  `iopub-stream` in order to fix `ql:quickload` failure in CCL.
 - 2019-03-14 — Add options to specify implementation during install.
 - 2019-03-12 — Add image option for kernel installation.
 - 2019-03-12 — Add install of icons and other resources.

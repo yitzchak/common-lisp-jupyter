@@ -31,8 +31,8 @@ class MyKernelTests(jupyter_kernel_test.KernelTests):
 
     completion_samples = [
         {
-            'text': 'format',
-            'matches': {'formatter', 'format'},
+            'text': 'z',
+            'matches': {'zerop'},
         },
         {
             'text': 'cl:car',

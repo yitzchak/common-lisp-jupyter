@@ -190,13 +190,13 @@
                                :transport transport
                                :ip ip
                                :port iopub-port)
-          shell (make-instance 'iopub-channel
+          shell (make-instance 'shell-channel
                                :key key
                                :socket (pzmq:socket ctx :router)
                                :transport transport
                                :ip ip
                                :port shell-port)
-          stdin (make-instance 'iopub-channel
+          stdin (make-instance 'stdin-channel
                                :key key
                                :socket (pzmq:socket ctx :dealer)
                                :transport transport
