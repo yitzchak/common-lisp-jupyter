@@ -99,3 +99,6 @@ most cases of *query-io* usage. Makes overloading y-or-no-p unnecessary.
 
 (defmethod trivial-gray-streams:stream-unread-char ((stream stdin-stream) char)
   (vector-push-extend char (stdin-stream-input stream)))
+
+(defmethod trivial-gray-streams:stream-line-column ((stream stdin-stream))
+   nil)

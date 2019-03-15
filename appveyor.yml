@@ -12,6 +12,7 @@ clone_folder: c:\Users\appveyor\.roswell\local-projects\common-lisp-jupyter
 environment:
   BIT: 64
   COMPILER: msys2
+  ROSWELL_ZIP: https://ci.appveyor.com/api/projects/snmsts/roswell-en89n/artifacts/Roswell-x86_64.zip?branch=master&job=Environment%3A%20MSYS2_ARCH%3Dx86_64,%20MSYS2_BITS%3D64,%20MSYSTEM%3DMINGW64,%20METHOD%3Dcross
   MSYS2_ARCH: x86_64
   MSYS2_DIR: msys64
   MSYSTEM: MINGW64
@@ -21,15 +22,18 @@ environment:
   PYTHON_VERSION: "3.6.x" # currently 3.6.5
   PYTHON: "C:\\Python36-x64"
   matrix:
-    - LISP: sbcl-bin
+    - ROS_LISP: ccl-bin
+    - ROS_LISP: sbcl-bin
 
 install:
-  - bash -lc "pacman -Sy --noconfirm mingw64/mingw-w64-x86_64-zeromq"
+  - bash -lc 'pacman -Sy --noconfirm mingw64/mingw-w64-x86_64-zeromq mingw32/mingw-w64-i686-zeromq'
   - pip install --user jupyter jupyter_kernel_test
-  - ps: appveyor DownloadFile 'https://ci.appveyor.com/api/projects/snmsts/roswell-en89n/artifacts/Roswell-x86_64.zip?branch=master&job=Environment%3A%20MSYS2_ARCH%3Dx86_64,%20MSYS2_BITS%3D64,%20MSYSTEM%3DMINGW64,%20METHOD%3Dcross' -FileName Roswell-x86_64.zip
-  - 7z x -o%USERPROFILE% Roswell-x86_64.zip
-  - ros install %LISP%
-  - bash -lc "ros install common-lisp-jupyter"
+  - ps: appveyor DownloadFile $Env:ROSWELL_ZIP -FileName Roswell.zip
+  - 7z x -o%USERPROFILE% Roswell.zip
+  - ros install %ROS_LISP%
+  - ros config
+  - bash -lc 'ros install common-lisp-jupyter'
+  - bash -lc 'ros run --eval "(ql:quickload :common-lisp-jupyter)" --quit'
 
 build: off
 
