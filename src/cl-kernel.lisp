@@ -84,11 +84,6 @@
    (status :initarg :status
            :reader inspect-result-status)))
 
-(defun sexpr-to-text (value)
-  (string-trim '(#\Newline)
-    (with-output-to-string (s)
-      (pprint value s))))
-
 (defmethod jupyter:render ((res inspect-result))
   (jsown:new-js
     ("text/plain"
