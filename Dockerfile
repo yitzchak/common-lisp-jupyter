@@ -19,7 +19,7 @@ WORKDIR ${HOME}/roswell
 RUN makepkg
 
 USER root
-RUN pacman -U --noconfirm roswell-19.3.10.97-1-x86_64.pkg.tar.xz
+RUN ls -t *.pkg.tar.xz | xargs pacman -U --noconfirm
 
 WORKDIR ${HOME}/common-lisp-jupyter
 
