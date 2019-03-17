@@ -19,7 +19,8 @@
       (uiop:ensure-all-directories-exist (list path))
       (setf stream (open path :direction :output
                               :if-exists :rename
-                              :if-does-not-exist :create)))))
+                              :if-does-not-exist :create
+                              #+ccl :sharing #+ccl :external)))))
 
 (defmethod stop ((l sink))
   (with-slots (lock stream) l
