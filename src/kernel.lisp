@@ -228,16 +228,16 @@
 
 (defun run-kernel (kernel-class connection-file-name)
   "Run a kernel based on a kernel class and a connection file."
-  (let ((log-path (uiop:xdg-data-home
+  (unless (stringp connection-file-name)
+    (error "Wrong connection file argument (expecting a string)"))
+  (let ((log-path (uiop:xdg-runtime-dir
                     (make-pathname :directory '(:relative "common-lisp-jupyter")
-                                   :name "kernel"
+                                   :name (pathname-name connection-file-name)
                                    :type "log"))))
     (uiop:ensure-all-directories-exist (list log-path))
     (v:define-pipe ()
       (v:level-filter :level :info)
-      (v:rotating-file-faucet :template log-path)))
-  (unless (stringp connection-file-name)
-    (fatal-error "Wrong connection file argument (expecting a string)"))
+      (v:file-faucet :file log-path)))
   (v:info :kernel "Using connection file ~A" connection-file-name)
   (let* ((config-js (jsown:parse (read-file-into-string connection-file-name)))
          (transport (json-getf config-js "transport"))
