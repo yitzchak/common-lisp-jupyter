@@ -298,7 +298,7 @@
       ("kernel_info_request" (handle-kernel-info-request kernel msg))
       ("shutdown_request" (handle-shutdown-request kernel msg))
       (otherwise
-        (warn "[Shell] message type '~A' not supported, skipping..." msg-type)
+        (v:warn :kernel "Ignoring ~A message since there is no appropriate handler." msg-type)
         t))))
 
 #|
