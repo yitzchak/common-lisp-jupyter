@@ -136,27 +136,20 @@ The wire-deserialization part follows.
 
 |#
 
-;; Locking, courtesy of dmeister, thanks !
-(defparameter *message-send-lock* (bordeaux-threads:make-lock "message-send-lock"))
-
 (defun message-send (channel msg)
-  (unwind-protect
-    (let* ((socket (channel-socket channel))
-           (key (channel-key channel))
-           (wire-parts (wire-serialize msg :key key)))
-      (bordeaux-threads:acquire-lock *message-send-lock*)
-      ;;DEBUG>>
-      ;;(info "~%[Send] wire parts: ~W~%" wire-parts)
-      (dolist (part wire-parts)
-        (if (stringp part)
-          (pzmq:send socket part :sndmore t)
-          (let ((len (length part)))
-            (cffi:with-foreign-pointer (m len)
-              (dotimes (i len)
-                (setf (cffi:mem-aref m :unsigned-char i) (elt part i)))
-              (pzmq:send socket m :len len :sndmore t)))))
-      (pzmq:send socket nil))
-    (bordeaux-threads:release-lock *message-send-lock*)))
+  (with-slots (send-lock socket key) channel
+    (let ((wire-parts (wire-serialize msg :key key)))
+      (bordeaux-threads:with-lock-held (send-lock)
+        ; (v:debug :message "Sending parts: ~W" wire-parts)
+        (dolist (part wire-parts)
+          (if (stringp part)
+            (pzmq:send socket part :sndmore t)
+            (let ((len (length part)))
+              (cffi:with-foreign-pointer (m len)
+                (dotimes (i len)
+                  (setf (cffi:mem-aref m :unsigned-char i) (elt part i)))
+                (pzmq:send socket m :len len :sndmore t)))))
+        (pzmq:send socket nil)))))
 
 (defun recv-parts (socket)
   (pzmq:with-message msg
@@ -173,15 +166,9 @@ The wire-deserialization part follows.
                 (setf (aref res i) (cffi:mem-aref data :unsigned-char i)))))))
       (while (pzmq:getsockopt socket :rcvmore)))))
 
-(defparameter *message-recv-lock* (bordeaux-threads:make-lock "message-recv-lock"))
-
 (defun message-recv (channel)
-  (unwind-protect
-    (let ((socket (channel-socket channel))
-          (key (channel-key channel)))
-      (bordeaux-threads:acquire-lock *message-recv-lock*)
+  (with-slots (recv-lock socket key) channel
+    (bordeaux-threads:with-lock-held (recv-lock)
       (let ((parts (recv-parts socket)))
-        ;;DEBUG>>
-        ;;(info "[Recv]: parts: ~A~%" (mapcar (lambda (part) (format nil "~W" part)) parts))
-        (wire-deserialize parts :key key)))
-    (bordeaux-threads:release-lock *message-recv-lock*)))
+        ; (v:debug :message "Received parts: ~A" (mapcar (lambda (part) (format nil "~W" part)) parts))
+        (wire-deserialize parts :key key)))))

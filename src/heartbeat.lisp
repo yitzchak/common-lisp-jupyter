@@ -18,10 +18,10 @@
     (setf thread-id
           (bordeaux-threads:make-thread
             (lambda ()
-              (info "[hb-channel] Thread starting...~%")
+              (inform :info hb "Starting thread")
               (pzmq:proxy socket socket (cffi:null-pointer)))))))
 
 #-cmucl
 (defmethod stop :before ((hb hb-channel))
-  (info "[hb-channel] Thread stopped.~%")
+  (inform :info hb "Stopping thread")
   (bordeaux-threads:destroy-thread (hb-thread-id hb)))

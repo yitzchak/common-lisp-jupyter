@@ -12,7 +12,7 @@ Jupyter protocol constants
 (defparameter +status-unknown+ "unknown")
 
 
-(defclass channel ()
+(defclass channel (source)
   ((key :initarg :key
         :reader channel-key)
    (socket :initarg :socket
@@ -25,14 +25,18 @@ Jupyter protocol constants
        :type string)
    (port :initarg :port
          :reader channel-port
-         :type fixnum))
+         :type fixnum)
+   (recv-lock :initform (bordeaux-threads:make-lock)
+              :reader channel-recv-lock)
+   (send-lock :initform (bordeaux-threads:make-lock)
+              :reader channel-send-lock))
   (:documentation "Common channel class."))
 
 (defgeneric start (ch)
   (:documentation "Start the resource."))
 
 (defmethod start ((ch channel))
-  (info "[~(~A~)] Starting...~%" (class-name (class-of ch)))
+  (inform :info ch "Starting channel")
   (pzmq:bind (channel-socket ch)
              (format nil "~A://~A:~A"
                      (channel-transport ch)
@@ -43,5 +47,5 @@ Jupyter protocol constants
   (:documentation "Stop the resource."))
 
 (defmethod stop ((ch channel))
-  (info "[~(~A~)] Stopped.~%" (class-name (class-of ch)))
+  (inform :info ch "Stopping channel")
   (pzmq:close (channel-socket ch)))
