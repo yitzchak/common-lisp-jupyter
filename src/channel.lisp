@@ -32,7 +32,7 @@ Jupyter protocol constants
   (:documentation "Start the resource."))
 
 (defmethod start ((ch channel))
-  (info "[~(~A~)] Starting...~%" (class-name (class-of ch)))
+  (v:info :channel "Starting ~(~A~)" (class-name (class-of ch)))
   (pzmq:bind (channel-socket ch)
              (format nil "~A://~A:~A"
                      (channel-transport ch)
@@ -43,5 +43,5 @@ Jupyter protocol constants
   (:documentation "Stop the resource."))
 
 (defmethod stop ((ch channel))
-  (info "[~(~A~)] Stopped.~%" (class-name (class-of ch)))
+  (v:info :channel "Stopping ~A" (class-name (class-of ch)))
   (pzmq:close (channel-socket ch)))

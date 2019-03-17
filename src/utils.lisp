@@ -8,6 +8,11 @@
 
 ; (defvar maxima::$kernel_info nil)
 
+(defun fatal-error (format-control &rest format-arguments)
+  (v:fatal :kernel 'simple-error :format-control format-control
+                                 :format-arguments format-arguments)
+  (apply #'error format-control format-arguments))
+
 (defun info (&rest args)
   "Display informational message regarding kernel status."
   (when nil;maxima::$kernel_info

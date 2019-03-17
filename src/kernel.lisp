@@ -172,10 +172,10 @@
 
 ;; Start all channels.
 (defmethod start ((k kernel))
-  (info "[kernel] Starting...~%")
   (with-slots (ctx key transport ip hb-port hb shell-port shell stdin-port stdin history
-               iopub-port iopub session prompt-prefix prompt-suffix language-name)
+               iopub-port iopub session prompt-prefix prompt-suffix language-name name)
               k
+    (v:info :kernel "Starting ~A kernel" name)
     (setq session (make-uuid)
           ctx (pzmq:ctx-new)
           hb (make-instance 'hb-channel
@@ -203,7 +203,7 @@
                                :ip ip
                                :port stdin-port)
           history (make-instance 'history
-                                 :path (uiop:xdg-config-home
+                                 :path (uiop:xdg-data-home
                                          (make-pathname :directory '(:relative "common-lisp-jupyter")
                                                         :name language-name
                                                         :type "history"))))
@@ -217,8 +217,8 @@
 
 ;; Stop all channels and destroy the control.
 (defmethod stop ((k kernel))
-  (info "[kernel] Stopped.~%")
-  (with-slots (ctx hb iopub shell stdin history) k
+  (with-slots (ctx hb iopub shell stdin history name) k
+    (v:info :kernel "Stopping ~A kernel" name)
     (stop hb)
     (stop iopub)
     (stop shell)
@@ -228,9 +228,17 @@
 
 (defun run-kernel (kernel-class connection-file-name)
   "Run a kernel based on a kernel class and a connection file."
-  (info "[kernel] Connection file = ~A~%" connection-file-name)
+  (let ((log-path (uiop:xdg-data-home
+                    (make-pathname :directory '(:relative "common-lisp-jupyter")
+                                   :name "kernel"
+                                   :type "log"))))
+    (uiop:ensure-all-directories-exist (list log-path))
+    (v:define-pipe ()
+      (v:level-filter :level :info)
+      (v:rotating-file-faucet :template log-path)))
   (unless (stringp connection-file-name)
-    (error "[kernel] Wrong connection file argument (expecting a string)"))
+    (fatal-error "Wrong connection file argument (expecting a string)"))
+  (v:info :kernel "Using connection file ~A" connection-file-name)
   (let* ((config-js (jsown:parse (read-file-into-string connection-file-name)))
          (transport (json-getf config-js "transport"))
          (ip (json-getf config-js "ip"))
@@ -242,7 +250,7 @@
          (key (json-getf config-js "key"))
          (signature-scheme (json-getf config-js "signature_scheme")))
     (when (not (string= signature-scheme "hmac-sha256"))
-      (error "[kernel] Signature scheme 'hmac-sha256' required, was provided ~S." signature-scheme))
+      (fatal-error "Signature scheme 'hmac-sha256' required, was provided ~S." signature-scheme))
     (iter
       (with kernel = (make-instance kernel-class
                                     :transport transport
@@ -265,6 +273,7 @@
         (send-status-update (kernel-iopub kernel) msg "idle"))
       (finally-protected
         (stop kernel)))))
+
 
 #|
 
@@ -299,7 +308,7 @@
 |#
 
 (defun handle-kernel-info-request (kernel msg)
-  (info "[kernel] Handling 'kernel_info_request'~%")
+  (v:info :kernel "Handling kernel_info_request message")
   (with-slots (name version language-name language-version mime-type
                file-extension pygments-lexer codemirror-mode help-links banner
                shell)
@@ -332,7 +341,7 @@
 |#
 
 (defun handle-execute-request (kernel msg)
-  (info "[kernel] Handling 'execute_request'~%")
+  (v:info :kernel "Handling execute_request message")
   (let ((code (json-getf (message-content msg) "code")))
     (with-slots (execution-count history iopub package prompt-prefix prompt-suffix shell stdin)
                 kernel
@@ -382,7 +391,7 @@
 |#
 
 (defun handle-shutdown-request (kernel msg)
-  (info "[kernel] Handling 'shutdown_request'~%")
+  (v:info :kernel "Handling shutdown_request message")
   (let* ((shell (kernel-shell kernel))
          (content (message-content msg))
          (restart (json-getf content "restart")))
@@ -396,7 +405,7 @@
 |#
 
 (defun handle-is-complete-request (kernel msg)
-  (info "[kernel] Handling 'is_complete_request'~%")
+  (v:info :kernel "Handling is_complete_request message")
   (let* ((shell (kernel-shell kernel))
          (content (message-content msg))
          (code (json-getf content "code"))
@@ -411,7 +420,7 @@
 |#
 
 (defun handle-inspect-request (kernel msg)
-  (info "[kernel] Handling 'inspect_request'~%")
+  (v:info :kernel "Handling inspect_request message")
   (with-slots (shell package) kernel
     (let* ((content (message-content msg))
            (code (json-getf content "code"))
@@ -434,7 +443,7 @@
 |#
 
 (defun handle-complete-request (kernel msg)
-  (info "[kernel] Handling 'complete_request'~%")
+  (v:info :kernel "Handling complete_request message")
   (with-slots (shell package) kernel
     (let* ((content (message-content msg))
            (code (json-getf content "code"))
@@ -454,7 +463,7 @@
 
 
 (defun handle-comm-info-request (kernel msg)
-  (info "[kernel] Handling 'comm_info_request'~%")
+  (v:info :kernel "Handling comm_info_request message")
   (with-slots (shell comms) kernel
     (let* ((content (message-content msg))
            (target-name (json-getf content "target_name"))
@@ -467,7 +476,7 @@
   t)
 
 (defun handle-comm-open (kernel msg)
-  (info "[kernel] Handling 'comm_open'~%")
+  (v:info :kernel "Handling comm_open message")
   (with-slots (iopub session comms) kernel
     (let* ((content (message-content msg))
            (metadata (message-metadata msg))
@@ -475,7 +484,6 @@
            (target-name (json-getf content "target_name"))
            (data (json-getf content "data"))
            (inst (create-comm (intern target-name 'keyword) id data metadata)))
-      (info "~A ~%" target-name)
       (if inst
         (progn
           (setf (gethash id comms) inst)
@@ -484,7 +492,7 @@
   t)
 
 (defun handle-comm-message (kernel msg)
-  (info "[kernel] Handling 'comm_msg'~%")
+  (v:info :kernel "Handling comm_msg message")
   (with-slots (comms) kernel
     (let* ((content (message-content msg))
            (metadata (message-metadata msg))
@@ -496,7 +504,7 @@
   t)
 
 (defun handle-comm-close (kernel msg)
-  (info "[kernel] Handling 'comm_close'~%")
+  (v:info :kernel "Handling comm_close")
   (with-slots (comms) kernel
     (let* ((content (message-content msg))
            (metadata (message-metadata msg))
@@ -509,7 +517,7 @@
   t)
 
 (defun handle-history-request (kernel msg)
-  (info "[kernel] Handling 'history_request'~%")
+  (v:info :kernel "Handling history_request message")
   (with-slots (shell history) kernel
     (let* ((content (message-content msg))
            (output (json-getf content "output"))

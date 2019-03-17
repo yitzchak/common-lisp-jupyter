@@ -145,8 +145,7 @@ The wire-deserialization part follows.
            (key (channel-key channel))
            (wire-parts (wire-serialize msg :key key)))
       (bordeaux-threads:acquire-lock *message-send-lock*)
-      ;;DEBUG>>
-      ;;(info "~%[Send] wire parts: ~W~%" wire-parts)
+      (v:debug :message "Sending parts: ~W" wire-parts)
       (dolist (part wire-parts)
         (if (stringp part)
           (pzmq:send socket part :sndmore t)
@@ -181,7 +180,6 @@ The wire-deserialization part follows.
           (key (channel-key channel)))
       (bordeaux-threads:acquire-lock *message-recv-lock*)
       (let ((parts (recv-parts socket)))
-        ;;DEBUG>>
-        ;;(info "[Recv]: parts: ~A~%" (mapcar (lambda (part) (format nil "~W" part)) parts))
+        (v:debug :message "Received parts: ~A" (mapcar (lambda (part) (format nil "~W" part)) parts))
         (wire-deserialize parts :key key)))
     (bordeaux-threads:release-lock *message-recv-lock*)))

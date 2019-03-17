@@ -16,7 +16,8 @@
     :pzmq
     :trivial-gray-streams
     :trivial-mimes
-    :uuid)
+    :uuid
+    :verbose)
   :components
     ((:module res
       :components

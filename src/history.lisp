@@ -57,10 +57,10 @@
       (setf date (file-write-date path)))))
 
 (defmethod start ((h history))
-  (info "[history] Starting...~%"))
+  (v:info :history "Starting history"))
 
 (defmethod stop ((h history))
-  (info "[history] Stopped.~%")
+  (v:info :history "Stopping history")
   (write-history h))
 
 (defun add-cell (history number input)
