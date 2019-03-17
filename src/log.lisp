@@ -18,7 +18,7 @@
     (bordeaux-threads:with-lock-held (lock)
       (uiop:ensure-all-directories-exist (list path))
       (setf stream (open path :direction :output
-                              :if-exists :supersede
+                              :if-exists :rename
                               :if-does-not-exist :create)))))
 
 (defmethod stop ((l sink))
