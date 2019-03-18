@@ -8,15 +8,12 @@
 
 ; (defvar maxima::$kernel_info nil)
 
+(defparameter v:*process-locally* t)
+
 (defun fatal-error (format-control &rest format-arguments)
   (v:fatal :kernel 'simple-error :format-control format-control
                                  :format-arguments format-arguments)
   (apply #'error format-control format-arguments))
-
-(defun info (&rest args)
-  "Display informational message regarding kernel status."
-  (when nil;maxima::$kernel_info
-    (apply #'format *trace-output* args)))
 
 (defun make-uuid ()
   (string-downcase (remove #\- (format nil "~W" (uuid:make-v4-uuid)))))
