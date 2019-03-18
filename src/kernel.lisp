@@ -356,6 +356,7 @@
              (*standard-output* (make-iopub-stream iopub msg "stdout"
                                                    prompt-prefix prompt-suffix))
              (*debug-io* *standard-output*)
+             (*trace-output* *standard-output*)
              (results (let* ((*package* package)
                              (r (evaluate-code kernel code)))
                         (setf package *package*)
