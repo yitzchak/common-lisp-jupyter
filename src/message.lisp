@@ -71,26 +71,26 @@ The wire-serialization of IPython kernel messages uses multi-parts ZMQ messages.
 (defun octets-to-hex-string (bytes)
   (apply #'concatenate (cons 'string (map 'list (lambda (x) (format nil "~(~2,'0X~)" x)) bytes))))
 
-(defun message-signing (key parts)
-  (let ((hmac (ironclad:make-hmac key :SHA256)))
+(defun message-signing (mac-args parts)
+  (let ((mac (apply #'ironclad:make-mac mac-args)))
     ;; updates
-    (loop for part in parts
-       do (let ((part-bin (babel:string-to-octets part)))
-            (ironclad:update-hmac hmac part-bin)))
+    (iter
+      (for part in parts)
+      (ironclad:update-mac mac (babel:string-to-octets part)))
     ;; digest
-    (octets-to-hex-string (ironclad:hmac-digest hmac))))
+    (octets-to-hex-string (ironclad:produce-mac mac))))
 
 ;; XXX: should be a defconstant but  strings are not EQL-able...
 (defvar +WIRE-IDS-MSG-DELIMITER+ "<IDS|MSG>")
 
-(defmethod wire-serialize ((msg message) &key (key nil))
+(defun wire-serialize (mac-args msg)
   (with-slots (header parent-header identities metadata content buffers) msg
     (let* ((header-json (jsown:to-json header))
            (parent-header-json (jsown:to-json parent-header))
            (metadata-json (jsown:to-json metadata))
            (content-json (jsown:to-json content))
-           (sig (if key
-                    (message-signing key (list header-json parent-header-json metadata-json content-json))
+           (sig (if mac-args
+                    (message-signing mac-args (list header-json parent-header-json metadata-json content-json))
                     "")))
       (append identities
         (list +WIRE-IDS-MSG-DELIMITER+
@@ -109,7 +109,7 @@ The wire-deserialization part follows.
 
 |#
 
-(defun wire-deserialize (parts &key (key nil))
+(defun wire-deserialize (mac-args parts)
   (let ((delim-index (position +WIRE-IDS-MSG-DELIMITER+ parts :test  #'equal)))
     (when (not delim-index)
       (error "[Wire] No <IDS|MSG> delimiter found in message parts"))
@@ -117,7 +117,7 @@ The wire-deserialization part follows.
            (sig (nth (1+ delim-index) parts))
            (buffers (subseq parts (+ 6 delim-index)))
            (parts (subseq parts (+ 2 delim-index) (+ 6 delim-index)))
-           (expected-sig (if key (message-signing key parts) "")))
+           (expected-sig (if mac-args (message-signing mac-args parts) "")))
       (unless (equal sig expected-sig)
         (error "[Wire] Signature mismatch in message"))
       (destructuring-bind (header parent-header metadata content) parts
@@ -137,8 +137,8 @@ The wire-deserialization part follows.
 |#
 
 (defun message-send (channel msg)
-  (with-slots (send-lock socket key) channel
-    (let ((wire-parts (wire-serialize msg :key key)))
+  (with-slots (send-lock socket mac-args) channel
+    (let ((wire-parts (wire-serialize mac-args msg)))
       (bordeaux-threads:with-lock-held (send-lock)
         ; (v:debug :message "Sending parts: ~W" wire-parts)
         (dolist (part wire-parts)
@@ -167,8 +167,8 @@ The wire-deserialization part follows.
       (while (pzmq:getsockopt socket :rcvmore)))))
 
 (defun message-recv (channel)
-  (with-slots (recv-lock socket key) channel
+  (with-slots (recv-lock socket mac-args) channel
     (bordeaux-threads:with-lock-held (recv-lock)
       (let ((parts (recv-parts socket)))
         ; (v:debug :message "Received parts: ~A" (mapcar (lambda (part) (format nil "~W" part)) parts))
-        (wire-deserialize parts :key key)))))
+        (wire-deserialize mac-args parts)))))

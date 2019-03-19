@@ -164,6 +164,19 @@
 
 (defmethod complete-code (kernel code cursor-pos))
 
+(defun compute-mac-args (k)
+  (with-slots (key signature-scheme) k
+    (when key
+      (if (starts-with-subseq "hmac-" signature-scheme)
+        (let* ((digest-name (subseq signature-scheme 5))
+               (digest-type (find-symbol (string-upcase digest-name) 'ironclad)))
+          (if (and digest-type (ironclad:digest-supported-p digest-type))
+            (progn
+              (inform :info k "Using hmac with ~A digest for message signing." digest-name)
+              (list 'ironclad:hmac key digest-type))
+            (inform :error k "Unknown digest ~A" digest-name)))
+        (inform :error k "Unknown signature scheme ~A" signature-scheme)))))
+
 ;; Start all channels.
 (defmethod start ((k kernel))
   (with-slots (connection-file control-port ctx hb hb-port history iopub
@@ -192,42 +205,43 @@
                   nil
                   (babel:string-to-octets encoded-key :encoding :ASCII))
             signature-scheme (json-getf config-js "signature_scheme")))
-    (setq session (make-uuid)
-          ctx (pzmq:ctx-new)
-          hb (make-instance 'hb-channel
-                            :sink sink
-                            :key key
-                            :socket (pzmq:socket ctx :rep)
-                            :transport transport
-                            :ip ip
-                            :port hb-port)
-          iopub (make-instance 'iopub-channel
-                               :sink sink
-                               :key key
-                               :socket (pzmq:socket ctx :pub)
-                               :transport transport
-                               :ip ip
-                               :port iopub-port)
-          shell (make-instance 'shell-channel
-                               :sink sink
-                               :key key
-                               :socket (pzmq:socket ctx :router)
-                               :transport transport
-                               :ip ip
-                               :port shell-port)
-          stdin (make-instance 'stdin-channel
-                               :sink sink
-                               :key key
-                               :socket (pzmq:socket ctx :dealer)
-                               :transport transport
-                               :ip ip
-                               :port stdin-port)
-          history (make-instance 'history
+    (let ((mac-args (compute-mac-args k)))
+      (setq session (make-uuid)
+            ctx (pzmq:ctx-new)
+            hb (make-instance 'hb-channel
+                              :sink sink
+                              :mac-args mac-args
+                              :socket (pzmq:socket ctx :rep)
+                              :transport transport
+                              :ip ip
+                              :port hb-port)
+            iopub (make-instance 'iopub-channel
                                  :sink sink
-                                 :path (uiop:xdg-data-home
-                                         (make-pathname :directory '(:relative "common-lisp-jupyter")
-                                                        :name language-name
-                                                        :type "history"))))
+                                 :mac-args mac-args
+                                 :socket (pzmq:socket ctx :pub)
+                                 :transport transport
+                                 :ip ip
+                                 :port iopub-port)
+            shell (make-instance 'shell-channel
+                                 :sink sink
+                                 :mac-args mac-args
+                                 :socket (pzmq:socket ctx :router)
+                                 :transport transport
+                                 :ip ip
+                                 :port shell-port)
+            stdin (make-instance 'stdin-channel
+                                 :sink sink
+                                 :mac-args mac-args
+                                 :socket (pzmq:socket ctx :dealer)
+                                 :transport transport
+                                 :ip ip
+                                 :port stdin-port)
+            history (make-instance 'history
+                                   :sink sink
+                                   :path (uiop:xdg-data-home
+                                           (make-pathname :directory '(:relative "common-lisp-jupyter")
+                                                          :name language-name
+                                                          :type "history")))))
     (start hb)
     (start iopub)
     (start shell)
@@ -252,19 +266,6 @@
   "Run a kernel based on a kernel class and a connection file."
   (unless (stringp connection-file)
     (error "Wrong connection file argument (expecting a string)"))
-  ; (inform :info k "Using connection file ~A" connection-file-name)
-  ; (let* ((config-js (jsown:parse (read-file-into-string connection-file-name)))
-  ;        (transport (json-getf config-js "transport"))
-  ;        (ip (json-getf config-js "ip"))
-  ;        (shell-port (json-getf config-js "shell_port"))
-  ;        (stdin-port (json-getf config-js "stdin_port"))
-  ;        (iopub-port (json-getf config-js "iopub_port"))
-  ;        (control-port (json-getf config-js "control_port"))
-  ;        (hb-port (json-getf config-js "hb_port"))
-  ;        (key (json-getf config-js "key"))
-  ;        (signature-scheme (json-getf config-js "signature_scheme")))
-  ;   (when (not (string= signature-scheme "hmac-sha256"))
-  ;     (error "Signature scheme 'hmac-sha256' required, was provided ~S." signature-scheme))
   (iter
     (with kernel = (make-instance kernel-class
                                   :connection-file connection-file))

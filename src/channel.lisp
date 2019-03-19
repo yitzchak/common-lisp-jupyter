@@ -13,8 +13,8 @@ Jupyter protocol constants
 
 
 (defclass channel (source)
-  ((key :initarg :key
-        :reader channel-key)
+  ((mac-args :initarg :mac-args
+        :reader channel-mac-args)
    (socket :initarg :socket
            :reader channel-socket)
    (transport :initarg :transport
@@ -36,12 +36,10 @@ Jupyter protocol constants
   (:documentation "Start the resource."))
 
 (defmethod start ((ch channel))
-  (inform :info ch "Starting channel")
-  (pzmq:bind (channel-socket ch)
-             (format nil "~A://~A:~A"
-                     (channel-transport ch)
-                     (channel-ip ch)
-                     (channel-port ch))))
+  (with-slots (socket transport ip port) ch
+    (let ((uri (format nil "~A://~A:~A" transport ip port)))
+      (inform :info ch "Starting channel on ~A" uri)
+      (pzmq:bind socket uri))))
 
 (defgeneric stop (ch)
   (:documentation "Stop the resource."))
