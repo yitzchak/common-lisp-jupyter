@@ -2,7 +2,7 @@
 
 (defvar +history-size+ 1000)
 
-(defclass history ()
+(defclass history (source)
   ((path :initarg :path
          :accessor history-path)
    (date :initform nil
@@ -57,10 +57,10 @@
       (setf date (file-write-date path)))))
 
 (defmethod start ((h history))
-  (info "[history] Starting...~%"))
+  (inform :info h "Starting history"))
 
 (defmethod stop ((h history))
-  (info "[history] Stopped.~%")
+  (inform :info h "Stopping history")
   (write-history h))
 
 (defun add-cell (history number input)

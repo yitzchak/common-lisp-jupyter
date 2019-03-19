@@ -27,6 +27,8 @@
         ((:file "packages")
          (:file "utils")
          (:file "config")
+         (:file "log")
+         (:file "mac")
          (:file "channel")
          (:file "heartbeat")
          (:file "message")

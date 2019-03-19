@@ -167,7 +167,6 @@
                                      model-name view-module
                                      view-module-version view-name))
          (class (gethash name *widgets*)))
-    (jupyter:info "~A~%" name)
     (when class
       (make-widget class))))
 

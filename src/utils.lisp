@@ -8,13 +8,8 @@
 
 ; (defvar maxima::$kernel_info nil)
 
-(defun info (&rest args)
-  "Display informational message regarding kernel status."
-  (when nil;maxima::$kernel_info
-    (apply #'format *trace-output* args)))
-
 (defun make-uuid ()
-  (string-downcase (remove #\- (format nil "~W" (uuid:make-v4-uuid)))))
+  (remove #\- (format nil "~(~A~)" (uuid:make-v4-uuid))))
 
 (defun install-kernel (&key argv class display-name kernel-name language resources)
   "Install a kernel spec file given a kernel name and a language name."
