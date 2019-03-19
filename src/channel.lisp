@@ -13,8 +13,8 @@ Jupyter protocol constants
 
 
 (defclass channel (source)
-  ((mac-args :initarg :mac-args
-        :reader channel-mac-args)
+  ((mac :initarg :mac
+        :reader channel-mac)
    (socket :initarg :socket
            :reader channel-socket)
    (transport :initarg :transport

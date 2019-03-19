@@ -104,6 +104,9 @@
    (ctx :initform nil
         :accessor kernel-ctx
         :documentation "pzmq ctx handle.")
+   (mac :initform nil
+        :accessor kernel-mac
+        :documentation "Message authification.")
    (hb :initform nil
        :accessor kernel-hb
        :documentation "Heartbeat channel.")
@@ -164,23 +167,10 @@
 
 (defmethod complete-code (kernel code cursor-pos))
 
-(defun compute-mac-args (k)
-  (with-slots (key signature-scheme) k
-    (when key
-      (if (starts-with-subseq "hmac-" signature-scheme)
-        (let* ((digest-name (subseq signature-scheme 5))
-               (digest-type (find-symbol (string-upcase digest-name) 'ironclad)))
-          (if (and digest-type (ironclad:digest-supported-p digest-type))
-            (progn
-              (inform :info k "Using hmac with ~A digest for message signing." digest-name)
-              (list 'ironclad:hmac key digest-type))
-            (inform :error k "Unknown digest ~A" digest-name)))
-        (inform :error k "Unknown signature scheme ~A" signature-scheme)))))
-
 ;; Start all channels.
 (defmethod start ((k kernel))
   (with-slots (connection-file control-port ctx hb hb-port history iopub
-               iopub-port ip key language-name name prompt-prefix prompt-suffix
+               iopub-port ip key language-name mac name prompt-prefix prompt-suffix
                session shell shell-port signature-scheme sink stdin stdin-port
                transport)
               k
@@ -205,43 +195,47 @@
                   nil
                   (babel:string-to-octets encoded-key :encoding :ASCII))
             signature-scheme (json-getf config-js "signature_scheme")))
-    (let ((mac-args (compute-mac-args k)))
-      (setq session (make-uuid)
-            ctx (pzmq:ctx-new)
-            hb (make-instance 'hb-channel
-                              :sink sink
-                              :mac-args mac-args
-                              :socket (pzmq:socket ctx :rep)
-                              :transport transport
-                              :ip ip
-                              :port hb-port)
-            iopub (make-instance 'iopub-channel
+    (setq session (make-uuid)
+          ctx (pzmq:ctx-new)
+          mac (make-instance 'mac
+                             :sink sink
+                             :key key
+                             :signature-scheme signature-scheme)
+          hb (make-instance 'hb-channel
+                            :sink sink
+                            :mac mac
+                            :socket (pzmq:socket ctx :rep)
+                            :transport transport
+                            :ip ip
+                            :port hb-port)
+          iopub (make-instance 'iopub-channel
+                               :sink sink
+                               :mac mac
+                               :socket (pzmq:socket ctx :pub)
+                               :transport transport
+                               :ip ip
+                               :port iopub-port)
+          shell (make-instance 'shell-channel
+                               :sink sink
+                               :mac mac
+                               :socket (pzmq:socket ctx :router)
+                               :transport transport
+                               :ip ip
+                               :port shell-port)
+          stdin (make-instance 'stdin-channel
+                               :sink sink
+                               :mac mac
+                               :socket (pzmq:socket ctx :dealer)
+                               :transport transport
+                               :ip ip
+                               :port stdin-port)
+          history (make-instance 'history
                                  :sink sink
-                                 :mac-args mac-args
-                                 :socket (pzmq:socket ctx :pub)
-                                 :transport transport
-                                 :ip ip
-                                 :port iopub-port)
-            shell (make-instance 'shell-channel
-                                 :sink sink
-                                 :mac-args mac-args
-                                 :socket (pzmq:socket ctx :router)
-                                 :transport transport
-                                 :ip ip
-                                 :port shell-port)
-            stdin (make-instance 'stdin-channel
-                                 :sink sink
-                                 :mac-args mac-args
-                                 :socket (pzmq:socket ctx :dealer)
-                                 :transport transport
-                                 :ip ip
-                                 :port stdin-port)
-            history (make-instance 'history
-                                   :sink sink
-                                   :path (uiop:xdg-data-home
-                                           (make-pathname :directory '(:relative "common-lisp-jupyter")
-                                                          :name language-name
-                                                          :type "history")))))
+                                 :path (uiop:xdg-data-home
+                                         (make-pathname :directory '(:relative "common-lisp-jupyter")
+                                                        :name language-name
+                                                        :type "history"))))
+    (start mac)
     (start hb)
     (start iopub)
     (start shell)
@@ -252,12 +246,13 @@
 
 ;; Stop all channels and destroy the control.
 (defmethod stop ((k kernel))
-  (with-slots (sink ctx hb iopub shell stdin history name) k
+  (with-slots (sink ctx hb iopub shell stdin history mac name) k
     (inform :info k "Stopping ~A kernel" name)
     (stop hb)
     (stop iopub)
     (stop shell)
     (stop stdin)
+    (stop mac)
     (stop history)
     (stop sink)
     (pzmq:ctx-destroy ctx)))
