@@ -153,8 +153,8 @@ The wire-deserialization part follows.
   (pzmq:with-message msg
     (iter
       (pzmq:msg-recv msg socket)
-      (for data = (pzmq:msg-data msg))
-      (for len = (pzmq:msg-size msg))
+      (for data next (pzmq:msg-data msg))
+      (for len next (pzmq:msg-size msg))
       (collect
         (handler-case
           (cffi:foreign-string-to-lisp data :count len :encoding :utf-8)
@@ -162,7 +162,7 @@ The wire-deserialization part follows.
             (let ((res (make-array len :element-type 'unsigned-byte)))
               (dotimes (i len res)
                 (setf (aref res i) (cffi:mem-aref data :unsigned-char i)))))))
-      (while (pzmq:getsockopt socket :rcvmore)))))
+      (until (zerop (pzmq::%msg-more msg))))))
 
 (defun message-recv (channel)
   (with-slots (recv-lock socket mac) channel
