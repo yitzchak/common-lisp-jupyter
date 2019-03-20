@@ -29,7 +29,7 @@
   (inform :info m "Stopping message authentification"))
 
 (defun octets-to-hex-string (bytes)
-  (apply #'concatenate (cons 'string (map 'list (lambda (x) (format nil "~(~2,'0X~)" x)) bytes))))
+  (format nil "~(~{~2,'0X~}~)" (coerce bytes 'list)))
 
 (defun compute-signature (m parts)
   (with-slots (args) m
