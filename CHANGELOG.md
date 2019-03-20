@@ -7,6 +7,13 @@ of how the versioning scheme that this project does not use is clearly superior
 to random natural numbers and how incrementing the minor version number
 indicates backward compatible changes, unless it does not.
 
+- 2019-03-20 — Refactor message serialization and add binary `buffers` support
+  along with `buffer_paths` support for widgets.
+- 2019-03-19 — Add file based logging so that `*trace-output*` can be redirected
+  during evaluation.
+- 2019-03-19 — Add per-channel send and receive locks.
+- 2019-03-19 — Add support for message signature verification with digests other
+  than SHA256.
 - 2019-03-15 — Add `trivial-gray-streams:stream-line-column` method for
   `stdin-stream` in order to fix `*query-io*` failure in CMUCL.
 - 2019-03-15 — Add support for CMUCL Roswell based installation.
