@@ -142,6 +142,24 @@
     (t
       (values nil nil))))
 
+(defun inject-buffer (state buffer-path buffer)
+  (let ((node (car buffer-path))
+        (rest (cdr buffer-path)))
+    (if rest
+      (inject-buffer (if (stringp node)
+                       (jsown:val state node)
+                       (elt state node))
+                     rest buffer)
+      (if (stringp node)
+        (setf (jsown:val state node) buffer)
+        (setf (elt state node) buffer)))))
+
+(defun inject-buffers (state buffer-paths buffers)
+  (iter
+    (for buffer-path in buffer-paths)
+    (for buffer in buffers)
+    (inject-buffer state buffer-path buffer)))
+
 (defun send-state (w &optional name)
   (when (not *state-lock*)
     (let ((state (to-json-state w name)))
@@ -153,11 +171,13 @@
           (jsown:new-js ("version" +protocol-version+))
           buffers)))))
 
-(defun update-state (w data)
+(defun update-state (w data buffers)
   (let ((*state-lock* t))
     (iter
-      (for state next (jupyter:json-getf data "state"))
-      (for keywords next (jsown:keywords state))
+      (with state = (jupyter:json-getf data "state"))
+      (with buffer-paths = (jupyter:json-getf data "buffer_paths"))
+      (inject-buffers state buffer-paths buffers)
+      (with keywords = (jsown:keywords state))
       (for def in (closer-mop:class-slots (class-of w)))
       (for name next (closer-mop:slot-definition-name def))
       (for key next (symbol-to-key name))
@@ -166,10 +186,10 @@
         (setf (slot-value w name)
           (deserialize-trait w type name (jupyter:json-getf state key)))))))
 
-(defmethod jupyter:on-comm-message ((w widget) data metadata)
+(defmethod jupyter:on-comm-message ((w widget) data metadata buffers)
   (declare (ignore metadata))
   (switch ((jupyter:json-getf data "method") :test #'equal)
-    ("update" (update-state w data))
+    ("update" (update-state w data buffers))
     ("request_state" (send-state w))
     (otherwise (call-next-method))))
 
@@ -190,7 +210,7 @@
           buffers)
         inst))))
 
-(defmethod jupyter:create-comm ((target-name (eql :|jupyter.widget|)) id data metadata)
+(defmethod jupyter:create-comm ((target-name (eql :|jupyter.widget|)) id data metadata buffers)
   (let* ((state (jupyter:json-getf data "state"))
          (model-name (jupyter:json-getf state "_model_name"))
          (model-module (jupyter:json-getf state "_model_module"))
@@ -203,7 +223,10 @@
                                      view-module-version view-name))
          (class (gethash name *widgets*)))
     (when class
-      (make-widget class))))
+      (with-trait-silence
+        (let ((w (make-widget class)))
+          (update-state w data buffers)
+          w)))))
 
 (defun display (widget)
   "Display a widget in the notebook."

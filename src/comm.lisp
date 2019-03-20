@@ -13,21 +13,21 @@
 (defun get-comm (id)
   (gethash id (kernel-comms *kernel*)))
 
-(defgeneric create-comm (target-name id data metadata))
+(defgeneric create-comm (target-name id data metadata buffers))
 
-(defmethod create-comm (target-name id data metadata))
+(defmethod create-comm (target-name id data metadata buffers))
 
-(defgeneric on-comm-open (comm data metadata))
+(defgeneric on-comm-open (comm data metadata buffers))
 
-(defmethod on-comm-open (comm data metadata))
+(defmethod on-comm-open (comm data metadata buffers))
 
-(defgeneric on-comm-message (comm data metadata))
+(defgeneric on-comm-message (comm data metadata buffers))
 
-(defmethod on-comm-message (comm data metadata))
+(defmethod on-comm-message (comm data metadata buffers))
 
-(defgeneric on-comm-close (comm data metadata))
+(defgeneric on-comm-close (comm data metadata buffers))
 
-(defmethod on-comm-close (comm data metadata))
+(defmethod on-comm-close (comm data metadata buffers))
 
 (defun send-comm-open (comm &optional data metadata buffers)
   (with-slots (id kernel target-name) comm

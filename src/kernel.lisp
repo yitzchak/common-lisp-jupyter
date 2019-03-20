@@ -481,14 +481,15 @@
   (with-slots (iopub session comms) kernel
     (let* ((content (message-content msg))
            (metadata (message-metadata msg))
+           (buffers (message-buffers msg))
            (id (json-getf content "comm_id"))
            (target-name (json-getf content "target_name"))
            (data (json-getf content "data"))
-           (inst (create-comm (intern target-name 'keyword) id data metadata)))
+           (inst (create-comm (intern target-name 'keyword) id data metadata buffers)))
       (if inst
         (progn
           (setf (gethash id comms) inst)
-          (on-comm-open inst data metadata))
+          (on-comm-open inst data metadata buffers))
         (send-comm-close-orphan iopub session id))))
   t)
 
@@ -497,11 +498,12 @@
   (with-slots (comms) kernel
     (let* ((content (message-content msg))
            (metadata (message-metadata msg))
+           (buffers (message-buffers msg))
            (id (json-getf content "comm_id"))
            (data (json-getf content "data"))
            (inst (gethash id comms)))
       (when inst
-        (on-comm-message inst data metadata))))
+        (on-comm-message inst data metadata buffers))))
   t)
 
 (defun handle-comm-close (kernel msg)
@@ -509,11 +511,12 @@
   (with-slots (comms) kernel
     (let* ((content (message-content msg))
            (metadata (message-metadata msg))
+           (buffers (message-buffers msg))
            (id (json-getf content "comm_id"))
            (data (json-getf content "data"))
            (inst (gethash id comms)))
       (when inst
-        (on-comm-close inst data metadata)
+        (on-comm-close inst data metadata buffers)
         (remhash id comms))))
   t)
 

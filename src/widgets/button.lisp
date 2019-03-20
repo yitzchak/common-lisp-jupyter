@@ -24,8 +24,8 @@ user clicking on the button.  The click event itself is stateless."))
 
 (defmethod on-button-click (w))
 
-(defmethod jupyter:on-comm-message ((w button) data metadata)
-  (declare (ignore metadata))
+(defmethod jupyter:on-comm-message ((w button) data metadata buffers)
+  (declare (ignore metadata buffers))
   (if (and (equal (jupyter:json-getf data "method") "custom")
            (equal (jupyter:json-getf (jupyter:json-getf data "content") "event") "click"))
     (on-button-click w)
