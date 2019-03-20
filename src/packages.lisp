@@ -2,9 +2,10 @@
   (:use #:common-lisp #:alexandria #:iterate)
   (:export
     ; utils
-    #:info
     #:install-kernel
     #:json-getf
+    ; log
+    #:inform
     ; results
     #:file
     #:gif-file
