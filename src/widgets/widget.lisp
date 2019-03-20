@@ -118,7 +118,7 @@
           ((and (vectorp v) (equal (array-element-type v) '(unsigned-byte 8)))
             (collect (append path (list k)) into buffer-paths)
             (collect v into buffers)
-            (setf (jsown:val state k) :null))
+            (jsown:remkey state k))
           (t
             (multiple-value-bind (sub-buffer-paths sub-buffers) (extract-buffers v (append path (list k)))
               (appending sub-buffer-paths into buffer-paths)

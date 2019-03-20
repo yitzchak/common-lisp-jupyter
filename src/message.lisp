@@ -78,17 +78,19 @@
     (bordeaux-threads:with-lock-held (send-lock)
       (iter
         (for part in identities)
-        (pzmq:send socket part :sndmore t))
+        (for len next (length part))
+        (if (stringp part)
+          (pzmq:send socket part :sndmore t)
+          (cffi:with-foreign-array (m part (list :array :uint8 len))
+            (pzmq:send socket m :len len :sndmore t))))
       (pzmq:send socket +IDS-MSG-DELIMITER+ :sndmore t)
       (iter
         (for part in body)
         (pzmq:send socket part :sndmore t))
       (iter
         (for part in buffers)
-        (with len = (length part))
-        (cffi:with-foreign-pointer (m len)
-          (dotimes (j len)
-            (setf (cffi:mem-aref m :unsigned-char j) (elt part j)))
+        (for len next (length part))
+        (cffi:with-foreign-array (m part (list :array :uint8 len))
           (pzmq:send socket m :len len :sndmore t)))
       (pzmq:send socket nil))))
 
@@ -106,17 +108,17 @@
 
 (defun read-array-part (socket msg)
   (pzmq:msg-recv msg socket)
-  (let* ((data (pzmq:msg-data msg))
-          (len (pzmq:msg-size msg))
-          (res (make-array len :element-type 'unsigned-byte)))
-    (dotimes (i len res)
-    (setf (aref res i) (cffi:mem-aref data :unsigned-char i)))))
+  (cffi:foreign-array-to-lisp (pzmq:msg-data msg)
+                              (list :array :uint8 (pzmq:msg-size msg))))
 
 (defun read-string-part (socket msg)
   (pzmq:msg-recv msg socket)
-  (cffi:foreign-string-to-lisp (pzmq:msg-data msg)
-                               :count (pzmq:msg-size msg)
-                               :encoding :utf-8))
+  (let ((data (pzmq:msg-data msg))
+        (len (pzmq:msg-size msg)))
+    (handler-case
+      (cffi:foreign-string-to-lisp data :count len :encoding :utf-8)
+        (babel-encodings:character-decoding-error ()
+          (cffi:foreign-array-to-lisp data (list :array :uint8 len))))))
 
 (defun recv-parts (ch)
   (with-slots (recv-lock socket) ch
