@@ -35,7 +35,7 @@
       (with-slots (iopub session comms) kernel
         (setf (gethash id comms) comm)
         (message-send iopub
-          (make-orphan-message session "comm_open" '("comm_open")
+          (make-orphan-message session "comm_open"
                                (jsown:new-js
                                  ("comm_id" id)
                                  ("target_name" target-name)
@@ -47,7 +47,7 @@
     (when kernel
       (with-slots (iopub session) kernel
         (message-send iopub
-          (make-orphan-message session "comm_msg" '("comm_msg")
+          (make-orphan-message session "comm_msg"
                                (jsown:new-js
                                  ("comm_id" id)
                                  ("data" (or data (jsown:new-js))))
@@ -59,7 +59,7 @@
       (with-slots (iopub session comms) kernel
         (remhash id comms)
         (message-send iopub
-          (make-orphan-message session "comm_close" '("comm_close")
+          (make-orphan-message session "comm_close"
                                (jsown:new-js
                                  ("comm_id" id)
                                  ("data" (or data (jsown:new-js))))

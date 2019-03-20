@@ -20,7 +20,7 @@
                   :initform (jsown:new-js)
                   :accessor message-parent-header)
    (identities :initarg :identities
-               :initform nil
+               :initform (list (uuid:uuid-to-byte-array (uuid:make-v4-uuid)))
                :accessor message-identities)
    (metadata :initarg :metadata
              :initform (jsown:new-js)
@@ -49,7 +49,7 @@
                    :metadata (or metadata (jsown:new-js))
                    :buffers buffers)))
 
-(defun make-orphan-message (session-id msg-type identities content &optional metadata buffers)
+(defun make-orphan-message (session-id msg-type content &optional metadata buffers)
   (make-instance 'message
                  :header (jsown:new-js
                            ("msg_id" (make-uuid))
@@ -57,13 +57,12 @@
                            ("session" session-id)
                            ("msg_type" msg-type)
                            ("version" +KERNEL-PROTOCOL-VERSION+))
-                 :identities identities
                  :content content
                  :metadata (or metadata (jsown:new-js))
                  :buffers buffers))
 
 ;; XXX: should be a defconstant but  strings are not EQL-able...
-(defvar +IDS-MSG-DELIMITER+ "<IDS|MSG>")
+(defvar +IDS-MSG-DELIMITER+ (babel:string-to-octets "<IDS|MSG>"))
 (defvar +BODY-LENGTH+ 5)
 
 
@@ -73,25 +72,27 @@
 
 |#
 
+(defun send-string-part (ch part)
+  (pzmq:send (channel-socket ch) part :sndmore t))
+
+(defun send-binary-part (ch part)
+  (let ((len (length part)))
+    (cffi:with-foreign-array (m part (list :array :uint8 len))
+      (pzmq:send (channel-socket ch) m :len len :sndmore t))))
+
 (defun send-parts (ch identities body buffers)
   (with-slots (send-lock socket) ch
     (bordeaux-threads:with-lock-held (send-lock)
       (iter
         (for part in identities)
-        (for len next (length part))
-        (if (stringp part)
-          (pzmq:send socket part :sndmore t)
-          (cffi:with-foreign-array (m part (list :array :uint8 len))
-            (pzmq:send socket m :len len :sndmore t))))
-      (pzmq:send socket +IDS-MSG-DELIMITER+ :sndmore t)
+        (send-binary-part ch part))
+      (send-binary-part ch +IDS-MSG-DELIMITER+)
       (iter
         (for part in body)
-        (pzmq:send socket part :sndmore t))
+        (send-string-part ch part))
       (iter
         (for part in buffers)
-        (for len next (length part))
-        (cffi:with-foreign-array (m part (list :array :uint8 len))
-          (pzmq:send socket m :len len :sndmore t)))
+        (send-binary-part ch part))
       (pzmq:send socket nil))))
 
 (defun message-send (ch msg)
@@ -102,48 +103,49 @@
                     (cons (compute-signature mac tail) tail)
                     buffers)))))
 
-(defun more-parts (socket msg)
-  (declare (ignore socket))
+(defun more-parts (ch msg)
+  (declare (ignore ch))
   (not (zerop (pzmq::%msg-more msg))))
 
-(defun read-array-part (socket msg)
-  (pzmq:msg-recv msg socket)
+(defun read-binary-part (ch msg)
+  (pzmq:msg-recv msg (channel-socket ch))
   (cffi:foreign-array-to-lisp (pzmq:msg-data msg)
                               (list :array :uint8 (pzmq:msg-size msg))))
 
-(defun read-string-part (socket msg)
-  (pzmq:msg-recv msg socket)
-  (let ((data (pzmq:msg-data msg))
-        (len (pzmq:msg-size msg)))
-    (handler-case
-      (cffi:foreign-string-to-lisp data :count len :encoding :utf-8)
-        (babel-encodings:character-decoding-error ()
-          (cffi:foreign-array-to-lisp data (list :array :uint8 len))))))
+(defun read-string-part (ch msg)
+  (pzmq:msg-recv msg (channel-socket ch))
+  (handler-case
+    (cffi:foreign-string-to-lisp (pzmq:msg-data msg)
+                                 :count (pzmq:msg-size msg)
+                                 :encoding :utf-8)
+    (babel-encodings:character-decoding-error ()
+      (inform :warn ch "Unable to decode message part.")
+      "")))
 
 (defun recv-parts (ch)
-  (with-slots (recv-lock socket) ch
+  (with-slots (recv-lock) ch
     (bordeaux-threads:with-lock-held (recv-lock)
       (pzmq:with-message msg
         (values
           ; Read the identities first
           (iter
-            (for part next (read-string-part socket msg))
-            (until (equal part +IDS-MSG-DELIMITER+))
+            (for part next (read-binary-part ch msg))
+            (until (equalp part +IDS-MSG-DELIMITER+))
             (collect part)
-            (unless (more-parts socket msg)
-              (inform :warn ch "No ~A delimiter found in message parts" +IDS-MSG-DELIMITER+)
+            (unless (more-parts ch msg)
+              (inform :warn ch "No identities/message delimiter found in message parts")
               (finish)))
           ; Read the message body
           (iter
             (for i from 1 to +BODY-LENGTH+)
-            (unless (more-parts socket msg)
+            (unless (more-parts ch msg)
               (inform :warn ch "Incomplete message body.")
               (finish))
-            (collect (read-string-part socket msg)))
+            (collect (read-string-part ch msg)))
           ; The remaining parts should be binary buffers
           (iter
-            (while (more-parts socket msg))
-            (collect (read-array-part socket msg))))))))
+            (while (more-parts ch msg))
+            (collect (read-binary-part ch msg))))))))
 
 (defun message-recv (ch)
   (multiple-value-bind (identities body buffers) (recv-parts ch)
