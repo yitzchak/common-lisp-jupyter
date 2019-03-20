@@ -109,6 +109,39 @@
           (serialize-trait w type name (slot-value w name)))))
     (finally (return state))))
 
+(defun extract-buffers (state &optional path)
+  (cond
+    ((and (listp state) (eq (first state) :obj))
+      (iter
+        (for (k . v) in (cdr state))
+        (cond
+          ((and (vectorp v) (equal (array-element-type v) '(unsigned-byte 8)))
+            (collect (append path (list k)) into buffer-paths)
+            (collect v into buffers)
+            (setf (jsown:val state k) :null))
+          (t
+            (multiple-value-bind (sub-buffer-paths sub-buffers) (extract-buffers v (append path (list k)))
+              (appending sub-buffer-paths into buffer-paths)
+              (appending sub-buffers into buffers))))
+        (finally
+          (return (values buffer-paths buffers)))))
+    ((listp state)
+      (iter
+        (for v in-sequence state with-index i)
+        (cond
+          ((and (vectorp v) (equal (array-element-type v) '(unsigned-byte 8)))
+            (collect (append path (list i)) into buffer-paths)
+            (collect v into buffers)
+            (setf (elt state i) :null))
+          (t
+            (multiple-value-bind (sub-buffer-paths sub-buffers) (extract-buffers v (append path (list i)))
+              (appending sub-buffer-paths into buffer-paths)
+              (appending sub-buffers into buffers))))
+        (finally
+          (return (values buffer-paths buffers)))))
+    (t
+      (values nil nil))))
+
 (defun send-state (w &optional name)
   (when (not *state-lock*)
     (let* ((state (to-json-state w name))

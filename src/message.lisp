@@ -33,7 +33,7 @@
             :accessor message-buffers))
   (:documentation "Representation of IPython messages"))
 
-(defun make-message (parent-msg msg-type content &optional metadata)
+(defun make-message (parent-msg msg-type content &optional metadata buffers)
   (let ((hdr (message-header parent-msg))
         (identities (message-identities parent-msg)))
     (make-instance 'message
@@ -46,9 +46,10 @@
                    :parent-header hdr
                    :identities identities
                    :content content
-                   :metadata (or metadata (jsown:new-js)))))
+                   :metadata (or metadata (jsown:new-js))
+                   :buffers buffers)))
 
-(defun make-orphan-message (session-id msg-type identities content &optional metadata)
+(defun make-orphan-message (session-id msg-type identities content &optional metadata buffers)
   (make-instance 'message
                  :header (jsown:new-js
                            ("msg_id" (make-uuid))
@@ -58,7 +59,8 @@
                            ("version" +KERNEL-PROTOCOL-VERSION+))
                  :identities identities
                  :content content
-                 :metadata (or metadata (jsown:new-js))))
+                 :metadata (or metadata (jsown:new-js))
+                 :buffers buffers))
 
 ;; XXX: should be a defconstant but  strings are not EQL-able...
 (defvar +IDS-MSG-DELIMITER+ "<IDS|MSG>")

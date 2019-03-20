@@ -29,7 +29,7 @@
 
 (defmethod on-comm-close (comm data metadata))
 
-(defun send-comm-open (comm &optional data metadata)
+(defun send-comm-open (comm &optional data metadata buffers)
   (with-slots (id kernel target-name) comm
     (when kernel
       (with-slots (iopub session comms) kernel
@@ -40,9 +40,9 @@
                                  ("comm_id" id)
                                  ("target_name" target-name)
                                  ("data" (or data (jsown:new-js))))
-                               metadata))))))
+                               metadata buffers))))))
 
-(defun send-comm-message (comm &optional data metadata)
+(defun send-comm-message (comm &optional data metadata buffers)
   (with-slots (id kernel) comm
     (when kernel
       (with-slots (iopub session) kernel
@@ -51,9 +51,9 @@
                                (jsown:new-js
                                  ("comm_id" id)
                                  ("data" (or data (jsown:new-js))))
-                               metadata))))))
+                               metadata buffers))))))
 
-(defun send-comm-close (comm &optional data metadata)
+(defun send-comm-close (comm &optional data metadata buffers)
   (with-slots (id kernel) comm
     (when kernel
       (with-slots (iopub session comms) kernel
@@ -63,4 +63,4 @@
                                (jsown:new-js
                                  ("comm_id" id)
                                  ("data" (or data (jsown:new-js))))
-                               metadata))))))
+                               metadata buffers))))))
