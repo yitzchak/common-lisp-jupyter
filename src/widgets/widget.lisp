@@ -144,13 +144,14 @@
 
 (defun send-state (w &optional name)
   (when (not *state-lock*)
-    (let* ((state (to-json-state w name))
-           (data (jsown:new-js
-                   ("method" "update")
-                   ("state" state)
-                   ("buffer_paths" nil))))
-      (jupyter:send-comm-message w data
-        (jsown:new-js ("version" +protocol-version+))))))
+    (let ((state (to-json-state w name)))
+      (multiple-value-bind (buffer-paths buffers) (extract-buffers state)
+        (jupyter:send-comm-message w
+          (jsown:new-js ("method" "update")
+                        ("state" state)
+                        ("buffer_paths" buffer-paths))
+          (jsown:new-js ("version" +protocol-version+))
+          buffers)))))
 
 (defun update-state (w data)
   (let ((*state-lock* t))
@@ -180,13 +181,14 @@
   "Create a Jupyter widget and inform the frontend to create a synchronized model."
   (with-trait-silence
     (let* ((inst (apply 'make-instance class rest))
-           (state (to-json-state inst))
-           (data (jsown:new-js
-                  ("state" state)
-                  ("buffer_paths" nil))))
-      (jupyter:send-comm-open inst data
-        (jsown:new-js ("version" +protocol-version+)))
-      inst)))
+           (state (to-json-state inst)))
+      (multiple-value-bind (buffer-paths buffers) (extract-buffers state)
+        (jupyter:send-comm-open inst
+          (jsown:new-js ("state" state)
+                        ("buffer_paths" buffer-paths))
+          (jsown:new-js ("version" +protocol-version+))
+          buffers)
+        inst))))
 
 (defmethod jupyter:create-comm ((target-name (eql :|jupyter.widget|)) id data metadata)
   (let* ((state (jupyter:json-getf data "state"))
