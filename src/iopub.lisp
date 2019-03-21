@@ -18,7 +18,7 @@
 
 (defun send-status (iopub session status)
   (message-send iopub
-                (make-orphan-message session "status" '("status")
+                (make-orphan-message session "status"
                                      (jsown:new-js
                                        ("execution_state" status)))))
 
@@ -74,7 +74,7 @@
 
 (defun send-comm-close-orphan (iopub session comm-id &optional data)
   (message-send iopub
-                (make-orphan-message session "comm_close" '("comm_close")
+                (make-orphan-message session "comm_close"
                                      (jsown:new-js
                                        ("comm_id" comm-id)
                                        ("data" (or data (jsown:new-js)))))))

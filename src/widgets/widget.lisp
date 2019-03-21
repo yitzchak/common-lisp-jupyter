@@ -109,21 +109,75 @@
           (serialize-trait w type name (slot-value w name)))))
     (finally (return state))))
 
+(defun extract-buffers (state &optional path)
+  (cond
+    ((and (listp state) (eq (first state) :obj))
+      (iter
+        (for (k . v) in (cdr state))
+        (cond
+          ((and (vectorp v) (equal (array-element-type v) '(unsigned-byte 8)))
+            (collect (append path (list k)) into buffer-paths)
+            (collect v into buffers)
+            (jsown:remkey state k))
+          (t
+            (multiple-value-bind (sub-buffer-paths sub-buffers) (extract-buffers v (append path (list k)))
+              (appending sub-buffer-paths into buffer-paths)
+              (appending sub-buffers into buffers))))
+        (finally
+          (return (values buffer-paths buffers)))))
+    ((listp state)
+      (iter
+        (for v in-sequence state with-index i)
+        (cond
+          ((and (vectorp v) (equal (array-element-type v) '(unsigned-byte 8)))
+            (collect (append path (list i)) into buffer-paths)
+            (collect v into buffers)
+            (setf (elt state i) :null))
+          (t
+            (multiple-value-bind (sub-buffer-paths sub-buffers) (extract-buffers v (append path (list i)))
+              (appending sub-buffer-paths into buffer-paths)
+              (appending sub-buffers into buffers))))
+        (finally
+          (return (values buffer-paths buffers)))))
+    (t
+      (values nil nil))))
+
+(defun inject-buffer (state buffer-path buffer)
+  (let ((node (car buffer-path))
+        (rest (cdr buffer-path)))
+    (if rest
+      (inject-buffer (if (stringp node)
+                       (jsown:val state node)
+                       (elt state node))
+                     rest buffer)
+      (if (stringp node)
+        (setf (jsown:val state node) buffer)
+        (setf (elt state node) buffer)))))
+
+(defun inject-buffers (state buffer-paths buffers)
+  (iter
+    (for buffer-path in buffer-paths)
+    (for buffer in buffers)
+    (inject-buffer state buffer-path buffer)))
+
 (defun send-state (w &optional name)
   (when (not *state-lock*)
-    (let* ((state (to-json-state w name))
-           (data (jsown:new-js
-                   ("method" "update")
-                   ("state" state)
-                   ("buffer_paths" nil))))
-      (jupyter:send-comm-message w data
-        (jsown:new-js ("version" +protocol-version+))))))
+    (let ((state (to-json-state w name)))
+      (multiple-value-bind (buffer-paths buffers) (extract-buffers state)
+        (jupyter:send-comm-message w
+          (jsown:new-js ("method" "update")
+                        ("state" state)
+                        ("buffer_paths" buffer-paths))
+          (jsown:new-js ("version" +protocol-version+))
+          buffers)))))
 
-(defun update-state (w data)
+(defun update-state (w data buffers)
   (let ((*state-lock* t))
     (iter
-      (for state next (jupyter:json-getf data "state"))
-      (for keywords next (jsown:keywords state))
+      (with state = (jupyter:json-getf data "state"))
+      (with buffer-paths = (jupyter:json-getf data "buffer_paths"))
+      (inject-buffers state buffer-paths buffers)
+      (with keywords = (jsown:keywords state))
       (for def in (closer-mop:class-slots (class-of w)))
       (for name next (closer-mop:slot-definition-name def))
       (for key next (symbol-to-key name))
@@ -132,10 +186,10 @@
         (setf (slot-value w name)
           (deserialize-trait w type name (jupyter:json-getf state key)))))))
 
-(defmethod jupyter:on-comm-message ((w widget) data metadata)
+(defmethod jupyter:on-comm-message ((w widget) data metadata buffers)
   (declare (ignore metadata))
   (switch ((jupyter:json-getf data "method") :test #'equal)
-    ("update" (update-state w data))
+    ("update" (update-state w data buffers))
     ("request_state" (send-state w))
     (otherwise (call-next-method))))
 
@@ -147,15 +201,16 @@
   "Create a Jupyter widget and inform the frontend to create a synchronized model."
   (with-trait-silence
     (let* ((inst (apply 'make-instance class rest))
-           (state (to-json-state inst))
-           (data (jsown:new-js
-                  ("state" state)
-                  ("buffer_paths" nil))))
-      (jupyter:send-comm-open inst data
-        (jsown:new-js ("version" +protocol-version+)))
-      inst)))
+           (state (to-json-state inst)))
+      (multiple-value-bind (buffer-paths buffers) (extract-buffers state)
+        (jupyter:send-comm-open inst
+          (jsown:new-js ("state" state)
+                        ("buffer_paths" buffer-paths))
+          (jsown:new-js ("version" +protocol-version+))
+          buffers)
+        inst))))
 
-(defmethod jupyter:create-comm ((target-name (eql :|jupyter.widget|)) id data metadata)
+(defmethod jupyter:create-comm ((target-name (eql :|jupyter.widget|)) id data metadata buffers)
   (let* ((state (jupyter:json-getf data "state"))
          (model-name (jupyter:json-getf state "_model_name"))
          (model-module (jupyter:json-getf state "_model_module"))
@@ -168,7 +223,10 @@
                                      view-module-version view-name))
          (class (gethash name *widgets*)))
     (when class
-      (make-widget class))))
+      (with-trait-silence
+        (let ((w (make-widget class)))
+          (update-state w data buffers)
+          w)))))
 
 (defun display (widget)
   "Display a widget in the notebook."
