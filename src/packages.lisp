@@ -95,6 +95,7 @@
     #:link
     #:make-widget
     #:on-button-click
+    #:on-trait-change
     #:output
     #:password
     #:play
