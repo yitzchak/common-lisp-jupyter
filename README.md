@@ -26,8 +26,9 @@ derived kernel.
 
 ## Examples
 
-- [about.ipynb][]
-- [widgets.ipynb][]
+- [about.ipynb][] — Simple examples including displaying images.
+- [widgets.ipynb][] — Basic widget examples.
+- [julia.ipynb][] — A Julia set explorer.
 
 ## Comparison to cl-jupyter
 
@@ -228,6 +229,7 @@ during the installation phase of Roswell.
 [cl-jupyter]: https://github.com/fredokun/cl-jupyter/
 [ECL]: https://common-lisp.net/project/ecl/
 [jsown]: http://quickdocs.org/jsown/
+[julia.ipynb]: http://nbviewer.jupyter.org/github/yitzchak/common-lisp-jupyter/blob/master/examples/julia.ipynb
 [Jupyter]: https://jupyter.org/
 [Maxima-Jupyter]: https://github.com/robert-dodier/maxima-jupyter/
 [mybinder-badge]: https://mybinder.org/badge_logo.svg
