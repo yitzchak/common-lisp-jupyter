@@ -60,7 +60,7 @@
       stream))
   (iter
     (for src in resources)
-    (for dest next (merge-pathnames kernel-directory src))
+    (for dest next (merge-pathnames kernel-home src))
     (format t "Installing kernel resource ~A~%" dest)
     (copy-file src dest))
   (unless argv
