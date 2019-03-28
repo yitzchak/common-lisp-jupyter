@@ -185,7 +185,8 @@
           end)))))
 
 
-(defun install (&key bin-path (ev-flag #+clisp "-x" #+(or mkcl cmucl) "-eval" #-(or clisp cmucl mkcl) "--eval") preamble use-implementation)
+(defun install (&key bin-path (ev-flag #+clisp "-x" #+(or mkcl cmucl) "-eval" #-(or clisp cmucl mkcl) "--eval")
+                     preamble use-implementation system)
   "Install Common Lisp kernel based on the current implementation"
   (jupyter:install-kernel
     :argv (iter
@@ -208,9 +209,10 @@
         (format nil "~A_~(~A~)" +language+ (uiop:implementation-type))
         +language+)
     :language +language+
-    :resources +resources+))
+    :resources +resources+
+    :system system))
 
-(defun install-image (&key use-implementation)
+(defun install-image (&key use-implementation system)
   "Install Common Lisp kernel based on image of current implementation"
   (jupyter:install-kernel
     :class 'kernel
@@ -223,7 +225,8 @@
         (format nil "~A_~(~A~)" +language+ (uiop:implementation-type))
         +language+)
     :language +language+
-    :resources +resources+))
+    :resources +resources+
+    :system system))
 
 (defun install-roswell (&key implementation)
   "Install Common Lisp kernel using Roswell"
