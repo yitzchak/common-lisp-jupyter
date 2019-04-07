@@ -1,35 +1,37 @@
 (in-package #:jupyter)
 
-#|
-
-Jupyter protocol constants
-
-|#
-
-(defparameter +status-complete+ "complete")
-(defparameter +status-incomplete+ "incomplete")
-(defparameter +status-invalid+ "invalid")
-(defparameter +status-unknown+ "unknown")
-
-
 (defclass channel (source)
-  ((mac :initarg :mac
-        :reader channel-mac)
-   (socket :initarg :socket
-           :reader channel-socket)
-   (transport :initarg :transport
-              :reader channel-transport
-              :type string)
-   (ip :initarg :ip
-       :reader channel-ip
-       :type string)
-   (port :initarg :port
-         :reader channel-port
-         :type fixnum)
-   (recv-lock :initform (bordeaux-threads:make-lock)
-              :reader channel-recv-lock)
-   (send-lock :initform (bordeaux-threads:make-lock)
-              :reader channel-send-lock))
+  ((mac
+     :initarg :mac
+     :reader channel-mac
+     :documentation "Shared channel authentification handler.")
+   (socket
+     :initarg :socket
+     :reader channel-socket
+     :documentation "Channel socket")
+   (transport
+     :initarg :transport
+     :reader channel-transport
+     :type string
+     :documentation "Transport type")
+   (ip
+     :initarg :ip
+     :reader channel-ip
+     :type string
+     :documentation "Channel IP address")
+   (port
+     :initarg :port
+     :reader channel-port
+     :type fixnum
+     :documentation "Channel port number")
+   (recv-lock
+     :initform (bordeaux-threads:make-lock)
+     :reader channel-recv-lock
+     :documentation "Lock used during recv actions")
+   (send-lock
+     :initform (bordeaux-threads:make-lock)
+     :reader channel-send-lock
+     :documentation "Lock used during send actions"))
   (:documentation "Common channel class."))
 
 (defgeneric start (ch)
