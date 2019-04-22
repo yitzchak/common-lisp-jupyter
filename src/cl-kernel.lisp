@@ -2,8 +2,10 @@
 
 (defvar +display-name+ "Common Lisp")
 (defvar +language+ "common-lisp")
-(defvar +resources+
-  (list (asdf:component-pathname (asdf:find-component :common-lisp-jupyter '("res" "logo-64x64.png")))))
+(defvar +eval-flag+
+  #+clisp "-x" #+(or mkcl cmucl) "-eval" #-(or clisp cmucl mkcl) "--eval")
+(defvar +load-flag+
+  #+clisp "-i" #+(or mkcl cmucl) "-load" #-(or clisp cmucl mkcl) "--load")
 
 (defclass kernel (jupyter:kernel)
   ()
@@ -184,73 +186,107 @@
           start
           end)))))
 
+(defclass cl-installer (jupyter:installer)
+  ()
+  (:default-initargs
+     :class 'kernel
+     :language +language+
+     :resources
+       (list (asdf:component-pathname (asdf:find-component :common-lisp-jupyter '("res" "logo-64x64.png"))))
+     :systems '(:common-lisp-jupyter)))
 
-(defun install (&key bin-path (ev-flag #+clisp "-x" #+(or mkcl cmucl) "-eval" #-(or clisp cmucl mkcl) "--eval")
-                     preamble use-implementation system)
+(defclass system-installer (jupyter:system-installer cl-installer)
+  ())
+
+(defclass user-installer (jupyter:user-installer cl-installer)
+  ())
+
+(defclass user-image-installer (jupyter:user-image-installer cl-installer)
+  ())
+
+(defclass user-roswell-installer (jupyter:user-installer cl-installer)
+  ())
+
+(defmethod jupyter:command-line ((instance user-installer))
+  (let ((implementation (jupyter:installer-implementation instance)))
+    (list
+      (or implementation
+          (first (uiop:raw-command-line-arguments))
+          (format nil "~(~A~)" (uiop:implementation-type)))
+      +eval-flag+ "(ql:quickload :common-lisp-jupyter)"
+      +eval-flag+ "(jupyter:run-kernel 'common-lisp-jupyter:kernel #\"{connection_file}\")")))
+
+(defmethod jupyter:command-line ((instance system-installer))
+  (let ((implementation (jupyter:installer-implementation instance)))
+    (list
+      (or implementation
+          (first (uiop:raw-command-line-arguments))
+          (format nil "~(~A~)" (uiop:implementation-type)))
+      +load-flag+ (namestring (jupyter:installer-path instance :root :program :bundle))
+      +eval-flag+ "(asdf:load-system :common-lisp-jupyter)"
+      +eval-flag+ "(jupyter:run-kernel 'common-lisp-jupyter:kernel #\"{connection_file}\")")))
+
+(defmethod jupyter:command-line ((instance user-roswell-installer))
+  (let ((implementation (jupyter:installer-implementation instance)))
+    (append
+      (if (or implementation (uiop:os-windows-p))
+        '("ros")
+        '("cl-jupyter"))
+      (when implementation
+        (list "--lisp" implementation))
+      (when (or implementation (uiop:os-windows-p))
+        (list (namestring
+                (merge-pathnames
+                  (make-pathname :directory '(:relative ".roswell" "bin")
+                                 :name "cl-jupyter")
+                  (if (uiop:os-windows-p) ; Get the home from %USERPROFILE% if on Windows to avoid MSYS home
+                    (uiop:getenv-absolute-directory "USERPROFILE")
+                    (truename (user-homedir-pathname)))))))
+          '("{connection_file}"))))
+
+(defun install (&key bin-path use-implementation system local prefix)
   "Install Common Lisp kernel based on the current implementation"
-  (jupyter:install-kernel
-    :argv (iter
-      (for cmd in (append preamble
-                    '("(ql:quickload :common-lisp-jupyter)"
-                      "(jupyter:run-kernel 'common-lisp-jupyter:kernel #\"{connection_file}\")")))
-      (if-first-time
-        (collect
-          (or bin-path
-              (first (uiop:raw-command-line-arguments))
-              (format nil "~(~A~)" (uiop:implementation-type)))))
-      (collect ev-flag)
-      (collect cmd))
-    :display-name
-      (if use-implementation
-        (lisp-implementation-type)
-        +display-name+)
-    :kernel-name
-      (if use-implementation
-        (format nil "~A_~(~A~)" +language+ (uiop:implementation-type))
-        +language+)
-    :language +language+
-    :resources +resources+
-    :system system))
+  (jupyter:install
+    (make-instance
+      (if system
+        'system-installer
+        'user-installer)
+      :display-name
+        (if use-implementation
+          (lisp-implementation-type)
+          +display-name+)
+      :implementation bin-path
+      :local local
+      :kernel-name
+        (if use-implementation
+          (format nil "~A_~(~A~)" +language+ (uiop:implementation-type))
+          +language+)
+      :prefix prefix)))
 
-(defun install-image (&key use-implementation system)
+(defun install-image (&key use-implementation prefix)
   "Install Common Lisp kernel based on image of current implementation"
-  (jupyter:install-kernel
-    :class 'kernel
-    :display-name
-      (if use-implementation
-        (lisp-implementation-type)
-        +display-name+)
-    :kernel-name
-      (if use-implementation
-        (format nil "~A_~(~A~)" +language+ (uiop:implementation-type))
-        +language+)
-    :language +language+
-    :resources +resources+
-    :system system))
+  (jupyter:install
+    (make-instance 'user-image-installer
+      :display-name
+        (if use-implementation
+          (lisp-implementation-type)
+          +display-name+)
+      :kernel-name
+        (if use-implementation
+          (format nil "~A_~(~A~)" +language+ (uiop:implementation-type))
+          +language+)
+      :prefix prefix)))
 
 (defun install-roswell (&key implementation)
   "Install Common Lisp kernel using Roswell"
-  (jupyter:install-kernel
-    :argv (append
-            (if (or implementation (uiop:os-windows-p))
-              '("ros")
-              '("cl-jupyter"))
-            (when implementation
-              (list "--lisp" implementation))
-            (when (or implementation (uiop:os-windows-p))
-              (list (namestring
-                      (merge-pathnames
-                        (make-pathname :directory '(:relative ".roswell" "bin")
-                                       :name "cl-jupyter")
-                        (if (uiop:os-windows-p) ; Get the home from %USERPROFILE% if on Windows to avoid MSYS home
-                          (uiop:getenv-absolute-directory "USERPROFILE")
-                          (truename (user-homedir-pathname)))))))
-            '("{connection_file}"))
-    :display-name (if implementation
-                    (format nil "~A (~A)" +display-name+ implementation)
-                    +display-name+)
-    :kernel-name (if implementation
-                   (format nil "~A_~A" +language+ (substitute #\_ #\/ implementation))
-                   +language+)
-    :language +language+
-    :resources +resources+))
+  (jupyter:install
+    (make-instance 'user-roswell-installer
+      :display-name
+        (if implementation
+          (format nil "~A (~A)" +display-name+ implementation)
+          +display-name+)
+      :implementation implementation
+      :kernel-name
+        (if implementation
+          (format nil "~A_~A" +language+ (substitute #\_ #\/ implementation))
+          +language+))))
