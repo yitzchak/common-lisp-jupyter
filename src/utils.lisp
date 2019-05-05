@@ -81,3 +81,12 @@
       (leave value))
     (finally
       (return default))))
+
+(defun read-raw-string (stream c1 c2)
+  (declare (ignore c1 c2))
+  (iter
+    (for ch next (read-char stream))
+    (until (char= ch #\"))
+    (collect ch result-type 'string)))
+
+(set-dispatch-macro-character #\# #\" #'read-raw-string)
