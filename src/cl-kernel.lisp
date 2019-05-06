@@ -192,7 +192,7 @@
     :argv (iter
       (for cmd in (append preamble
                     '("(ql:quickload :common-lisp-jupyter)"
-                      "(jupyter:run-kernel 'common-lisp-jupyter:kernel \"{connection_file}\")")))
+                      "(jupyter:run-kernel 'common-lisp-jupyter:kernel #\"{connection_file}\")")))
       (if-first-time
         (collect
           (or bin-path
