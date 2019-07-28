@@ -196,18 +196,23 @@
      :systems '(:common-lisp-jupyter)))
 
 (defclass system-installer (jupyter:system-installer cl-installer)
-  ())
+  ()
+  (:documentation "common-lisp-jupyter system installer."))
 
 (defclass user-installer (jupyter:user-installer cl-installer)
-  ())
+  ()
+  (:documentation "common-lisp-jupyter user installer."))
 
 (defclass user-image-installer (jupyter:user-image-installer cl-installer)
-  ())
+  ()
+  (:documentation "common-lisp-jupyter user image installer."))
 
 (defclass user-roswell-installer (jupyter:user-installer cl-installer)
-  ())
+  ()
+  (:documentation "common-lisp-jupyter roswell installer."))
 
 (defmethod jupyter:command-line ((instance user-installer))
+  "Get the command line for a user installation."
   (let ((implementation (jupyter:installer-implementation instance)))
     (list
       (or implementation
@@ -217,6 +222,7 @@
       +eval-flag+ "(jupyter:run-kernel 'common-lisp-jupyter:kernel #\"{connection_file}\")")))
 
 (defmethod jupyter:command-line ((instance system-installer))
+  "Get the command line for a system installation."
   (let ((implementation (jupyter:installer-implementation instance)))
     (list
       (or implementation
@@ -227,6 +233,7 @@
       +eval-flag+ "(jupyter:run-kernel 'common-lisp-jupyter:kernel #\"{connection_file}\")")))
 
 (defmethod jupyter:command-line ((instance user-roswell-installer))
+  "Get the command line for a roswell installation."
   (let ((implementation (jupyter:installer-implementation instance)))
     (append
       (if (or implementation (uiop:os-windows-p))
