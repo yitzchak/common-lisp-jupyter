@@ -26,8 +26,9 @@ derived kernel.
 
 ## Examples
 
-- [about.ipynb][]
-- [widgets.ipynb][]
+- [about.ipynb][] — Simple examples including displaying images.
+- [widgets.ipynb][] — Basic widget examples.
+- [julia.ipynb][] — A Julia set explorer.
 
 ## Comparison to cl-jupyter
 
@@ -103,17 +104,31 @@ ros install common-lisp-jupyter
 
 ### Installing via Quicklisp
 
-- Install [Quicklisp][] and use `(ql:add-to-init-file)`. If you already have
-  Quicklisp installed you may need to update your distribution with
-  `(ql:update-dist "quicklisp")` to resolve package conflicts.
+Install [Quicklisp][] and use `(ql:add-to-init-file)`. If you already have
+Quicklisp installed you may need to update your distribution with 
+`(ql:update-dist "quicklisp")` to resolve package conflicts.
 
-- Start your Lisp implementation and evaluate the following. The `install`
-  command will try to deduce the correct command line arguments for your
-  implementation. The keyword parameters `:bin-path` and `:ev-flag` can be
-  used to customize these arguments. For example, for SBCL `:bin-path` is `sbcl`
-  and `:ev-flag` is `--eval`. To install a kernel image using
-  [uiop:dump-image][] use `cl-jupyter:install-image` instead of
-  `cl-jupyter:install`. `install-image` takes no arguments.
+- To install an image based user kernel evaluate `(cl-jupyter:install-image)`
+- To install a non-image based user kernel evaluate `(cl-jupyter:install)`
+- To install a Quicklisp bundle based system evaluate
+  `(cl-jupyter:install :system t :local t :prefix "pkg/")`. Afterward copy the
+  contents of the `pkg` directory to the system root. For instance in bash
+  `sudo cp -r pkg/* /`
+
+### Installing via Quicklisp [version 20190521 and earlier]
+
+Install [Quicklisp][] and use `(ql:add-to-init-file)`. If you already have
+Quicklisp installed you may need to update your distribution with 
+`(ql:update-dist "quicklisp")` to resolve package conflicts.
+
+Start your Lisp implementation and evaluate the following. The `install` command 
+will try to deduce the correct command line arguments for your implementation. 
+The keyword parameters `:bin-path` and `:ev-flag` can be used to customize these 
+arguments. For example, for SBCL `:bin-path` is `sbcl` and `:ev-flag` is 
+`--eval`. To install a kernel image using [uiop:dump-image][] use 
+`cl-jupyter:install-image` instead of `cl-jupyter:install`. `install-image` 
+takes no arguments.
+
 ```lisp
 (ql:quickload :common-lisp-jupyter)
 (cl-jupyter:install)
@@ -228,6 +243,7 @@ during the installation phase of Roswell.
 [cl-jupyter]: https://github.com/fredokun/cl-jupyter/
 [ECL]: https://common-lisp.net/project/ecl/
 [jsown]: http://quickdocs.org/jsown/
+[julia.ipynb]: http://nbviewer.jupyter.org/github/yitzchak/common-lisp-jupyter/blob/master/examples/julia.ipynb
 [Jupyter]: https://jupyter.org/
 [Maxima-Jupyter]: https://github.com/robert-dodier/maxima-jupyter/
 [mybinder-badge]: https://mybinder.org/badge_logo.svg
@@ -246,3 +262,4 @@ during the installation phase of Roswell.
 [widgets.ipynb]: http://nbviewer.jupyter.org/github/yitzchak/common-lisp-jupyter/blob/master/examples/widgets.ipynb
 [Windows Installation]: https://github.com/yitzchak/common-lisp-jupyter/wiki/Windows-Installation
 [ZeroMQ]: http://zeromq.org/
+

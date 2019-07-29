@@ -252,7 +252,13 @@
           '("{connection_file}"))))
 
 (defun install (&key bin-path use-implementation system local prefix)
-  "Install Common Lisp kernel based on the current implementation"
+  "Install Common Lisp kernel based on the current implementation.
+- `bin-path` specifies path to LISP binary.
+- `use-implementation` toggles including implementation details in kernel name.
+- `system` toggles system versus user installation.
+- `local` toggles `/usr/local/share versus` `/usr/share` for system installations.
+- `prefix` key specifies directory prefix for packaging.
+"
   (jupyter:install
     (make-instance
       (if system
@@ -271,7 +277,9 @@
       :prefix prefix)))
 
 (defun install-image (&key use-implementation prefix)
-  "Install Common Lisp kernel based on image of current implementation"
+  "Install Common Lisp kernel based on image of current implementation.
+- `use-implementation` toggles including implementation details in kernel name.
+- `prefix` key specifies directory prefix for packaging."
   (jupyter:install
     (make-instance 'user-image-installer
       :display-name
@@ -285,7 +293,8 @@
       :prefix prefix)))
 
 (defun install-roswell (&key implementation)
-  "Install Common Lisp kernel using Roswell"
+  "Install Common Lisp kernel using Roswell. `implementation` key toggles
+including implementation details in kernel name."
   (jupyter:install
     (make-instance 'user-roswell-installer
       :display-name

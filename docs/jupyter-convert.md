@@ -1,12 +1,14 @@
 # Package jupyter-convert
 
 
-## Function `to-notebook`
+## *Function* `to-notebook`
 
-Convert Lisp source to Jupyter notebook
-
-### Definition
+### Syntax
 
 ```common-lisp
 (to-notebook src dest)
 ```
+
+### Description
+
+Convert Lisp source to Jupyter notebook

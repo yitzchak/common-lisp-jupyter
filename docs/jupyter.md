@@ -1,30 +1,48 @@
 # Package jupyter
 
 
-## Function `run-kernel`
-
-Run a kernel based on a kernel class and a connection file.
+## *Variable* `*page-output*`
 
 ### Definition
 
 ```common-lisp
-(run-kernel kernel-class connection-file-name)
+nil
 ```
 
+### Description
 
-## Generic Function `render`
+Output stream sent to Jupyter pager. Available during calls to evaluate-code.
 
-Render evaluation result as a mime bundle for execute_result
-  or display_data.
 
-### Definition
+## *Function* `clear`
+
+### Syntax
 
 ```common-lisp
-(render result)
+(clear &optional wait)
 ```
 
+### Description
 
-## Class `comm`
+Send clear output message to frontend.
+
+
+## *Generic Function* `code-is-complete`
+
+### Syntax
+
+```common-lisp
+(code-is-complete kernel code)
+```
+
+### Description
+
+Check code for completeness. Kernel implementations should
+  result one of the permitted values of complete, incomplete, unknown or
+  invalid.
+
+
+## *Class* `comm`
 
 ### Superclasses
 
@@ -38,173 +56,168 @@ Render evaluation result as a mime bundle for execute_result
 - `:kernel`
 
 
-## Function `jpeg`
+## *Generic Function* `comm-id`
 
-Create a JPEG image result based on an inline value.
-
-### Definition
+### Syntax
 
 ```common-lisp
-(jpeg value &optional display-data)
+(comm-id sb-pcl::object)
 ```
 
 
-## Variable `*page-output*`
+## *Generic Function* `command-line`
 
-Output stream sent to Jupyter pager. Available during calls to evaluate-code.
-
-### Definition
+### Syntax
 
 ```common-lisp
-nil
+(command-line instance)
+```
+
+### Description
+
+Get the command line for an installer instance.
+
+
+## *Generic Function* `complete-code`
+
+### Syntax
+
+```common-lisp
+(complete-code kernel code cursor-pos)
+```
+
+### Description
+
+Complete code at cursor-pos. Successful completion should
+  return three values, first a list of strings, then the cursor start position
+  and finally the cursor end position.
+
+
+## *Generic Function* `create-comm`
+
+### Syntax
+
+```common-lisp
+(create-comm target-name id data metadata buffers)
 ```
 
 
-## Function `send-comm-open`
+## *Function* `enqueue-input`
 
-### Definition
-
-```common-lisp
-(send-comm-open comm &optional data metadata)
-```
-
-
-## Function `ps-file`
-
-Create a PostScript result based on a file path.
-
-### Definition
+### Syntax
 
 ```common-lisp
-(ps-file path &optional display-data)
+(enqueue-input kernel code)
 ```
 
+### Description
 
-## Function `get-comm`
+Add code to input queue.
 
-### Definition
+
+## *Generic Function* `evaluate-code`
+
+### Syntax
+
+```common-lisp
+(evaluate-code kernel code)
+```
+
+### Description
+
+Evaluate code along with paged output. Kernel implementations
+  must return a list of evaluated results. Each result should be wrapped with an
+  appropriate `result` class instance. Sending the results to the client will be
+  handled by the calling method.
+
+
+## *Function* `file`
+
+### Syntax
+
+```common-lisp
+(file path &optional display-data)
+```
+
+### Description
+
+Create a result based on a file path. The mime type with automatically be
+  determined from the file extension.
+
+
+## *Function* `get-comm`
+
+### Syntax
 
 ```common-lisp
 (get-comm id)
 ```
 
 
-## Generic Function `on-comm-message`
+## *Function* `gif-file`
 
-### Definition
+### Syntax
 
 ```common-lisp
-(on-comm-message comm data metadata)
+(gif-file path &optional display-data)
+```
+
+### Description
+
+Create a GIF image result based on a file path.
+
+
+## *Macro* `handling-errors`
+
+### Syntax
+
+```common-lisp
+(handling-errors
+  &body
+  body)
+```
+
+### Description
+
+Macro for catching any conditions including quit-conditions during code
+  evaluation.
+
+
+## *Function* `html`
+
+### Syntax
+
+```common-lisp
+(html value &optional display-data)
+```
+
+### Description
+
+Create a HTML result based on an inline value.
+
+
+## *Function* `inform`
+
+### Syntax
+
+```common-lisp
+(inform level src format-control &rest format-arguments)
 ```
 
 
-## Function `jpeg-file`
+## *Function* `inline-result`
 
-Create a JPEG image result based on a file path.
-
-### Definition
-
-```common-lisp
-(jpeg-file path &optional display-data)
-```
-
-
-## Class `kernel`
-
-Kernel state representation.
-
-### Superclasses
-
-- `kernel`
-- `standard-object`
-
-### Initial Arguments
-
-- `:name`
-- `:version`
-- `:banner`
-- `:language-name`
-- `:language-version`
-- `:mime-type`
-- `:file-extension`
-- `:pygments-lexer`
-- `:codemirror-mode`
-- `:help-links`
-- `:package`
-- `:transport`
-- `:ip`
-- `:shell-port`
-- `:stdin-port`
-- `:iopub-port`
-- `:control-port`
-- `:hb-port`
-- `:signature-scheme`
-- `:key`
-- `:prompt-prefix`
-- `:prompt-suffix`
-- `:input-queue`
-
-### Slots
-
-- `name` &mdash; Kernel name. Used as a unique identifier in kernel
-         description.
-- `version` &mdash; Kernel version.
-- `banner` &mdash; Banner text used to describe kernel. Used in
-           kernel_info_reply messages.
-- `language-name` &mdash; Display name of implementation language. Used
-                  in kernel_info_reply messages.
-- `language-version` &mdash; Version of implementation language. Used in
-                     kernel_info_reply messages.
-- `mime-type` &mdash; Default MIME type for source files. Used in
-              kernel_info_reply messages.
-- `file-extension` &mdash; Default file extension for source files. Used
-                   in kernel_info_reply messages.
-- `pygments-lexer` &mdash; Name of Pygments lexer for source files. Used
-                   in kernel_info_reply messages.
-- `codemirror-mode` &mdash; CodeMirror mode for source files. Used in
-                    kernel_info_reply messages.
-- `help-links` &mdash; An association list of help links. The car is the
-               description and the cdr is URL. Used in kernel_info_reply
-               messages.
-- `package` &mdash; The package in which evaluate-code,
-            code-is-complete and others are called.
-- `transport` &mdash; Transport protocol from connection file.
-- `ip` &mdash; IP address from connection file.
-- `shell-port` &mdash; SHELL port from connection file.
-- `stdin-port` &mdash; STDIN port from connection file.
-- `iopub-port` &mdash; IOPUB port from connection file.
-- `control-port` &mdash; CONTROL port from connection file.
-- `hb-port` &mdash; HB port from connection file.
-- `signature-scheme` &mdash; Signature scheme from connection file.
-- `key` &mdash; Signing key from connection file.
-- `prompt-prefix` &mdash; String prefix using in *standard-output* to
-                  indicate the start of prompt.
-- `prompt-suffix` &mdash; String suffix using in *standard-output* to
-                  indicate the end of prompt.
-- `ctx` &mdash; pzmq ctx handle.
-- `hb` &mdash; Heartbeat channel.
-- `shell` &mdash; SHELL channel.
-- `stdin` &mdash; STDIN channel.
-- `iopub` &mdash; IOPUB channel.
-- `session` &mdash; Session identifier.
-- `input-queue` &mdash; Input queue used to feed values into
-                execute_result payloads.
-- `history` &mdash; Kernel history manager.
-- `execution-count` &mdash; Kernel execution count.
-- `comms` &mdash; Currently open comms.
-
-
-## Function `inline-result`
-
-Create a result based on an inline value.
-
-### Definition
+### Syntax
 
 ```common-lisp
 (inline-result value mime-type &optional display-data)
 ```
 
-## Class `inline-result`
+### Description
+
+Create a result based on an inline value.
+
+## *Class* `inline-result`
 
 ### Superclasses
 
@@ -219,125 +232,599 @@ Create a result based on an inline value.
 - `:mime-type`
 
 
-## Function `send-comm-message`
+## *Generic Function* `inspect-code`
 
-### Definition
+### Syntax
 
 ```common-lisp
-(send-comm-message comm &optional data metadata)
+(inspect-code kernel code cursor-pos detail-level)
+```
+
+### Description
+
+Inspect code at cursor-pos with detail-level. Successful
+  inspection should return a single wrapped result.
+
+
+## *Generic Function* `install`
+
+### Syntax
+
+```common-lisp
+(install instance)
+```
+
+### Description
+
+Install a kernel based on an installer instance.
+
+
+## *Class* `installer`
+
+### Superclasses
+
+- `installer`
+- `standard-object`
+
+### Slots
+
+- `class` &mdash; Class that implements the kernel. Used by image based installations.
+
+- `display-name` &mdash; Name of the kernel displayed to the user.
+
+- `implementation` &mdash; Path to specific binary used by the kernel.
+
+- `kernel-name` &mdash; Name of the kernel.
+
+- `language` &mdash; Language that the kernel supports.
+
+- `local` &mdash; Is the installation a local or packaged installation?
+
+- `local-systems` &mdash; List of systems to package into local-projects.
+
+- `prefix` &mdash; Directory to put installed files into. Used by packaging system, should be nil otherwise.
+
+- `resources` &mdash; List of paths of resource files such as icons.
+
+- `systems` &mdash; List of systems to bundle for system installs.
+
+
+### Initial Arguments
+
+- `:class`
+- `:display-name`
+- `:implementation`
+- `:kernel-name`
+- `:language`
+- `:local`
+- `:local-systems`
+- `:prefix`
+- `:resources`
+- `:systems`
+
+### Description
+
+Base installer class.
+
+
+## *Generic Function* `installer-class`
+
+### Syntax
+
+```common-lisp
+(installer-class sb-pcl::object)
+```
+
+## *Generic Function* `installer-class`
+
+### Syntax
+
+```common-lisp
+(installer-class sb-pcl::new-value sb-pcl::object)
 ```
 
 
-## Function `markdown`
+## *Generic Function* `installer-display-name`
 
-Create a Markdown result based on an inline value.
-
-### Definition
+### Syntax
 
 ```common-lisp
-(markdown value &optional display-data)
+(installer-display-name sb-pcl::object)
+```
+
+## *Generic Function* `installer-display-name`
+
+### Syntax
+
+```common-lisp
+(installer-display-name sb-pcl::new-value sb-pcl::object)
 ```
 
 
-## Function `html`
+## *Generic Function* `installer-implementation`
 
-Create a HTML result based on an inline value.
-
-### Definition
+### Syntax
 
 ```common-lisp
-(html value &optional display-data)
+(installer-implementation sb-pcl::object)
+```
+
+## *Generic Function* `installer-implementation`
+
+### Syntax
+
+```common-lisp
+(installer-implementation sb-pcl::new-value sb-pcl::object)
 ```
 
 
-## Function `info`
+## *Generic Function* `installer-kernel-name`
 
-Display informational message regarding kernel status.
-
-### Definition
+### Syntax
 
 ```common-lisp
-(info &rest args)
+(installer-kernel-name sb-pcl::object)
+```
+
+## *Generic Function* `installer-kernel-name`
+
+### Syntax
+
+```common-lisp
+(installer-kernel-name sb-pcl::new-value sb-pcl::object)
 ```
 
 
-## Function `svg-file`
+## *Generic Function* `installer-language`
 
-Create a SVG result based on a file path.
-
-### Definition
+### Syntax
 
 ```common-lisp
-(svg-file path &optional display-data)
+(installer-language sb-pcl::object)
+```
+
+## *Generic Function* `installer-language`
+
+### Syntax
+
+```common-lisp
+(installer-language sb-pcl::new-value sb-pcl::object)
 ```
 
 
-## Generic Function `on-comm-close`
+## *Generic Function* `installer-local`
 
-### Definition
+### Syntax
 
 ```common-lisp
-(on-comm-close comm data metadata)
+(installer-local sb-pcl::object)
+```
+
+## *Generic Function* `installer-local`
+
+### Syntax
+
+```common-lisp
+(installer-local sb-pcl::new-value sb-pcl::object)
 ```
 
 
-## Function `clear`
+## *Generic Function* `installer-local-systems`
 
-Send clear output message to frontend.
-
-### Definition
+### Syntax
 
 ```common-lisp
-(clear &optional wait)
+(installer-local-systems sb-pcl::object)
+```
+
+## *Generic Function* `installer-local-systems`
+
+### Syntax
+
+```common-lisp
+(installer-local-systems sb-pcl::new-value sb-pcl::object)
 ```
 
 
-## Generic Function `kernel-prompt-suffix`
+## *Function* `installer-path`
 
-### Definition
+### Syntax
+
+```common-lisp
+(installer-path instance &rest parts)
+```
+
+### Description
+
+Resolve each of the path parts then combine all into a single path using merge-pathnames.
+
+
+## *Generic Function* `installer-prefix`
+
+### Syntax
+
+```common-lisp
+(installer-prefix sb-pcl::object)
+```
+
+## *Generic Function* `installer-prefix`
+
+### Syntax
+
+```common-lisp
+(installer-prefix sb-pcl::new-value sb-pcl::object)
+```
+
+
+## *Generic Function* `installer-resources`
+
+### Syntax
+
+```common-lisp
+(installer-resources sb-pcl::object)
+```
+
+## *Generic Function* `installer-resources`
+
+### Syntax
+
+```common-lisp
+(installer-resources sb-pcl::new-value sb-pcl::object)
+```
+
+
+## *Generic Function* `installer-systems`
+
+### Syntax
+
+```common-lisp
+(installer-systems sb-pcl::object)
+```
+
+## *Generic Function* `installer-systems`
+
+### Syntax
+
+```common-lisp
+(installer-systems sb-pcl::new-value sb-pcl::object)
+```
+
+
+## *Function* `jpeg`
+
+### Syntax
+
+```common-lisp
+(jpeg value &optional display-data)
+```
+
+### Description
+
+Create a JPEG image result based on an inline value.
+
+
+## *Function* `jpeg-file`
+
+### Syntax
+
+```common-lisp
+(jpeg-file path &optional display-data)
+```
+
+### Description
+
+Create a JPEG image result based on a file path.
+
+
+## *Function* `json-getf`
+
+### Syntax
+
+```common-lisp
+(json-getf object indicator &optional default)
+```
+
+### Description
+
+Safe accessor for the internal JSON format that behaves like getf
+
+
+## *Class* `kernel`
+
+### Superclasses
+
+- `kernel`
+- `standard-object`
+
+### Slots
+
+- `name` &mdash; Kernel name. Used as a unique identifier in kernel
+         description.
+
+- `version` &mdash; Kernel version.
+
+- `banner` &mdash; Banner text used to describe kernel. Used in
+           kernel_info_reply messages.
+
+- `language-name` &mdash; Display name of implementation language. Used
+                  in kernel_info_reply messages.
+
+- `language-version` &mdash; Version of implementation language. Used in
+                     kernel_info_reply messages.
+
+- `mime-type` &mdash; Default MIME type for source files. Used in
+              kernel_info_reply messages.
+
+- `file-extension` &mdash; Default file extension for source files. Used
+                   in kernel_info_reply messages.
+
+- `pygments-lexer` &mdash; Name of Pygments lexer for source files. Used
+                   in kernel_info_reply messages.
+
+- `codemirror-mode` &mdash; CodeMirror mode for source files. Used in
+                    kernel_info_reply messages.
+
+- `help-links` &mdash; An association list of help links. The car is the
+               description and the cdr is URL. Used in kernel_info_reply
+               messages.
+
+- `package` &mdash; The package in which evaluate-code,
+            code-is-complete and others are called.
+
+- `connection-file` &mdash; Pathname of connection file.
+
+- `transport` &mdash; Transport protocol from connection file.
+
+- `ip` &mdash; IP address from connection file.
+
+- `shell-port` &mdash; SHELL port from connection file.
+
+- `stdin-port` &mdash; STDIN port from connection file.
+
+- `iopub-port` &mdash; IOPUB port from connection file.
+
+- `control-port` &mdash; CONTROL port from connection file.
+
+- `hb-port` &mdash; HB port from connection file.
+
+- `signature-scheme` &mdash; Signature scheme from connection file.
+
+- `key` &mdash; Signing key from connection file.
+
+- `prompt-prefix` &mdash; String prefix using in *standard-output* to
+                  indicate the start of prompt.
+
+- `prompt-suffix` &mdash; String suffix using in *standard-output* to
+                  indicate the end of prompt.
+
+- `ctx` &mdash; pzmq ctx handle.
+
+- `mac` &mdash; Message authification.
+
+- `hb` &mdash; Heartbeat channel.
+
+- `shell` &mdash; SHELL channel.
+
+- `stdin` &mdash; STDIN channel.
+
+- `iopub` &mdash; IOPUB channel.
+
+- `session` &mdash; Session identifier.
+
+- `input-queue` &mdash; Input queue used to feed values into
+                execute_result payloads.
+
+- `history` &mdash; Kernel history manager.
+
+- `execution-count` &mdash; Kernel execution count.
+
+- `comms` &mdash; Currently open comms.
+
+
+### Initial Arguments
+
+- `:sink`
+- `:name`
+- `:version`
+- `:banner`
+- `:language-name`
+- `:language-version`
+- `:mime-type`
+- `:file-extension`
+- `:pygments-lexer`
+- `:codemirror-mode`
+- `:help-links`
+- `:package`
+- `:connection-file`
+- `:prompt-prefix`
+- `:prompt-suffix`
+- `:input-queue`
+
+### Description
+
+Kernel state representation.
+
+
+## *Generic Function* `kernel-prompt-prefix`
+
+### Syntax
+
+```common-lisp
+(kernel-prompt-prefix sb-pcl::object)
+```
+
+
+## *Generic Function* `kernel-prompt-suffix`
+
+### Syntax
 
 ```common-lisp
 (kernel-prompt-suffix sb-pcl::object)
 ```
 
 
-## Function `make-inline-result`
+## *Function* `latex`
 
-Make a result based on an inline value. The handle argument is used by the
-  convenience functions to instantly process the result.
-
-### Definition
-
-```common-lisp
-(make-inline-result value &key mime-type display-data handle)
-```
-
-
-## Function `latex`
-
-Create a LaTeX result based on an inline value.
-
-### Definition
+### Syntax
 
 ```common-lisp
 (latex value &optional display-data)
 ```
 
+### Description
 
-## Function `send-result`
+Create a LaTeX result based on an inline value.
 
-Send a result either as display data or an execute result.
 
-### Definition
+## *Function* `make-error-result`
+
+### Syntax
 
 ```common-lisp
-(send-result result)
+(make-error-result ename evalue &key quit traceback)
+```
+
+### Description
+
+Make a result based on an error. The quit the parameter indicates that the
+  kernel should exit. The handle argument is used by the convenience functions
+  to instantly process the result.
+
+
+## *Function* `make-file-result`
+
+### Syntax
+
+```common-lisp
+(make-file-result path &key mime-type display-data handle)
+```
+
+### Description
+
+Make a result based on a file. The handle argument is used by the convenience
+  functions to instantly process the result.
+
+
+## *Function* `make-inline-result`
+
+### Syntax
+
+```common-lisp
+(make-inline-result value &key mime-type display-data handle)
+```
+
+### Description
+
+Make a result based on an inline value. The handle argument is used by the
+  convenience functions to instantly process the result.
+
+
+## *Function* `make-lisp-result`
+
+### Syntax
+
+```common-lisp
+(make-lisp-result value &key display-data)
+```
+
+### Description
+
+Make a lisp result based on an inline value.
+
+
+## *Function* `markdown`
+
+### Syntax
+
+```common-lisp
+(markdown value &optional display-data)
+```
+
+### Description
+
+Create a Markdown result based on an inline value.
+
+
+## *Generic Function* `on-comm-close`
+
+### Syntax
+
+```common-lisp
+(on-comm-close comm data metadata buffers)
 ```
 
 
-## Class `quit-condition`
+## *Generic Function* `on-comm-message`
 
-A condition for identifying a request for kernel shutdown.
+### Syntax
+
+```common-lisp
+(on-comm-message comm data metadata buffers)
+```
+
+
+## *Generic Function* `on-comm-open`
+
+### Syntax
+
+```common-lisp
+(on-comm-open comm data metadata buffers)
+```
+
+
+## *Function* `pdf-file`
+
+### Syntax
+
+```common-lisp
+(pdf-file path &optional display-data)
+```
+
+### Description
+
+Create a PDF result based on a file path.
+
+
+## *Function* `png`
+
+### Syntax
+
+```common-lisp
+(png value &optional display-data)
+```
+
+### Description
+
+Create a PNG image result based on an inline value.
+
+
+## *Function* `png-file`
+
+### Syntax
+
+```common-lisp
+(png-file path &optional display-data)
+```
+
+### Description
+
+Create a PNG image result based on a file path.
+
+
+## *Function* `ps-file`
+
+### Syntax
+
+```common-lisp
+(ps-file path &optional display-data)
+```
+
+### Description
+
+Create a PostScript result based on a file path.
+
+
+## *Class* `quit-condition`
 
 ### Superclasses
 
@@ -346,289 +833,225 @@ A condition for identifying a request for kernel shutdown.
 - `serious-condition`
 - `condition`
 
+### Description
 
-## Generic Function `evaluate-code`
-
-Evaluate code along with paged output. Kernel implementations
-  must return a list of evaluated results. Each result should be wrapped with an
-  appropriate `result` class instance. Sending the results to the client will be
-  handled by the calling method.
-
-### Definition
-
-```common-lisp
-(evaluate-code kernel code)
-```
+A condition for identifying a request for kernel shutdown.
 
 
-## Function `json-getf`
+## *Function* `quit-eval-error-p`
 
-Safe accessor for the internal JSON format that behaves like getf
-
-### Definition
-
-```common-lisp
-(json-getf object indicator &optional default)
-```
-
-
-## Function `quit-eval-error-p`
-
-Predicate to determine if result is an quit result.
-
-### Definition
+### Syntax
 
 ```common-lisp
 (quit-eval-error-p result)
 ```
 
+### Description
 
-## Generic Function `inspect-code`
-
-Inspect code at cursor-pos with detail-level. Successful
-  inspection should return a single wrapped result.
-
-### Definition
-
-```common-lisp
-(inspect-code kernel code cursor-pos detail-level)
-```
+Predicate to determine if result is an quit result.
 
 
-## Generic Function `complete-code`
+## *Generic Function* `render`
 
-Complete code at cursor-pos. Successful completion should
-  return three values, first a list of strings, then the cursor start position
-  and finally the cursor end position.
-
-### Definition
+### Syntax
 
 ```common-lisp
-(complete-code kernel code cursor-pos)
+(render result)
 ```
 
+### Description
 
-## Function `png-file`
-
-Create a PNG image result based on a file path.
-
-### Definition
-
-```common-lisp
-(png-file path &optional display-data)
-```
+Render evaluation result as a mime bundle for execute_result
+  or display_data.
 
 
-## Function `text`
-
-Create a plain text result based on an inline value.
-
-### Definition
-
-```common-lisp
-(text value &optional display-data)
-```
-
-
-## Function `file`
-
-Create a result based on a file path. The mime type with automatically be
-  determined from the file extension.
-
-### Definition
-
-```common-lisp
-(file path &optional display-data)
-```
-
-
-## Function `enqueue-input`
-
-Add code to input queue.
-
-### Definition
-
-```common-lisp
-(enqueue-input kernel code)
-```
-
-
-## Generic Function `create-comm`
-
-### Definition
-
-```common-lisp
-(create-comm target-name id data metadata)
-```
-
-
-## Function `pdf-file`
-
-Create a PDF result based on a file path.
-
-### Definition
-
-```common-lisp
-(pdf-file path &optional display-data)
-```
-
-
-## Function `make-error-result`
-
-Make a result based on an error. The quit the parameter indicates that the
-  kernel should exit. The handle argument is used by the convenience functions
-  to instantly process the result.
-
-### Definition
-
-```common-lisp
-(make-error-result ename evalue &key quit traceback)
-```
-
-
-## Function `gif-file`
-
-Create a GIF image result based on a file path.
-
-### Definition
-
-```common-lisp
-(gif-file path &optional display-data)
-```
-
-
-## Generic Function `code-is-complete`
-
-Check code for completeness. Kernel implementations should
-  result one of the permitted values of complete, incomplete, unknown or
-  invalid.
-
-### Definition
-
-```common-lisp
-(code-is-complete kernel code)
-```
-
-
-## Function `install-kernel`
-
-Install a kernel spec file given a kernel name and a language name.
-
-### Definition
-
-```common-lisp
-(install-kernel &key argv class name language resources)
-```
-
-
-## Function `svg`
-
-Create a SVG result based on an inline value.
-
-### Definition
-
-```common-lisp
-(svg value &optional display-data)
-```
-
-
-## Class `result`
-
-Base class for encapsulation of evaluation result.
+## *Class* `result`
 
 ### Superclasses
 
 - `result`
 - `standard-object`
 
-### Initial Arguments
-
-- `:display-data`
-
 ### Slots
 
 - `display-data` &mdash; Show result as display_data in client.
 
 
-## Function `make-lisp-result`
+### Initial Arguments
 
-Make a lisp result based on an inline value.
+- `:display-data`
 
-### Definition
+### Description
+
+Base class for encapsulation of evaluation result.
+
+
+## *Function* `run-kernel`
+
+### Syntax
 
 ```common-lisp
-(make-lisp-result value &key display-data)
+(run-kernel kernel-class connection-file)
+```
+
+### Description
+
+Run a kernel based on a kernel class and a connection file.
+
+
+## *Function* `send-comm-close`
+
+### Syntax
+
+```common-lisp
+(send-comm-close comm &optional data metadata buffers)
 ```
 
 
-## Function `make-file-result`
+## *Function* `send-comm-message`
 
-Make a result based on a file. The handle argument is used by the convenience
-  functions to instantly process the result.
-
-### Definition
+### Syntax
 
 ```common-lisp
-(make-file-result path &key mime-type display-data handle)
+(send-comm-message comm &optional data metadata buffers)
 ```
 
 
-## Macro `handling-errors`
+## *Function* `send-comm-open`
 
-Macro for catching any conditions including quit-conditions during code
-  evaluation.
-
-### Definition
+### Syntax
 
 ```common-lisp
-(handling-errors
-  &body
-  body)
+(send-comm-open comm &optional data metadata buffers)
 ```
 
 
-## Generic Function `on-comm-open`
+## *Function* `send-result`
 
-### Definition
-
-```common-lisp
-(on-comm-open comm data metadata)
-```
-
-
-## Generic Function `comm-id`
-
-### Definition
+### Syntax
 
 ```common-lisp
-(comm-id sb-pcl::object)
+(send-result result)
 ```
 
+### Description
 
-## Generic Function `kernel-prompt-prefix`
+Send a result either as display data or an execute result.
 
-### Definition
+
+## *Function* `svg`
+
+### Syntax
 
 ```common-lisp
-(kernel-prompt-prefix sb-pcl::object)
+(svg value &optional display-data)
 ```
 
+### Description
 
-## Function `png`
+Create a SVG result based on an inline value.
 
-Create a PNG image result based on an inline value.
 
-### Definition
+## *Function* `svg-file`
+
+### Syntax
 
 ```common-lisp
-(png value &optional display-data)
+(svg-file path &optional display-data)
 ```
 
+### Description
 
-## Function `send-comm-close`
+Create a SVG result based on a file path.
 
-### Definition
+
+## *Class* `system-installer`
+
+### Superclasses
+
+- `system-installer`
+- `installer`
+- `standard-object`
+
+### Initial Arguments
+
+- `:class`
+- `:display-name`
+- `:implementation`
+- `:kernel-name`
+- `:language`
+- `:local`
+- `:local-systems`
+- `:prefix`
+- `:resources`
+- `:systems`
+
+### Description
+
+System installer class.
+
+
+## *Function* `text`
+
+### Syntax
 
 ```common-lisp
-(send-comm-close comm &optional data metadata)
+(text value &optional display-data)
 ```
+
+### Description
+
+Create a plain text result based on an inline value.
+
+
+## *Class* `user-image-installer`
+
+### Superclasses
+
+- `user-image-installer`
+- `user-installer`
+- `installer`
+- `standard-object`
+
+### Initial Arguments
+
+- `:class`
+- `:display-name`
+- `:implementation`
+- `:kernel-name`
+- `:language`
+- `:local`
+- `:local-systems`
+- `:prefix`
+- `:resources`
+- `:systems`
+
+### Description
+
+User image installer class.
+
+
+## *Class* `user-installer`
+
+### Superclasses
+
+- `user-installer`
+- `installer`
+- `standard-object`
+
+### Initial Arguments
+
+- `:class`
+- `:display-name`
+- `:implementation`
+- `:kernel-name`
+- `:language`
+- `:local`
+- `:local-systems`
+- `:prefix`
+- `:resources`
+- `:systems`
+
+### Description
+
+User installer class.
