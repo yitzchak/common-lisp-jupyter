@@ -2,7 +2,6 @@
   (:use #:common-lisp #:alexandria #:iterate)
   (:export
     ; utils
-    #:install-kernel
     #:json-getf
     ; log
     #:inform
@@ -53,7 +52,25 @@
     #:send-comm-close
     #:send-comm-message
     #:send-comm-open
-    #:send-result))
+    #:send-result
+    ; installer
+    #:command-line
+    #:install
+    #:installer
+    #:installer-class
+    #:installer-display-name
+    #:installer-implementation
+    #:installer-kernel-name
+    #:installer-language
+    #:installer-local
+    #:installer-local-systems
+    #:installer-path
+    #:installer-prefix
+    #:installer-resources
+    #:installer-systems
+    #:system-installer
+    #:user-image-installer
+    #:user-installer))
 
 (defpackage #:jupyter-widgets
   (:use #:common-lisp #:alexandria #:iterate)

@@ -13,6 +13,8 @@ os:
 addons:
   apt:
     update: true
+    sources:
+      - sourceline: 'ppa:darabi/lisp'
     packages:
       - g++-multilib
       - libzmq3-dev
@@ -22,6 +24,7 @@ addons:
       - python3-setuptools
       - sbcl
   homebrew:
+    update: true
     packages:
       - czmq
 
@@ -30,23 +33,29 @@ env:
     - PATH=~/.roswell/bin:$PATH
     - ROSWELL_INSTALL_DIR=$HOME/.roswell
   matrix:
-    - METHOD=im LISP=sbcl
+    - METHOD=img LISP=sbcl
     - METHOD=ros LISP=ccl-bin
     - METHOD=ros LISP=cmu-bin
     - METHOD=ros LISP=ecl
     - METHOD=ros LISP=sbcl-bin
+    - METHOD=loc LISP=sbcl
     - METHOD=sys LISP=sbcl
+    - METHOD=usr LISP=sbcl
 
 matrix:
   exclude:
     - os: osx
-      env: METHOD=im LISP=sbcl
+      env: METHOD=img LISP=sbcl
     - os: osx
       env: METHOD=ros LISP=cmu-bin
     - os: osx
       env: METHOD=ros LISP=ecl
     - os: osx
       env: METHOD=sys LISP=sbcl
+    - os: osx
+      env: METHOD=loc LISP=sbcl
+    - os: osx
+      env: METHOD=usr LISP=sbcl
 
 install:
   - bash scripts/ci-install
