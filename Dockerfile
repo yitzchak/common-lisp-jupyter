@@ -40,8 +40,6 @@ WORKDIR ${HOME}/python-certipy
 RUN makepkg
 WORKDIR ${HOME}/python-pamela
 RUN makepkg
-WORKDIR ${HOME}/jupyterhub-git
-RUN makepkg
 
 USER root
 WORKDIR ${HOME}/roswell
@@ -52,6 +50,12 @@ WORKDIR ${HOME}/python-certipy
 RUN ls -t *.pkg.tar.xz | xargs pacman -U --noconfirm
 WORKDIR ${HOME}/python-pamela
 RUN ls -t *.pkg.tar.xz | xargs pacman -U --noconfirm
+
+USER ${NB_USER}
+WORKDIR ${HOME}/jupyterhub-git
+RUN makepkg
+
+USER root
 WORKDIR ${HOME}/jupyterhub-git
 RUN ls -t *.pkg.tar.xz | xargs pacman -U --noconfirm
 
