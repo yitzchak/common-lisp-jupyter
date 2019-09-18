@@ -11,7 +11,17 @@ RUN echo "[multilib]" >> /etc/pacman.conf
 RUN echo "Include = /etc/pacman.d/mirrorlist" >> /etc/pacman.conf
 
 RUN pacman -Syu --noconfirm --needed base-devel git jre8-openjdk jupyter-notebook jupyterlab lib32-zeromq \
-  maven readline
+  maven readline \
+  python-async_generator \
+  python-oauthlib \
+  python-certipy \
+  python-alembic \
+  python-pamela \
+  python-sqlalchemy \
+  python-requests \
+  nodejs-configurable-http-proxy \
+  bower \
+  npm
 
 RUN useradd --create-home --shell=/bin/false --uid=${NB_UID} ${NB_USER}
 
@@ -28,7 +38,7 @@ RUN makepkg
 USER root
 WORKDIR ${HOME}/roswell
 RUN ls -t *.pkg.tar.xz | xargs pacman -U --noconfirm
-WORKDIR ${HOME}/roswell
+WORKDIR ${HOME}/jupyterhub-git
 RUN ls -t *.pkg.tar.xz | xargs pacman -U --noconfirm
 
 WORKDIR ${HOME}/common-lisp-jupyter
