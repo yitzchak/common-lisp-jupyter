@@ -22,11 +22,10 @@ RUN git clone https://aur.archlinux.org/roswell.git
 RUN git clone https://aur.archlinux.org/jupyterhub-git.git
 WORKDIR ${HOME}/roswell
 RUN makepkg
-WORKDIR ${HOME}/jupyterhub-git
-RUN makepkg -s
 
 USER root
-RUN ls -t *.pkg.tar.xz | xargs pacman -U --noconfirm
+WORKDIR ${HOME}/jupyterhub-git
+RUN makepkg -sic
 WORKDIR ${HOME}/roswell
 RUN ls -t *.pkg.tar.xz | xargs pacman -U --noconfirm
 
