@@ -14,12 +14,9 @@ RUN pacman -Syu --noconfirm --needed base-devel git jre8-openjdk jupyter-noteboo
   maven readline \
   python-async_generator \
   python-oauthlib \
-  python-certipy \
   python-alembic \
-  python-pamela \
   python-sqlalchemy \
   python-requests \
-  nodejs-configurable-http-proxy \
   bower \
   npm \
   python-pyopenssl \
