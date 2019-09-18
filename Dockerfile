@@ -22,10 +22,9 @@ RUN pacman -Syu --noconfirm --needed base-devel git jre8-openjdk jupyter-noteboo
   nodejs-configurable-http-proxy \
   bower \
   npm \
-  python-certipy \
-  python-pamela \
-  nodejs-configurable-http-proxy
-
+  python-pyopenssl \
+  python-pypandoc 
+  
 RUN useradd --create-home --shell=/bin/false --uid=${NB_UID} ${NB_USER}
 
 WORKDIR ${HOME}
@@ -33,13 +32,28 @@ WORKDIR ${HOME}
 USER ${NB_USER}
 RUN git clone https://aur.archlinux.org/roswell.git
 RUN git clone https://aur.archlinux.org/jupyterhub-git.git
+RUN git clone https://aur.archlinux.org/nodejs-configurable-http-proxy.git
+RUN git clone https://aur.archlinux.org/python-certipy.git
+RUN git clone https://aur.archlinux.org/python-pamela.git
 WORKDIR ${HOME}/roswell
+RUN makepkg
+WORKDIR ${HOME}/nodejs-configurable-http-proxy
+RUN makepkg
+WORKDIR ${HOME}/python-certipy
+RUN makepkg
+WORKDIR ${HOME}/python-pamela
 RUN makepkg
 WORKDIR ${HOME}/jupyterhub-git
 RUN makepkg
 
 USER root
 WORKDIR ${HOME}/roswell
+RUN ls -t *.pkg.tar.xz | xargs pacman -U --noconfirm
+WORKDIR ${HOME}/nodejs-configurable-http-proxy
+RUN ls -t *.pkg.tar.xz | xargs pacman -U --noconfirm
+WORKDIR ${HOME}/python-certipy
+RUN ls -t *.pkg.tar.xz | xargs pacman -U --noconfirm
+WORKDIR ${HOME}/python-pamela
 RUN ls -t *.pkg.tar.xz | xargs pacman -U --noconfirm
 WORKDIR ${HOME}/jupyterhub-git
 RUN ls -t *.pkg.tar.xz | xargs pacman -U --noconfirm
