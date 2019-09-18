@@ -58,6 +58,14 @@ RUN makepkg
 USER root
 WORKDIR ${HOME}/jupyterhub-git
 RUN ls -t *.pkg.tar.xz | xargs pacman -U --noconfirm
+RUN jupyter lab build --dev-build=False
+#     npm cache clean --force && \
+#     rm -rf $CONDA_DIR/share/jupyter/lab/staging && \
+#     rm -rf /home/$NB_USER/.cache/yarn && \
+#     rm -rf /home/$NB_USER/.node-gyp && \
+#     fix-permissions $CONDA_DIR && \
+#     fix-permissions /home/$NB_USER
+
 
 WORKDIR ${HOME}/common-lisp-jupyter
 
