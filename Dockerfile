@@ -10,7 +10,7 @@ ENV PATH "${HOME}/.roswell/bin:${PATH}"
 RUN echo "[multilib]" >> /etc/pacman.conf
 RUN echo "Include = /etc/pacman.d/mirrorlist" >> /etc/pacman.conf
 
-RUN pacman -Syu --noconfirm base-devel git jre8-openjdk jupyter-notebook jupyterlab lib32-zeromq \
+RUN pacman -Syu --noconfirm base-devel git jre8-openjdk jupyter-notebook jupyterlab jupyterhub-git lib32-zeromq \
   maven readline
 
 RUN useradd --create-home --shell=/bin/false --uid=${NB_UID} ${NB_USER}
