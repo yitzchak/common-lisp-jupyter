@@ -21,7 +21,10 @@ RUN pacman -Syu --noconfirm --needed base-devel git jre8-openjdk jupyter-noteboo
   python-requests \
   nodejs-configurable-http-proxy \
   bower \
-  npm
+  npm \
+  python-certipy \
+  python-pamela \
+  nodejs-configurable-http-proxy \
 
 RUN useradd --create-home --shell=/bin/false --uid=${NB_UID} ${NB_USER}
 
