@@ -10,7 +10,7 @@ ENV PATH "${HOME}/.roswell/bin:${PATH}"
 RUN echo "[multilib]" >> /etc/pacman.conf
 RUN echo "Include = /etc/pacman.d/mirrorlist" >> /etc/pacman.conf
 
-RUN pacman -Syu --noconfirm base-devel git jre8-openjdk jupyter-notebook jupyterlab jupyterhub-git lib32-zeromq \
+RUN pacman -Syu --noconfirm --needed base-devel git jre8-openjdk jupyter-notebook jupyterlab lib32-zeromq \
   maven readline
 
 RUN useradd --create-home --shell=/bin/false --uid=${NB_UID} ${NB_USER}
@@ -19,10 +19,15 @@ WORKDIR ${HOME}
 
 USER ${NB_USER}
 RUN git clone https://aur.archlinux.org/roswell.git
+RUN git clone https://aur.archlinux.org/jupyterhub-git.git
 WORKDIR ${HOME}/roswell
+RUN makepkg
+WORKDIR ${HOME}/jupyterhub-git
 RUN makepkg
 
 USER root
+RUN ls -t *.pkg.tar.xz | xargs pacman -U --noconfirm
+WORKDIR ${HOME}/roswell
 RUN ls -t *.pkg.tar.xz | xargs pacman -U --noconfirm
 
 WORKDIR ${HOME}/common-lisp-jupyter
