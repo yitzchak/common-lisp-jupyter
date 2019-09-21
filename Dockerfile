@@ -30,8 +30,12 @@ RUN rm -rf roswell; ros install sbcl-bin; ros install abcl-bin; \
   jupyter labextension install @jupyter-widgets/jupyterlab-manager; \
   jupyter nbextension enable --user --py widgetsnbextension
 
-COPY --chown=${NB_USER} . ${HOME}/common-lisp-jupyter
+USER root
+COPY . ${HOME}/common-lisp-jupyter
+RUN chown -R ${NB_UID} common-lisp-jupyter && \
+  chgrp -R ${NB_USER} common-lisp-jupyter
 
+USER ${NB_USER}
 RUN cd common-lisp-jupyter; ros install ./common-lisp-jupyter.asd; exit 0
 RUN cd common-lisp-jupyter; ros install ./common-lisp-jupyter.asd && \
   ros run --lisp abcl-bin --eval "(ql:quickload :common-lisp-jupyter)" \
