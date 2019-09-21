@@ -5,57 +5,40 @@ ARG NB_UID=1000
 
 ENV USER ${NB_USER}
 ENV HOME /home/${NB_USER}
-ENV PATH "${HOME}/.roswell/bin:${PATH}"
+ENV PATH "${HOME}/.roswell/bin:${HOME}/.local/bin:${PATH}"
 
-RUN echo "[multilib]" >> /etc/pacman.conf
-RUN echo "Include = /etc/pacman.d/mirrorlist" >> /etc/pacman.conf
+RUN echo -e "[multilib]\nInclude = /etc/pacman.d/mirrorlist" >> /etc/pacman.conf
 
-RUN pacman -Syu --noconfirm base-devel git jre8-openjdk jupyter lib32-zeromq \
-  maven readline
-
-RUN useradd --create-home --shell=/bin/false --uid=${NB_UID} ${NB_USER}
+RUN pacman -Syu --noconfirm --needed base-devel git jre8-openjdk lib32-zeromq \
+  maven npm readline python-pip; \
+  useradd --create-home --shell=/bin/false --uid=${NB_UID} ${NB_USER}
 
 WORKDIR ${HOME}
 
 USER ${NB_USER}
-RUN git clone https://aur.archlinux.org/roswell.git
-WORKDIR ${HOME}/roswell
-RUN makepkg
+RUN git clone https://aur.archlinux.org/roswell.git && \
+  cd roswell && makepkg
 
 USER root
-RUN ls -t *.pkg.tar.xz | xargs pacman -U --noconfirm
-
-WORKDIR ${HOME}/common-lisp-jupyter
-
-COPY . ${HOME}/common-lisp-jupyter
-RUN chown -R ${NB_UID} ${HOME} && chgrp -R ${NB_USER} ${HOME}
+RUN ls -t roswell/*.pkg.tar.xz | xargs pacman -U --noconfirm
 
 USER ${NB_USER}
+RUN rm -rf roswell; ros install sbcl-bin; ros install abcl-bin; \
+  ros install ccl-bin; ros install cmu-bin; ros use sbcl-bin; \
+  pip install --user jupyter jupyterlab; \
+  jupyter serverextension enable --user --py jupyterlab; \
+  jupyter labextension install @jupyter-widgets/jupyterlab-manager; \
+  jupyter nbextension enable --user --py widgetsnbextension
 
-RUN ros install sbcl-bin
-RUN ros install ./common-lisp-jupyter.asd; exit 0
-RUN ros install ./common-lisp-jupyter.asd
-RUN echo '(print "Hello World!")' | jupyter-console --no-confirm-exit --kernel=common-lisp \
-  --ZMQTerminalInteractiveShell.kernel_timeout=240
+COPY --chown=${NB_UID}:${NB_USER} . ${HOME}/common-lisp-jupyter
 
-RUN ros install abcl-bin
-RUN ros run --lisp abcl-bin --eval "(ql:quickload :common-lisp-jupyter)" \
-  --eval "(cl-jupyter:install-roswell :implementation \"abcl-bin\")" --quit
-RUN echo '(print "Hello World!")' | jupyter-console --no-confirm-exit --kernel=common-lisp_abcl-bin \
-  --ZMQTerminalInteractiveShell.kernel_timeout=240
-
-RUN ros install ccl-bin
-RUN ros run --lisp ccl-bin --eval "(ql:quickload :common-lisp-jupyter)" \
-  --eval "(cl-jupyter:install-roswell :implementation \"ccl-bin\")" --quit
-RUN echo '(print "Hello World!")' | jupyter-console --no-confirm-exit --kernel=common-lisp_ccl-bin \
-  --ZMQTerminalInteractiveShell.kernel_timeout=240
-
-RUN ros install cmu-bin
-RUN ros run --lisp cmu-bin --eval "(ql:quickload :common-lisp-jupyter)" \
+RUN cd common-lisp-jupyter; ros install ./common-lisp-jupyter.asd; exit 0
+RUN cd common-lisp-jupyter; ros install ./common-lisp-jupyter.asd && \
+  ros run --lisp abcl-bin --eval "(ql:quickload :common-lisp-jupyter)" \
+  --eval "(cl-jupyter:install-roswell :implementation \"abcl-bin\")" --quit && \
+  ros run --lisp ccl-bin --eval "(ql:quickload :common-lisp-jupyter)" \
+  --eval "(cl-jupyter:install-roswell :implementation \"ccl-bin\")" --quit && \
+  ros run --lisp cmu-bin --eval "(ql:quickload :common-lisp-jupyter)" \
   --eval "(cl-jupyter:install-roswell :implementation \"cmu-bin\")" --quit
-RUN echo '(print "Hello World!")' | jupyter-console --no-confirm-exit --kernel=common-lisp_cmu-bin \
-  --ZMQTerminalInteractiveShell.kernel_timeout=240
-
-RUN ros use sbcl-bin
 
 WORKDIR ${HOME}/common-lisp-jupyter/examples
