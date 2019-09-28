@@ -4,16 +4,16 @@
 (defclass base-slider (description-widget disabled-slot orientation-slot
                        continuous-update-slot)
   ((readout
-    :initarg :readout
-    :initform t
-    :accessor widget-readout
-    :documentation "Display the current value of the slider next to it."
-    :trait :bool)
+     :initarg :readout
+     :initform t
+     :accessor widget-readout
+     :documentation "Display the current value of the slider next to it."
+     :trait :bool)
    (readout-format
-    :initarg :readout-format
-    :accessor widget-readout-format
-    :documentation "Format for the readout"
-    :trait :unicode))
+     :initarg :readout-format
+     :accessor widget-readout-format
+     :documentation "Format for the readout"
+     :trait :unicode))
   (:metaclass trait-metaclass)
   (:default-initargs
     :style (make-widget 'slider-style)))
@@ -21,21 +21,21 @@
 
 (defclass number-slider (base-slider)
   ((readout-format
-    :initarg :readout-format
-    :accessor widget-readout-format
-    :documentation "Format for the readout"
-    :trait :unicode))
+     :initarg :readout-format
+     :accessor widget-readout-format
+     :documentation "Format for the readout"
+     :trait :unicode))
   (:metaclass trait-metaclass))
 
 
 (defclass float-log-slider (number-slider float-min-max-slots float-step-slot
                             float-value-slot)
   ((base
-    :initarg :base
-    :initform 10.0d0
-    :accessor widget-base
-    :documentation "Base for the logarithm"
-    :trait :float))
+     :initarg :base
+     :initform 10.0d0
+     :accessor widget-base
+     :documentation "Base for the logarithm"
+     :trait :float))
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "FloatLogSliderModel"
@@ -50,11 +50,11 @@
 
 (defclass float-range-slider (number-slider float-min-max-slots float-step-slot)
   ((value
-    :initarg :value
-    :initform '(0.0d0 1.0d0)
-    :accessor widget-value
-    :documentation "Float range"
-    :trait :float-list))
+     :initarg :value
+     :initform '(0.0d0 1.0d0)
+     :accessor widget-value
+     :documentation "Float range"
+     :trait :float-list))
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "FloatRangeSliderModel"
@@ -82,11 +82,11 @@ value."))
 
 (defclass int-range-slider (number-slider int-min-max-slots int-step-slot)
   ((value
-    :initarg :value
-    :initform '(0 1)
-    :accessor widget-value
-    :documentation "Int range value"
-    :trait :int-list))
+     :initarg :value
+     :initform '(0 1)
+     :accessor widget-value
+     :documentation "Int range value"
+     :trait :int-list))
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "IntRangeSliderModel"
@@ -120,11 +120,11 @@ value."))
 
 (defclass selection-range-slider (label-slider)
   ((index
-    :initarg :index
-    :initform '(0 0)
-    :accessor widget-index
-    :documentation "Min and max selected indices"
-    :trait :int-list))
+     :initarg :index
+     :initform '(0 0)
+     :accessor widget-index
+     :documentation "Min and max selected indices"
+     :trait :int-list))
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "SelectionRangeSliderModel"

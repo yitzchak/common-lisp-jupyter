@@ -84,6 +84,7 @@
     #:button-style
     #:checkbox
     #:color-picker
+    #:combobox
     #:controller
     #:controller-axis
     #:controller-button
@@ -93,6 +94,7 @@
     #:display
     #:dom-widget
     #:dropdown
+    #:file-upload
     #:float-log-slider
     #:float-progress
     #:float-range-slider
@@ -144,6 +146,7 @@
     #:widget-%view-module
     #:widget-%view-module-version
     #:widget-%view-name
+    #:widget-accept
     #:widget-align-content
     #:widget-align-items
     #:widget-align-self
@@ -156,19 +159,22 @@
     #:widget-bottom
     #:widget-box-style
     #:widget-button-color
+    #:widget-buttons
     #:widget-button-style
     #:widget-button-width
-    #:widget-buttons
     #:widget-children
     #:widget-concise
     #:widget-connected
     #:widget-continuous-update
     #:widget-controls
+    #:widget-data
     #:widget-description
     #:widget-description-tooltip
     #:widget-description-width
     #:widget-disabled
     #:widget-display
+    #:widget-ensure-option
+    #:widget-error
     #:widget-flex
     #:widget-flex-flow
     #:widget-font-weight
@@ -176,8 +182,10 @@
     #:widget-grid-area
     #:widget-grid-auto-columns
     #:widget-grid-auto-flow
+    #:widget-grid-auto-rows
     #:widget-grid-column
     #:widget-grid-gap
+    #:widget-grid-row
     #:widget-grid-template-areas
     #:widget-grid-template-columns
     #:widget-grid-template-rows
@@ -197,11 +205,16 @@
     #:widget-max
     #:widget-max-height
     #:widget-max-width
+    #:widget-metadata
     #:widget-min
     #:widget-min-height
     #:widget-min-width
     #:widget-msg-id
+    #:widget-multiple
     #:widget-name
+    #:widget-object-fit
+    #:widget-object-positon
+    #:widget-options
     #:widget-order
     #:widget-orientation
     #:widget-outputs

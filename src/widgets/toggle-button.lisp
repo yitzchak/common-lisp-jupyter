@@ -15,16 +15,16 @@
 (defclass toggle-buttons (description-widget %options-labels-slot
                           button-style-slot disabled-slot index-slot)
   ((icons
-    :initarg :icons
-    :initform ""
-    :accessor widget-icons
-    :documentation "Icons names for each button (FontAwesome names without the fa- prefix)."
-    :trait :unicode-list)
+     :initarg :icons
+     :initform ""
+     :accessor widget-icons
+     :documentation "Icons names for each button (FontAwesome names without the fa- prefix)."
+     :trait :unicode-list)
    (tooltips
-    :initarg :tooltips
-    :accessor widget-tooltips
-    :documentation "Tooltips for each button."
-    :trait :unicode-list))
+     :initarg :tooltips
+     :accessor widget-tooltips
+     :documentation "Tooltips for each button."
+     :trait :unicode-list))
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "ToggleButtonsModel"

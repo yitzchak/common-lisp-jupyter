@@ -3,11 +3,11 @@
 
 (defclass base-select (description-widget %options-labels-slot disabled-slot)
   ((rows
-    :initarg :rows
-    :initform 5
-    :accessor widget-rows
-    :documentation "The number of rows to display."
-    :trait :int))
+     :initarg :rows
+     :initform 5
+     :accessor widget-rows
+     :documentation "The number of rows to display."
+     :trait :int))
   (:metaclass trait-metaclass))
 
 
@@ -25,11 +25,11 @@
 
 (defclass select-multiple (base-select)
   ((index
-    :initarg :index
-    :initform nil
-    :accessor widget-index
-    :documentation "Selected indicies"
-    :trait :int-list))
+     :initarg :index
+     :initform nil
+     :accessor widget-index
+     :documentation "Selected indicies"
+     :trait :int-list))
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "SelectMultipleModel"

@@ -2,11 +2,11 @@
 
 (defclass valid (description-widget disabled-slot bool-value-slot)
   ((readout
-    :initarg :readout
-    :initform "Invalid"
-    :accessor widget-readout
-    :documentation "Message displayed when the value is False"
-    :trait :unicode))
+     :initarg :readout
+     :initform "Invalid"
+     :accessor widget-readout
+     :documentation "Message displayed when the value is False"
+     :trait :unicode))
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "ValidModel"
