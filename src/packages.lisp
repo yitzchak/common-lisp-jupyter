@@ -112,7 +112,6 @@
     #:label
     #:layout
     #:link
-    #:make-widget
     #:on-button-click
     #:on-trait-change
     #:output

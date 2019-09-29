@@ -11,7 +11,7 @@
   (:metaclass trait-metaclass)
   (:default-initargs
     :%view-name "ProgressView"
-    :style (make-widget 'progress-style)))
+    :style (make-instance 'progress-style)))
 
 
 (defclass float-progress (base-progress float-min-max-slots float-value-slot)

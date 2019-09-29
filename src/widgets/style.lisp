@@ -120,4 +120,4 @@
      :trait :unicode))
   (:metaclass trait-metaclass)
   (:default-initargs
-    :style (make-widget 'description-style)))
+    :style (make-instance 'description-style)))

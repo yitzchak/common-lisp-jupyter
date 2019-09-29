@@ -16,7 +16,7 @@
      :trait :unicode))
   (:metaclass trait-metaclass)
   (:default-initargs
-    :style (make-widget 'slider-style)))
+    :style (make-instance 'slider-style)))
 
 
 (defclass number-slider (base-slider)

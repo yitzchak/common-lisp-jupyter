@@ -251,7 +251,7 @@ expose the shorthand."))
      :trait :unicode-list)
    (layout
      :initarg :layout
-     :initform (make-widget 'layout)
+     :initform (make-instance 'layout)
      :accessor widget-layout
      :documentation "Reference to layout widget."
      :trait :widget))

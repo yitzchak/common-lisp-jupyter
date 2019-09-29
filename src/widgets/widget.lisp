@@ -197,18 +197,17 @@
   (declare (ignore type old-value new-value))
   (send-state w name))
 
-(defun make-widget (class &rest rest &key &allow-other-keys)
-  "Create a Jupyter widget and inform the frontend to create a synchronized model."
+(defmethod initialize-instance :around ((instance widget) &rest rest &key &allow-other-keys)
+  (declare (ignore rest))
   (with-trait-silence
-    (let* ((inst (apply 'make-instance class rest))
-           (state (to-json-state inst)))
+    (call-next-method)
+    (let ((state (to-json-state instance)))
       (multiple-value-bind (buffer-paths buffers) (extract-buffers state)
-        (jupyter:send-comm-open inst
+        (jupyter:send-comm-open instance
           (jsown:new-js ("state" state)
                         ("buffer_paths" buffer-paths))
           (jsown:new-js ("version" +protocol-version+))
-          buffers)
-        inst))))
+          buffers)))))
 
 (defmethod jupyter:create-comm ((target-name (eql :|jupyter.widget|)) id data metadata buffers)
   (let* ((state (jupyter:json-getf data "state"))
@@ -224,7 +223,7 @@
          (class (gethash name *widgets*)))
     (when class
       (with-trait-silence
-        (let ((w (make-widget class)))
+        (let ((w (make-instance class)))
           (update-state w data buffers)
           w)))))
 

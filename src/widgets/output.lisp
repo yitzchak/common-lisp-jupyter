@@ -35,7 +35,7 @@ output area.
 
 ```common-lisp
 (use-package :jupyter-widgets)
-(defvar out (make-widget 'output))
+(defvar out (make-instance 'output))
 (with-output out
   (print \"prints to output area\")
 ```"))
