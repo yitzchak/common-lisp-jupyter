@@ -247,7 +247,7 @@ during the installation phase of Roswell.
 [Jupyter]: https://jupyter.org/
 [Maxima-Jupyter]: https://github.com/robert-dodier/maxima-jupyter/
 [mybinder-badge]: https://mybinder.org/badge_logo.svg
-[mybinder]: https://mybinder.org/v2/gh/yitzchak/common-lisp-jupyter/master
+[mybinder]: https://mybinder.org/v2/gh/yitzchak/common-lisp-jupyter/master?urlpath=lab
 [nbviewer]: http://nbviewer.jupyter.org
 [quicklisp-badge]: http://quickdocs.org/badge/common-lisp-jupyter.svg
 [quicklisp-clj]: http://quickdocs.org/common-lisp-jupyter

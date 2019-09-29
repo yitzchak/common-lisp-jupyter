@@ -2,17 +2,17 @@
 
 (defclass output (dom-widget)
   ((msg-id
-    :initarg :msg-id
-    :initform ""
-    :accessor widget-msg-id
-    :documentation "Parent message id of messages to capture"
-    :trait :unicode)
+     :initarg :msg-id
+     :initform ""
+     :accessor widget-msg-id
+     :documentation "Parent message id of messages to capture"
+     :trait :unicode)
    (outputs
-    :initarg :outputs
-    :initform nil
-    :accessor widget-outputs
-    :documentation "The output messages synced from the frontend."
-    :trait :list))
+     :initarg :outputs
+     :initform nil
+     :accessor widget-outputs
+     :documentation "The output messages synced from the frontend."
+     :trait :list))
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "OutputModel"

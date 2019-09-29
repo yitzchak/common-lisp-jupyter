@@ -19,11 +19,11 @@
 
 (defclass text-area (text)
   ((rows
-    :initarg :rows
-    :initform nil
-    :accessor widget-rows
-    :documentation "The number of rows to display."
-    :trait :int))
+     :initarg :rows
+     :initform nil
+     :accessor widget-rows
+     :documentation "The number of rows to display."
+     :trait :int))
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "TextareaModel"

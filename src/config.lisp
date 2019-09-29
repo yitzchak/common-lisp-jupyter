@@ -1,3 +1,3 @@
 (in-package #:jupyter)
 
-(defparameter +KERNEL-PROTOCOL-VERSION+ "5.1")
+(defparameter +KERNEL-PROTOCOL-VERSION+ "5.3")

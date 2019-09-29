@@ -2,9 +2,9 @@
 
 (defparameter +protocol-version+ "2.0.0")
 (defparameter +base-module+ "@jupyter-widgets/base")
-(defparameter +base-module-version+ "1.1.0")
+(defparameter +base-module-version+ "1.2.0")
 (defparameter +controls-module+ "@jupyter-widgets/controls")
-(defparameter +controls-module-version+ "1.4.0")
+(defparameter +controls-module-version+ "1.5.0")
 (defparameter +output-module+ "@jupyter-widgets/output")
 (defparameter +output-module-version+ "1.0.0")
 
@@ -46,35 +46,35 @@
 
 (defclass widget (jupyter:comm jupyter:result)
   ((%model-name
-    :initarg :%model-name
-    :reader widget-%module-name
-    :documentation "Name of the model."
-    :trait :unicode)
+     :initarg :%model-name
+     :reader widget-%module-name
+     :documentation "Name of the model."
+     :trait :unicode)
    (%model-module
-    :initarg :%model-module
-    :reader widget-%module-module
-    :documentation "The namespace for the model."
-    :trait :unicode)
+     :initarg :%model-module
+     :reader widget-%module-module
+     :documentation "The namespace for the model."
+     :trait :unicode)
    (%model-module-version
-    :initarg :%model-module-version
-    :reader widget-%module-module-version
-    :documentation "A semver requirement for namespace version containing the model."
-    :trait :unicode)
+     :initarg :%model-module-version
+     :reader widget-%module-module-version
+     :documentation "A semver requirement for namespace version containing the model."
+     :trait :unicode)
    (%view-name
-    :initarg :%view-name
-    :reader widget-%view-name
-    :documentation "Name of the view."
-    :trait :unicode)
+     :initarg :%view-name
+     :reader widget-%view-name
+     :documentation "Name of the view."
+     :trait :unicode)
    (%view-module
-    :initarg :%view-module
-    :reader widget-%view-module
-    :documentation "The namespace for the view."
-    :trait :unicode)
+     :initarg :%view-module
+     :reader widget-%view-module
+     :documentation "The namespace for the view."
+     :trait :unicode)
    (%view-module-version
-    :initarg :%view-module-version
-    :reader widget-%view-module-version
-    :documentation "A semver requirement for namespace version containing the view."
-    :trait :unicode))
+     :initarg :%view-module-version
+     :reader widget-%view-module-version
+     :documentation "A semver requirement for namespace version containing the view."
+     :trait :unicode))
   (:metaclass trait-metaclass)
   (:default-initargs
     :display-data t

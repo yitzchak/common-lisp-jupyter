@@ -396,6 +396,49 @@ Displays a boolean `value` in the form of a checkbox.
 Color picker widget
 
 
+## *Class* `combobox`
+
+### Superclasses
+
+- `combobox`
+- `dom-widget`
+- `widget`
+- `jupyter:comm`
+- `jupyter:result`
+- `standard-object`
+
+### Slots
+
+- `ensure-option` &mdash; If set, ensure value is in options. Implies continuous_update=False.
+
+- `options` &mdash; Dropdown options for the combobox
+
+
+### Initial Arguments
+
+- `:value`
+- `:placeholder`
+- `:disabled`
+- `:continuous-update`
+- `:display-data`
+- `:id`
+- `:target-name`
+- `:kernel`
+- `:%model-name`
+- `:%model-module`
+- `:%model-module-version`
+- `:%view-name`
+- `:%view-module`
+- `:%view-module-version`
+- `:%dom-classes`
+- `:layout`
+- `:style`
+- `:description`
+- `:description-tooltip`
+- `:ensure-option`
+- `:options`
+
+
 ## *Class* `controller`
 
 ### Superclasses
@@ -709,6 +752,57 @@ Base class for all Jupyter widgets which have DOM view.
 ### Description
 
 Allows you to select a single item from a dropdown.
+
+
+## *Class* `file-upload`
+
+### Superclasses
+
+- `file-upload`
+- `dom-widget`
+- `widget`
+- `jupyter:comm`
+- `jupyter:result`
+- `standard-object`
+
+### Slots
+
+- `accept` &mdash; If set, ensure value is in options. Implies continuous_update=False.	File types to accept, empty string for all.
+
+- `data` &mdash; List of file content (bytes)
+
+- `error` &mdash; Error message
+
+- `metadata` &mdash; List of file metadata
+
+- `multiple` &mdash; If True, allow for multiple files upload
+
+
+### Initial Arguments
+
+- `:icon`
+- `:disabled`
+- `:button-style`
+- `:display-data`
+- `:id`
+- `:target-name`
+- `:kernel`
+- `:%model-name`
+- `:%model-module`
+- `:%model-module-version`
+- `:%view-name`
+- `:%view-module`
+- `:%view-module-version`
+- `:%dom-classes`
+- `:layout`
+- `:style`
+- `:description`
+- `:description-tooltip`
+- `:accept`
+- `:data`
+- `:error`
+- `:metadata`
+- `:multiple`
 
 
 ## *Class* `float-log-slider`
@@ -1361,9 +1455,13 @@ $$ $$ and similar latex tags).
 
 - `grid-auto-flow` &mdash; The grid-auto-flow CSS attribute.
 
+- `grid-auto-rows` &mdash; The grid-auto-rows CSS attribute.
+
 - `grid-column` &mdash; The grid-column CSS attribute.
 
 - `grid-gap` &mdash; The grid-gap CSS attribute.
+
+- `grid-row` &mdash; The grid-row CSS attribute.
 
 - `grid-template-areas` &mdash; The grid-template-areas CSS attribute.
 
@@ -1386,6 +1484,10 @@ $$ $$ and similar latex tags).
 - `min-height` &mdash; The min-height CSS attribute.
 
 - `min-width` &mdash; The min-width CSS attribute.
+
+- `object-fit` &mdash; The object-fit CSS attribute.
+
+- `object-position` &mdash; The object-position CSS attribute.
 
 - `order` &mdash; The order CSS attribute.
 
@@ -1429,8 +1531,10 @@ $$ $$ and similar latex tags).
 - `:grid-area`
 - `:grid-auto-columns`
 - `:grid-auto-flow`
+- `:grid-auto-rows`
 - `:grid-column`
 - `:grid-gap`
+- `:grid-row`
 - `:grid-template-areas`
 - `:grid-template-columns`
 - `:grid-template-rows`
@@ -1442,6 +1546,8 @@ $$ $$ and similar latex tags).
 - `:max-width`
 - `:min-height`
 - `:min-width`
+- `:object-fit`
+- `:object-position`
 - `:order`
 - `:overflow`
 - `:overflow-x`
@@ -2472,6 +2578,23 @@ Base class for all Jupyter widgets.
 ```
 
 
+## *Generic Function* `widget-accept`
+
+### Syntax
+
+```common-lisp
+(widget-accept sb-pcl::object)
+```
+
+## *Generic Function* `widget-accept`
+
+### Syntax
+
+```common-lisp
+(widget-accept sb-pcl::new-value sb-pcl::object)
+```
+
+
 ## *Generic Function* `widget-align-content`
 
 ### Syntax
@@ -2812,6 +2935,23 @@ Base class for all Jupyter widgets.
 ```
 
 
+## *Generic Function* `widget-data`
+
+### Syntax
+
+```common-lisp
+(widget-data sb-pcl::object)
+```
+
+## *Generic Function* `widget-data`
+
+### Syntax
+
+```common-lisp
+(widget-data sb-pcl::new-value sb-pcl::object)
+```
+
+
 ## *Generic Function* `widget-description`
 
 ### Syntax
@@ -2894,6 +3034,40 @@ Base class for all Jupyter widgets.
 
 ```common-lisp
 (widget-display sb-pcl::new-value sb-pcl::object)
+```
+
+
+## *Generic Function* `widget-ensure-option`
+
+### Syntax
+
+```common-lisp
+(widget-ensure-option sb-pcl::object)
+```
+
+## *Generic Function* `widget-ensure-option`
+
+### Syntax
+
+```common-lisp
+(widget-ensure-option sb-pcl::new-value sb-pcl::object)
+```
+
+
+## *Generic Function* `widget-error`
+
+### Syntax
+
+```common-lisp
+(widget-error sb-pcl::object)
+```
+
+## *Generic Function* `widget-error`
+
+### Syntax
+
+```common-lisp
+(widget-error sb-pcl::new-value sb-pcl::object)
 ```
 
 
@@ -3016,6 +3190,23 @@ Base class for all Jupyter widgets.
 ```
 
 
+## *Generic Function* `widget-grid-auto-rows`
+
+### Syntax
+
+```common-lisp
+(widget-grid-auto-rows sb-pcl::object)
+```
+
+## *Generic Function* `widget-grid-auto-rows`
+
+### Syntax
+
+```common-lisp
+(widget-grid-auto-rows sb-pcl::new-value sb-pcl::object)
+```
+
+
 ## *Generic Function* `widget-grid-column`
 
 ### Syntax
@@ -3047,6 +3238,23 @@ Base class for all Jupyter widgets.
 
 ```common-lisp
 (widget-grid-gap sb-pcl::new-value sb-pcl::object)
+```
+
+
+## *Generic Function* `widget-grid-row`
+
+### Syntax
+
+```common-lisp
+(widget-grid-row sb-pcl::object)
+```
+
+## *Generic Function* `widget-grid-row`
+
+### Syntax
+
+```common-lisp
+(widget-grid-row sb-pcl::new-value sb-pcl::object)
 ```
 
 
@@ -3373,6 +3581,23 @@ Base class for all Jupyter widgets.
 ```
 
 
+## *Generic Function* `widget-metadata`
+
+### Syntax
+
+```common-lisp
+(widget-metadata sb-pcl::object)
+```
+
+## *Generic Function* `widget-metadata`
+
+### Syntax
+
+```common-lisp
+(widget-metadata sb-pcl::new-value sb-pcl::object)
+```
+
+
 ## *Generic Function* `widget-min`
 
 ### Syntax
@@ -3441,6 +3666,23 @@ Base class for all Jupyter widgets.
 ```
 
 
+## *Generic Function* `widget-multiple`
+
+### Syntax
+
+```common-lisp
+(widget-multiple sb-pcl::object)
+```
+
+## *Generic Function* `widget-multiple`
+
+### Syntax
+
+```common-lisp
+(widget-multiple sb-pcl::new-value sb-pcl::object)
+```
+
+
 ## *Generic Function* `widget-name`
 
 ### Syntax
@@ -3455,6 +3697,41 @@ Base class for all Jupyter widgets.
 
 ```common-lisp
 (widget-name sb-pcl::new-value sb-pcl::object)
+```
+
+
+## *Generic Function* `widget-object-fit`
+
+### Syntax
+
+```common-lisp
+(widget-object-fit sb-pcl::object)
+```
+
+## *Generic Function* `widget-object-fit`
+
+### Syntax
+
+```common-lisp
+(widget-object-fit sb-pcl::new-value sb-pcl::object)
+```
+
+
+
+## *Generic Function* `widget-options`
+
+### Syntax
+
+```common-lisp
+(widget-options sb-pcl::object)
+```
+
+## *Generic Function* `widget-options`
+
+### Syntax
+
+```common-lisp
+(widget-options sb-pcl::new-value sb-pcl::object)
 ```
 
 

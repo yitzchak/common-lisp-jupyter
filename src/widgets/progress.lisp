@@ -3,11 +3,11 @@
 
 (defclass base-progress (description-widget orientation-slot)
   ((bar-style
-    :initarg :bar-style
-    :initform ""
-    :accessor widget-bar-style
-    :documentation "Use a predefined styling for the progess bar."
-    :trait :bool))
+     :initarg :bar-style
+     :initform ""
+     :accessor widget-bar-style
+     :documentation "Use a predefined styling for the progess bar."
+     :trait :bool))
   (:metaclass trait-metaclass)
   (:default-initargs
     :%view-name "ProgressView"

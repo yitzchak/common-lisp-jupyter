@@ -3,10 +3,10 @@
 (defclass button (styled-widget button-style-slot disabled-slot icon-slot
                   tooltip-slot)
   ((description
-    :initarg :description
-    :accessor widget-description
-    :documentation "Button label."
-    :trait :unicode))
+     :initarg :description
+     :accessor widget-description
+     :documentation "Button label."
+     :trait :unicode))
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "ButtonModel"
