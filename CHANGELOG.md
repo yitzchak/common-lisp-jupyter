@@ -7,6 +7,7 @@ of how the versioning scheme that this project does not use is clearly superior
 to random natural numbers and how incrementing the minor version number
 indicates backward compatible changes, unless it does not.
 
+- 2019-09-29 — Add `combobox`, `file-upload` and support for v7.5 widgets.
 - 2019-09-27 — Add support for JupyterLab in Docker.
 - 2019-09-07 — Add system-wide installation method.
 - 2019-05-06 — Add raw string reader for kernel command line.
