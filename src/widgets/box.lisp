@@ -23,9 +23,9 @@
 
 ```common-lisp
 (use-package :jupyter-widgets)
-(defvar title-widget (make-widget 'html :value \"<em>Box Example</em>\"))
-(defvar slider (make-widget 'int-slider))
-(make-widget 'box :children (list title-widget slider))
+(defvar title-widget (make-instance 'html :value \"<em>Box Example</em>\"))
+(defvar slider (make-instance 'int-slider))
+(make-instance 'box :children (list title-widget slider))
 ```"))
 
 (register-widget box)
@@ -86,9 +86,9 @@
 
 ```common-lisp
 (use-package :jupyter-widgets)
-(defvar title-widget (make-widget 'html :value \"<em>Box Example</em>\"))
-(defvar slider (make-widget 'int-slider))
-(make-widget 'h-box :children (list title-widget slider))
+(defvar title-widget (make-instance 'html :value \"<em>Box Example</em>\"))
+(defvar slider (make-instance 'int-slider))
+(make-instance 'h-box :children (list title-widget slider))
 ```"))
 
 (register-widget h-box)
@@ -118,9 +118,9 @@
 
 ```common-lisp
 (use-package :jupyter-widgets)
-(defvar title-widget (make-widget 'html :value \"<em>Box Example</em>\"))
-(defvar slider (make-widget 'int-slider))
-(make-widget 'v-box :children (list title-widget slider))
+(defvar title-widget (make-instance 'html :value \"<em>Box Example</em>\"))
+(defvar slider (make-instance 'int-slider))
+(make-instance 'v-box :children (list title-widget slider))
 ```"))
 
 (register-widget v-box)

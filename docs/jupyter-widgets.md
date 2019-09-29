@@ -223,9 +223,9 @@ Displays multiple widgets in a group. The widgets are laid out horizontally.
 
 ```common-lisp
 (use-package :jupyter-widgets)
-(defvar title-widget (make-widget 'html :value "<em>Box Example</em>"))
-(defvar slider (make-widget 'int-slider))
-(make-widget 'box :children (list title-widget slider))
+(defvar title-widget (make-instance 'html :value "<em>Box Example</em>"))
+(defvar slider (make-instance 'int-slider))
+(make-instance 'box :children (list title-widget slider))
 ```
 
 
@@ -1091,9 +1091,9 @@ Displays multiple widgets horizontally using the flexible box model.
 
 ```common-lisp
 (use-package :jupyter-widgets)
-(defvar title-widget (make-widget 'html :value "<em>Box Example</em>"))
-(defvar slider (make-widget 'int-slider))
-(make-widget 'h-box :children (list title-widget slider))
+(defvar title-widget (make-instance 'html :value "<em>Box Example</em>"))
+(defvar slider (make-instance 'int-slider))
+(make-instance 'h-box :children (list title-widget slider))
 ```
 
 
@@ -1599,18 +1599,6 @@ expose the shorthand.
 Link Widget
 
 
-## *Function* `make-widget`
-
-### Syntax
-
-```common-lisp
-(make-widget class &rest rest &key &allow-other-keys)
-```
-
-### Description
-
-Create a Jupyter widget and inform the frontend to create a synchronized model.
-
 
 ## *Generic Function* `on-button-click`
 
@@ -1684,7 +1672,7 @@ output area.
 
 ```common-lisp
 (use-package :jupyter-widgets)
-(defvar out (make-widget 'output))
+(defvar out (make-instance 'output))
 (with-output out
   (print "prints to output area")
 ```
@@ -2302,9 +2290,9 @@ Displays multiple widgets vertically using the flexible box model.
 
 ```common-lisp
 (use-package :jupyter-widgets)
-(defvar title-widget (make-widget 'html :value "<em>Box Example</em>"))
-(defvar slider (make-widget 'int-slider))
-(make-widget 'v-box :children (list title-widget slider))
+(defvar title-widget (make-instance 'html :value "<em>Box Example</em>"))
+(defvar slider (make-instance 'int-slider))
+(make-instance 'v-box :children (list title-widget slider))
 ```
 
 
