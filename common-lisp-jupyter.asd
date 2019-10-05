@@ -10,7 +10,7 @@
     :cl-base64
     :cl-containers
     :closer-mop
-    :ironclad
+    #-clasp :ironclad
     :iterate
     :jsown
     :pzmq
