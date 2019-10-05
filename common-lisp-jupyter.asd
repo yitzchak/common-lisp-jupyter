@@ -8,7 +8,6 @@
     :babel
     :bordeaux-threads
     :cl-base64
-    :cl-containers
     :closer-mop
     #-clasp :ironclad
     :iterate
