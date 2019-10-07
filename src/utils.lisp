@@ -18,7 +18,7 @@
     (dotimes (index +uuid-size+)
       (setf (aref bytes index)
         (if (= 6 index)
-          (logior #x40 (random 4))
+          (logior #x40 (random 16))
           (random 256))))
     (if as-bytes
       bytes
