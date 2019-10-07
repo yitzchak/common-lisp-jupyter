@@ -16,11 +16,10 @@ addons:
     sources:
       - sourceline: 'ppa:darabi/lisp'
     packages:
+      - abcl
       - g++-multilib
       - libzmq3-dev
       - libzmq3-dev:i386
-      - maven
-      - openjdk-8-jdk
       - python3
       - python3-pip
       - python3-setuptools
@@ -36,13 +35,13 @@ env:
     - ROSWELL_INSTALL_DIR=$HOME/.roswell
   matrix:
     - METHOD=img LISP=sbcl
-    - METHOD=ros LISP=abcl
+    - METHOD=loc LISP=sbcl
     - METHOD=ros LISP=ccl-bin
     - METHOD=ros LISP=cmu-bin
     - METHOD=ros LISP=ecl
     - METHOD=ros LISP=sbcl-bin
-    - METHOD=loc LISP=sbcl
     - METHOD=sys LISP=sbcl
+    - METHOD=usr LISP=abcl
     - METHOD=usr LISP=sbcl
 
 matrix:
@@ -50,11 +49,11 @@ matrix:
     - os: osx
       env: METHOD=img LISP=sbcl
     - os: osx
-      env: METHOD=ros LISP=abcl
-    - os: osx
       env: METHOD=ros LISP=cmu-bin
     - os: osx
       env: METHOD=ros LISP=ecl
+    - os: osx
+      env: METHOD=usr LISP=abcl
     - os: osx
       env: METHOD=sys LISP=sbcl
     - os: osx
