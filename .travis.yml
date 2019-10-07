@@ -16,7 +16,6 @@ addons:
     sources:
       - sourceline: 'ppa:darabi/lisp'
     packages:
-      - abcl
       - g++-multilib
       - libzmq3-dev
       - libzmq3-dev:i386
@@ -34,16 +33,16 @@ env:
     - PATH=~/.roswell/bin:$PATH
     - ROSWELL_INSTALL_DIR=$HOME/.roswell
   allow_failures:
-    - METHOD=usr LISP=abcl-bin
+    - METHOD=ros LISP=abcl-bin
   matrix:
     - METHOD=img LISP=sbcl
     - METHOD=loc LISP=sbcl
+    - METHOD=ros LISP=abcl-bin
     - METHOD=ros LISP=ccl-bin
     - METHOD=ros LISP=cmu-bin
     - METHOD=ros LISP=ecl
     - METHOD=ros LISP=sbcl-bin
     - METHOD=sys LISP=sbcl
-    - METHOD=usr LISP=abcl-bin
     - METHOD=usr LISP=sbcl
 
 matrix:
@@ -54,8 +53,6 @@ matrix:
       env: METHOD=ros LISP=cmu-bin
     - os: osx
       env: METHOD=ros LISP=ecl
-    - os: osx
-      env: METHOD=usr LISP=abcl-bin
     - os: osx
       env: METHOD=sys LISP=sbcl
     - os: osx
