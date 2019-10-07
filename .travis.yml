@@ -32,12 +32,9 @@ env:
   global:
     - PATH=~/.roswell/bin:$PATH
     - ROSWELL_INSTALL_DIR=$HOME/.roswell
-  allow_failures:
-    - METHOD=ros LISP=abcl-bin
   matrix:
     - METHOD=img LISP=sbcl
     - METHOD=loc LISP=sbcl
-    - METHOD=ros LISP=abcl-bin
     - METHOD=ros LISP=ccl-bin
     - METHOD=ros LISP=cmu-bin
     - METHOD=ros LISP=ecl
