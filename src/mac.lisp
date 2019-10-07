@@ -32,9 +32,6 @@
 (defmethod stop ((m mac))
   (inform :info m "Stopping message authentification"))
 
-(defun octets-to-hex-string (bytes)
-  (format nil "~(~{~2,'0X~}~)" (coerce bytes 'list)))
-
 (defun compute-signature (m parts)
   (if m
     #-clasp

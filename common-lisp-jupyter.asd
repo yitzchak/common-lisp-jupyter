@@ -14,8 +14,7 @@
     :jsown
     :pzmq
     :trivial-gray-streams
-    :trivial-mimes
-    :uuid)
+    :trivial-mimes)
   :components
     ((:module res
       :components

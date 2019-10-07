@@ -8,8 +8,21 @@
 
 ; (defvar maxima::$kernel_info nil)
 
-(defun make-uuid ()
-  (remove #\- (format nil "~(~A~)" (uuid:make-v4-uuid))))
+(defparameter +uuid-size+ 16)
+
+(defun octets-to-hex-string (bytes)
+  (format nil "~(~{~2,'0X~}~)" (coerce bytes 'list)))
+
+(defun make-uuid (&optional as-bytes)
+  (let ((bytes (make-array +uuid-size+ :element-type 'unsigned-byte)))
+    (dotimes (index +uuid-size+)
+      (setf (aref bytes index)
+        (if (= 6 index)
+          (logior #x40 (random 4))
+          (random 256))))
+    (if as-bytes
+      bytes
+      (octets-to-hex-string bytes))))
 
 (defun json-getf (object indicator &optional default)
   "Safe accessor for the internal JSON format that behaves like getf"
