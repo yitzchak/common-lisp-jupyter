@@ -33,6 +33,8 @@ env:
   global:
     - PATH=~/.roswell/bin:$PATH
     - ROSWELL_INSTALL_DIR=$HOME/.roswell
+  allow_failures:
+    - METHOD=usr LISP=abcl-bin
   matrix:
     - METHOD=img LISP=sbcl
     - METHOD=loc LISP=sbcl
@@ -41,7 +43,7 @@ env:
     - METHOD=ros LISP=ecl
     - METHOD=ros LISP=sbcl-bin
     - METHOD=sys LISP=sbcl
-    - METHOD=usr LISP=abcl
+    - METHOD=usr LISP=abcl-bin
     - METHOD=usr LISP=sbcl
 
 matrix:
@@ -53,7 +55,7 @@ matrix:
     - os: osx
       env: METHOD=ros LISP=ecl
     - os: osx
-      env: METHOD=usr LISP=abcl
+      env: METHOD=usr LISP=abcl-bin
     - os: osx
       env: METHOD=sys LISP=sbcl
     - os: osx
