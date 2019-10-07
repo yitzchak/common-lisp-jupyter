@@ -42,5 +42,7 @@
       (finally
         (return (octets-to-hex-string (ironclad:produce-mac mac)))))
     #+clasp
-    (core:hmac-sha256 (mapcar #'babel:string-to-octets parts) (mac-key m))
+    (core:hmac-sha256
+      (apply #'concatenate '(vector (unsigned-byte 8)) (mapcar #'babel:string-to-octets parts))
+      (mac-key m))
     ""))

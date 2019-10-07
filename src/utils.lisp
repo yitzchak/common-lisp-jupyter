@@ -14,7 +14,7 @@
   (format nil "~(~{~2,'0X~}~)" (coerce bytes 'list)))
 
 (defun make-uuid (&optional as-bytes)
-  (let ((bytes (make-array +uuid-size+ :element-type 'unsigned-byte)))
+  (let ((bytes (make-array +uuid-size+ :element-type '(unsigned-byte 8))))
     (dotimes (index +uuid-size+)
       (setf (aref bytes index)
         (if (= 6 index)
