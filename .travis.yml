@@ -19,6 +19,7 @@ addons:
       - g++-multilib
       - libzmq3-dev
       - libzmq3-dev:i386
+      - maven
       - python3
       - python3-pip
       - python3-setuptools
@@ -47,6 +48,8 @@ matrix:
   exclude:
     - os: osx
       env: METHOD=img LISP=sbcl
+    - os: osx
+      env: METHOD=ros LISP=abcl-bin
     - os: osx
       env: METHOD=ros LISP=cmu-bin
     - os: osx
