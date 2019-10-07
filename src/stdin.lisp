@@ -53,7 +53,7 @@ most cases of *query-io* usage. Makes overloading y-or-no-p unnecessary.
                                 :element-type 'character)
           :reader stdin-stream-input)))
 
-#+(or sbcl clasp) (defmethod interactive-stream-p ((stream stdin-stream))
+#+sbcl (defmethod interactive-stream-p ((stream stdin-stream))
   (declare (ignore stream))
   t)
 
