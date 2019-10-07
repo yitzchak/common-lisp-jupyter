@@ -36,7 +36,7 @@ env:
     - ROSWELL_INSTALL_DIR=$HOME/.roswell
   matrix:
     - METHOD=img LISP=sbcl
-    - METHOD=ros LISP=abcl-bin
+    - METHOD=ros LISP=abcl
     - METHOD=ros LISP=ccl-bin
     - METHOD=ros LISP=cmu-bin
     - METHOD=ros LISP=ecl
@@ -50,7 +50,7 @@ matrix:
     - os: osx
       env: METHOD=img LISP=sbcl
     - os: osx
-      env: METHOD=ros LISP=abcl-bin
+      env: METHOD=ros LISP=abcl
     - os: osx
       env: METHOD=ros LISP=cmu-bin
     - os: osx
