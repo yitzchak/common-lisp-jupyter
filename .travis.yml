@@ -34,11 +34,11 @@ env:
     - ROSWELL_INSTALL_DIR=$HOME/.roswell
   matrix:
     - METHOD=img LISP=sbcl
+    - METHOD=loc LISP=sbcl
     - METHOD=ros LISP=ccl-bin
     - METHOD=ros LISP=cmu-bin
     - METHOD=ros LISP=ecl
     - METHOD=ros LISP=sbcl-bin
-    - METHOD=loc LISP=sbcl
     - METHOD=sys LISP=sbcl
     - METHOD=usr LISP=sbcl
 

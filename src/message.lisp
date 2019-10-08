@@ -20,7 +20,7 @@
                   :initform (jsown:new-js)
                   :accessor message-parent-header)
    (identities :initarg :identities
-               :initform (list (uuid:uuid-to-byte-array (uuid:make-v4-uuid)))
+               :initform (list (make-uuid t))
                :accessor message-identities)
    (metadata :initarg :metadata
              :initform (jsown:new-js)

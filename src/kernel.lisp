@@ -123,7 +123,7 @@
             :accessor kernel-session
             :documentation "Session identifier.")
    (input-queue :initarg :input-queue
-                :initform (make-instance 'cl-containers:basic-queue)
+                :initform nil
                 :reader kernel-input-queue
                 :documentation "Input queue used to feed values into
                 execute_result payloads.")
@@ -343,7 +343,7 @@
 (defun handle-execute-request (kernel msg)
   (inform :info kernel "Handling execute_request message")
   (let ((code (json-getf (message-content msg) "code")))
-    (with-slots (execution-count history iopub package prompt-prefix prompt-suffix shell stdin)
+    (with-slots (execution-count history iopub package prompt-prefix prompt-suffix shell stdin input-queue)
                 kernel
       (setq execution-count (1+ execution-count))
       (add-cell history execution-count code)
@@ -375,10 +375,9 @@
             (let ((ename (format nil "~{~A~^, ~}" (mapcar #'error-result-ename errors)))
                   (evalue (format nil "~{~A~^, ~}" (mapcar #'error-result-evalue errors))))
               (send-execute-reply-error shell msg execution-count ename evalue))
-            (let ((input-queue (kernel-input-queue kernel))
-                  (p (get-output-stream-string *page-output*)))
-              (unless (cl-containers:empty-p input-queue)
-                (set-next-input (cl-containers:dequeue input-queue)))
+            (let ((p (get-output-stream-string *page-output*)))
+              (when input-queue
+                (set-next-input (pop input-queue)))
               (unless (zerop (length p))
                 (page (make-inline-result p)))
               (send-execute-reply-ok shell msg execution-count (coerce *payload* 'list)))))
@@ -618,7 +617,8 @@
 
 (defun enqueue-input (kernel code)
   "Add code to input queue."
-  (cl-containers:enqueue (kernel-input-queue kernel) code))
+  (with-slots (input-queue) kernel
+    (setf input-queue (nconc input-queue (list code)))))
 
 (defun clear (&optional (wait nil))
   "Send clear output message to frontend."
