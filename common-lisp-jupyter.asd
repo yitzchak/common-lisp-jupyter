@@ -9,7 +9,9 @@
      :bordeaux-threads
      :cl-base64
      :closer-mop
-     (:feature (:not :clasp) :ironclad)
+     ; This should be `(:feature (:not :clasp) :ironclad)` but some distributions still don't have
+     ; ASDF 3
+     #-clasp  :ironclad
      :iterate
      :jsown
      :pzmq
