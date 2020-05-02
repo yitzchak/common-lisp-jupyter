@@ -2,6 +2,8 @@ FROM archlinux/base:latest
 
 ARG NB_USER=app
 ARG NB_UID=1000
+ARG LISP_IMPL=sbcl-bin
+ARG OTHER_LISP_IMPL="abcl-bin cmu-bin"
 
 ENV USER ${NB_USER}
 ENV HOME /home/${NB_USER}
@@ -23,8 +25,12 @@ USER root
 RUN ls -t roswell/*.pkg.tar.xz | xargs pacman -U --noconfirm
 
 USER ${NB_USER}
-RUN rm -rf roswell; ros install sbcl-bin; ros install abcl-bin; \
-  ros install ccl-bin; ros install cmu-bin; ros use sbcl-bin; \
+RUN rm -rf roswell; \
+  ros install $LISP_IMPL; \
+  for IMPL in $OTHER_LISP_IMPL; \
+    do ros install $IMPL; \
+  done; \
+  ros use $LISP_IMPL; \
   pip install --user jupyter jupyterlab; \
   jupyter serverextension enable --user --py jupyterlab; \
   jupyter labextension install @jupyter-widgets/jupyterlab-manager; \
@@ -37,12 +43,10 @@ RUN chown -R ${NB_UID} common-lisp-jupyter && \
 
 USER ${NB_USER}
 RUN cd common-lisp-jupyter; ros install ./common-lisp-jupyter.asd; exit 0
-RUN cd common-lisp-jupyter; ros install ./common-lisp-jupyter.asd && \
-  ros run --lisp abcl-bin --eval "(ql:quickload :common-lisp-jupyter)" \
-  --eval "(cl-jupyter:install-roswell :implementation \"abcl-bin\")" --quit && \
-  ros run --lisp ccl-bin --eval "(ql:quickload :common-lisp-jupyter)" \
-  --eval "(cl-jupyter:install-roswell :implementation \"ccl-bin\")" --quit && \
-  ros run --lisp cmu-bin --eval "(ql:quickload :common-lisp-jupyter)" \
-  --eval "(cl-jupyter:install-roswell :implementation \"cmu-bin\")" --quit
+RUN cd common-lisp-jupyter; ros install ./common-lisp-jupyter.asd; \
+  for IMPL in $OTHER_LISP_IMPL; \
+    do ros run --lisp $IMPL --eval "(ql:quickload :common-lisp-jupyter)" \
+      --eval "(cl-jupyter:install-roswell :implementation \"$IMPL\")" --quit; \
+  done
 
 WORKDIR ${HOME}/common-lisp-jupyter/examples
