@@ -3,18 +3,18 @@
   :version "0.1"
   :author "Tarn W. Burton"
   :license "MIT"
-  :depends-on (
-    :alexandria
-    :babel
-    :bordeaux-threads
-    :cl-base64
-    :closer-mop
-    #-clasp :ironclad
-    :iterate
-    :jsown
-    :pzmq
-    :trivial-gray-streams
-    :trivial-mimes)
+  :depends-on
+    (:alexandria
+     :babel
+     :bordeaux-threads
+     :cl-base64
+     :closer-mop
+     (:feature (:not :clasp) :ironclad)
+     :iterate
+     :jsown
+     :pzmq
+     :trivial-gray-streams
+     :trivial-mimes)
   :components
     ((:module res
       :components
