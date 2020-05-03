@@ -39,6 +39,7 @@
     #:enqueue-input
     #:evaluate-code
     #:handling-errors
+    #:inform
     #:inspect-code
     #:kernel
     #:kernel-prompt-prefix
@@ -119,6 +120,7 @@
     #:play
     #:progress-style
     #:radio-buttons
+    #:register-widget
     #:select
     #:select-multiple
     #:selection-range-slider
@@ -130,6 +132,7 @@
     #:toggle-button
     #:toggle-button-style
     #:toggle-buttons
+    #:trait-metaclass
     #:v-box
     #:valid
     #:video

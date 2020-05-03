@@ -76,12 +76,20 @@
   (declare (ignore initargs))
   (find-class 'direct-trait))
 
+(defgeneric trait-name (value))
+
+(defmethod trait-name ((slot effective-trait))
+  (intern (symbol-name (closer-mop:slot-definition-name slot)) "KEYWORD"))
+
+(defmethod trait-name ((value symbol))
+  (intern (symbol-name value) "KEYWORD"))
+
 (defmethod (setf closer-mop:slot-value-using-class)
            (value (class trait-metaclass) object (slot effective-trait))
   (call-next-method
     (let ((type (trait-type slot)))
       (if type
-        (validate-trait object type (closer-mop:slot-definition-name slot) value)
+        (validate-trait object type (trait-name slot) value)
         value))
     class object slot))
 
@@ -90,11 +98,12 @@
   (let ((type (trait-type slot)))
     (if (and (not *trait-silence*) type)
       (let* ((name (closer-mop:slot-definition-name slot))
+             (trait-name (trait-name name))
              (old-value (if (slot-boundp object name) (slot-value object name) :unbound))
              (new-value (call-next-method)))
         (when (not (equal old-value new-value))
           (if *trait-hold*
-            (push (list object type name old-value new-value) *trait-notifications*)
-            (on-trait-change object type name old-value new-value)))
+            (push (list object type trait-name old-value new-value) *trait-notifications*)
+            (on-trait-change object type trait-name old-value new-value)))
         new-value)
       (call-next-method))))
