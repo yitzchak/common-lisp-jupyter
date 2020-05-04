@@ -266,7 +266,7 @@
         'user-installer)
       :display-name
         (if use-implementation
-          (lisp-implementation-type)
+          (format nil "~A (~A)" +display-name+ (lisp-implementation-type))
           +display-name+)
       :implementation bin-path
       :local local
@@ -284,7 +284,7 @@
     (make-instance 'user-image-installer
       :display-name
         (if use-implementation
-          (lisp-implementation-type)
+          (format nil "~A (~A)" +display-name+ (lisp-implementation-type))
           +display-name+)
       :kernel-name
         (if use-implementation
