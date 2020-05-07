@@ -11,7 +11,7 @@
      :closer-mop
      ; This should be `(:feature (:not :clasp) :ironclad)` but some distributions still don't have
      ; ASDF 3
-     #-clasp  :ironclad
+     #-clasp :ironclad
      :iterate
      :jsown
      :pzmq
@@ -26,6 +26,7 @@
       :components
         ((:file "packages")
          (:file "utils")
+         (:file "queue")
          (:file "config")
          (:file "log")
          (:file "mac")

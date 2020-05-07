@@ -44,6 +44,7 @@
     #:kernel
     #:kernel-prompt-prefix
     #:kernel-prompt-suffix
+    #:make-uuid
     #:on-comm-close
     #:on-comm-message
     #:on-comm-open
@@ -114,6 +115,7 @@
     #:layout
     #:link
     #:on-button-click
+    #:on-custom-message
     #:on-trait-change
     #:output
     #:password
@@ -125,6 +127,7 @@
     #:select-multiple
     #:selection-range-slider
     #:selection-slider
+    #:send-custom
     #:slider-style
     #:tab
     #:text

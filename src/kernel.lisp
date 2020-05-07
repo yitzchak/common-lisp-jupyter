@@ -8,134 +8,155 @@
   "Output stream sent to Jupyter pager. Available during calls to evaluate-code.")
 
 (defclass kernel (source)
-  ((name :initarg :name
-         :initform ""
-         :reader kernel-name
-         :documentation "Kernel name. Used as a unique identifier in kernel
-         description.")
-   (version :initarg :version
-            :initform ""
-            :reader kernel-version
-            :documentation "Kernel version.")
-   (banner :initarg :banner
-           :initform ""
-           :reader kernel-banner
-           :documentation "Banner text used to describe kernel. Used in
-           kernel_info_reply messages.")
-   (language-name :initarg :language-name
-                  :initform ""
-                  :reader kernel-language-name
-                  :documentation "Display name of implementation language. Used
-                  in kernel_info_reply messages.")
-   (language-version :initarg :language-version
-                     :initform ""
-                     :reader kernel-language-version
-                     :documentation "Version of implementation language. Used in
-                     kernel_info_reply messages.")
-   (mime-type :initarg :mime-type
-              :initform ""
-              :reader kernel-mime-type
-              :documentation "Default MIME type for source files. Used in
-              kernel_info_reply messages.")
-   (file-extension :initarg :file-extension
-                   :initform ""
-                   :reader kernel-file-extension
-                   :documentation "Default file extension for source files. Used
-                   in kernel_info_reply messages.")
-   (pygments-lexer :initarg :pygments-lexer
-                   :initform ""
-                   :reader kernel-pygments-lexer
-                   :documentation "Name of Pygments lexer for source files. Used
-                   in kernel_info_reply messages.")
-   (codemirror-mode :initarg :codemirror-mode
-                    :initform ""
-                    :reader kernel-codemirror-mode
-                    :documentation "CodeMirror mode for source files. Used in
-                    kernel_info_reply messages.")
-   (help-links :initarg :help-links
-               :initform nil
-               :reader kernel-help-links
-               :documentation "An association list of help links. The car is the
-               description and the cdr is URL. Used in kernel_info_reply
-               messages.")
-   (package :initarg :package
-            :accessor kernel-package
-            :documentation "The package in which evaluate-code,
-            code-is-complete and others are called.")
-   (connection-file :initarg :connection-file
-                    :reader kernel-connection-file
-                    :documentation "Pathname of connection file.")
-   (transport :accessor kernel-transport
-              :type string
-              :documentation "Transport protocol from connection file.")
-   (ip :accessor kernel-ip
-       :type string
-       :documentation "IP address from connection file.")
-   (shell-port :accessor kernel-shell-port
-               :type fixnum
-               :documentation "SHELL port from connection file.")
-   (stdin-port :accessor kernel-stdin-port
-               :type fixnum
-               :documentation "STDIN port from connection file.")
-   (iopub-port :accessor kernel-iopub-port
-               :type fixnum
-               :documentation "IOPUB port from connection file.")
-   (control-port :accessor kernel-control-port
-                 :type fixnum
-                 :documentation "CONTROL port from connection file.")
-   (hb-port :accessor kernel-hb-port
-            :type fixnum
-            :documentation "HB port from connection file.")
-   (signature-scheme :accessor kernel-signature-scheme
-                     :type string
-                     :documentation "Signature scheme from connection file.")
-   (key :accessor kernel-key
-        :documentation "Signing key from connection file.")
-   (prompt-prefix :initarg :prompt-prefix
-                  :initform (coerce '(#\Escape #\X) 'string)
-                  :reader kernel-prompt-prefix
-                  :documentation "String prefix using in *standard-output* to
-                  indicate the start of prompt.")
-   (prompt-suffix :initarg :prompt-suffix
-                  :initform (coerce '(#\Escape #\\) 'string)
-                  :reader kernel-prompt-suffix
-                  :documentation "String suffix using in *standard-output* to
-                  indicate the end of prompt.")
-   (ctx :initform nil
-        :accessor kernel-ctx
-        :documentation "pzmq ctx handle.")
-   (mac :initform nil
-        :accessor kernel-mac
-        :documentation "Message authification.")
-   (hb :initform nil
-       :accessor kernel-hb
-       :documentation "Heartbeat channel.")
-   (shell :initform nil
-          :accessor kernel-shell
-          :documentation "SHELL channel.")
-   (stdin :initform nil
-          :accessor kernel-stdin
-          :documentation "STDIN channel.")
-   (iopub :initform nil
-          :accessor kernel-iopub
-          :documentation "IOPUB channel.")
-   (session :initform nil
-            :accessor kernel-session
-            :documentation "Session identifier.")
-   (input-queue :initarg :input-queue
-                :initform nil
-                :reader kernel-input-queue
-                :documentation "Input queue used to feed values into
-                execute_result payloads.")
-   (history :initform nil
-            :accessor kernel-history
-            :documentation "Kernel history manager.")
-   (execution-count :initform 0
-                    :accessor history-execution-count
-                    :documentation "Kernel execution count.")
-   (comms :initform (make-hash-table :test #'equal)
-          :reader kernel-comms
-          :documentation "Currently open comms."))
+  ((name
+     :initarg :name
+     :initform ""
+     :reader kernel-name
+     :documentation "Kernel name. Used as a unique identifier in kernel description.")
+   (version
+     :initarg :version
+     :initform ""
+     :reader kernel-version
+     :documentation "Kernel version.")
+   (banner
+     :initarg :banner
+     :initform ""
+     :reader kernel-banner
+     :documentation "Banner text used to describe kernel. Used in kernel_info_reply messages.")
+   (language-name
+     :initarg :language-name
+     :initform ""
+     :reader kernel-language-name
+     :documentation "Display name of implementation language. Used in kernel_info_reply messages.")
+   (language-version
+     :initarg :language-version
+     :initform ""
+     :reader kernel-language-version
+     :documentation "Version of implementation language. Used in kernel_info_reply messages.")
+   (mime-type
+     :initarg :mime-type
+     :initform ""
+     :reader kernel-mime-type
+     :documentation "Default MIME type for source files. Used in kernel_info_reply messages.")
+   (file-extension
+     :initarg :file-extension
+     :initform ""
+     :reader kernel-file-extension
+     :documentation "Default file extension for source files. Used in kernel_info_reply messages.")
+   (pygments-lexer
+     :initarg :pygments-lexer
+     :initform ""
+     :reader kernel-pygments-lexer
+     :documentation "Name of Pygments lexer for source files. Used in kernel_info_reply messages.")
+   (codemirror-mode
+     :initarg :codemirror-mode
+     :initform ""
+     :reader kernel-codemirror-mode
+     :documentation "CodeMirror mode for source files. Used in kernel_info_reply messages.")
+   (help-links
+     :initarg :help-links
+     :initform nil
+     :reader kernel-help-links
+     :documentation "An association list of help links. The car is the description and the cdr is
+       URL. Used in kernel_info_reply messages.")
+   (package
+     :initarg :package
+     :accessor kernel-package
+     :documentation "The package in which evaluate-code, code-is-complete and others are called.")
+   (connection-file
+     :initarg :connection-file
+     :reader kernel-connection-file
+     :documentation "Pathname of connection file.")
+   (transport
+     :accessor kernel-transport
+     :type string
+     :documentation "Transport protocol from connection file.")
+   (ip
+     :accessor kernel-ip
+     :type string
+     :documentation "IP address from connection file.")
+   (shell-port
+     :accessor kernel-shell-port
+     :type fixnum
+     :documentation "SHELL port from connection file.")
+   (stdin-port
+     :accessor kernel-stdin-port
+     :type fixnum
+     :documentation "STDIN port from connection file.")
+   (iopub-port
+     :accessor kernel-iopub-port
+     :type fixnum
+     :documentation "IOPUB port from connection file.")
+   (control-port
+     :accessor kernel-control-port
+     :type fixnum
+     :documentation "CONTROL port from connection file.")
+   (hb-port
+     :accessor kernel-hb-port
+     :type fixnum
+     :documentation "HB port from connection file.")
+   (signature-scheme
+     :accessor kernel-signature-scheme
+     :type string
+     :documentation "Signature scheme from connection file.")
+   (key
+     :accessor kernel-key
+     :documentation "Signing key from connection file.")
+   (prompt-prefix
+     :initarg :prompt-prefix
+     :initform (coerce '(#\Escape #\X) 'string)
+     :reader kernel-prompt-prefix
+     :documentation "String prefix using in *standard-output* to indicate the start of prompt.")
+   (prompt-suffix
+     :initarg :prompt-suffix
+     :initform (coerce '(#\Escape #\\) 'string)
+     :reader kernel-prompt-suffix
+     :documentation "String suffix using in *standard-output* to indicate the end of prompt.")
+   (ctx
+     :initform nil
+     :accessor kernel-ctx
+     :documentation "pzmq ctx handle.")
+   (mac
+     :initform nil
+     :accessor kernel-mac
+     :documentation "Message authentification.")
+   (hb
+     :initform nil
+     :accessor kernel-hb
+     :documentation "Heartbeat channel.")
+   (shell
+     :initform nil
+     :accessor kernel-shell
+     :documentation "SHELL channel.")
+   (stdin
+     :initform nil
+     :accessor kernel-stdin
+     :documentation "STDIN channel.")
+   (iopub
+     :initform nil
+     :accessor kernel-iopub
+     :documentation "IOPUB channel.")
+   (session
+     :initform nil
+     :accessor kernel-session
+     :documentation "Session identifier.")
+   (input-queue
+     :initarg :input-queue
+     :initform (make-instance 'queue)
+     :reader kernel-input-queue
+     :documentation "Input queue used to feed values into execute_result payloads.")
+   (history
+     :initform nil
+     :accessor kernel-history
+     :documentation "Kernel history manager.")
+   (execution-count
+     :initform 0
+     :accessor history-execution-count
+     :documentation "Kernel execution count.")
+   (comms
+     :initform (make-hash-table :test #'equal)
+     :reader kernel-comms
+     :documentation "Currently open comms."))
   (:documentation "Kernel state representation."))
 
 (defgeneric evaluate-code (kernel code)
@@ -376,8 +397,8 @@
                   (evalue (format nil "~{~A~^, ~}" (mapcar #'error-result-evalue errors))))
               (send-execute-reply-error shell msg execution-count ename evalue))
             (let ((p (get-output-stream-string *page-output*)))
-              (when input-queue
-                (set-next-input (pop input-queue)))
+              (unless (queue-empty-p input-queue)
+                (set-next-input (dequeue input-queue)))
               (unless (zerop (length p))
                 (page (make-inline-result p)))
               (send-execute-reply-ok shell msg execution-count (coerce *payload* 'list)))))
@@ -617,8 +638,7 @@
 
 (defun enqueue-input (kernel code)
   "Add code to input queue."
-  (with-slots (input-queue) kernel
-    (setf input-queue (nconc input-queue (list code)))))
+  (enqueue (kernel-input-queue kernel) code))
 
 (defun clear (&optional (wait nil))
   "Send clear output message to frontend."

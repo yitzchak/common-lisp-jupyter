@@ -188,12 +188,28 @@
         (setf (slot-value w name)
           (deserialize-trait w type trait-name (jupyter:json-getf state key)))))))
 
+(defun send-custom (widget content &optional buffers)
+  (jupyter:send-comm-message widget
+    (jsown:new-js ("method" "custom")
+                  ("content" content))
+    (jsown:new-js ("version" +protocol-version+))
+    buffers))
+
+(defgeneric on-custom-message (widget content buffers))
+
+(defmethod on-custom-message (widget content buffers))
+
 (defmethod jupyter:on-comm-message ((w widget) data metadata buffers)
   (declare (ignore metadata))
   (switch ((jupyter:json-getf data "method") :test #'equal)
-    ("update" (update-state w data buffers))
-    ("request_state" (send-state w))
-    (otherwise (call-next-method))))
+    ("update"
+      (update-state w data buffers))
+    ("request_state"
+      (send-state w))
+    ("custom"
+      (on-custom-message w (jupyter:json-getf data "content") buffers))
+    (otherwise
+      (call-next-method))))
 
 (defmethod on-trait-change :after ((w widget) type name old-value new-value)
   (declare (ignore type old-value new-value))
