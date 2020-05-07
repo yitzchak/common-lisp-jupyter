@@ -21,6 +21,14 @@
             (setf head-cons tail-cons)
             (bordeaux-threads:condition-notify not-empty-condition)))))))
 
+(defun enqueue-high (queue item)
+  (with-slots (head-cons tail-cons access-lock not-empty-condition) queue
+    (bordeaux-threads:with-lock-held (access-lock)
+      (push item head-cons)
+      (unless tail-cons
+        (setf tail-cons head-cons)
+        (bordeaux-threads:condition-notify not-empty-condition)))))
+
 (defun dequeue (queue)
   (with-slots (head-cons tail-cons access-lock not-empty-condition) queue
     (bordeaux-threads:with-lock-held (access-lock)

@@ -35,6 +35,7 @@
          (:file "message")
          (:file "shell")
          (:file "stdin")
+         (:file "control")
          (:file "iopub")
          (:file "results")
          (:file "comm")

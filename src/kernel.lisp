@@ -132,6 +132,10 @@
      :initform nil
      :accessor kernel-stdin
      :documentation "STDIN channel.")
+   (control
+     :initform nil
+     :accessor kernel-control
+     :documentation "CONTROL channel.")
    (iopub
      :initform nil
      :accessor kernel-iopub
@@ -140,6 +144,11 @@
      :initform nil
      :accessor kernel-session
      :documentation "Session identifier.")
+   (request-queue
+     :initarg :input-queue
+     :initform (make-instance 'queue)
+     :reader kernel-request-queue
+     :documentation "Message queue for SHELL and CONTROL channel.")
    (input-queue
      :initarg :input-queue
      :initform (make-instance 'queue)
@@ -190,9 +199,9 @@
 
 ;; Start all channels.
 (defmethod start ((k kernel))
-  (with-slots (connection-file control-port ctx hb hb-port history iopub
+  (with-slots (connection-file control-port ctx hb hb-port history iopub request-queue
                iopub-port ip key language-name mac name prompt-prefix prompt-suffix
-               session shell shell-port signature-scheme sink stdin stdin-port
+               session shell shell-port signature-scheme sink stdin stdin-port control
                transport)
               k
     (setq sink (make-instance 'sink
@@ -239,6 +248,7 @@
           shell (make-instance 'shell-channel
                                :sink sink
                                :mac mac
+                               :request-queue request-queue
                                :socket (pzmq:socket ctx :router)
                                :transport transport
                                :ip ip
@@ -250,6 +260,14 @@
                                :transport transport
                                :ip ip
                                :port stdin-port)
+          control (make-instance 'control-channel
+                                 :sink sink
+                                 :mac mac
+                                 :request-queue request-queue
+                                 :socket (pzmq:socket ctx :router)
+                                 :transport transport
+                                 :ip ip
+                                 :port control-port)
           history (make-instance 'history
                                  :sink sink
                                  :path (uiop:xdg-data-home
@@ -261,18 +279,20 @@
     (start iopub)
     (start shell)
     (start stdin)
+    (start control)
     (start history)
     (send-status iopub session "starting")
     (send-status iopub session "idle")))
 
 ;; Stop all channels and destroy the control.
 (defmethod stop ((k kernel))
-  (with-slots (sink ctx hb iopub shell stdin history mac name) k
+  (with-slots (sink ctx hb iopub shell stdin control history mac name) k
     (inform :info k "Stopping ~A kernel" name)
     (stop hb)
     (stop iopub)
     (stop shell)
     (stop stdin)
+    (stop control)
     (stop mac)
     (stop history)
     (stop sink)
@@ -287,7 +307,7 @@
                                   :connection-file connection-file))
     (initially
       (start kernel))
-    (for msg = (message-recv (kernel-shell kernel)))
+    (for msg = (dequeue (kernel-request-queue kernel)))
     (send-status-update (kernel-iopub kernel) msg "busy")
     (while (handle-message kernel msg))
     (after-each
@@ -298,7 +318,7 @@
 
 #|
 
-### Message type: kernel_info_request ###
+### Message type: Handle kernel messages ###
 
 |#
 
@@ -413,10 +433,10 @@
 
 (defun handle-shutdown-request (kernel msg)
   (inform :info kernel "Handling shutdown_request message")
-  (let* ((shell (kernel-shell kernel))
+  (let* ((control (kernel-control kernel))
          (content (message-content msg))
          (restart (json-getf content "restart")))
-    (send-shutdown-reply shell msg restart)
+    (send-shutdown-reply control msg restart)
     nil))
 
 #|

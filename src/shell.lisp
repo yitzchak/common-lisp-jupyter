@@ -6,21 +6,25 @@
 
 |#
 
-(defclass shell-channel (channel)
+(defclass shell-channel (request-channel)
   ()
   (:documentation "SHELL channel class."))
+
+(defmethod start :after ((instance shell-channel))
+  (setf (channel-thread instance)
+        (bordeaux-threads:make-thread
+          (lambda ()
+            (inform :info instance "Starting thread")
+            (do ((msg (message-recv instance) (message-recv instance)))
+                (nil)
+              (inform :info instance "Received ~A message" (json-getf (message-header msg) "msg_type"))
+              (enqueue (channel-request-queue instance) msg))))))
 
 #|
 
 # Message sending functions
 
 |#
-
-(defun send-shutdown-reply (shell parent-msg restart)
-  (message-send shell
-                (make-message parent-msg "shutdown_reply"
-                              (jsown:new-js
-                                ("restart" (if restart t :f))))))
 
 (defun send-is-complete-reply (shell parent-msg status)
   (message-send shell
