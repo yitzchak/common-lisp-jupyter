@@ -26,12 +26,9 @@
 
 (defun json-getf (object indicator &optional default)
   "Safe accessor for the internal JSON format that behaves like getf"
-  (iter
-    (for (key . value) in (cdr object))
-    (when (string= indicator key)
-      (leave value))
-    (finally
-      (return default))))
+  (if-let ((pair (assoc indicator (cdr object) :test #'string=)))
+    (cdr pair)
+    default))
 
 (defun read-raw-string (stream c1 c2)
   (declare (ignore c1 c2))
