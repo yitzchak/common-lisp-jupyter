@@ -114,6 +114,7 @@
     #:label
     #:layout
     #:link
+    #:observe
     #:on-button-click
     #:on-custom-message
     #:on-trait-change
@@ -124,33 +125,22 @@
     #:radio-buttons
     #:register-widget
     #:select
-    #:select-multiple
     #:selection-range-slider
     #:selection-slider
+    #:select-multiple
     #:send-custom
     #:slider-style
     #:tab
     #:text
     #:text-area
     #:toggle-button
-    #:toggle-button-style
     #:toggle-buttons
+    #:toggle-button-style
     #:trait-metaclass
-    #:v-box
     #:valid
+    #:v-box
     #:video
     #:widget
-    #:widget-%dom-classes
-    #:widget-%module-module
-    #:widget-%module-module-version
-    #:widget-%module-name
-    #:widget-%options-labels
-    #:widget-%playing
-    #:widget-%repeat
-    #:widget-%titles
-    #:widget-%view-module
-    #:widget-%view-module-version
-    #:widget-%view-name
     #:widget-accept
     #:widget-align-content
     #:widget-align-items
@@ -178,6 +168,7 @@
     #:widget-description-width
     #:widget-disabled
     #:widget-display
+    #:widget-%dom-classes
     #:widget-ensure-option
     #:widget-error
     #:widget-flex
@@ -214,12 +205,17 @@
     #:widget-min
     #:widget-min-height
     #:widget-min-width
+    #:widget-%module-module
+    #:widget-%module-module-version
+    #:widget-%module-name
     #:widget-msg-id
     #:widget-multiple
     #:widget-name
     #:widget-object-fit
     #:widget-object-positon
+    #:widget-on-trait-change
     #:widget-options
+    #:widget-%options-labels
     #:widget-order
     #:widget-orientation
     #:widget-outputs
@@ -228,9 +224,11 @@
     #:widget-overflow-y
     #:widget-padding
     #:widget-placeholder
+    #:widget-%playing
     #:widget-pressed
     #:widget-readout
     #:widget-readout-format
+    #:widget-%repeat
     #:widget-right
     #:widget-rows
     #:widget-selected-index
@@ -240,10 +238,14 @@
     #:widget-style
     #:widget-target
     #:widget-timestamp
+    #:widget-%titles
     #:widget-tooltip
     #:widget-tooltips
     #:widget-top
     #:widget-value
+    #:widget-%view-module
+    #:widget-%view-module-version
+    #:widget-%view-name
     #:widget-visibility
     #:widget-width
     #:with-output))

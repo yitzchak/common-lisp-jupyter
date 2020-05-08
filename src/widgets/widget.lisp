@@ -45,7 +45,11 @@
           (setf (gethash name *widgets*) (quote ,name)))))))
 
 (defclass widget (jupyter:comm jupyter:result)
-  ((%model-name
+  ((on-trait-change
+     :initarg :on-trait-change
+     :accessor widget-on-trait-change
+     :documentation "Instance specific trait notification")
+  (%model-name
      :initarg :%model-name
      :reader widget-%module-name
      :documentation "Name of the model."
@@ -212,7 +216,8 @@
       (call-next-method))))
 
 (defmethod on-trait-change :after ((w widget) type name old-value new-value)
-  (declare (ignore type old-value new-value))
+  (when-let ((handler (cdr (assoc name (widget-on-trait-change w)))))
+    (funcall handler w type name old-value new-value))
   (send-state w name))
 
 (defmethod initialize-instance :around ((instance widget) &rest rest &key &allow-other-keys)
@@ -244,6 +249,13 @@
         (let ((w (make-instance class)))
           (update-state w data buffers)
           w)))))
+
+(defun observe (instance name handler)
+  (with-slots (on-trait-change) instance
+    (let ((pair (assoc name on-trait-change)))
+      (if pair
+        (rplacd pair handler)
+        (push (cons name handler) on-trait-change)))))
 
 (defun display (widget)
   "Display a widget in the notebook."
