@@ -1,14 +1,17 @@
 (in-package #:jupyter)
 
 (defclass comm ()
-  ((id :initarg :id
-       :initform (make-uuid)
-       :reader comm-id)
-   (target-name :initarg :target-name
-                :reader comm-target-name)
-   (kernel :initarg :kernel
-           :initform *kernel*
-           :reader comm-kernel)))
+  ((id
+     :initarg :id
+     :initform (make-uuid)
+     :reader comm-id)
+   (target-name
+     :initarg :target-name
+     :reader comm-target-name)
+   (kernel
+     :initarg :kernel
+     :initform *kernel*
+     :reader comm-kernel)))
 
 (defun get-comm (id)
   (gethash id (kernel-comms *kernel*)))

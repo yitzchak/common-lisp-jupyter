@@ -3,14 +3,18 @@
 (defvar +history-size+ 1000)
 
 (defclass history (source)
-  ((path :initarg :path
-         :accessor history-path)
-   (date :initform nil
-         :accessor history-date)
-   (session :initform 1
-            :accessor history-session)
-   (cells :initform nil
-          :accessor history-cells)))
+  ((path
+     :initarg :path
+     :accessor history-path)
+   (date
+     :initform nil
+     :accessor history-date)
+   (session
+     :initform 1
+     :accessor history-session)
+   (cells
+     :initform nil
+     :accessor history-cells)))
 
 (defmacro lock-file (path &body body)
   `(iter

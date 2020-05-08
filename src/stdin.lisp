@@ -36,22 +36,26 @@ most cases of *query-io* usage. Makes overloading y-or-no-p unnecessary.
 
 (defclass stdin-stream (trivial-gray-streams:fundamental-character-output-stream
                         trivial-gray-streams:fundamental-character-input-stream)
-  ((channel :initarg :channel
-            :reader stdin-stream-channel)
-   (parent-msg :initarg :parent-msg
-               :reader stdin-stream-parent-msg)
-   (output :initarg :output
-           :initform (make-array *stdin-stream-size*
-                                 :fill-pointer 0
-                                 :adjustable t
-                                 :element-type 'character)
-           :reader stdin-stream-output)
-   (input :initarg :input
-          :initform (make-array *stdin-stream-size*
-                                :fill-pointer 0
-                                :adjustable t
-                                :element-type 'character)
-          :reader stdin-stream-input)))
+  ((channel
+     :initarg :channel
+     :reader stdin-stream-channel)
+   (parent-msg
+     :initarg :parent-msg
+     :reader stdin-stream-parent-msg)
+   (output
+     :initarg :output
+     :initform (make-array *stdin-stream-size*
+                           :fill-pointer 0
+                           :adjustable t
+                           :element-type 'character)
+     :reader stdin-stream-output)
+   (input
+     :initarg :input
+     :initform (make-array *stdin-stream-size*
+                           :fill-pointer 0
+                           :adjustable t
+                           :element-type 'character)
+     :reader stdin-stream-input)))
 
 #+sbcl (defmethod interactive-stream-p ((stream stdin-stream))
   (declare (ignore stream))

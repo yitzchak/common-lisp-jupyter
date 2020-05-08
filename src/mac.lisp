@@ -1,15 +1,18 @@
 (in-package #:jupyter)
 
 (defclass mac (source)
-  ((signature-scheme :initarg :signature-scheme
-                     :reader mac-signature-scheme
-                     :type string
-                     :documentation "Signature scheme from connection file.")
-   (key :initarg :key
-        :reader mac-key
-        :documentation "Signing key from connection file.")
-   (args :initform nil
-         :accessor mac-args)))
+  ((signature-scheme
+     :initarg :signature-scheme
+     :reader mac-signature-scheme
+     :type string
+     :documentation "Signature scheme from connection file.")
+   (key
+     :initarg :key
+     :reader mac-key
+     :documentation "Signing key from connection file.")
+   (args
+     :initform nil
+     :accessor mac-args)))
 
 (defmethod start ((m mac))
   (inform :info m "Starting message authentification")

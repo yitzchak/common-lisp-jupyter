@@ -13,24 +13,30 @@
 |#
 
 (defclass message ()
-  ((header :initarg :header
-           :initform (jsown:new-js)
-           :accessor message-header)
-   (parent-header :initarg :parent-header
-                  :initform (jsown:new-js)
-                  :accessor message-parent-header)
-   (identities :initarg :identities
-               :initform (list (make-uuid t))
-               :accessor message-identities)
-   (metadata :initarg :metadata
-             :initform (jsown:new-js)
-             :accessor message-metadata)
-   (content :initarg :content
-            :initform (jsown:new-js)
-            :accessor message-content)
-   (buffers :initarg :buffers
-            :initform nil
-            :accessor message-buffers))
+  ((header
+     :initarg :header
+     :initform (jsown:new-js)
+     :accessor message-header)
+   (parent-header
+     :initarg :parent-header
+     :initform (jsown:new-js)
+     :accessor message-parent-header)
+   (identities
+     :initarg :identities
+     :initform (list (make-uuid t))
+     :accessor message-identities)
+   (metadata
+     :initarg :metadata
+     :initform (jsown:new-js)
+     :accessor message-metadata)
+   (content
+     :initarg :content
+     :initform (jsown:new-js)
+     :accessor message-content)
+   (buffers
+     :initarg :buffers
+     :initform nil
+     :accessor message-buffers))
   (:documentation "Representation of IPython messages"))
 
 (defun make-message (parent-msg msg-type content &optional metadata buffers)

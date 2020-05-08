@@ -1,12 +1,14 @@
 (in-package #:jupyter-convert)
 
 (defclass cell ()
-  ((markdown :initarg :markdown
-             :initform nil
-             :accessor cell-markdown)
-   (source :initarg :source
-           :initform ""
-           :accessor cell-source)))
+  ((markdown
+     :initarg :markdown
+     :initform nil
+     :accessor cell-markdown)
+   (source
+     :initarg :source
+     :initform ""
+     :accessor cell-source)))
 
 (defmethod jsown:to-json ((c cell))
   (jsown:to-json
