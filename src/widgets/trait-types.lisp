@@ -68,6 +68,14 @@
                 (1+ (jupyter:json-getf value "month"))
                 (jupyter:json-getf value "date"))))
 
+; Dict
+
+(defmethod serialize-trait (object (type (eql :dict)) name value)
+  (cons :obj value))
+
+(defmethod deserialize-trait (object (type (eql :dict)) name value)
+  (cdr value))
+
 ; Integer
 
 (defmethod serialize-trait (object (type (eql :int)) name (value (eql nil)))

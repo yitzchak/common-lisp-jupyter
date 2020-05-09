@@ -15,6 +15,7 @@
      :iterate
      :jsown
      :pzmq
+     :trivial-garbage
      :trivial-gray-streams
      :trivial-mimes)
   :components

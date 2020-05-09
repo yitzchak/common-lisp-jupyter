@@ -33,8 +33,8 @@
       (setf stream nil))))
 
 (defun inform (level src format-control &rest format-arguments)
-  (when src
-    (with-slots (lock stream) (source-sink src)
+  (when-let ((s (or src *kernel*)))
+    (with-slots (lock stream) (source-sink s)
       (bordeaux-threads:with-lock-held (lock)
         (multiple-value-bind (second minute hour day month year)
                              (get-decoded-time)

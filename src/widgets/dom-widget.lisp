@@ -259,8 +259,8 @@ expose the shorthand."))
   (:default-initargs
     :%model-name "DOMWidgetModel"
     :%model-module +controls-module+
-    :%model-module-version +controls-module-version+
+    :%model-module-version "1.4.0"
     :%view-name ""
     :%view-module +controls-module+
-    :%view-module-version +controls-module-version+)
+    :%view-module-version "1.4.0")
 (:documentation "Base class for all Jupyter widgets which have DOM view."))

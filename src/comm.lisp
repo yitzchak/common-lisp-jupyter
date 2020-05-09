@@ -1,6 +1,6 @@
 (in-package #:jupyter)
 
-(defclass comm ()
+(defclass comm (source)
   ((id
      :initarg :id
      :initform (make-uuid)
@@ -11,7 +11,10 @@
    (kernel
      :initarg :kernel
      :initform *kernel*
-     :reader comm-kernel)))
+     :reader comm-kernel))
+  (:default-initargs
+    :sink (when *kernel*
+            (source-sink *kernel*))))
 
 (defun get-comm (id)
   (gethash id (kernel-comms *kernel*)))
@@ -67,3 +70,4 @@
                                  ("comm_id" id)
                                  ("data" (or data (jsown:new-js))))
                                metadata buffers))))))
+

@@ -47,6 +47,7 @@
 (defclass widget (jupyter:comm jupyter:result)
   ((on-trait-change
      :initarg :on-trait-change
+     :initform nil
      :accessor widget-on-trait-change
      :documentation "Instance specific trait notification")
   (%model-name

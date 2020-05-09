@@ -18,7 +18,7 @@
             (do ((msg (message-recv instance) (message-recv instance)))
                 (nil)
               (inform :info instance "Received ~A message" (json-getf (message-header msg) "msg_type"))
-              (enqueue-high (channel-request-queue instance) msg))))))
+              (enqueue (channel-request-queue instance) msg :high-priority t))))))
 
 #|
 

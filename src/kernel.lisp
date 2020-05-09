@@ -622,6 +622,7 @@
          (apply #'format nil (simple-condition-format-control err)
                              (simple-condition-format-arguments err))))
      (simple-type-error (err)
+      #+clasp (clasp-debug:print-backtrace :stream *error-output*)
        (make-eval-error err
          (apply #'format nil (simple-condition-format-control err)
                              (simple-condition-format-arguments err))))
