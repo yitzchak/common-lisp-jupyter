@@ -96,12 +96,22 @@
 (defmethod serialize-trait (object (type (eql :link)) name value)
   (when value
     (list (serialize-trait object :widget name (first value))
-          (serialize-trait object :unicode name  (second value)))))
+          (serialize-trait object :trait-name name (second value)))))
 
 (defmethod deserialize-trait (object (type (eql :link)) name value)
   (when value
     (list (deserialize-trait object :widget name (first value))
-          (deserialize-trait object :unicode name (second value)))))
+          (deserialize-trait object :trait-name name (second value)))))
+
+; Trait Name
+
+(defmethod serialize-trait (object (type (eql :trait-name)) name value)
+  (when value
+    (symbol-to-key value)))
+
+(defmethod deserialize-trait (object (type (eql :trait-name)) name value)
+  (when value
+    (key-to-symbol value)))
 
 ; Unicode
 

@@ -10,6 +10,7 @@
     #:gif-file
     #:html
     #:inline-result
+    #:javascript
     #:jpeg
     #:jpeg-file
     #:latex
@@ -103,6 +104,7 @@
     #:float-slider
     #:float-text
     #:grid-box
+    #:has-traits
     #:h-box
     #:html
     #:html-math

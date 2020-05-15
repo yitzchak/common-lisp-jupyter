@@ -15,7 +15,7 @@
   `(let* ((*trait-hold* t)
           (*trait-notifications* nil)
           (result (progn ,@body)))
-    (mapcar #'on-trait-change (reverse *trait-notifications*))
+    (mapcar (lambda (args) (apply #'on-trait-change args)) (reverse *trait-notifications*))
     result))
 
 (defgeneric validate-trait (object type name value))
@@ -107,3 +107,14 @@
             (on-trait-change object type trait-name old-value new-value)))
         new-value)
       (call-next-method))))
+
+(defclass has-traits ()
+  ((on-trait-change
+     :initarg :on-trait-change
+     :initform nil
+     :accessor widget-on-trait-change
+     :documentation "Instance specific trait notification"))
+  (:metaclass trait-metaclass))
+
+
+

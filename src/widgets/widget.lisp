@@ -44,13 +44,8 @@
                                                (def-initarg :%view-name))))
           (setf (gethash name *widgets*) (quote ,name)))))))
 
-(defclass widget (jupyter:comm jupyter:result)
-  ((on-trait-change
-     :initarg :on-trait-change
-     :initform nil
-     :accessor widget-on-trait-change
-     :documentation "Instance specific trait notification")
-  (%model-name
+(defclass widget (has-traits jupyter:comm jupyter:result)
+  ((%model-name
      :initarg :%model-name
      :reader widget-%module-name
      :documentation "Name of the model."
@@ -99,6 +94,16 @@
   (substitute #\_ #\%
     (substitute #\_ #\-
       (string-downcase (symbol-name s)))))
+
+(defun key-to-symbol (k)
+  (intern
+    (string-upcase
+      (substitute #\- #\_
+                  (if (and (not (zerop (length k)))
+                                (char= (char k 0) #\_))
+                    (substitute #\% #\_ k :count 1)
+                    k)))
+    "KEYWORD"))
 
 (defmethod to-json-state (w &optional nm)
   (iter
@@ -224,14 +229,15 @@
 (defmethod initialize-instance :around ((instance widget) &rest rest &key &allow-other-keys)
   (declare (ignore rest))
   (with-trait-silence
-    (call-next-method)
-    (let ((state (to-json-state instance)))
-      (multiple-value-bind (buffer-paths buffers) (extract-buffers state)
-        (jupyter:send-comm-open instance
-          (jsown:new-js ("state" state)
-                        ("buffer_paths" buffer-paths))
-          (jsown:new-js ("version" +protocol-version+))
-          buffers)))))
+    (prog1
+      (call-next-method)
+      (let ((state (to-json-state instance)))
+        (multiple-value-bind (buffer-paths buffers) (extract-buffers state)
+          (jupyter:send-comm-open instance
+            (jsown:new-js ("state" state)
+                          ("buffer_paths" buffer-paths))
+            (jsown:new-js ("version" +protocol-version+))
+            buffers))))))
 
 (defmethod jupyter:create-comm ((target-name (eql :|jupyter.widget|)) id data metadata buffers)
   (let* ((state (jupyter:json-getf data "state"))
@@ -258,7 +264,8 @@
         (rplacd pair handler)
         (push (cons name handler) on-trait-change)))))
 
-(defun display (widget)
-  "Display a widget in the notebook."
-  (jupyter:send-result widget)
-  nil)
+(defgeneric display (widget)
+  (:documentation "Display a widget in the notebook.")
+  (:method (widget)
+    (jupyter:send-result widget)
+    nil))
