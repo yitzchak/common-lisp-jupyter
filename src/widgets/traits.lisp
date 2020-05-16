@@ -116,5 +116,45 @@
      :documentation "Instance specific trait notification"))
   (:metaclass trait-metaclass))
 
+(defun symbol-to-camel-case (s)
+  (do ((name (symbol-name s))
+       (position 0 (1+ position))
+       (result "")
+       capitalize)
+      ((= position (length name)) result)
+    (cond
+      ((char= (char name position) #\-)
+        (setq capitalize t))
+      (capitalize
+        (setq result (concatenate 'string result (string (char-upcase (char name position)))))
+        (setq capitalize nil))
+      (t
+        (setq result (concatenate 'string result (string (char-downcase (char name position)))))))))
+
+(defun camel-case-to-symbol (name)
+  (intern
+    (do ((position 0 (1+ position))
+         (result ""))
+        ((= position (length name)) result)
+      (when (and (not (zerop position))
+                 (upper-case-p (char name position)))
+        (setq result (concatenate 'string result "-")))
+        (setq result (concatenate 'string result (string (char-upcase (char name position))))))
+    "KEYWORD"))
+
+(defun symbol-to-snake-case (s)
+  (substitute #\_ #\%
+    (substitute #\_ #\-
+      (string-downcase (symbol-name s)))))
+
+(defun snake-case-to-symbol (k)
+  (intern
+    (string-upcase
+      (substitute #\- #\_
+                  (if (and (not (zerop (length k)))
+                                (char= (char k 0) #\_))
+                    (substitute #\% #\_ k :count 1)
+                    k)))
+    "KEYWORD"))
 
 

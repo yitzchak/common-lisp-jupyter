@@ -90,21 +90,6 @@
         ("version_minor" 0)
         ("model_id" (jupyter:comm-id w))))))
 
-(defun symbol-to-key (s)
-  (substitute #\_ #\%
-    (substitute #\_ #\-
-      (string-downcase (symbol-name s)))))
-
-(defun key-to-symbol (k)
-  (intern
-    (string-upcase
-      (substitute #\- #\_
-                  (if (and (not (zerop (length k)))
-                                (char= (char k 0) #\_))
-                    (substitute #\% #\_ k :count 1)
-                    k)))
-    "KEYWORD"))
-
 (defmethod to-json-state (w &optional nm)
   (iter
     (with state = (jsown:new-js))
@@ -116,7 +101,7 @@
                (slot-boundp w name)
                type)
       (jsown:extend-js state
-        ((symbol-to-key name)
+        ((symbol-to-snake-case name)
           (serialize-trait w type trait-name (slot-value w name)))))
     (finally (return state))))
 
@@ -192,7 +177,7 @@
       (for def in (closer-mop:class-slots (class-of w)))
       (for name next (closer-mop:slot-definition-name def))
       (for trait-name next (trait-name name))
-      (for key next (symbol-to-key name))
+      (for key next (symbol-to-snake-case name))
       (for type next (trait-type def))
       (when (position key keywords :test #'equal)
         (setf (slot-value w name)
