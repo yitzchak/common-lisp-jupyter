@@ -3,6 +3,7 @@
   (:export
     ; utils
     #:json-getf
+    #:json-to-plist
     ; log
     #:inform
     ; results
@@ -94,6 +95,7 @@
     #:date-picker
     #:description-style
     #:directional-link
+    #:%display
     #:display
     #:dom-widget
     #:dropdown

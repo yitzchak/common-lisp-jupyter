@@ -207,8 +207,10 @@
       (call-next-method))))
 
 (defmethod on-trait-change :after ((w widget) type name old-value new-value)
-  (when-let ((handler (cdr (assoc name (widget-on-trait-change w)))))
-    (funcall handler w type name old-value new-value))
+  (dolist (pair (widget-on-trait-change w))
+          ()
+    (when (eql (car pair) name)
+      (funcall (cdr pair) w type name old-value new-value)))
   (send-state w name))
 
 (defmethod initialize-instance :around ((instance widget) &rest rest &key &allow-other-keys)
@@ -243,14 +245,14 @@
           w)))))
 
 (defun observe (instance name handler)
-  (with-slots (on-trait-change) instance
-    (let ((pair (assoc name on-trait-change)))
-      (if pair
-        (rplacd pair handler)
-        (push (cons name handler) on-trait-change)))))
+  (push (cons name handler) (widget-on-trait-change instance)))
 
-(defgeneric display (widget)
-  (:documentation "Display a widget in the notebook.")
-  (:method (widget)
-    (jupyter:send-result widget)
-    nil))
+(defgeneric %display (widget &rest args &key &allow-other-keys)
+  (:documentation "Prepare widget for display")
+  (:method (widget &rest args &key &allow-other-keys)
+    (declare (ignore args))
+    widget))
+
+(defun display (widget &rest args &key &allow-other-keys)
+  (jupyter:send-result (apply #'%display widget args))
+  nil)
