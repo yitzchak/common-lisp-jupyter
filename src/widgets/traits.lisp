@@ -1,22 +1,15 @@
 (in-package #:jupyter-widgets)
 
 (defvar *trait-silence* nil)
-(defvar *trait-hold* nil)
-(defvar *trait-notifications* nil)
+(defvar *trait-source* nil)
+(defvar *trait-notifications* (make-instance 'jupyter::queue))
 
-(defgeneric on-trait-change (object type name old-value new-value))
+(defgeneric on-trait-change (object type name old-value new-value source))
 
-(defmethod on-trait-change (object type name old-value new-value))
+(defmethod on-trait-change (object type name old-value new-value source))
 
 (defmacro with-trait-silence (&body body)
   `(let ((*trait-silence* t)) ,@body))
-
-(defmacro with-trait-hold (&body body)
-  `(let* ((*trait-hold* t)
-          (*trait-notifications* nil)
-          (result (progn ,@body)))
-    (mapcar (lambda (args) (apply #'on-trait-change args)) (reverse *trait-notifications*))
-    result))
 
 (defgeneric validate-trait (object type name value))
 
@@ -102,9 +95,12 @@
              (old-value (if (slot-boundp object name) (slot-value object name) :unbound))
              (new-value (call-next-method)))
         (when (not (equal old-value new-value))
-          (if *trait-hold*
-            (push (list object type trait-name old-value new-value) *trait-notifications*)
-            (on-trait-change object type trait-name old-value new-value)))
+          (jupyter::enqueue *trait-notifications*
+            (list object type trait-name old-value new-value *trait-source*)))
+        (let ((*trait-source* t))
+          (do ()
+              ((jupyter::queue-empty-p *trait-notifications*))
+            (apply #'on-trait-change (jupyter::dequeue *trait-notifications*))))
         new-value)
       (call-next-method))))
 

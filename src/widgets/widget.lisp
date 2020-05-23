@@ -7,6 +7,8 @@
 (defparameter +controls-module-version+ "1.5.0")
 (defparameter +output-module+ "@jupyter-widgets/output")
 (defparameter +output-module-version+ "1.0.0")
+(defparameter +sidecar-module+ "@jupyter-widgets/jupyterlab-sidecar")
+(defparameter +sidecar-module-version+ "1.0.0")
 
 (defparameter +target-name+ "jupyter.widget")
 
@@ -157,18 +159,17 @@
     (inject-buffer state buffer-path buffer)))
 
 (defun send-state (w &optional name)
-  (when (not *state-lock*)
-    (let ((state (to-json-state w name)))
-      (multiple-value-bind (buffer-paths buffers) (extract-buffers state)
-        (jupyter:send-comm-message w
-          (jsown:new-js ("method" "update")
-                        ("state" state)
-                        ("buffer_paths" buffer-paths))
-          (jsown:new-js ("version" +protocol-version+))
-          buffers)))))
+  (let ((state (to-json-state w name)))
+    (multiple-value-bind (buffer-paths buffers) (extract-buffers state)
+      (jupyter:send-comm-message w
+        (jsown:new-js ("method" "update")
+                      ("state" state)
+                      ("buffer_paths" buffer-paths))
+        (jsown:new-js ("version" +protocol-version+))
+        buffers))))
 
 (defun update-state (w data buffers)
-  (let ((*state-lock* t))
+  (let ((*trait-source* nil))
     (iter
       (with state = (jupyter:json-getf data "state"))
       (with buffer-paths = (jupyter:json-getf data "buffer_paths"))
@@ -206,12 +207,13 @@
     (otherwise
       (call-next-method))))
 
-(defmethod on-trait-change :after ((w widget) type name old-value new-value)
+(defmethod on-trait-change :after ((w widget) type name old-value new-value source)
   (dolist (pair (widget-on-trait-change w))
           ()
     (when (eql (car pair) name)
-      (funcall (cdr pair) w type name old-value new-value)))
-  (send-state w name))
+      (funcall (cdr pair) w type name old-value new-value source)))
+  (when source
+    (send-state w name)))
 
 (defmethod initialize-instance :around ((instance widget) &rest rest &key &allow-other-keys)
   (declare (ignore rest))

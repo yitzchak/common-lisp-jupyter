@@ -133,6 +133,7 @@
     #:selection-slider
     #:select-multiple
     #:send-custom
+    #:sidecar
     #:slider-style
     #:tab
     #:text
