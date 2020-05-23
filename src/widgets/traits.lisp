@@ -1,7 +1,7 @@
 (in-package #:jupyter-widgets)
 
 (defvar *trait-silence* nil)
-(defvar *trait-source* nil)
+(defvar *trait-source* t)
 (defvar *trait-notifications* (make-instance 'jupyter::queue))
 
 (defgeneric on-trait-change (object type name old-value new-value source))
