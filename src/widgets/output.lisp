@@ -46,16 +46,16 @@ output area.
 ; We should clean up after ourselves, but the messages are processed outside of this lexigraphic context.
 (defmacro with-output (output &body body)
   "Evaluate body with all output sent to the output widget."
-  (with-slots (msg-id) ,output
-    (unwind-protect 
-      (progn
-        (finish-output) 
-        (finish-output *error-output*) 
-        (setf msg-id (jupyter:json-getf (jupyter::message-header jupyter::*message*) "msg_id"))    
-        ,@body)
-      (finish-output) 
-      (finish-output *error-output*) 
-      (setf msg-id "")))) 
+  `(with-slots (msg-id) ,output
+     (unwind-protect 
+       (progn
+         (finish-output) 
+         (finish-output *error-output*) 
+         (setf msg-id (jupyter:json-getf (jupyter::message-header jupyter::*message*) "msg_id"))    
+         ,@body)
+       (finish-output) 
+       (finish-output *error-output*) 
+       (setf msg-id "")))) 
 
 
 (defclass sidecar (output)
