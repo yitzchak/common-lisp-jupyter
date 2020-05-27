@@ -28,10 +28,11 @@
 ; Simulate value property below
 
 (defun select-value (instance index)
-  (nth index
-       (if (slot-boundp instance 'options)
-         (widget-options instance)
-         (widget-%options-labels instance))))
+  (when index
+    (nth index
+         (if (slot-boundp instance 'options)
+           (widget-options instance)
+           (widget-%options-labels instance)))))
 
 (defmethod widget-value ((instance select))
   (select-value instance (widget-index instance)))
