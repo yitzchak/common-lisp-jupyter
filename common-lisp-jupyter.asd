@@ -21,7 +21,12 @@
   :components
     ((:module res
       :components
-        ((:static-file "logo-64x64.png")))
+        ((:module cl
+          :components
+            ((:static-file "logo-64x64.png")))
+         (:module sbcl
+          :components
+            ((:static-file "logo-64x64.png")))))
      (:module src
       :serial t
       :components
@@ -62,7 +67,6 @@
              (:file "media")
              (:file "output")
              (:file "progress")
-             (:file "radio-buttons")
              (:file "select")
              (:file "slider")
              (:file "text")
