@@ -47,13 +47,13 @@
   (:method (source source-trait target target-trait)
     (observe
       source source-trait
-      (lambda (instance type name old-value new-value source)
-        (declare (ignore instance type name old-value source))
+      (lambda (instance type name old-value new-value src)
+        (declare (ignore instance type name old-value src))
         (setf (trait target target-trait) new-value)))
     (observe
       target target-trait
-      (lambda (instance type name old-value new-value source)
-        (declare (ignore instance type name old-value source))
+      (lambda (instance type name old-value new-value src)
+        (declare (ignore instance type name old-value src))
         (setf (trait source source-trait) new-value)))))
 
 (defmethod link ((source widget) source-trait (target widget) target-trait)

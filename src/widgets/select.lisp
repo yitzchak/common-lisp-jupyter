@@ -38,7 +38,7 @@
   (select-value instance (widget-index instance)))
 
 (defmethod (setf widget-value) (new-value (instance select))
-  (setf (widget-index)
+  (setf (widget-index instance)
         (position new-value
                   (if (slot-boundp instance 'options)
                     (widget-options instance)
