@@ -57,6 +57,8 @@
     #:send-comm-message
     #:send-comm-open
     #:send-result
+    #:start
+    #:stop
     ; installer
     #:command-line
     #:install
