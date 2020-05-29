@@ -246,8 +246,12 @@
           (update-state w data buffers)
           w)))))
 
-(defun observe (instance name handler)
-  (push (cons name handler) (widget-on-trait-change instance)))
+(defun observe (instance name/s handler)
+  (setf (widget-on-trait-change instance)
+        (nconc (widget-on-trait-change instance)
+               (if (listp name/s)
+                 (mapcar (lambda (name) (cons name handler)) name/s)
+                 (list (cons name/s handler))))))
 
 (defgeneric %display (widget &rest args &key &allow-other-keys)
   (:documentation "Prepare widget for display")
