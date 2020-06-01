@@ -1,10 +1,11 @@
 import unittest
 import jupyter_kernel_test
-from jupyter_client.manager import start_new_kernel
 
-TIMEOUT=240
+TIMEOUT = 240
+
 
 class MyKernelTests(jupyter_kernel_test.KernelTests):
+
     @classmethod
     def tearDownClass(cls):
         cls.kc.shutdown()

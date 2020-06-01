@@ -7,6 +7,8 @@
 (defparameter +controls-module-version+ "1.5.0")
 (defparameter +output-module+ "@jupyter-widgets/output")
 (defparameter +output-module-version+ "1.0.0")
+(defparameter +sidecar-module+ "@jupyter-widgets/jupyterlab-sidecar")
+(defparameter +sidecar-module-version+ "1.0.0")
 
 (defparameter +target-name+ "jupyter.widget")
 
@@ -44,7 +46,7 @@
                                                (def-initarg :%view-name))))
           (setf (gethash name *widgets*) (quote ,name)))))))
 
-(defclass widget (jupyter:comm jupyter:result)
+(defclass widget (has-traits jupyter:comm jupyter:result)
   ((%model-name
      :initarg :%model-name
      :reader widget-%module-name
@@ -90,23 +92,19 @@
         ("version_minor" 0)
         ("model_id" (jupyter:comm-id w))))))
 
-(defun symbol-to-key (s)
-  (substitute #\_ #\%
-    (substitute #\_ #\-
-      (string-downcase (symbol-name s)))))
-
 (defmethod to-json-state (w &optional nm)
   (iter
     (with state = (jsown:new-js))
     (for def in (closer-mop:class-slots (class-of w)))
     (for name next (closer-mop:slot-definition-name def))
+    (for trait-name next (trait-name name))
     (for type next (trait-type def))
-    (when (and (or (not nm) (equal name nm))
+    (when (and (or (not nm) (eql trait-name nm))
                (slot-boundp w name)
                type)
       (jsown:extend-js state
-        ((symbol-to-key name)
-          (serialize-trait w type name (slot-value w name)))))
+        ((symbol-to-snake-case name)
+          (serialize-trait w type trait-name (slot-value w name)))))
     (finally (return state))))
 
 (defun extract-buffers (state &optional path)
@@ -161,18 +159,17 @@
     (inject-buffer state buffer-path buffer)))
 
 (defun send-state (w &optional name)
-  (when (not *state-lock*)
-    (let ((state (to-json-state w name)))
-      (multiple-value-bind (buffer-paths buffers) (extract-buffers state)
-        (jupyter:send-comm-message w
-          (jsown:new-js ("method" "update")
-                        ("state" state)
-                        ("buffer_paths" buffer-paths))
-          (jsown:new-js ("version" +protocol-version+))
-          buffers)))))
+  (let ((state (to-json-state w name)))
+    (multiple-value-bind (buffer-paths buffers) (extract-buffers state)
+      (jupyter:send-comm-message w
+        (jsown:new-js ("method" "update")
+                      ("state" state)
+                      ("buffer_paths" buffer-paths))
+        (jsown:new-js ("version" +protocol-version+))
+        buffers))))
 
 (defun update-state (w data buffers)
-  (let ((*state-lock* t))
+  (let ((*trait-source* nil))
     (iter
       (with state = (jupyter:json-getf data "state"))
       (with buffer-paths = (jupyter:json-getf data "buffer_paths"))
@@ -180,34 +177,56 @@
       (with keywords = (jsown:keywords state))
       (for def in (closer-mop:class-slots (class-of w)))
       (for name next (closer-mop:slot-definition-name def))
-      (for key next (symbol-to-key name))
+      (for trait-name next (trait-name name))
+      (for key next (symbol-to-snake-case name))
       (for type next (trait-type def))
       (when (position key keywords :test #'equal)
         (setf (slot-value w name)
-          (deserialize-trait w type name (jupyter:json-getf state key)))))))
+          (deserialize-trait w type trait-name (jupyter:json-getf state key)))))))
+
+(defun send-custom (widget content &optional buffers)
+  (jupyter:send-comm-message widget
+    (jsown:new-js ("method" "custom")
+                  ("content" content))
+    (jsown:new-js ("version" +protocol-version+))
+    buffers))
+
+(defgeneric on-custom-message (widget content buffers))
+
+(defmethod on-custom-message (widget content buffers))
 
 (defmethod jupyter:on-comm-message ((w widget) data metadata buffers)
   (declare (ignore metadata))
   (switch ((jupyter:json-getf data "method") :test #'equal)
-    ("update" (update-state w data buffers))
-    ("request_state" (send-state w))
-    (otherwise (call-next-method))))
+    ("update"
+      (update-state w data buffers))
+    ("request_state"
+      (send-state w))
+    ("custom"
+      (on-custom-message w (jupyter:json-getf data "content") buffers))
+    (otherwise
+      (call-next-method))))
 
-(defmethod on-trait-change :after ((w widget) type name old-value new-value)
-  (declare (ignore type old-value new-value))
-  (send-state w name))
+(defmethod on-trait-change :after ((w widget) type name old-value new-value source)
+  (dolist (pair (widget-on-trait-change w))
+          ()
+    (when (eql (car pair) name)
+      (funcall (cdr pair) w type name old-value new-value source)))
+  (when source
+    (send-state w name)))
 
 (defmethod initialize-instance :around ((instance widget) &rest rest &key &allow-other-keys)
   (declare (ignore rest))
   (with-trait-silence
-    (call-next-method)
-    (let ((state (to-json-state instance)))
-      (multiple-value-bind (buffer-paths buffers) (extract-buffers state)
-        (jupyter:send-comm-open instance
-          (jsown:new-js ("state" state)
-                        ("buffer_paths" buffer-paths))
-          (jsown:new-js ("version" +protocol-version+))
-          buffers)))))
+    (prog1
+      (call-next-method)
+      (let ((state (to-json-state instance)))
+        (multiple-value-bind (buffer-paths buffers) (extract-buffers state)
+          (jupyter:send-comm-open instance
+            (jsown:new-js ("state" state)
+                          ("buffer_paths" buffer-paths))
+            (jsown:new-js ("version" +protocol-version+))
+            buffers))))))
 
 (defmethod jupyter:create-comm ((target-name (eql :|jupyter.widget|)) id data metadata buffers)
   (let* ((state (jupyter:json-getf data "state"))
@@ -227,7 +246,19 @@
           (update-state w data buffers)
           w)))))
 
-(defun display (widget)
-  "Display a widget in the notebook."
-  (jupyter:send-result widget)
+(defun observe (instance name/s handler)
+  (setf (widget-on-trait-change instance)
+        (nconc (widget-on-trait-change instance)
+               (if (listp name/s)
+                 (mapcar (lambda (name) (cons name handler)) name/s)
+                 (list (cons name/s handler))))))
+
+(defgeneric %display (widget &rest args &key &allow-other-keys)
+  (:documentation "Prepare widget for display")
+  (:method (widget &rest args &key &allow-other-keys)
+    (declare (ignore args))
+    widget))
+
+(defun display (widget &rest args &key &allow-other-keys)
+  (jupyter:send-result (apply #'%display widget args))
   nil)

@@ -189,11 +189,14 @@
 (defclass cl-installer (jupyter:installer)
   ()
   (:default-initargs
-     :class 'kernel
-     :language +language+
-     :resources
-       (list (asdf:component-pathname (asdf:find-component :common-lisp-jupyter '("res" "logo-64x64.png"))))
-     :systems '(:common-lisp-jupyter)))
+    :class 'kernel
+    :language +language+
+    :resources
+    (mapcar #'asdf:component-pathname
+            (asdf:component-children
+              (or (asdf:find-component :common-lisp-jupyter (list "res" (format nil "~(~A~)" (uiop:implementation-type))))
+                  (asdf:find-component :common-lisp-jupyter '("res" "cl")))))
+    :systems '(:common-lisp-jupyter)))
 
 (defclass system-installer (jupyter:system-installer cl-installer)
   ()
@@ -266,7 +269,7 @@
         'user-installer)
       :display-name
         (if use-implementation
-          (lisp-implementation-type)
+          (format nil "~A (~A)" +display-name+ (lisp-implementation-type))
           +display-name+)
       :implementation bin-path
       :local local
@@ -284,7 +287,7 @@
     (make-instance 'user-image-installer
       :display-name
         (if use-implementation
-          (lisp-implementation-type)
+          (format nil "~A (~A)" +display-name+ (lisp-implementation-type))
           +display-name+)
       :kernel-name
         (if use-implementation

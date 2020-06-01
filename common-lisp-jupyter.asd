@@ -11,21 +11,28 @@
      :closer-mop
      ; This should be `(:feature (:not :clasp) :ironclad)` but some distributions still don't have
      ; ASDF 3
-     #-clasp  :ironclad
+     #-clasp :ironclad
      :iterate
      :jsown
      :pzmq
+     :trivial-garbage
      :trivial-gray-streams
      :trivial-mimes)
   :components
     ((:module res
       :components
-        ((:static-file "logo-64x64.png")))
+        ((:module cl
+          :components
+            ((:static-file "logo-64x64.png")))
+         (:module sbcl
+          :components
+            ((:static-file "logo-64x64.png")))))
      (:module src
       :serial t
       :components
         ((:file "packages")
          (:file "utils")
+         (:file "queue")
          (:file "config")
          (:file "log")
          (:file "mac")
@@ -34,6 +41,7 @@
          (:file "message")
          (:file "shell")
          (:file "stdin")
+         (:file "control")
          (:file "iopub")
          (:file "results")
          (:file "comm")
@@ -59,7 +67,6 @@
              (:file "media")
              (:file "output")
              (:file "progress")
-             (:file "radio-buttons")
              (:file "select")
              (:file "slider")
              (:file "text")

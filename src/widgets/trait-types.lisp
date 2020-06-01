@@ -68,6 +68,14 @@
                 (1+ (jupyter:json-getf value "month"))
                 (jupyter:json-getf value "date"))))
 
+; Dict
+
+(defmethod serialize-trait (object (type (eql :dict)) name value)
+  (cons :obj value))
+
+(defmethod deserialize-trait (object (type (eql :dict)) name value)
+  (cdr value))
+
 ; Integer
 
 (defmethod serialize-trait (object (type (eql :int)) name (value (eql nil)))
@@ -88,12 +96,50 @@
 (defmethod serialize-trait (object (type (eql :link)) name value)
   (when value
     (list (serialize-trait object :widget name (first value))
-          (serialize-trait object :unicode name  (second value)))))
+          (serialize-trait object :trait-name name (second value)))))
 
 (defmethod deserialize-trait (object (type (eql :link)) name value)
   (when value
     (list (deserialize-trait object :widget name (first value))
-          (deserialize-trait object :unicode name (second value)))))
+          (deserialize-trait object :trait-name name (second value)))))
+
+; plist snake case
+
+(defmethod serialize-trait (object (type (eql :plist-snake-case)) name value)
+  (cons :obj
+        (mapcar (lambda (pair)
+                  (cons (symbol-to-snake-case (car pair)) (cdr pair)))
+                (alexandria:plist-alist value))))
+
+(defmethod deserialize-trait (object (type (eql :plist-snake-case)) name value)
+  (mapcan (lambda (pair)
+            (list (snake-case-to-symbol (car pair))
+                  (cdr pair)))
+          (cdr value)))
+
+; plist camel case
+
+(defmethod serialize-trait (object (type (eql :plist-camel-case)) name value)
+  (cons :obj
+    (mapcar (lambda (pair)
+              (cons (symbol-to-camel-case (car pair)) (cdr pair)))
+            (alexandria:plist-alist value))))
+
+(defmethod deserialize-trait (object (type (eql :plist-camel-case)) name value)
+  (mapcan (lambda (pair)
+            (list (camel-case-to-symbol (car pair))
+                  (cdr pair)))
+          (cdr value)))
+
+; Trait Name
+
+(defmethod serialize-trait (object (type (eql :trait-name)) name value)
+  (when value
+    (symbol-to-snake-case value)))
+
+(defmethod deserialize-trait (object (type (eql :trait-name)) name value)
+  (when value
+    (snake-case-to-symbol value)))
 
 ; Unicode
 

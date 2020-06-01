@@ -6,7 +6,11 @@
      :initarg :description
      :accessor widget-description
      :documentation "Button label."
-     :trait :unicode))
+     :trait :unicode)
+   (on-click
+     :initarg :on-click
+     :initform nil
+     :accessor widget-on-click))
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "ButtonModel"
@@ -18,15 +22,13 @@ user clicking on the button.  The click event itself is stateless."))
 
 (register-widget button)
 
-(defgeneric on-button-click (w)
-  (:documentation
-    "This method is called when the button receives a click message."))
+(defun on-button-click (widget handler)
+  (push handler (widget-on-click widget)))
 
-(defmethod on-button-click (w))
-
-(defmethod jupyter:on-comm-message ((w button) data metadata buffers)
-  (declare (ignore metadata buffers))
-  (if (and (equal (jupyter:json-getf data "method") "custom")
-           (equal (jupyter:json-getf (jupyter:json-getf data "content") "event") "click"))
-    (on-button-click w)
+(defmethod on-custom-message ((w button) content buffers)
+  (declare (ignore buffers))
+  (if (equal (jupyter:json-getf content "event") "click")
+    (dolist (handler (widget-on-click w))
+            ()
+      (funcall handler w))
     (call-next-method)))

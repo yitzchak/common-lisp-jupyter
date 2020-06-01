@@ -210,6 +210,13 @@ Standard MIME types
                       :display-data display-data
                       :handle t))
 
+(defun javascript (value &optional (display-data nil))
+  "Create a JavaScript text result based on an inline value."
+  (make-inline-result value
+                      :mime-type *javascript-mime-type*
+                      :display-data display-data
+                      :handle t))
+
 (defun jpeg (value &optional (display-data nil))
   "Create a JPEG image result based on an inline value."
   (make-inline-result value

@@ -1,22 +1,15 @@
 (in-package #:jupyter-widgets)
 
 (defvar *trait-silence* nil)
-(defvar *trait-hold* nil)
-(defvar *trait-notifications* nil)
+(defvar *trait-source* t)
+(defvar *trait-notifications* (make-instance 'jupyter::queue))
 
-(defgeneric on-trait-change (object type name old-value new-value))
+(defgeneric on-trait-change (object type name old-value new-value source))
 
-(defmethod on-trait-change (object type name old-value new-value))
+(defmethod on-trait-change (object type name old-value new-value source))
 
 (defmacro with-trait-silence (&body body)
   `(let ((*trait-silence* t)) ,@body))
-
-(defmacro with-trait-hold (&body body)
-  `(let* ((*trait-hold* t)
-          (*trait-notifications* nil)
-          (result (progn ,@body)))
-    (mapcar #'on-trait-change (reverse *trait-notifications*))
-    result))
 
 (defgeneric validate-trait (object type name value))
 
@@ -76,12 +69,20 @@
   (declare (ignore initargs))
   (find-class 'direct-trait))
 
+(defgeneric trait-name (value))
+
+(defmethod trait-name ((slot effective-trait))
+  (intern (symbol-name (closer-mop:slot-definition-name slot)) "KEYWORD"))
+
+(defmethod trait-name ((value symbol))
+  (intern (symbol-name value) "KEYWORD"))
+
 (defmethod (setf closer-mop:slot-value-using-class)
            (value (class trait-metaclass) object (slot effective-trait))
   (call-next-method
     (let ((type (trait-type slot)))
       (if type
-        (validate-trait object type (closer-mop:slot-definition-name slot) value)
+        (validate-trait object type (trait-name slot) value)
         value))
     class object slot))
 
@@ -90,11 +91,66 @@
   (let ((type (trait-type slot)))
     (if (and (not *trait-silence*) type)
       (let* ((name (closer-mop:slot-definition-name slot))
+             (trait-name (trait-name name))
              (old-value (if (slot-boundp object name) (slot-value object name) :unbound))
              (new-value (call-next-method)))
         (when (not (equal old-value new-value))
-          (if *trait-hold*
-            (push (list object type name old-value new-value) *trait-notifications*)
-            (on-trait-change object type name old-value new-value)))
+          (jupyter::enqueue *trait-notifications*
+            (list object type trait-name old-value new-value *trait-source*)))
+        (let ((*trait-source* t))
+          (do ()
+              ((jupyter::queue-empty-p *trait-notifications*))
+            (apply #'on-trait-change (jupyter::dequeue *trait-notifications*))))
         new-value)
       (call-next-method))))
+
+(defclass has-traits ()
+  ((on-trait-change
+     :initarg :on-trait-change
+     :initform nil
+     :accessor widget-on-trait-change
+     :documentation "Instance specific trait notification"))
+  (:metaclass trait-metaclass))
+
+(defun symbol-to-camel-case (s)
+  (do ((name (symbol-name s))
+       (position 0 (1+ position))
+       (result "")
+       capitalize)
+      ((= position (length name)) result)
+    (cond
+      ((char= (char name position) #\-)
+        (setq capitalize t))
+      (capitalize
+        (setq result (concatenate 'string result (string (char-upcase (char name position)))))
+        (setq capitalize nil))
+      (t
+        (setq result (concatenate 'string result (string (char-downcase (char name position)))))))))
+
+(defun camel-case-to-symbol (name)
+  (intern
+    (do ((position 0 (1+ position))
+         (result ""))
+        ((= position (length name)) result)
+      (when (and (not (zerop position))
+                 (upper-case-p (char name position)))
+        (setq result (concatenate 'string result "-")))
+        (setq result (concatenate 'string result (string (char-upcase (char name position))))))
+    "KEYWORD"))
+
+(defun symbol-to-snake-case (s)
+  (substitute #\_ #\%
+    (substitute #\_ #\-
+      (string-downcase (symbol-name s)))))
+
+(defun snake-case-to-symbol (k)
+  (intern
+    (string-upcase
+      (substitute #\- #\_
+                  (if (and (not (zerop (length k)))
+                                (char= (char k 0) #\_))
+                    (substitute #\% #\_ k :count 1)
+                    k)))
+    "KEYWORD"))
+
+

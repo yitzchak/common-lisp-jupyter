@@ -31,7 +31,9 @@
    (send-lock
      :initform (bordeaux-threads:make-lock)
      :reader channel-send-lock
-     :documentation "Lock used during send actions"))
+     :documentation "Lock used during send actions")
+   (thread
+     :accessor channel-thread))
   (:documentation "Common channel class."))
 
 (defgeneric start (ch)
@@ -46,6 +48,19 @@
 (defgeneric stop (ch)
   (:documentation "Stop the resource."))
 
+(defmethod stop :before ((ch channel))
+  (when (slot-boundp ch 'thread)
+    (inform :info ch "Stopping thread")
+    (bordeaux-threads:destroy-thread (channel-thread ch))))
+
 (defmethod stop ((ch channel))
   (inform :info ch "Stopping channel")
   (pzmq:close (channel-socket ch)))
+
+
+(defclass request-channel (channel)
+  ((request-queue
+     :initarg :request-queue
+     :accessor channel-request-queue))
+  (:documentation "ROUTER channel used for requests."))
+

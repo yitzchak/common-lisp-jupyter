@@ -3,6 +3,7 @@
   (:export
     ; utils
     #:json-getf
+    #:json-to-plist
     ; log
     #:inform
     ; results
@@ -10,6 +11,7 @@
     #:gif-file
     #:html
     #:inline-result
+    #:javascript
     #:jpeg
     #:jpeg-file
     #:latex
@@ -39,10 +41,12 @@
     #:enqueue-input
     #:evaluate-code
     #:handling-errors
+    #:inform
     #:inspect-code
     #:kernel
     #:kernel-prompt-prefix
     #:kernel-prompt-suffix
+    #:make-uuid
     #:on-comm-close
     #:on-comm-message
     #:on-comm-open
@@ -53,6 +57,8 @@
     #:send-comm-message
     #:send-comm-open
     #:send-result
+    #:start
+    #:stop
     ; installer
     #:command-line
     #:install
@@ -91,6 +97,7 @@
     #:date-picker
     #:description-style
     #:directional-link
+    #:%display
     #:display
     #:dom-widget
     #:dropdown
@@ -101,6 +108,7 @@
     #:float-slider
     #:float-text
     #:grid-box
+    #:has-traits
     #:h-box
     #:html
     #:html-math
@@ -112,39 +120,34 @@
     #:label
     #:layout
     #:link
+    #:observe
     #:on-button-click
+    #:on-custom-message
     #:on-trait-change
     #:output
     #:password
     #:play
     #:progress-style
     #:radio-buttons
+    #:register-widget
     #:select
-    #:select-multiple
     #:selection-range-slider
     #:selection-slider
+    #:select-multiple
+    #:send-custom
+    #:sidecar
     #:slider-style
     #:tab
     #:text
     #:text-area
     #:toggle-button
-    #:toggle-button-style
     #:toggle-buttons
-    #:v-box
+    #:toggle-button-style
+    #:trait-metaclass
     #:valid
+    #:v-box
     #:video
     #:widget
-    #:widget-%dom-classes
-    #:widget-%module-module
-    #:widget-%module-module-version
-    #:widget-%module-name
-    #:widget-%options-labels
-    #:widget-%playing
-    #:widget-%repeat
-    #:widget-%titles
-    #:widget-%view-module
-    #:widget-%view-module-version
-    #:widget-%view-name
     #:widget-accept
     #:widget-align-content
     #:widget-align-items
@@ -172,6 +175,7 @@
     #:widget-description-width
     #:widget-disabled
     #:widget-display
+    #:widget-%dom-classes
     #:widget-ensure-option
     #:widget-error
     #:widget-flex
@@ -208,12 +212,17 @@
     #:widget-min
     #:widget-min-height
     #:widget-min-width
+    #:widget-%module-module
+    #:widget-%module-module-version
+    #:widget-%module-name
     #:widget-msg-id
     #:widget-multiple
     #:widget-name
     #:widget-object-fit
     #:widget-object-positon
+    #:widget-on-trait-change
     #:widget-options
+    #:widget-%options-labels
     #:widget-order
     #:widget-orientation
     #:widget-outputs
@@ -222,9 +231,11 @@
     #:widget-overflow-y
     #:widget-padding
     #:widget-placeholder
+    #:widget-%playing
     #:widget-pressed
     #:widget-readout
     #:widget-readout-format
+    #:widget-%repeat
     #:widget-right
     #:widget-rows
     #:widget-selected-index
@@ -234,10 +245,14 @@
     #:widget-style
     #:widget-target
     #:widget-timestamp
+    #:widget-%titles
     #:widget-tooltip
     #:widget-tooltips
     #:widget-top
     #:widget-value
+    #:widget-%view-module
+    #:widget-%view-module-version
+    #:widget-%view-name
     #:widget-visibility
     #:widget-width
     #:with-output))
