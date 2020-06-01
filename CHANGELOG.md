@@ -7,6 +7,18 @@ of how the versioning scheme that this project does not use is clearly superior
 to random natural numbers and how incrementing the minor version number
 indicates backward compatible changes, unless it does not.
 
+- 2020-06-01 — Add `link` methods to enable creating trait links easily.
+- 2020-06-01 — Simulate `options` and `value` properties on select widgets.
+- 2020-06-01 — Improve `with-output` behavior.
+- 2020-06-01 — Add support for sidecar widget.
+- 2020-06-01 — Add `has-traits` superclass for trait notification on
+  non-widgets.
+- 2020-06-01 — Add custom message handling.
+- 2020-06-01 — Add per instance trait notification and button messages.
+- 2020-06-01 — Add threadsafe message queueing.
+- 2020-06-01 — Listen to CONTROL channel for shutdown requests
+- 2020-06-01 — Add generic display functions so that widgets can customize
+  display requests.
 - 2019-10-07 — Add ABCL and CLASP support.
 - 2019-09-29 — Removed `make-widget`. Widget creation is now done with
   Common Lisp's `make-instance`.

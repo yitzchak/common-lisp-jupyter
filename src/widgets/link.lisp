@@ -54,9 +54,22 @@
       target target-trait
       (lambda (instance type name old-value new-value src)
         (declare (ignore instance type name old-value src))
-        (setf (trait source source-trait) new-value)))))
+        (setf (trait source source-trait) new-value))))
+  (:method ((source widget) source-trait (target widget) target-trait)
+    (make-instance 'link
+                   :source (list source source-trait)
+                   :target (list target target-trait))))
 
-(defmethod link ((source widget) source-trait (target widget) target-trait)
-  (make-instance 'link
-                 :source (list source source-trait)
-                 :target (list target target-trait))) 
+
+(defgeneric directional-link (source source-trait target target-trait)
+  (:documentation "Create a link between traits in the client if possible")
+  (:method (source source-trait target target-trait)
+    (observe
+      source source-trait
+      (lambda (instance type name old-value new-value src)
+        (declare (ignore instance type name old-value src))
+        (setf (trait target target-trait) new-value))))
+  (:method ((source widget) source-trait (target widget) target-trait)
+    (make-instance 'directional-link
+                   :source (list source source-trait)
+                   :target (list target target-trait))))                    
