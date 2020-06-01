@@ -19,7 +19,7 @@ else
     rm master.zip
   fi
 
-  curl -LO https://beta.quicklisp.org/quicklisp.lisp
+  curl -kLO https://beta.quicklisp.org/quicklisp.lisp
 
   if [ "$LISP" = "clisp" ]; then
     clisp scripts/$METHOD-install.lisp
