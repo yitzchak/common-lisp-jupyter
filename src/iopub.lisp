@@ -19,47 +19,47 @@
 (defun send-status (iopub session status)
   (message-send iopub
                 (make-orphan-message session "status"
-                                     (jsown:new-js
+                                     (json-new-obj
                                        ("execution_state" status)))))
 
 (defun send-clear-output (iopub parent-msg wait)
   (message-send iopub
                 (make-message parent-msg "clear_output"
-                              (jsown:new-js
+                              (json-new-obj
                                 ("wait" (if wait :true :false))))))
 
 (defun send-status-update (iopub parent-msg status)
   (message-send iopub
                 (make-message parent-msg "status"
-                              (jsown:new-js
+                              (json-new-obj
                                 ("execution_state" status)))))
 
 (defun send-display-data (iopub parent-msg data)
   (message-send iopub
                 (make-message parent-msg "display_data"
-                              (jsown:new-js
+                              (json-new-obj
                                 ("data" data)
-                                ("metadata" (jsown:new-js))))))
+                                ("metadata" (json-empty-obj))))))
 
 (defun send-execute-code (iopub parent-msg execution-count code)
   (message-send iopub
                 (make-message parent-msg "execute_input"
-                              (jsown:new-js
+                              (json-new-obj
                                 ("code" code)
                                 ("execution_count" execution-count)))))
 
 (defun send-execute-result (iopub parent-msg execution-count data)
   (message-send iopub
                 (make-message parent-msg "execute_result"
-                              (jsown:new-js
+                              (json-new-obj
                                 ("execution_count" execution-count)
                                 ("data" data)
-                                ("metadata" (jsown:new-js))))))
+                                ("metadata" (json-empty-obj))))))
 
 (defun send-execute-error (iopub parent-msg execution-count ename evalue)
   (message-send iopub
                 (make-message parent-msg "error"
-                              (jsown:new-js
+                              (json-new-obj
                                 ("execution_count" execution-count)
                                 ("ename" ename)
                                 ("evalue" evalue)
@@ -68,16 +68,16 @@
 (defun send-stream (iopub parent-msg stream-name data)
   (message-send iopub
                 (make-message parent-msg "stream"
-                              (jsown:new-js
+                              (json-new-obj
                                 ("name" stream-name)
                                 ("text" data)))))
 
 (defun send-comm-close-orphan (iopub session comm-id &optional data)
   (message-send iopub
                 (make-orphan-message session "comm_close"
-                                     (jsown:new-js
+                                     (json-new-obj
                                        ("comm_id" comm-id)
-                                       ("data" (or data (jsown:new-js)))))))
+                                       ("data" (or data (json-empty-obj)))))))
 
 (defvar *iopub-stream-size* 1024)
 

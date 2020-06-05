@@ -55,7 +55,7 @@
 
 (defmethod serialize-trait (object (type (eql :date)) name value)
   (if value
-    (jsown:new-js
+    (jupyter:json-new-obj
       ("year" (parse-integer value :start 0 :end 4))
       ("month" (1- (parse-integer value :start 5 :end 7)))
       ("date" (parse-integer value :start 8 :end 10)))

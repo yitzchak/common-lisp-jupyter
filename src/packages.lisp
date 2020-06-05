@@ -3,6 +3,9 @@
   (:export
     ; utils
     #:json-getf
+    #:json-empty-obj
+    #:json-new-obj
+    #:json-extend-obj
     #:json-to-plist
     ; log
     #:inform

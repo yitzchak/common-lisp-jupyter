@@ -21,7 +21,7 @@ See: http://jupyter-client.readthedocs.org/en/latest/messaging.html#messages-on-
 (defun send-input-request (stdin parent-msg prompt)
   (message-send stdin
                 (make-message parent-msg "input_request"
-                              (jsown:new-js
+                              (json-new-obj
                                 ("prompt" prompt)))))
 
 #|

@@ -29,23 +29,23 @@
 (defun send-is-complete-reply (shell parent-msg status)
   (message-send shell
                 (make-message parent-msg "is_complete_reply"
-                              (jsown:new-js
+                              (json-new-obj
                                 ("status" status)
                                 ("indent" "")))))
 
 (defun send-execute-reply-ok (shell parent-msg execution-count payload)
   (message-send shell
                 (make-message parent-msg "execute_reply"
-                              (jsown:new-js
+                              (json-new-obj
                                 ("status" "ok")
                                 ("execution_count" execution-count)
-                                ("user_expressions" (jsown:new-js))
+                                ("user_expressions" (json-empty-obj))
                                 ("payload" payload)))))
 
 (defun send-execute-reply-error (shell parent-msg execution-count ename evalue)
   (message-send shell
                 (make-message parent-msg "execute_reply"
-                              (jsown:new-js
+                              (json-new-obj
                                 ("status" "error")
                                 ("execution_count" execution-count)
                                 ("ename" ename)
@@ -55,7 +55,7 @@
 (defun send-inspect-reply-error (shell parent-msg ename evalue)
   (message-send shell
                 (make-message parent-msg "inspect_reply"
-                              (jsown:new-js
+                              (json-new-obj
                                 ("status" "error")
                                 ("ename" ename)
                                 ("evalue" evalue)
@@ -64,16 +64,16 @@
 (defun send-inspect-reply-ok (shell parent-msg data)
   (message-send shell
                 (make-message parent-msg "inspect_reply"
-                              (jsown:new-js
+                              (json-new-obj
                                 ("status" "ok")
                                 ("found" (if data t nil))
                                 ("data" data)
-                                ("metadata" (jsown:new-js))))))
+                                ("metadata" (json-empty-obj))))))
 
 (defun send-complete-reply-error (shell parent-msg ename evalue)
   (message-send shell
                 (make-message parent-msg "complete_reply"
-                              (jsown:new-js
+                              (json-new-obj
                                 ("status" "error")
                                 ("ename" ename)
                                 ("evalue" evalue)
@@ -82,26 +82,26 @@
 (defun send-complete-reply-ok (shell parent-msg matches start end)
   (message-send shell
                 (make-message parent-msg "complete_reply"
-                              (jsown:new-js
+                              (json-new-obj
                                 ("status" "ok")
                                 ("matches" matches)
                                 ("cursor_start" start)
                                 ("cursor_end" end)
-                                ("metadata" (jsown:new-js))))))
+                                ("metadata" (json-empty-obj))))))
 
 (defun send-comm-info-reply (shell parent-msg comms)
   (message-send shell
                 (make-message parent-msg "comm_info_reply"
-                              (jsown:new-js
+                              (json-new-obj
                                 ("comms" (mapcar (lambda (p)
                                                    (cons
                                                      (car p)
-                                                     (jsown:new-js
+                                                     (json-new-obj
                                                        ("target_name" (cdr p)))))
                                            comms))))))
 
 (defun send-history-reply (shell parent-msg history)
   (message-send shell
                 (make-message parent-msg "history_reply"
-                              (jsown:new-js
+                              (json-new-obj
                                 ("history" history)))))

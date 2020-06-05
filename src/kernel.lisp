@@ -356,7 +356,7 @@
               kernel
     (message-send shell
       (make-message msg "kernel_info_reply"
-        (jsown:new-js
+        (json-new-obj
           ("protocol_version" +KERNEL-PROTOCOL-VERSION+)
           ("implementation" name)
           ("implementation_version" version)
@@ -367,7 +367,7 @@
                 (list :obj (cons "text" (car p)) (cons "url" (cdr p))))
               help-links))
           ("language_info"
-            (jsown:new-js
+            (json-new-obj
               ("name" language-name)
               ("version" language-version)
               ("mimetype" mime-type)
@@ -645,13 +645,13 @@
 
 (defun set-next-input (text &optional (replace nil))
   (declare (ignore replace))
-  (vector-push-extend (jsown:new-js
+  (vector-push-extend (json-new-obj
                         ("source" "set_next_input")
                         ("text" text))
                       *payload*))
 
 (defun page (result &optional (start 0))
-  (vector-push-extend (jsown:new-js
+  (vector-push-extend (json-new-obj
                         ("source" "page")
                         ("data" (render result))
                         ("start" start))
