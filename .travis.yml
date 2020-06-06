@@ -57,6 +57,10 @@ matrix:
     - os: osx
       env: METHOD=usr LISP=sbcl
 
+jobs:
+  allow_failures:
+  - env: METHOD=ros LISP=cmu-bin
+
 install:
   - bash scripts/ci-install
 
