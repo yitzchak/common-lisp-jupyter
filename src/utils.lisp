@@ -51,6 +51,9 @@
   `(json-extend-obj (json-empty-obj)
      ,@specs))
 
+(defun json-keyp (object indicator)
+  (and (assoc indicator (cdr object) :test #'string=) t))
+
 (defun read-raw-string (stream c1 c2)
   (declare (ignore c1 c2))
   (iter

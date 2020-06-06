@@ -7,6 +7,7 @@
     #:json-new-obj
     #:json-extend-obj
     #:json-to-plist
+    #:json-keyp
     ; log
     #:inform
     ; results
