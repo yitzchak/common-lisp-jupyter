@@ -221,7 +221,7 @@
       (with-open-file (stream spec-path :direction :output :if-exists :supersede)
         (write-string
           (jsown:to-json
-            (jsown:new-js
+            (json-new-obj
               ("argv" (command-line instance))
               ("display_name" display-name)
               ("language" language)))

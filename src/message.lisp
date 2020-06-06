@@ -15,11 +15,11 @@
 (defclass message ()
   ((header
      :initarg :header
-     :initform (jsown:new-js)
+     :initform (json-empty-obj)
      :accessor message-header)
    (parent-header
      :initarg :parent-header
-     :initform (jsown:new-js)
+     :initform (json-empty-obj)
      :accessor message-parent-header)
    (identities
      :initarg :identities
@@ -27,11 +27,11 @@
      :accessor message-identities)
    (metadata
      :initarg :metadata
-     :initform (jsown:new-js)
+     :initform (json-empty-obj)
      :accessor message-metadata)
    (content
      :initarg :content
-     :initform (jsown:new-js)
+     :initform (json-empty-obj)
      :accessor message-content)
    (buffers
      :initarg :buffers
@@ -43,7 +43,7 @@
   (let ((hdr (message-header parent-msg))
         (identities (message-identities parent-msg)))
     (make-instance 'message
-                   :header (jsown:new-js
+                   :header (json-new-obj
                              ("msg_id" (make-uuid))
                              ("username" (json-getf hdr "username"))
                              ("session" (json-getf hdr "session"))
@@ -52,19 +52,19 @@
                    :parent-header hdr
                    :identities identities
                    :content content
-                   :metadata (or metadata (jsown:new-js))
+                   :metadata (or metadata (json-empty-obj))
                    :buffers buffers)))
 
 (defun make-orphan-message (session-id msg-type content &optional metadata buffers)
   (make-instance 'message
-                 :header (jsown:new-js
+                 :header (json-new-obj
                            ("msg_id" (make-uuid))
                            ("username" "kernel")
                            ("session" session-id)
                            ("msg_type" msg-type)
                            ("version" +KERNEL-PROTOCOL-VERSION+))
                  :content content
-                 :metadata (or metadata (jsown:new-js))
+                 :metadata (or metadata (json-empty-obj))
                  :buffers buffers))
 
 ;; XXX: should be a defconstant but  strings are not EQL-able...

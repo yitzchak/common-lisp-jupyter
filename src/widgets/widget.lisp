@@ -84,17 +84,17 @@
   (:documentation "Base class for all Jupyter widgets."))
 
 (defmethod jupyter:render ((w widget))
-  (jsown:new-js
+  (jupyter:json-new-obj
     ("text/plain" "A Jupyter Widget")
     ("application/vnd.jupyter.widget-view+json"
-      (jsown:new-js
+      (jupyter:json-new-obj
         ("version_major" 2)
         ("version_minor" 0)
         ("model_id" (jupyter:comm-id w))))))
 
 (defmethod to-json-state (w &optional nm)
   (iter
-    (with state = (jsown:new-js))
+    (with state = (jupyter:json-empty-obj))
     (for def in (closer-mop:class-slots (class-of w)))
     (for name next (closer-mop:slot-definition-name def))
     (for trait-name next (trait-name name))
@@ -102,7 +102,7 @@
     (when (and (or (not nm) (eql trait-name nm))
                (slot-boundp w name)
                type)
-      (jsown:extend-js state
+      (jupyter:json-extend-obj state
         ((symbol-to-snake-case name)
           (serialize-trait w type trait-name (slot-value w name)))))
     (finally (return state))))
@@ -145,11 +145,11 @@
         (rest (cdr buffer-path)))
     (if rest
       (inject-buffer (if (stringp node)
-                       (jsown:val state node)
+                       (jupyter:json-getf state node)
                        (elt state node))
                      rest buffer)
       (if (stringp node)
-        (setf (jsown:val state node) buffer)
+        (setf (jupyter:json-getf state node) buffer)
         (setf (elt state node) buffer)))))
 
 (defun inject-buffers (state buffer-paths buffers)
@@ -162,10 +162,10 @@
   (let ((state (to-json-state w name)))
     (multiple-value-bind (buffer-paths buffers) (extract-buffers state)
       (jupyter:send-comm-message w
-        (jsown:new-js ("method" "update")
+        (jupyter:json-new-obj ("method" "update")
                       ("state" state)
                       ("buffer_paths" buffer-paths))
-        (jsown:new-js ("version" +protocol-version+))
+        (jupyter:json-new-obj ("version" +protocol-version+))
         buffers))))
 
 (defun update-state (w data buffers)
@@ -186,9 +186,9 @@
 
 (defun send-custom (widget content &optional buffers)
   (jupyter:send-comm-message widget
-    (jsown:new-js ("method" "custom")
+    (jupyter:json-new-obj ("method" "custom")
                   ("content" content))
-    (jsown:new-js ("version" +protocol-version+))
+    (jupyter:json-new-obj ("version" +protocol-version+))
     buffers))
 
 (defgeneric on-custom-message (widget content buffers))
@@ -223,9 +223,9 @@
       (let ((state (to-json-state instance)))
         (multiple-value-bind (buffer-paths buffers) (extract-buffers state)
           (jupyter:send-comm-open instance
-            (jsown:new-js ("state" state)
+            (jupyter:json-new-obj ("state" state)
                           ("buffer_paths" buffer-paths))
-            (jsown:new-js ("version" +protocol-version+))
+            (jupyter:json-new-obj ("version" +protocol-version+))
             buffers))))))
 
 (defmethod jupyter:create-comm ((target-name (eql :|jupyter.widget|)) id data metadata buffers)

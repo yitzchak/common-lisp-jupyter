@@ -14,16 +14,16 @@
   (jsown:to-json
     (with-slots (markdown source) c
       (if markdown
-        (jsown:new-js
+        (jupyter:json-new-obj
           ("cell_type" "markdown")
           ("source" (list source))
-          ("metadata" (jsown:new-js)))
-        (jsown:new-js
+          ("metadata" (jupyter:json-empty-obj)))
+        (jupyter:json-new-obj
           ("cell_type" "code")
           ("source" (list source))
           ("execution_count" :null)
           ("outputs" nil)
-          ("metadata" (jsown:new-js ("collapsed" t))))))))
+          ("metadata" (jupyter:json-new-obj ("collapsed" t))))))))
 
 (defun my-read (value)
   (handler-case
@@ -35,18 +35,18 @@
   (with-open-file (dest-stream dest :direction :output :if-exists :supersede)
     (write-string
       (jsown:to-json
-        (jsown:new-js
+        (jupyter:json-new-obj
           ("nbformat" 4)
           ("nbformat_minor" 2)
           ("metadata"
-            (jsown:new-js
+            (jupyter:json-new-obj
               ("kernelspec"
-                (jsown:new-js
+                (jupyter:json-new-obj
                   ("display_name" "Common Lisp")
                   ("language" "common-lisp")
                   ("name" "common-lisp")))
               ("language_info"
-                (jsown:new-js
+                (jupyter:json-new-obj
                   ("codemirror_mode" "text/x-common-lisp")
                   ("file_extension" ".lisp")
                   ("mimetype" "text/x-common-lisp")

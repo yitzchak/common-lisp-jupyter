@@ -42,10 +42,10 @@
         (setf (gethash id comms) comm)
         (message-send iopub
           (make-orphan-message session "comm_open"
-                               (jsown:new-js
+                               (json-new-obj
                                  ("comm_id" id)
                                  ("target_name" target-name)
-                                 ("data" (or data (jsown:new-js))))
+                                 ("data" (or data (json-empty-obj))))
                                metadata buffers))))))
 
 (defun send-comm-message (comm &optional data metadata buffers)
@@ -54,9 +54,9 @@
       (with-slots (iopub session) kernel
         (message-send iopub
           (make-orphan-message session "comm_msg"
-                               (jsown:new-js
+                               (json-new-obj
                                  ("comm_id" id)
-                                 ("data" (or data (jsown:new-js))))
+                                 ("data" (or data (json-empty-obj))))
                                metadata buffers))))))
 
 (defun send-comm-close (comm &optional data metadata buffers)
@@ -66,8 +66,8 @@
         (remhash id comms)
         (message-send iopub
           (make-orphan-message session "comm_close"
-                               (jsown:new-js
+                               (json-new-obj
                                  ("comm_id" id)
-                                 ("data" (or data (jsown:new-js))))
+                                 ("data" (or data (json-empty-obj))))
                                metadata buffers))))))
 

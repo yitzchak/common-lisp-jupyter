@@ -29,7 +29,7 @@
 (defun send-shutdown-reply (ch parent-msg restart)
   (message-send ch
                 (make-message parent-msg "shutdown_reply"
-                              (jsown:new-js
+                              (json-new-obj
                                 ("restart" (if restart t :f))))))
 
               

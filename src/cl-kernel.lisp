@@ -87,7 +87,7 @@
            :reader inspect-result-status)))
 
 (defmethod jupyter:render ((res inspect-result))
-  (jsown:new-js
+  (jupyter:json-new-obj
     ("text/plain"
       (with-output-to-string (stream)
         (describe (inspect-result-symbol res) stream)))))

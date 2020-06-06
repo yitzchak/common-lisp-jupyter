@@ -44,7 +44,7 @@ Standard MIME types
           :reader sexpr-result-value)))
 
 (defmethod render ((res sexpr-result))
-  (jsown:new-js
+  (json-new-obj
     (*plain-text-mime-type* (sexpr-to-text (sexpr-result-value res)))))
 
 (defclass inline-result (result)
@@ -69,9 +69,9 @@ Standard MIME types
   (let ((value (inline-result-value res))
         (mime-type (inline-result-mime-type res)))
     (if (equal mime-type *plain-text-mime-type*)
-      (jsown:new-js
+      (json-new-obj
         (mime-type value))
-      (jsown:new-js
+      (json-new-obj
         (*plain-text-mime-type* "inline-value")
         (mime-type (if (or (stringp value) (ends-with-subseq "json" mime-type))
                        value
@@ -100,9 +100,9 @@ Standard MIME types
   (let* ((path (file-result-path res))
          (mime-type (or (file-result-mime-type res) (trivial-mimes:mime path))))
     (if (equal mime-type *plain-text-mime-type*)
-      (jsown:new-js
+      (json-new-obj
         (mime-type (read-file-into-string path)))
-      (jsown:new-js
+      (json-new-obj
         (*plain-text-mime-type* path)
         (mime-type
           (if (or (equal mime-type *svg-mime-type*)
