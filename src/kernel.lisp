@@ -587,9 +587,12 @@
             results)
           results)))))
 
-(defun make-eval-error (err msg &key (quit nil))
+(defun make-eval-error (err msg &key (quit nil) backtrace)
   (let ((name (symbol-name (class-name (class-of err)))))
     (write-string msg *error-output*)
+    (when backtrace
+      (fresh-line *error-output*)
+      (write-string backtrace *error-output*))
     (make-error-result name msg :quit quit)))
 
 (define-condition quit-condition (error)
@@ -600,34 +603,46 @@
 (defmacro handling-errors (&body body)
   "Macro for catching any conditions including quit-conditions during code
   evaluation."
-  `(handler-case
-    (handler-bind
-      ((simple-warning
-        (lambda (wrn)
-          (apply (function format) *standard-output*
-                (simple-condition-format-control   wrn)
-                (simple-condition-format-arguments wrn))
-          (format *standard-output* "~&")
-          (muffle-warning)))
-      (warning
-        (lambda (wrn)
-          (format *standard-output* "~&~A: ~%  ~A~%"
-                  (class-name (class-of wrn)) wrn)
-          (muffle-warning))))
-    	 (progn ,@body))
-     (quit-condition (err)
-       (make-eval-error err (format nil "~A" err) :quit t))
-     (simple-error (err)
-       (make-eval-error err
-         (apply #'format nil (simple-condition-format-control err)
-                             (simple-condition-format-arguments err))))
-     (simple-type-error (err)
-      #+clasp (clasp-debug:print-backtrace :stream *error-output*)
-       (make-eval-error err
-         (apply #'format nil (simple-condition-format-control err)
-                             (simple-condition-format-arguments err))))
-     (serious-condition (err)
-       (make-eval-error err (format nil "~A" err)))))
+  `(let (backtrace)
+     (handler-case
+         (handler-bind
+             ((simple-error
+                (lambda (err)
+                  (setf backtrace (trivial-backtrace:print-backtrace err :output nil))))
+              (simple-type-error
+                (lambda (err)
+                  (setf backtrace (trivial-backtrace:print-backtrace err :output nil))))
+              (serious-condition
+                (lambda (err)
+                  (setf backtrace (trivial-backtrace:print-backtrace err :output nil))))
+              (simple-warning
+                (lambda (wrn)
+                  (apply (function format) *standard-output*
+                         (simple-condition-format-control   wrn)
+                         (simple-condition-format-arguments wrn))
+                  (format *standard-output* "~&")
+                  (muffle-warning)))
+              (warning
+                (lambda (wrn)
+                  (format *standard-output* "~&~A: ~%  ~A~%"
+                          (class-name (class-of wrn)) wrn)
+                  (muffle-warning))))
+           (progn ,@body))
+       (quit-condition (err)
+         (make-eval-error err (format nil "~A" err) :quit t))
+       (simple-error (err)
+         (make-eval-error err
+                          (apply #'format nil (simple-condition-format-control err)
+                                 (simple-condition-format-arguments err))
+                          :backtrace backtrace))
+       (simple-type-error (err)
+         (make-eval-error err
+                          (apply #'format nil (simple-condition-format-control err)
+                                 (simple-condition-format-arguments err))
+                          :backtrace backtrace))
+       (serious-condition (err)
+         (make-eval-error err (format nil "~A" err)
+                          :backtrace backtrace)))))
 
 (defun send-result (result)
   "Send a result either as display data or an execute result."
