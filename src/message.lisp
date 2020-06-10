@@ -83,8 +83,13 @@
 
 (defun send-binary-part (ch part)
   (let ((len (length part)))
-    (cffi:with-foreign-array (m part (list :array :uint8 len))
-      (pzmq:send (channel-socket ch) m :len len :sndmore t))))
+    (cond
+      ((typep part '(array single-float *))
+        (cffi:with-foreign-array (m part (list :array :float len))
+          (pzmq:send (channel-socket ch) m :len (* 4 len) :sndmore t)))
+      (t
+        (cffi:with-foreign-array (m part (list :array :uint8 len))
+          (pzmq:send (channel-socket ch) m :len len :sndmore t))))))
 
 (defun send-parts (ch identities body buffers)
   (with-slots (send-lock socket) ch
