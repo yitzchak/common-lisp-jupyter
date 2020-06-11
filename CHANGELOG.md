@@ -7,6 +7,7 @@ of how the versioning scheme that this project does not use is clearly superior
 to random natural numbers and how incrementing the minor version number
 indicates backward compatible changes, unless it does not.
 
+- 2020-06-19 — Add basic debugger and handle errors in comm messages.
 - 2020-06-01 — Add `link` methods to enable creating trait links easily.
 - 2020-06-01 — Simulate `options` and `value` properties on select widgets.
 - 2020-06-01 — Improve `with-output` behavior.

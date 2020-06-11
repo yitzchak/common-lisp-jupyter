@@ -42,6 +42,7 @@
     #:comm-id
     #:complete-code
     #:create-comm
+    #:debugging-errors
     #:enqueue-input
     #:evaluate-code
     #:handling-errors
