@@ -43,6 +43,7 @@
                                 ("payload" payload)))))
 
 (defun send-execute-reply-error (shell parent-msg execution-count ename evalue)
+  (declare (ignore execution-count))
   (message-send shell
                 (make-message parent-msg "execute_reply"
                               (json-new-obj
