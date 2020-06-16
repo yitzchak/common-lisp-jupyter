@@ -60,7 +60,6 @@
   (message-send iopub
                 (make-message parent-msg "error"
                               (json-new-obj
-                                ("execution_count" execution-count)
                                 ("ename" ename)
                                 ("evalue" evalue)
                                 ("traceback" nil)))))

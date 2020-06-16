@@ -47,7 +47,6 @@
                 (make-message parent-msg "execute_reply"
                               (json-new-obj
                                 ("status" "error")
-                                ("execution_count" execution-count)
                                 ("ename" ename)
                                 ("evalue" evalue)
                                 ("traceback" nil)))))

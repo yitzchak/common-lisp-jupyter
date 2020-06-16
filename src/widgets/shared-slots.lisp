@@ -141,7 +141,7 @@
      :initarg :format
      :accessor widget-format
      :documentation "The format of the media."
-     :trait :string))
+     :trait :unicode))
   (:metaclass trait-metaclass))
 
 
@@ -151,7 +151,7 @@
      :initform ""
      :accessor widget-height
      :documentation "Height of the media in pixels."
-     :trait :string))
+     :trait :unicode))
   (:metaclass trait-metaclass))
 
 
@@ -269,5 +269,5 @@
      :initform ""
      :accessor widget-width
      :documentation "Width of the media in pixels."
-     :trait :string))
+     :trait :unicode))
   (:metaclass trait-metaclass))

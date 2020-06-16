@@ -9,6 +9,7 @@
 ; (defvar maxima::$kernel_info nil)
 
 (defparameter +uuid-size+ 16)
+(defparameter *uuid-random-state* (make-random-state t))
 
 (defun octets-to-hex-string (bytes)
   (format nil "~(~{~2,'0X~}~)" (coerce bytes 'list)))
@@ -18,8 +19,8 @@
     (dotimes (index +uuid-size+)
       (setf (aref bytes index)
         (if (= 6 index)
-          (logior #x40 (random 16))
-          (random 256))))
+          (logior #x40 (random 16 *uuid-random-state*))
+          (random 256 *uuid-random-state*))))
     (if as-bytes
       bytes
       (octets-to-hex-string bytes))))
