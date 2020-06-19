@@ -40,19 +40,18 @@
     (read input-stream eof-error-p eof-value recursive-p)))
 
 (defun my-eval (expr)
-  (jupyter:handling-errors
-    (setq common-lisp-user::- expr)
-    (let ((evaluated-expr (multiple-value-list (eval expr))))
-      (setq common-lisp-user::*** common-lisp-user::**
-            common-lisp-user::** common-lisp-user::*
-            common-lisp-user::* (car evaluated-expr)
-            common-lisp-user::/// common-lisp-user:://
-            common-lisp-user::// common-lisp-user::/
-            common-lisp-user::/ evaluated-expr
-            common-lisp-user::+++ common-lisp-user::++
-            common-lisp-user::++ common-lisp-user::+
-            common-lisp-user::+ expr)
-      (remove nil (mapcar #'jupyter:make-lisp-result evaluated-expr)))))
+  (setq common-lisp-user::- expr)
+  (let ((evaluated-expr (jupyter:debugging-errors (multiple-value-list (eval expr)))))
+    (setq common-lisp-user::*** common-lisp-user::**
+          common-lisp-user::** common-lisp-user::*
+          common-lisp-user::* (car evaluated-expr)
+          common-lisp-user::/// common-lisp-user:://
+          common-lisp-user::// common-lisp-user::/
+          common-lisp-user::/ evaluated-expr
+          common-lisp-user::+++ common-lisp-user::++
+          common-lisp-user::++ common-lisp-user::+
+          common-lisp-user::+ expr)
+    (remove nil (mapcar #'jupyter:make-lisp-result evaluated-expr))))
 
 (defmethod jupyter:evaluate-code ((k kernel) code)
   (iter
