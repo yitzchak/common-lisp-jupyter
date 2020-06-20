@@ -208,10 +208,6 @@
       (call-next-method))))
 
 (defmethod on-trait-change :after ((w widget) type name old-value new-value source)
-  (dolist (pair (widget-on-trait-change w))
-          ()
-    (when (eql (car pair) name)
-      (funcall (cdr pair) w type name old-value new-value source)))
   (when source
     (send-state w name)))
 

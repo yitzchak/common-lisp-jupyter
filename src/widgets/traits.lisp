@@ -112,6 +112,12 @@
      :documentation "Instance specific trait notification"))
   (:metaclass trait-metaclass))
 
+(defmethod on-trait-change :after ((w has-traits) type name old-value new-value source)
+  (dolist (pair (widget-on-trait-change w))
+          ()
+    (when (eql (car pair) name)
+      (funcall (cdr pair) w type name old-value new-value source))))
+
 (defun symbol-to-camel-case (s)
   (do ((name (symbol-name s))
        (position 0 (1+ position))
