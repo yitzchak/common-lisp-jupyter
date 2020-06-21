@@ -3,6 +3,7 @@
 (defvar *kernel* nil)
 (defvar *message* nil)
 (defvar *payload* nil)
+(defvar *debugger* nil)
 
 (defvar *page-output* nil
   "Output stream sent to Jupyter pager. Available during calls to evaluate-code.")
@@ -353,10 +354,7 @@
               (< -1 choice (length applicable-restarts)))
          (invoke-restart-interactively (nth choice applicable-restarts))))))
 
-(defmacro debugging-errors (&body body)
-  `(let ((*debugger-hook* #'my-debugger))
-     (with-simple-restart (exit "Exit debugger, returning to top level.")
-       ,@body)))
+
 
 (defmacro handling-errors (&body body)
   "Macro for catching any conditions including quit-conditions during code
@@ -383,6 +381,13 @@
                                (simple-condition-format-arguments err))))
      (serious-condition (err)
        (make-eval-error err (format nil "~A" err)))))
+
+(defmacro debugging-errors (&body body)
+  `(if *debugger*
+     (let ((*debugger-hook* #'my-debugger))
+       (with-simple-restart (exit "Exit debugger, returning to top level.")
+         ,@body))
+     (handling-errors ,@body)))
 
 (defmacro handling-comm-errors (&body body)
   "Macro for catching any conditions including quit-conditions during code
