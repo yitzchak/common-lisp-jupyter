@@ -9,12 +9,9 @@ pip3 install --user wheel jupyter jupyter_kernel_test
 if [ "${METHOD:-}" = "ros" ]; then
   curl -L https://raw.githubusercontent.com/snmsts/roswell/release/scripts/install-for-ci.sh | sh
   ros config
-  ros install yitzchak/cl-indentify
   ros install ./common-lisp-jupyter.asd
   ros run --eval "(ql:quickload '(:common-lisp-jupyter :jsown))" --quit
 else
-  git clone https://github.com/yitzchak/cl-indentify.git ~/quicklisp/local-projects/cl-indentify
-
   if [ "${METHOD:-}" != "img" ]; then
     mkdir -p ~/quicklisp/local-projects/
     curl -LO https://github.com/yitzchak/ziz/archive/master.zip

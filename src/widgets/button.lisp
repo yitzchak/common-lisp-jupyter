@@ -27,7 +27,7 @@ user clicking on the button.  The click event itself is stateless."))
 
 (defmethod on-custom-message ((w button) content buffers)
   (declare (ignore buffers))
-  (if (equal (jupyter:json-getf content "event") "click")
+  (if (equal (gethash "event" content) "click")
     (dolist (handler (widget-on-click w))
             ()
       (funcall handler w))

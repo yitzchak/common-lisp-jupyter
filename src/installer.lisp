@@ -228,13 +228,12 @@
     (let ((spec-path (installer-path instance :prefix :kernel :spec)))
       (format t "Installing kernel spec file ~A~%" spec-path)
       (with-open-file (stream spec-path :direction :output :if-exists :supersede)
-        (write-string
-          (jsown:to-json
-            (json-new-obj
-              ("argv" (command-line instance))
-              ("display_name" display-name)
-              ("language" language)
-              ("interrupt_method" "message")))
+        (shasht:write-json
+          (list :object
+            (cons "argv" (command-line instance))
+            (cons "display_name" display-name)
+            (cons "language" language)
+            (cons "interrupt_method" "message"))
           stream)))))
 
 (defun install-resources (instance)

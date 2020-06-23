@@ -19,14 +19,14 @@
 (defun send-shutdown-reply (ch parent-msg restart)
   (message-send ch
                 (make-message (channel-session ch) "shutdown_reply"
-                              (json-new-obj
-                                ("restart" (if restart t :f)))
+                              `(:object
+                                 ("restart" ,restart))
                               :parent parent-msg)))
 
 (defun send-interrupt-reply (ch parent-msg)
   (message-send ch
                 (make-message (channel-session ch) "interrupt_reply"
-                              (json-new-obj)
+                              :empty-object
                               :parent parent-msg)))
 
                             

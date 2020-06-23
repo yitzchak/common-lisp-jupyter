@@ -84,20 +84,19 @@
   (:documentation "Base class for all Jupyter widgets."))
 
 (defmethod jupyter:render ((w widget))
-  (jupyter:json-new-obj
-    ("text/plain" "A Jupyter Widget")
-    ("application/vnd.jupyter.widget-view+json"
-      (jupyter:json-new-obj
-        ("version_major" 2)
-        ("version_minor" 0)
-        ("model_id" (jupyter:comm-id w))))))
+  `(:object
+     ("text/plain" . "A Jupyter Widget")
+     ("application/vnd.jupyter.widget-view+json" .
+      (:object
+        ("version_major" . 2)
+        ("version_minor" . 0)
+        ("model_id" . ,(jupyter:comm-id w))))))
 
-;
 (defun to-json-state (w &optional nm)
-  (let ((state (jupyter:json-empty-obj))
+  (let (state
         buffer-paths
         buffers)
-    (dolist (def (closer-mop:class-slots (class-of w)) (values state buffer-paths buffers))
+    (dolist (def (closer-mop:class-slots (class-of w)) (values (cons :object state) buffer-paths buffers))
       (let* ((name (closer-mop:slot-definition-name def))
              (trait-name (trait-name name))
              (type (trait-type def))
@@ -113,92 +112,54 @@
                                                                (cons path-name buffer-path))
                                                              sub-buffer-paths))
                     buffers (nconc buffers sub-buffers)))
-            (jupyter:json-extend-obj state
-              (path-name value))))))))
-
-
-(defun extract-buffers (state &optional path)
-  (cond
-    ((and (listp state) (eq (first state) :obj))
-      (iter
-        (for (k . v) in (cdr state))
-        (cond
-          ((binary-value-p v)
-            (collect (append path (list k)) into buffer-paths)
-            (collect v into buffers)
-            (jsown:remkey state k))
-          (t
-            (multiple-value-bind (sub-buffer-paths sub-buffers) (extract-buffers v (append path (list k)))
-              (appending sub-buffer-paths into buffer-paths)
-              (appending sub-buffers into buffers))))
-        (finally
-          (return (values buffer-paths buffers)))))
-    ((listp state)
-      (iter
-        (for v in-sequence state with-index i)
-        (cond
-          ((binary-value-p v)
-            (collect (append path (list i)) into buffer-paths)
-            (collect v into buffers)
-            (setf (elt state i) :null))
-          (t
-            (multiple-value-bind (sub-buffer-paths sub-buffers) (extract-buffers v (append path (list i)))
-              (appending sub-buffer-paths into buffer-paths)
-              (appending sub-buffers into buffers))))
-        (finally
-          (return (values buffer-paths buffers)))))
-    (t
-      (values nil nil))))
+            (setf state (acons path-name value state))))))))
 
 (defun inject-buffer (state buffer-path buffer)
   (let ((node (car buffer-path))
         (rest (cdr buffer-path)))
     (if rest
       (inject-buffer (if (stringp node)
-                       (jupyter:json-getf state node)
+                       (gethash node state)
                        (elt state node))
                      rest buffer)
       (if (stringp node)
-        (setf (jupyter:json-getf state node) buffer)
+        (setf (gethash node state) buffer)
         (setf (elt state node) buffer)))))
 
 (defun inject-buffers (state buffer-paths buffers)
   (iter
-    (for buffer-path in buffer-paths)
-    (for buffer in buffers)
-    (inject-buffer state buffer-path buffer)))
+    (for buffer-path in-sequence buffer-paths)
+    (for buffer in-sequence buffers)
+    (inject-buffer state (coerce buffer-path 'list) buffer)))
 
 (defun send-state (w &optional name)
   (multiple-value-bind (state buffer-paths buffers)
                        (to-json-state w name)
     (jupyter:send-comm-message w
-      (jupyter:json-new-obj ("method" "update")
-                            ("state" state)
-                            ("buffer_paths" buffer-paths))
-      (jupyter:json-new-obj ("version" +protocol-version+))
+      `(:object ("method" . "update")
+                ("state" . ,new-state)
+                ("buffer_paths" . ,(or buffer-paths :empty-array)))
+      `(:object ("version" . ,+protocol-version+))
       buffers)))
 
 (defun update-state (w data buffers)
-  (let ((*trait-source* nil))
-    (iter
-      (with state = (jupyter:json-getf data "state"))
-      (with buffer-paths = (jupyter:json-getf data "buffer_paths"))
-      (inject-buffers state buffer-paths buffers)
-      (with keywords = (jsown:keywords state))
-      (for def in (closer-mop:class-slots (class-of w)))
-      (for name next (closer-mop:slot-definition-name def))
-      (for trait-name next (trait-name name))
-      (for key next (symbol-to-snake-case name))
-      (for type next (trait-type def))
-      (when (position key keywords :test #'equal)
-        (setf (slot-value w name)
-          (deserialize-trait w type trait-name (jupyter:json-getf state key)))))))
+  (let ((*trait-source* nil)
+        (state (gethash "state" data (make-hash-table :test #'equal)))
+        (buffer-paths (gethash "buffer_paths" data)))
+    (inject-buffers state buffer-paths buffers)
+    (dolist (def (closer-mop:class-slots (class-of w)))
+      (let ((name (closer-mop:slot-definition-name def)))
+        (multiple-value-bind (value present-p)
+                             (gethash (symbol-to-snake-case name) state)
+          (when present-p
+            (setf (slot-value w name)
+                  (deserialize-trait w (trait-type def) (trait-name name) value))))))))
 
 (defun send-custom (widget content &optional buffers)
   (jupyter:send-comm-message widget
-    (jupyter:json-new-obj ("method" "custom")
-                  ("content" content))
-    (jupyter:json-new-obj ("version" +protocol-version+))
+    `(:object ("method" . "custom")
+              ("content" . ,content))
+    `(:object ("version" . ,+protocol-version+))
     buffers))
 
 (defgeneric on-custom-message (widget content buffers))
@@ -207,13 +168,13 @@
 
 (defmethod jupyter:on-comm-message ((w widget) data metadata buffers)
   (declare (ignore metadata))
-  (switch ((jupyter:json-getf data "method") :test #'equal)
+  (switch ((gethash "method" data) :test #'equal)
     ("update"
       (update-state w data buffers))
     ("request_state"
       (send-state w))
     ("custom"
-      (on-custom-message w (jupyter:json-getf data "content") buffers))
+      (on-custom-message w (gethash "content" data) buffers))
     (otherwise
       (call-next-method))))
 
@@ -229,19 +190,19 @@
         (multiple-value-bind (state buffer-paths buffers)
                              (to-json-state instance)
           (jupyter:send-comm-open instance
-            (jupyter:json-new-obj ("state" state)
-                          ("buffer_paths" buffer-paths))
-            (jupyter:json-new-obj ("version" +protocol-version+))
+            `(:object ("state" . ,new-state)
+                      ("buffer_paths" . ,(or buffer-paths :empty-array)))
+            `(:object ("version" . ,+protocol-version+))
             buffers))))))
 
 (defmethod jupyter:create-comm ((target-name (eql :|jupyter.widget|)) id data metadata buffers)
-  (let* ((state (jupyter:json-getf data "state"))
-         (model-name (jupyter:json-getf state "_model_name"))
-         (model-module (jupyter:json-getf state "_model_module"))
-         (model-module-version (jupyter:json-getf state "_model_module_version"))
-         (view-name (jupyter:json-getf state "_view_name"))
-         (view-module (jupyter:json-getf state "_view_module"))
-         (view-module-version (jupyter:json-getf state "_view_module_version"))
+  (let* ((state (gethash "state" data))
+         (model-name (gethash "_model_name" state))
+         (model-module (gethash "_model_module" state))
+         (model-module-version (gethash "_model_module_version" state))
+         (view-name (gethash "_view_name" state))
+         (view-module (gethash "_view_module" state))
+         (view-module-version (gethash "_view_module_version" state))
          (name (widget-registry-name model-module model-module-version
                                      model-name view-module
                                      view-module-version view-name))

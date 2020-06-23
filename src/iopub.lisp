@@ -19,71 +19,71 @@
 (defun send-status (iopub status)
   (message-send iopub
                 (make-message (channel-session iopub) "status"
-                              (json-new-obj
-                                ("execution_state" status)))))
+                              `(:object
+                                 ("execution_state" . ,status)))))
 
 (defun send-clear-output (iopub parent-msg wait)
   (message-send iopub
                 (make-message (channel-session iopub) "clear_output"
-                              (json-new-obj
-                                ("wait" (if wait :true :false)))
+                              `(:object
+                                 ("wait" . ,(if wait :true :false)))
                               :parent parent-msg)))
 
 (defun send-status-update (iopub parent-msg status)
   (message-send iopub
                 (make-message (channel-session iopub) "status"
-                              (json-new-obj
-                                ("execution_state" status))
+                              `(:object
+                                 ("execution_state" . ,status))
                               :parent parent-msg)))
 
 (defun send-display-data (iopub parent-msg data)
   (message-send iopub
                 (make-message (channel-session iopub) "display_data"
-                              (json-new-obj
-                                ("data" data)
-                                ("metadata" (json-empty-obj)))
+                              `(:object
+                                 ("data" . ,data)
+                                 ("metadata" . :empty-object))
                               :parent parent-msg)))
 
 (defun send-execute-code (iopub parent-msg execution-count code)
   (message-send iopub
                 (make-message (channel-session iopub) "execute_input"
-                              (json-new-obj
-                                ("code" code)
-                                ("execution_count" execution-count))
+                              `(:object
+                                 ("code" . ,code)
+                                 ("execution_count" . ,execution-count))
                               :parent parent-msg)))
 
 (defun send-execute-result (iopub parent-msg execution-count data)
   (message-send iopub
                 (make-message (channel-session iopub) "execute_result"
-                              (json-new-obj
-                                ("execution_count" execution-count)
-                                ("data" data)
-                                ("metadata" (json-empty-obj)))
+                              `(:object
+                                 ("execution_count" . ,execution-count)
+                                 ("data" . ,data)
+                                 ("metadata" . :empty-object))
                               :parent parent-msg)))
 
 (defun send-execute-error (iopub parent-msg ename evalue)
   (message-send iopub
                 (make-message (channel-session iopub) "error"
-                              (json-new-obj
-                                ("ename" ename)
-                                ("evalue" evalue)
-                                ("traceback" nil))
+                              `(:object
+                                 ("ename" . ,ename)
+                                 ("evalue" . ,evalue)
+                                 ("traceback" . :empty-array))
                               :parent parent-msg)))
 
 (defun send-stream (iopub parent-msg stream-name data)
   (message-send iopub
                 (make-message (channel-session iopub) "stream"
-                              (json-new-obj
-                                ("name" stream-name)
-                                ("text" data))
+                              `(:object
+                                 ("name" . ,stream-name)
+                                 ("text" . ,data))
                               :parent parent-msg)))
 
 (defun send-comm-close-orphan (iopub comm-id &optional data)
   (message-send iopub
                 (make-message (channel-session iopub) "comm_close"
-                              (json-new-obj
-                                ("comm_id" comm-id)
-                                ("data" (or data (json-empty-obj)))))))
+                              `(:object
+                                 ("comm_id" . comm-id)
+                                 ("data" . ,(or data :empty-object))))))
 
 (defvar *iopub-stream-size* 1024)
 

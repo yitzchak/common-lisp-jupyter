@@ -41,9 +41,11 @@
 
 
 (defmethod widget-value ((instance file-upload))
-  (mapcar (lambda (content metadata)
-            (acons "content" content (copy-alist metadata)))
-          (widget-data instance) (widget-metadata instance)))
+  (map 'vector (lambda (content metadata)
+         (let ((table (alexandria:copy-hash-table metadata)))
+           (setf (gethash "content" table) content)
+           table))
+       (widget-data instance) (widget-metadata instance)))
 
 
 (defun file-upload-value-notify (instance)
@@ -51,7 +53,7 @@
              (slot-boundp instance 'metadata)
              (= (length (widget-data instance)) (length (widget-metadata instance)))
              (every (lambda (content metadata)
-                      (= (length content) (cdr (assoc "size" metadata :test #'equal))))
+                      (= (length content) (gethash "size" metadata)))
                     (widget-data instance) (widget-metadata instance)))
     (jupyter::enqueue *trait-notifications*
                       (list instance :any :value nil (widget-value instance) nil))))

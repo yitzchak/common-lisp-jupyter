@@ -51,7 +51,7 @@ output area.
        (progn
          (finish-output) 
          (finish-output *error-output*) 
-         (setf msg-id (jupyter:json-getf (jupyter::message-header jupyter::*message*) "msg_id"))    
+         (setf msg-id (gethash "msg_id" (jupyter::message-header jupyter::*message*)))
          ,@body)
        (finish-output) 
        (finish-output *error-output*) 

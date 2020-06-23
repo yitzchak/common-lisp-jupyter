@@ -38,12 +38,11 @@
 (defun compute-signature (m parts)
   (if m
     #-clasp
-    (iter
-      (with mac = (apply #'ironclad:make-mac (mac-args m)))
-      (for part in parts)
-      (ironclad:update-mac mac (babel:string-to-octets part))
-      (finally
-        (return (octets-to-hex-string (ironclad:produce-mac mac)))))
+    (let ((mac (apply #'ironclad:make-mac (mac-args m))))
+      (mapc (lambda (part)
+              (ironclad:update-mac mac (babel:string-to-octets part)))
+            parts)
+      (octets-to-hex-string (ironclad:produce-mac mac)))
     #+clasp
     (core:hmac-sha256
       (apply #'concatenate '(vector (unsigned-byte 8)) (mapcar #'babel:string-to-octets parts))

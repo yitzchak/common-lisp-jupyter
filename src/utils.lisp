@@ -41,19 +41,19 @@
   (with-gensyms (obj-var)
     `(let ((,obj-var ,object))
        ,@(mapcar (lambda (spec)
-                   `(setf (json-getf ,obj-var ,(first spec)) (progn ,@(rest spec))))
+                   `(setf (gethash ,(first spec) ,obj-var) (progn ,@(rest spec))))
                  specs)
        ,obj-var)))
 
 (defun json-empty-obj ()
-  (list :obj))
+  (make-hash-table :test #'equal))
 
 (defmacro json-new-obj (&body specs)
   `(json-extend-obj (json-empty-obj)
      ,@specs))
 
 (defun json-keyp (object indicator)
-  (and (assoc indicator (cdr object) :test #'string=) t))
+  (nth-value 1 (gethash indicator object)))
 
 (defun read-raw-string (stream c1 c2)
   (declare (ignore c1 c2))

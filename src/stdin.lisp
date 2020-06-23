@@ -21,8 +21,8 @@ See: http://jupyter-client.readthedocs.org/en/latest/messaging.html#messages-on-
 (defun send-input-request (stdin parent-msg prompt)
   (message-send stdin
                 (make-message (channel-session stdin) "input_request"
-                              (json-new-obj
-                                ("prompt" prompt))
+                              `(:object
+                                 ("prompt" . ,prompt))
                               :parent parent-msg)))
 
 #|
@@ -79,7 +79,7 @@ most cases of *query-io* usage. Makes overloading y-or-no-p unnecessary.
         (send-input-request channel parent-msg trimmed-output)
         (sleep 2)
         (let ((value (concatenate 'string
-                       (json-getf (message-content (message-recv channel)) "value")
+                       (gethash "value" (message-content (message-recv channel)))
                        '(#\Newline))))
           (adjust-array input (length value)
                         :fill-pointer (length value)

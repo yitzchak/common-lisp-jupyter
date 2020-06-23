@@ -44,8 +44,8 @@ Standard MIME types
           :reader sexpr-result-value)))
 
 (defmethod render ((res sexpr-result))
-  (json-new-obj
-    (*plain-text-mime-type* (sexpr-to-text (sexpr-result-value res)))))
+  (list :object
+        (cons *plain-text-mime-type* (sexpr-to-text (sexpr-result-value res)))))
 
 (defclass inline-result (result)
   ((value :initarg :value
@@ -70,18 +70,18 @@ Standard MIME types
         (mime-type (inline-result-mime-type res)))
     (cond
       ((equal mime-type *plain-text-mime-type*)
-        (json-new-obj
-          (mime-type value)))
+        (list :object
+              (cons mime-type value)))
       ((equal mime-type *markdown-mime-type*)
-        (json-new-obj
-          (*plain-text-mime-type* value)
-          (mime-type value)))
+        (list :object
+              (cons *plain-text-mime-type* value)
+              (cons mime-type value)))
       (t
-        (json-new-obj
-          (*plain-text-mime-type* "inline-value")
-          (mime-type (if (or (stringp value) (ends-with-subseq "json" mime-type))
-                         value
-                         (cl-base64:usb8-array-to-base64-string value))))))))
+        (list :object
+              (cons *plain-text-mime-type* "inline-value")
+              (cons mime-type (if (or (stringp value) (ends-with-subseq "json" mime-type))
+                                value
+                                (cl-base64:usb8-array-to-base64-string value))))))))
 
 (defclass file-result (result)
   ((path :initarg :path
@@ -106,16 +106,16 @@ Standard MIME types
   (let* ((path (file-result-path res))
          (mime-type (or (file-result-mime-type res) (trivial-mimes:mime path))))
     (if (equal mime-type *plain-text-mime-type*)
-      (json-new-obj
-        (mime-type (read-file-into-string path)))
-      (json-new-obj
-        (*plain-text-mime-type* path)
-        (mime-type
-          (if (or (equal mime-type *svg-mime-type*)
-                  (starts-with-subseq "text/" mime-type))
-            (read-file-into-string path)
-            (cl-base64:usb8-array-to-base64-string
-              (read-file-into-byte-vector path))))))))
+      (list :object
+            (cons mime-type (read-file-into-string path)))
+      (list :object
+            (cons *plain-text-mime-type* path)
+            (cons mime-type
+                  (if (or (equal mime-type *svg-mime-type*)
+                          (starts-with-subseq "text/" mime-type))
+                    (read-file-into-string path)
+                    (cl-base64:usb8-array-to-base64-string
+                      (read-file-into-byte-vector path))))))))
 
 (defclass error-result (result)
   ((ename :initarg :ename
