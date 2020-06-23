@@ -143,6 +143,8 @@
     #:send-custom
     #:sidecar
     #:slider-style
+    #:style
+    #:styled-widget
     #:tab
     #:text
     #:text-area
