@@ -216,13 +216,14 @@
   (with-trait-silence
     (prog1
       (call-next-method)
-      (let ((state (to-json-state instance)))
-        (multiple-value-bind (buffer-paths buffers) (extract-buffers state)
-          (jupyter:send-comm-open instance
-            (jupyter:json-new-obj ("state" state)
-                          ("buffer_paths" buffer-paths))
-            (jupyter:json-new-obj ("version" +protocol-version+))
-            buffers))))))
+      (unless (getf rest :create-comm)
+        (let ((state (to-json-state instance)))
+          (multiple-value-bind (buffer-paths buffers) (extract-buffers state)
+            (jupyter:send-comm-open instance
+              (jupyter:json-new-obj ("state" state)
+                            ("buffer_paths" buffer-paths))
+              (jupyter:json-new-obj ("version" +protocol-version+))
+              buffers)))))))
 
 (defmethod jupyter:create-comm ((target-name (eql :|jupyter.widget|)) id data metadata buffers)
   (let* ((state (jupyter:json-getf data "state"))
@@ -238,7 +239,7 @@
          (class (gethash name *widgets*)))
     (when class
       (with-trait-silence
-        (let ((w (make-instance class)))
+        (let ((w (make-instance class :create-comm t)))
           (update-state w data buffers)
           w)))))
 
