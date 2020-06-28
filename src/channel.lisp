@@ -5,6 +5,11 @@
      :initarg :mac
      :reader channel-mac
      :documentation "Shared channel authentification handler.")
+   (session
+     :initarg :session
+     :initform nil
+     :accessor channel-session
+     :documentation "Session identifier.")
    (socket
      :initarg :socket
      :reader channel-socket

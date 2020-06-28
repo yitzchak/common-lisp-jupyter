@@ -20,9 +20,10 @@ See: http://jupyter-client.readthedocs.org/en/latest/messaging.html#messages-on-
 
 (defun send-input-request (stdin parent-msg prompt)
   (message-send stdin
-                (make-message parent-msg "input_request"
+                (make-message (channel-session stdin) "input_request"
                               (json-new-obj
-                                ("prompt" prompt)))))
+                                ("prompt" prompt))
+                              :parent parent-msg)))
 
 #|
 

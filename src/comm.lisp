@@ -41,23 +41,23 @@
       (with-slots (iopub session comms) kernel
         (setf (gethash id comms) comm)
         (message-send iopub
-          (make-orphan-message session "comm_open"
+          (make-message session "comm_open"
                                (json-new-obj
                                  ("comm_id" id)
                                  ("target_name" target-name)
                                  ("data" (or data (json-empty-obj))))
-                               metadata buffers))))))
+                               :metadata metadata :buffers buffers))))))
 
 (defun send-comm-message (comm &optional data metadata buffers)
   (with-slots (id kernel) comm
     (when kernel
       (with-slots (iopub session) kernel
         (message-send iopub
-          (make-orphan-message session "comm_msg"
+          (make-message session "comm_msg"
                                (json-new-obj
                                  ("comm_id" id)
                                  ("data" (or data (json-empty-obj))))
-                               metadata buffers))))))
+                               :metadata metadata :buffers buffers))))))
 
 (defun send-comm-close (comm &optional data metadata buffers)
   (with-slots (id kernel) comm
@@ -65,9 +65,9 @@
       (with-slots (iopub session comms) kernel
         (remhash id comms)
         (message-send iopub
-          (make-orphan-message session "comm_close"
+          (make-message session "comm_close"
                                (json-new-obj
                                  ("comm_id" id)
                                  ("data" (or data (json-empty-obj))))
-                               metadata buffers))))))
+                               :metadata metadata :buffers buffers))))))
 

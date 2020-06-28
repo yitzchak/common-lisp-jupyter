@@ -234,6 +234,7 @@
                              :signature-scheme signature-scheme)
           hb (make-instance 'hb-channel
                             :sink sink
+                            :session session
                             :mac mac
                             :socket (pzmq:socket ctx :rep)
                             :transport transport
@@ -241,6 +242,7 @@
                             :port hb-port)
           iopub (make-instance 'iopub-channel
                                :sink sink
+                               :session session
                                :mac mac
                                :socket (pzmq:socket ctx :pub)
                                :transport transport
@@ -248,6 +250,7 @@
                                :port iopub-port)
           shell (make-instance 'shell-channel
                                :sink sink
+                               :session session
                                :mac mac
                                :request-queue request-queue
                                :socket (pzmq:socket ctx :router)
@@ -256,6 +259,7 @@
                                :port shell-port)
           stdin (make-instance 'stdin-channel
                                :sink sink
+                               :session session
                                :mac mac
                                :socket (pzmq:socket ctx :dealer)
                                :transport transport
@@ -263,6 +267,7 @@
                                :port stdin-port)
           control (make-instance 'control-channel
                                  :sink sink
+                                 :session session
                                  :mac mac
                                  :request-queue request-queue
                                  :socket (pzmq:socket ctx :router)
@@ -282,8 +287,8 @@
     (start stdin)
     (start control)
     (start history)
-    (send-status iopub session "starting")
-    (send-status iopub session "idle")))
+    (send-status iopub "starting")
+    (send-status iopub "idle")))
 
 ;; Stop all channels and destroy the control.
 (defmethod stop ((k kernel))
@@ -442,12 +447,12 @@
 
 (defun handle-kernel-info-request (kernel msg)
   (inform :info kernel "Handling kernel_info_request message")
-  (with-slots (name version language-name language-version mime-type
+  (with-slots (name version language-name language-version mime-type session
                file-extension pygments-lexer codemirror-mode help-links banner
                shell)
               kernel
     (message-send shell
-      (make-message msg "kernel_info_reply"
+      (make-message session "kernel_info_reply"
         (json-new-obj
           ("protocol_version" +KERNEL-PROTOCOL-VERSION+)
           ("implementation" name)
@@ -465,7 +470,8 @@
               ("mimetype" mime-type)
               ("file_extension" file-extension)
               ("pygments_lexer" pygments-lexer)
-              ("codemirror_mode" codemirror-mode))))))))
+              ("codemirror_mode" codemirror-mode))))
+      :parent msg))))
 
 #|
 
@@ -610,7 +616,7 @@
 
 (defun handle-comm-open (kernel msg)
   (inform :info kernel "Handling comm_open message")
-  (with-slots (iopub session comms) kernel
+  (with-slots (iopub comms) kernel
     (let* ((content (message-content msg))
            (metadata (message-metadata msg))
            (buffers (message-buffers msg))
@@ -623,7 +629,7 @@
           (setf (gethash id comms) inst)
           (handling-comm-errors
             (on-comm-open inst data metadata buffers)))
-        (send-comm-close-orphan iopub session id))))
+        (send-comm-close-orphan iopub id))))
   t)
 
 (defun handle-comm-message (kernel msg)
