@@ -28,8 +28,9 @@
 
 (defun send-shutdown-reply (ch parent-msg restart)
   (message-send ch
-                (make-message parent-msg "shutdown_reply"
+                (make-message (channel-session ch) "shutdown_reply"
                               (json-new-obj
-                                ("restart" (if restart t :f))))))
+                                ("restart" (if restart t :f)))
+                              :parent parent-msg)))
 
               

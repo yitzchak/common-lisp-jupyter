@@ -36,11 +36,12 @@
       (lock-file path
         (let ((session-cells (remove-if-not (lambda (cell) (equal (car cell) session)) cells)))
           (setf cells
-            (with-open-file (stream path :direction :input :if-does-not-exist nil)
-              (when stream
-                (iter
-                  (for cell in-stream stream)
-                  (collect cell)))))
+            (ignore-errors ; If the history file has become mangled then just give up.
+              (with-open-file (stream path :direction :input :if-does-not-exist nil)
+                (when stream
+                  (iter
+                    (for cell in-stream stream)
+                    (collect cell))))))
           (iter
             (with new-session = (1+ (reduce (lambda (x y) (max x (car y))) cells :initial-value 0)))
             (for cell in session-cells)

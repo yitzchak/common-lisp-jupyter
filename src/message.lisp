@@ -39,33 +39,32 @@
      :accessor message-buffers))
   (:documentation "Representation of IPython messages"))
 
-(defun make-message (parent-msg msg-type content &optional metadata buffers)
-  (let ((hdr (message-header parent-msg))
-        (identities (message-identities parent-msg)))
+(defun make-message (session-id msg-type content &key metadata buffers parent)
+  (if parent
+    (let ((hdr (message-header parent))
+          (identities (message-identities parent)))
+      (make-instance 'message
+                     :header (json-new-obj
+                               ("msg_id" (make-uuid))
+                               ("username" (json-getf hdr "username"))
+                               ("session" session-id)
+                               ("msg_type" msg-type)
+                               ("version" +KERNEL-PROTOCOL-VERSION+))
+                     :parent-header hdr
+                     :identities identities
+                     :content content
+                     :metadata (or metadata (json-empty-obj))
+                     :buffers buffers))
     (make-instance 'message
                    :header (json-new-obj
                              ("msg_id" (make-uuid))
-                             ("username" (json-getf hdr "username"))
-                             ("session" (json-getf hdr "session"))
+                             ("username" "kernel")
+                             ("session" session-id)
                              ("msg_type" msg-type)
                              ("version" +KERNEL-PROTOCOL-VERSION+))
-                   :parent-header hdr
-                   :identities identities
                    :content content
                    :metadata (or metadata (json-empty-obj))
                    :buffers buffers)))
-
-(defun make-orphan-message (session-id msg-type content &optional metadata buffers)
-  (make-instance 'message
-                 :header (json-new-obj
-                           ("msg_id" (make-uuid))
-                           ("username" "kernel")
-                           ("session" session-id)
-                           ("msg_type" msg-type)
-                           ("version" +KERNEL-PROTOCOL-VERSION+))
-                 :content content
-                 :metadata (or metadata (json-empty-obj))
-                 :buffers buffers))
 
 ;; XXX: should be a defconstant but  strings are not EQL-able...
 (defvar +IDS-MSG-DELIMITER+ (babel:string-to-octets "<IDS|MSG>"))

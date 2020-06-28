@@ -212,7 +212,6 @@
     (send-state w name)))
 
 (defmethod initialize-instance :around ((instance widget) &rest rest &key &allow-other-keys)
-  (declare (ignore rest))
   (with-trait-silence
     (prog1
       (call-next-method)

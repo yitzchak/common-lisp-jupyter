@@ -70,10 +70,16 @@
 
 ; Dict
 
-(defmethod serialize-trait (object (type (eql :dict)) name value)
+(defmethod serialize-trait (object (type (eql :dict)) name (value (eql :null)))
+  :null)
+
+(defmethod deserialize-trait (object (type (eql :dict)) name (value (eql :null)))
+  :null)
+
+(defmethod serialize-trait (object (type (eql :dict)) name (value list))
   (cons :obj value))
 
-(defmethod deserialize-trait (object (type (eql :dict)) name value)
+(defmethod deserialize-trait (object (type (eql :dict)) name (value list))
   (cdr value))
 
 ; Integer
