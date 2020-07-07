@@ -366,13 +366,13 @@
   evaluation."
   `(handler-case
        (handler-bind
-           ((serious-condition
-              (lambda (err)
-                (dissect:present err *error-output*)))
-            (warning
+           ((warning
               (lambda (wrn)
-                (dissect:present wrn *error-output*)
-                (muffle-warning))))
+                (format t "[~S] ~A~%" (type-of wrn) wrn)
+                (muffle-warning)))
+            (serious-condition
+              (lambda (err)
+                (dissect:present err *error-output*))))
          (progn ,@body))
      (quit-condition (err)
        (make-eval-error err (format nil "~A" err) :quit t))
