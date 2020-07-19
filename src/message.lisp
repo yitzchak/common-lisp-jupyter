@@ -39,6 +39,12 @@
      :accessor message-buffers))
   (:documentation "Representation of IPython messages"))
 
+(defun date-now ()
+  (multiple-value-bind (s m h dt mth yr day)
+        (get-decoded-time)
+        (declare (ignore day))
+    (format nil "~4,'0D-~2,'0D-~2,'0DT~2,'0D:~2,'0D:~2,'0DZ" yr mth dt h m s)))
+
 (defun make-message (session-id msg-type content &key metadata buffers parent)
   (if parent
     (let ((hdr (message-header parent))
@@ -49,6 +55,7 @@
                                ("username" (json-getf hdr "username"))
                                ("session" session-id)
                                ("msg_type" msg-type)
+                               ("date" (date-now))
                                ("version" +KERNEL-PROTOCOL-VERSION+))
                      :parent-header hdr
                      :identities identities
@@ -61,6 +68,7 @@
                              ("username" "kernel")
                              ("session" session-id)
                              ("msg_type" msg-type)
+                             ("date" (date-now))
                              ("version" +KERNEL-PROTOCOL-VERSION+))
                    :content content
                    :metadata (or metadata (json-empty-obj))
