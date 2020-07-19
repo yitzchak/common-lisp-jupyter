@@ -30,11 +30,11 @@
      :type fixnum
      :documentation "Channel port number")
    (recv-lock
-     :initform (bordeaux-threads:make-lock)
+     :initform (bordeaux-threads:make-lock (make-uuid))
      :reader channel-recv-lock
      :documentation "Lock used during recv actions")
    (send-lock
-     :initform (bordeaux-threads:make-lock)
+     :initform (bordeaux-threads:make-lock (make-uuid))
      :reader channel-send-lock
      :documentation "Lock used during send actions")
    (thread

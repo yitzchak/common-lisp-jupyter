@@ -8,7 +8,7 @@
      :initform nil
      :accessor logger-stream)
    (lock
-     :initform (bordeaux-threads:make-lock)
+     :initform (bordeaux-threads:make-lock (make-uuid))
      :reader logger-lock)))
 
 (defclass source ()

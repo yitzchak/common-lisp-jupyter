@@ -128,7 +128,9 @@
 (defun read-binary-part (ch msg)
   (pzmq:msg-recv msg (channel-socket ch))
   (cffi:foreign-array-to-lisp (pzmq:msg-data msg)
-                              (list :array :uint8 (pzmq:msg-size msg))))
+                            (list :array :uint8 (pzmq:msg-size msg))
+                            ; explicitly defined element type is needed for CLISP
+                            :element-type '(unsigned-byte 8)))
 
 (defun read-string-part (ch msg)
   (pzmq:msg-recv msg (channel-socket ch))

@@ -6,9 +6,9 @@
    (tail-cons
      :initform nil)
    (access-lock
-     :initform (bordeaux-threads:make-lock))
+     :initform (bordeaux-threads:make-lock (make-uuid)))
    (not-empty-condition
-     :initform (bordeaux-threads:make-condition-variable))))
+     :initform (bordeaux-threads:make-condition-variable :name (make-uuid)))))
 
 (defun enqueue (queue item &key high-priority)
   (with-slots (head-cons tail-cons access-lock not-empty-condition) queue

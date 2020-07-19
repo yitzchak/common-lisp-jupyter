@@ -22,7 +22,16 @@
   :components
     ((:module res
       :components
-        ((:module cl
+        ((:module ccl
+          :components
+            ((:static-file "logo-64x64.png")))
+         (:module cl
+          :components
+            ((:static-file "logo-64x64.png")))
+         (:module clisp
+          :components
+            ((:static-file "logo-64x64.png")))
+         (:module ecl
           :components
             ((:static-file "logo-64x64.png")))
          (:module sbcl

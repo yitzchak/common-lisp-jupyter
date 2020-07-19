@@ -215,6 +215,7 @@
     (inform :info k "Parsing connection file ~A" connection-file)
     (let* ((config-js (jsown:parse (read-file-into-string connection-file)))
            (encoded-key (json-getf config-js "key")))
+           (inform :info k "~A" config-js)
       (setq transport (json-getf config-js "transport")
             ip (json-getf config-js "ip")
             shell-port (json-getf config-js "shell_port")
