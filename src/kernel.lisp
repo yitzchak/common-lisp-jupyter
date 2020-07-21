@@ -693,7 +693,7 @@
   "Send a result either as display data or an execute result."
   (with-slots (iopub package execution-count history) *kernel*
     (if (typep result 'error-result)
-      (send-execute-error iopub *message* execution-count
+      (send-execute-error iopub *message*
                           (error-result-ename result)
                           (error-result-evalue result))
       (let ((data (let ((*package* package))

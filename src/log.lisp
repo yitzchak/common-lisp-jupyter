@@ -36,6 +36,12 @@
   (when-let ((s (or src *kernel*)))
     (with-slots (lock stream) (source-sink s)
       (bordeaux-threads:with-lock-held (lock)
+        (ignore-errors
+          (when (and (eql :error level)
+                     *kernel*)
+            (send-execute-error (kernel-iopub *kernel*)
+                                nil
+                                (class-name (class-of src)) (apply #'format nil format-control format-arguments))))
         (multiple-value-bind (second minute hour day month year)
                              (get-decoded-time)
           (format stream "~4,'0d-~2,'0d-~2,'0d ~2,'0d:~2,'0d:~2,'0d [~A] <~A> ~?~%"

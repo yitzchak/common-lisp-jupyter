@@ -61,8 +61,7 @@
                                 ("metadata" (json-empty-obj)))
                               :parent parent-msg)))
 
-(defun send-execute-error (iopub parent-msg execution-count ename evalue)
-  (declare (ignore execution-count))
+(defun send-execute-error (iopub parent-msg ename evalue)
   (message-send iopub
                 (make-message (channel-session iopub) "error"
                               (json-new-obj
