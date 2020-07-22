@@ -85,6 +85,11 @@
          (:file "history")
          (:file "kernel")
          (:file "installer")
-         (:file "cl-kernel")
-         (:file "ros-install")
+         (:module cl-jupyter
+          :serial t
+          :components
+            ((:file "kernel")
+             (:file "installer")
+             (:file "overrides")
+             (:file "ros-install")))
          (:file "convert")))))
