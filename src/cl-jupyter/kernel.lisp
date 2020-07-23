@@ -180,6 +180,32 @@
             (fragment-types frag))))
 
 
+(defun complete-method (partial-name start end package statuses)
+  (when package
+    (multiple-value-bind (sym status)
+                         (find-symbol partial-name package)
+      (when (and (member status statuses :test #'eql)
+                 (boundp sym))
+        (let ((cls (class-of (symbol-value sym))))
+          (mapcan (lambda (method)
+                    (do* (matches
+                          (name (closer-mop:generic-function-name (closer-mop:method-generic-function method)))
+                          (specializers (closer-mop:method-specializers method))
+                          (lambda-list (closer-mop:method-lambda-list method))
+                          (pos (position cls specializers :test #'eql)
+                               (position cls specializers :test #'eql :start (1+ pos))))
+                         ((null pos) matches)
+                        (push (list :match (format nil "(~S~{ ~A~} ~S~{ ~A~})"
+                                                name
+                                                (subseq lambda-list 0 pos)
+                                                sym
+                                                (subseq lambda-list (1+ pos)))
+                              :start start
+                              :end end)
+                              matches)))
+                  (closer-mop:specializer-direct-methods cls)))))))
+
+
 (defun complete-symbol (partial-name start end package statuses)
   (when package
     (let (matches)
@@ -221,26 +247,42 @@
   (let ((parent (fragment-parent frag))
         matches)
     (dolist (symbol-type (fragment-types parent) matches)
-      (case symbol-type
-        (:local-symbol
-          (setf matches
-              (nconc matches
-                     (complete-package (fragment-result frag) (fragment-start frag) (fragment-end frag) :include-marker t)
-                     (complete-symbol (fragment-result frag) (fragment-start frag) (fragment-end frag)
-                                      *package*
-                                      '(:internal :external :inherited)))))
-        (:external-symbol
-          (setf matches
-              (nconc matches
-                     (complete-symbol (fragment-result frag) (fragment-start frag) (fragment-end frag)
-                                      (find-package (fragment-result (first (fragment-children parent))))
-                                      '(:external)))))
-        (:internal-symbol
-          (setf matches
-              (nconc matches
-                     (complete-symbol (fragment-result frag) (fragment-start frag) (fragment-end frag)
-                                      (find-package (fragment-result (first (fragment-children parent))))
-                                      '(:internal)))))))))
+      (let ((pkg (cond
+                    ((eql :local-symbol symbol-type)
+                      *package*)
+                    ((zerop (length (fragment-result (first (fragment-children parent)))))
+                      (find-package "KEYWORD"))
+                    (t
+                      (find-package (fragment-result (first (fragment-children parent))))))))
+        (case symbol-type
+          (:local-symbol
+            (setf matches
+                (nconc matches
+                       (complete-package (fragment-result frag) (fragment-start frag) (fragment-end frag) :include-marker t)
+                       (complete-method (fragment-result frag) (fragment-start frag) (fragment-end frag)
+                                        pkg
+                                        '(:internal :external :inherited))
+                       (complete-symbol (fragment-result frag) (fragment-start frag) (fragment-end frag)
+                                        pkg
+                                        '(:internal :external :inherited)))))
+          (:external-symbol
+            (setf matches
+                (nconc matches
+                       (complete-method (fragment-result frag) (fragment-start frag) (fragment-end frag)
+                                        pkg
+                                        '(:external))
+                       (complete-symbol (fragment-result frag) (fragment-start frag) (fragment-end frag)
+                                        pkg
+                                        '(:external)))))
+          (:internal-symbol
+            (setf matches
+                (nconc matches
+                       (complete-method (fragment-result frag) (fragment-start frag) (fragment-end frag)
+                                        pkg
+                                        '(:internal))
+                       (complete-symbol (fragment-result frag) (fragment-start frag) (fragment-end frag)
+                                        pkg
+                                        '(:internal))))))))))
 
 
 (defmethod complete-fragment (frag (type (eql :package-name)))

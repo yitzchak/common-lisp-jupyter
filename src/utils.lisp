@@ -118,10 +118,13 @@
           (cdr value)))
 
 
-(defmacro dolist* (spec &body body)
-  (with-gensyms (head)
-    `(do* ((,head ,(third spec) (cdr ,head))
-           (,(first spec) (car ,head) (car ,head))
-           (,(second spec) 0 (1+ ,(second spec))))
-          ((null ,head) ,(fourth spec))
-       ,@body)))
+(defmacro dolist-with-position (spec &body body)
+  (with-gensyms (head repeat)
+    `(prog (,(first spec) (,(second spec) 0) (,head ,(third spec)))
+      ,repeat
+       (when ,head
+         (setq ,(first spec) (pop ,head))
+         ,@body
+         (incf ,(second spec))
+         (go ,repeat))
+       ,(fourth spec))))

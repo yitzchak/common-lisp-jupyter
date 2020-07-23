@@ -107,9 +107,16 @@
 
 (defmethod eclector.parse-result:make-expression-result ((client my-client) result children source)
   (let ((parent (make-fragment :result result :start (car source) :end (cdr source) :children children)))
-    (dolist* (child position children)
-      (setf (fragment-parent child) parent)
-      (setf (fragment-position child) position))
+    (prog ((head children)
+           (position 0)
+           child)
+     next
+      (when head
+        (setq child (pop head))
+        (setf (fragment-parent child) parent)
+        (setf (fragment-position child) position)
+        (incf position)
+        (go next)))
     parent))
 
 
