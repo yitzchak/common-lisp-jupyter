@@ -117,3 +117,11 @@
                   (cdr pair)))
           (cdr value)))
 
+
+(defmacro dolist* (spec &body body)
+  (with-gensyms (head)
+    `(do* ((,head ,(third spec) (cdr ,head))
+           (,(first spec) (car ,head) (car ,head))
+           (,(second spec) 0 (1+ ,(second spec))))
+          ((null ,head) ,(fourth spec))
+       ,@body)))

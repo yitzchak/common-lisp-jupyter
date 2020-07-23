@@ -12,6 +12,7 @@
      :dissect
      ; This should be `(:feature (:not :clasp) :ironclad)` but some distributions still don't have
      ; ASDF 3
+     #-clasp :eclector
      #-clasp :ironclad
      :iterate
      :jsown
@@ -88,7 +89,8 @@
          (:module cl-jupyter
           :serial t
           :components
-            ((:file "kernel")
+            ((:file "parser")
+             (:file "kernel")
              (:file "installer")
              (:file "overrides")
              (:file "ros-install")))

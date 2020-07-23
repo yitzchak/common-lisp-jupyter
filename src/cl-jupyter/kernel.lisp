@@ -14,7 +14,7 @@
     :package (find-package :common-lisp-user)
     :version "0.1"
     :banner "common-lisp-jupyter: a Common Lisp Jupyter kernel
-(C) 2019 Tarn Burton (MIT)"
+(C) 2019-2020 Tarn Burton (MIT)"
     :language-name "common-lisp"
     :language-version (uiop:lisp-version-string)
     :mime-type "text/x-common-lisp"
@@ -161,28 +161,120 @@
           name))
       name)))
 
+(defun remove-if-not-match (partial-name matches)
+  (remove-if-not (lambda (match)
+                   (starts-with-subseq partial-name match))
+                 matches))
+
+
+(defgeneric complete-fragment (frag type)
+  (:method (frag type)
+    (declare (ignore frag type))))
+
+
+(defun complete-symbol (partial-name package statuses)
+  (when package
+    (let (matches)
+      (do-symbols (sym package matches)
+        (let ((sym-name (symbol-name sym)))
+          (multiple-value-bind (s status)
+                               (find-symbol sym-name package)
+            (declare (ignore s))
+            (when (and (member status statuses :test #'eql)
+                       (starts-with-subseq partial-name sym-name))
+              (push sym-name matches))))))))
+
+
+(defun complete-package (partial-name &key include-marker)
+  (let ((matches (remove-if-not-match
+                   partial-name
+                   (append (mapcan (lambda (pkg)
+                                     (cons (package-name pkg)
+                                           (package-nicknames pkg)))
+                                   (list-all-packages))
+                           #+(or abcl clasp ecl) (mapcar #'car (ext:package-local-nicknames *package*))
+                           #+allegro (mapcar #'car (excl:package-local-nicknames *package*))
+                           #+ccl (mapcar #'car (ccl:package-local-nicknames *package*))
+                           #+lispworks (mapcar #'car (hcl:package-local-nicknames *package*))
+                           #+sbcl (mapcar #'car (sb-ext:package-local-nicknames *package*))))))
+    (if include-marker
+      (mapcar (lambda (name)
+                (concatenate 'string name ":"))
+              matches)
+      matches)))
+
+
+(defmethod complete-fragment (frag (type (eql :symbol-name)))
+  (let ((parent (fragment-parent frag))
+        matches)
+    (dolist (symbol-type (fragment-types parent) matches)
+      (case symbol-type
+        (:local-symbol
+          (setf matches
+              (nconc matches
+                     (complete-package (fragment-result frag) :include-marker t)
+                     (complete-symbol (fragment-result frag)
+                                      *package*
+                                      '(:internal :external :inherited)))))
+        (:external-symbol
+          (setf matches
+              (nconc matches
+                     (complete-symbol (fragment-result frag)
+                                      (find-package (fragment-result (first (fragment-children parent))))
+                                      '(:external)))))
+        (:internal-symbol
+          (setf matches
+              (nconc matches
+                     (complete-symbol (fragment-result frag)
+                                      (find-package (fragment-result (first (fragment-children parent))))
+                                      '(:internal)))))))))
+
+
+(defmethod complete-fragment (frag (type (eql :package-name)))
+  (complete-package (fragment-result frag)))
+
+
+(defmethod complete-fragment (frag (type (eql :package-marker)))
+  (complete-fragment frag :symbol-name))
+
+
 (defmethod jupyter:complete-code ((k kernel) code cursor-pos)
+  (jupyter:inform :error k "~A ~A" code cursor-pos)
   (jupyter:handling-errors
-    (multiple-value-bind (word start end) (symbol-string-at-position code cursor-pos)
-      (when word
-        (values
-          (multiple-value-bind (name package-name ext) (split-qualified-name word)
-            (with-slots (package) k
-              (let ((pkg (find-package (or package-name package))))
-                (when pkg
-                  (if ext
-                    (iter
-                      (for sym in-package pkg external-only t)
-                      (for sym-name next (symbol-name sym))
-                      (when (starts-with-subseq name sym-name)
-                        (collect
-                          (symbol-name-to-qualified-name sym-name package-name pkg))))
-                    (iter
-                      (for sym in-package pkg)
-                      (for sym-name next (symbol-name sym))
-                      (when (starts-with-subseq name sym-name)
-                        (collect
-                          (symbol-name-to-qualified-name sym-name package-name pkg)))))))))
-          start
-          end)))))
+    (when-let ((frag (locate-fragment code cursor-pos)))
+      (values
+        (sort
+          (remove-duplicates
+            (mapcan (lambda (type)
+                      (complete-fragment frag type))
+                    (fragment-types frag))
+            :test #'string=)
+          #'string-lessp)
+        (fragment-start frag)
+        (fragment-end frag)))))
+
+    ; (with-input-from-string (stream code))
+    ; (do ((stream
+    ; (multiple-value-bind (word start end) (symbol-string-at-position code cursor-pos)
+    ;   (when word
+    ;     (values
+    ;       (multiple-value-bind (name package-name ext) (split-qualified-name word)
+    ;         (with-slots (package) k
+    ;           (let ((pkg (find-package (or package-name package))))
+    ;             (when pkg
+    ;               (if ext
+    ;                 (iter
+    ;                   (for sym in-package pkg external-only t)
+    ;                   (for sym-name next (symbol-name sym))
+    ;                   (when (starts-with-subseq name sym-name)
+    ;                     (collect
+    ;                       (symbol-name-to-qualified-name sym-name package-name pkg))))
+    ;                 (iter
+    ;                   (for sym in-package pkg)
+    ;                   (for sym-name next (symbol-name sym))
+    ;                   (when (starts-with-subseq name sym-name)
+    ;                     (collect
+    ;                       (symbol-name-to-qualified-name sym-name package-name pkg)))))))))
+    ;       start
+    ;       end)))))
 
