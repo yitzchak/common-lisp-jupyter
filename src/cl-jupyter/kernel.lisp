@@ -172,7 +172,15 @@
     (declare (ignore frag type))))
 
 
-(defun complete-symbol (partial-name package statuses)
+(defmethod complete-fragment (frag (type (eql nil)))
+  (when (and frag
+             (fragment-types frag))
+    (mapcan (lambda (sub-type)
+              (complete-fragment frag sub-type))
+            (fragment-types frag))))
+
+
+(defun complete-symbol (partial-name start end package statuses)
   (when package
     (let (matches)
       (do-symbols (sym package matches)
@@ -182,10 +190,13 @@
             (declare (ignore s))
             (when (and (member status statuses :test #'eql)
                        (starts-with-subseq partial-name sym-name))
-              (push sym-name matches))))))))
+              (push (list :match sym-name
+                          :start start
+                          :end end)
+                    matches))))))))
 
 
-(defun complete-package (partial-name &key include-marker)
+(defun complete-package (partial-name start end &key include-marker)
   (let ((matches (remove-if-not-match
                    partial-name
                    (append (mapcan (lambda (pkg)
@@ -197,11 +208,13 @@
                            #+ccl (mapcar #'car (ccl:package-local-nicknames *package*))
                            #+lispworks (mapcar #'car (hcl:package-local-nicknames *package*))
                            #+sbcl (mapcar #'car (sb-ext:package-local-nicknames *package*))))))
-    (if include-marker
-      (mapcar (lambda (name)
-                (concatenate 'string name ":"))
-              matches)
-      matches)))
+    (mapcar (lambda (name)
+              (list :match (if include-marker
+                             (concatenate 'string name ":")
+                             name)
+                    :start start
+                    :end end))
+              matches)))
 
 
 (defmethod complete-fragment (frag (type (eql :symbol-name)))
@@ -212,46 +225,54 @@
         (:local-symbol
           (setf matches
               (nconc matches
-                     (complete-package (fragment-result frag) :include-marker t)
-                     (complete-symbol (fragment-result frag)
+                     (complete-package (fragment-result frag) (fragment-start frag) (fragment-end frag) :include-marker t)
+                     (complete-symbol (fragment-result frag) (fragment-start frag) (fragment-end frag)
                                       *package*
                                       '(:internal :external :inherited)))))
         (:external-symbol
           (setf matches
               (nconc matches
-                     (complete-symbol (fragment-result frag)
+                     (complete-symbol (fragment-result frag) (fragment-start frag) (fragment-end frag)
                                       (find-package (fragment-result (first (fragment-children parent))))
                                       '(:external)))))
         (:internal-symbol
           (setf matches
               (nconc matches
-                     (complete-symbol (fragment-result frag)
+                     (complete-symbol (fragment-result frag) (fragment-start frag) (fragment-end frag)
                                       (find-package (fragment-result (first (fragment-children parent))))
                                       '(:internal)))))))))
 
 
 (defmethod complete-fragment (frag (type (eql :package-name)))
-  (complete-package (fragment-result frag)))
+  (complete-package (fragment-result frag) (fragment-start frag) (fragment-end frag)))
 
 
 (defmethod complete-fragment (frag (type (eql :package-marker)))
-  (complete-fragment frag :symbol-name))
+  (complete-fragment (car (last (fragment-children (fragment-parent frag)))) nil))
 
 
 (defmethod jupyter:complete-code ((k kernel) code cursor-pos)
-  (jupyter:inform :error k "~A ~A" code cursor-pos)
   (jupyter:handling-errors
-    (when-let ((frag (locate-fragment code cursor-pos)))
-      (values
-        (sort
-          (remove-duplicates
-            (mapcan (lambda (type)
-                      (complete-fragment frag type))
-                    (fragment-types frag))
-            :test #'string=)
-          #'string-lessp)
-        (fragment-start frag)
-        (fragment-end frag)))))
+    (if-let ((matches (complete-fragment (locate-fragment code cursor-pos) nil)))
+      (let ((start (reduce #'min matches :key (lambda (match)
+                                                (getf match :start))))
+            (end (reduce #'max matches  :key (lambda (match)
+                                               (getf match :end)))))
+        (jupyter:inform :error k "~S" matches)
+        (values
+          (sort
+            (remove-duplicates
+              (mapcar (lambda (match)
+                        (concatenate 'string
+                                     (subseq code start (getf match :start))
+                                     (getf match :match)
+                                     (subseq code (getf match :end) end)))
+                      matches)
+              :test #'string-equal)
+            #'string-lessp)
+          start
+          end))
+        (values nil cursor-pos cursor-pos))))
 
     ; (with-input-from-string (stream code))
     ; (do ((stream
