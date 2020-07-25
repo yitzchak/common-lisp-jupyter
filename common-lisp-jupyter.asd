@@ -91,6 +91,8 @@
           :components
             ((:file "parser")
              (:file "kernel")
+             (:file "complete")
+             (:file "inspect")
              (:file "installer")
              (:file "overrides")
              (:file "ros-install")))

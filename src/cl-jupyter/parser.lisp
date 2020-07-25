@@ -138,9 +138,10 @@
 
 
 (defun read-fragment (stream)
-  (handler-bind
-      ((error #'eclector.base:recover))
-    (eclector.parse-result:read (make-instance 'my-client) stream nil)))
+  ;(ignore-errors
+    (handler-bind
+        ((error #'eclector.base:recover))
+      (eclector.parse-result:read (make-instance 'my-client) stream nil)));)
 
 
 (defun find-fragment (frag pos)
@@ -151,7 +152,7 @@
     ((null (fragment-children frag))
       (values frag t))
     (t
-      (dolist (child (fragment-children frag) (values nil t))
+      (dolist (child (fragment-children frag) (values frag t))
         (let ((fc (find-fragment child pos)))
           (when fc
             (return (values fc t))))))))
@@ -161,7 +162,9 @@
   (with-input-from-string (stream code)
     (do ((frag (read-fragment stream) (read-fragment stream)))
         ((null frag))
+      ;(jupyter:inform :error nil "frag ~A ~A" (fragment-result frag) (fragment-types frag))
       (multiple-value-bind (enclosing-frag contained)
                            (find-fragment frag pos)
+        ;(jupyter:inform :error nil "cfrag ~A ~A ~A" contained (fragment-result enclosing-frag) (fragment-types enclosing-frag))
         (when contained
           (return enclosing-frag))))))

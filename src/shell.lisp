@@ -71,7 +71,7 @@
                               (json-new-obj
                                 ("status" "ok")
                                 ("found" (if data t nil))
-                                ("data" data)
+                                ("data" (or data (json-empty-obj)))
                                 ("metadata" (json-empty-obj)))
                               :parent parent-msg)))
 

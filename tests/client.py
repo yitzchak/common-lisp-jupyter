@@ -37,8 +37,24 @@ class MyKernelTests(jupyter_kernel_test.KernelTests):
             'matches': {'zerop'},
         },
         {
-            'text': 'cl:car',
-            'matches': {'cl:car'},
+            'text': 'cl:cd',
+            'matches': {
+                'cdaadr',
+                'cddaar',
+                'cdadar',
+                'cdar',
+                'cddadr',
+                'cdadr',
+                'cdddr',
+                'cdaaar',
+                'cddddr',
+                'cddr',
+                'cdaar',
+                'cdddar',
+                'cddar',
+                'cdaddr',
+                'cdr'
+            },
         },
     ]
 
