@@ -590,8 +590,7 @@
            (cursor-pos (json-getf content "cursor_pos")))
       (multiple-value-bind (result start end)
                            (let ((*package* package))
-                              (complete-code kernel code
-                               (min (1- (length code)) cursor-pos)))
+                              (complete-code kernel code cursor-pos))
         (cond
           ((eval-error-p result)
             (with-slots (ename evalue) result

@@ -7,25 +7,12 @@
                  matches))
 
 
-(defgeneric complete-fragment (frag type)
-  (:method (frag type)
-    ;(jupyter:inform :error nil "complete-fragment nil ~A" type)
-    nil))
-
-    ;(declare (ignore frag type))))
-
-
-(defmethod complete-fragment (frag (type (eql nil)))
-  ;(jupyter:inform :error nil "complete-fragment nil")
-  (when (and frag
-             (fragment-types frag))
-    (mapcan (lambda (sub-type)
-              (complete-fragment frag sub-type))
-            (fragment-types frag))))
+(defgeneric complete-fragment (frag)
+  (:method (frag)
+    (declare (ignore frag))))
 
 
 (defun complete-method (partial-name start end package statuses)
-  (jupyter:inform :error nil "complete-method")
   (when package
     (multiple-value-bind (sym status)
                          (find-symbol partial-name package)
@@ -51,17 +38,17 @@
                   (closer-mop:specializer-direct-methods cls)))))))
 
 
-(defun complete-symbol (partial-name start end package statuses)
-  (jupyter:inform :error nil "complete-symbol")
+(defun complete-symbol (partial-name start end package func statuses)
   (when package
     (let (matches)
       (do-symbols (sym package matches)
         (let ((sym-name (symbol-name sym)))
           (multiple-value-bind (s status)
                                (find-symbol sym-name package)
-            (declare (ignore s))
             (when (and (member status statuses :test #'eql)
-                       (starts-with-subseq partial-name sym-name))
+                       (starts-with-subseq partial-name sym-name)
+                       (or (and func (fboundp sym))
+                           (and (not func) (boundp sym))))
               (push (list :match (string-downcase sym-name)
                           :start start
                           :end end)
@@ -79,7 +66,6 @@
 
 
 (defun complete-package (partial-name start end &key include-marker)
-  (jupyter:inform :error nil "complete-package")
   (mapcar (lambda (name)
             (list :match (format nil "~(~A~)~:[~;:~]" name include-marker)
                   :start start
@@ -94,76 +80,53 @@
                        #+sbcl (mapcar #'car (sb-ext:package-local-nicknames *package*)))))
 
 
-(defmethod complete-fragment (frag (type (eql :symbol-name)))
-  ;(jupyter:inform :error nil "complete-fragment symbol-name")
-  (let ((parent (fragment-parent frag))
-        matches)
-    (jupyter:inform :error nil "a ~A" matches)
-    (dolist (symbol-type (fragment-types parent) matches)
-      (let ((pkg (cond
-                    ((eql :local-symbol symbol-type)
-                      *package*)
-                    ((zerop (length (fragment-result (first (fragment-children parent)))))
-                      (find-package "KEYWORD"))
-                    (t
-                      (find-package (fragment-result (first (fragment-children parent))))))))
-        (jupyter:inform :error nil "b ~A ~A ~A" matches pkg symbol-type)
-        (case symbol-type
-          (:local-symbol
-            (setf matches
-                (nconc matches
-                       (complete-package (fragment-result frag) (fragment-start frag) (fragment-end frag) :include-marker t)
-                       (complete-method (fragment-result frag) (fragment-start frag) (fragment-end frag)
-                                        pkg
-                                        '(:internal :external :inherited))
-                       (complete-symbol (fragment-result frag) (fragment-start frag) (fragment-end frag)
-                                        pkg
-                                        '(:internal :external :inherited)))))
-          (:external-symbol
-            (setf matches
-                (nconc matches
-                       (complete-method (fragment-result frag) (fragment-start frag) (fragment-end frag)
-                                        pkg
-                                        '(:external))
-                       (complete-symbol (fragment-result frag) (fragment-start frag) (fragment-end frag)
-                                        pkg
-                                        '(:external)))))
-          (:internal-symbol
-            (setf matches
-                (nconc matches
-                       (complete-method (fragment-result frag) (fragment-start frag) (fragment-end frag)
-                                        pkg
-                                        '(:internal))
-                       (complete-symbol (fragment-result frag) (fragment-start frag) (fragment-end frag)
-                                        pkg
-                                        '(:internal))))))))
-           (jupyter:inform :error nil "c ~A" matches)
-           matches))
+(defmethod complete-fragment ((frag symbol-name-fragment))
+  (complete-fragment (fragment-parent frag)))
 
 
-
-(defmethod complete-fragment (frag (type (eql :package-name)))
-  ;(jupyter:inform :error nil "complete-fragment package-name")
-  (complete-package (fragment-result frag) (fragment-start frag) (fragment-end frag)))
+(defmethod complete-fragment ((frag package-marker-fragment))
+  (complete-fragment (fragment-parent frag)))
 
 
-(defmethod complete-fragment (frag (type (eql :package-marker)))
-  ;(jupyter:inform :error nil "complete-fragment package-marker")
-  (complete-fragment (car (last (fragment-children (fragment-parent frag)))) nil))
+(defmethod complete-fragment ((frag symbol-fragment))
+  (with-slots (status position children)
+              frag
+    (let* ((func (or (equal 0 position)
+                     (and (equal 1 position)
+                          (equal 'function (fragment-value (first (fragment-children (fragment-parent frag))))))))
+           (symbol-name-frag (car (last children)))
+           (symbol-name (fragment-value symbol-name-frag))
+           (start (fragment-start symbol-name-frag))
+           (end (fragment-end symbol-name-frag)))
+      (if (eql :local status)
+        (nconc (complete-package symbol-name start end :include-marker t)
+               (unless func
+                 (complete-method symbol-name start end *package*
+                                  '(:internal :external :inherited)))
+               (complete-symbol symbol-name start end *package* func
+                                '(:internal :external :inherited)))
+        (let ((pkg (find-package (if (zerop (length (fragment-value (first children))))
+                                  "KEYWORD"
+                                  (fragment-value (first children))))))
+          (nconc (unless func
+                   (complete-method symbol-name start end pkg (list status)))
+                 (complete-symbol symbol-name start end pkg func (list status))))))))
+
+
+(defmethod complete-fragment ((frag package-name-fragment))
+  (complete-package (fragment-value frag) (fragment-start frag) (fragment-end frag)))
 
 
 (defmethod jupyter:complete-code ((k kernel) code cursor-pos)
-  ;(jupyter:inform :error k "~A ~A" code cursor-pos)
-  (let* ((matches (complete-fragment (locate-fragment code cursor-pos) nil))
+  (let* ((matches (complete-fragment (locate-fragment code (1- cursor-pos))))
          (start (apply #'min (or (mapcar (lambda (match)
                                            (getf match :start))
                                           matches)
-                                 (list cursor-pos))))
+                                 (list (1- cursor-pos)))))
          (end (apply #'max (or (mapcar (lambda (match)
                                          (getf match :end))
                                        matches)
-                               (list cursor-pos)))))
-    ;(jupyter:inform :error k "~S" matches)
+                               (list (1- cursor-pos))))))
     (values
       (sort
         (remove-duplicates

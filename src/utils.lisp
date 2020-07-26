@@ -118,13 +118,17 @@
           (cdr value)))
 
 
-(defmacro dolist-with-position (spec &body body)
-  (with-gensyms (head repeat)
-    `(prog (,(first spec) (,(second spec) 0) (,head ,(third spec)))
+(defmacro dolist* ((position-var value-var list-form &optional result-form) &rest body)
+  (let ((head (gensym))
+        (repeat (gensym)))
+    `(prog (,value-var
+            (,position-var 0)
+            (,head ,list-form))
       ,repeat
-       (when ,head
-         (setq ,(first spec) (pop ,head))
-         ,@body
-         (incf ,(second spec))
-         (go ,repeat))
-       ,(fourth spec))))
+       (unless ,head
+         (return ,result-form))
+       (setq ,value-var (pop ,head))
+       (locally ,@body)
+       (incf ,position-var)
+       (go ,repeat))))
+

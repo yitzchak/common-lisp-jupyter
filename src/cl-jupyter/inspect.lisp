@@ -1,9 +1,9 @@
 (in-package #:common-lisp-jupyter)
 
 
-(defgeneric inspect-fragment (frag type)
-  (:method (frag type)
-    (declare (ignore frag type))))
+(defgeneric inspect-fragment (frag)
+  (:method (frag)
+    (declare (ignore frag))))
 
 
 (defun cl-user::code (stream value colon at &rest args)
@@ -22,7 +22,11 @@
         (write-string delim stream)))))
 
 
-(defun inspect-package (name))
+(defun inspect-package (name)
+  (when-let ((pkg (find-package name)))
+    (list (with-output-to-string (stream)
+            (format stream "## Package ~A~%~%" (package-name pkg))
+            (format stream "### Nicknames~%~%~{- ~A~%~}" (package-nicknames pkg))))))
 
 
 (defun inspect-method (name package statuses))
@@ -39,61 +43,36 @@
                       (if (boundp sym) (symbol-value sym) "UNBOUND")))))))
 
 
-(defmethod inspect-fragment (frag (type (eql nil)))
-  (when (and frag
-             (fragment-types frag))
-    (mapcan (lambda (sub-type)
-              (inspect-fragment frag sub-type))
-            (fragment-types frag))))
+(defmethod inspect-fragment ((frag symbol-name-fragment))
+  (inspect-fragment (fragment-parent frag)))
 
 
-(defmethod inspect-fragment (frag (type (eql :symbol-name)))
-  (let ((parent (fragment-parent frag))
-        results)
-    (dolist (symbol-type (fragment-types parent) results)
-      (let ((pkg (cond
-                    ((eql :local-symbol symbol-type)
-                      *package*)
-                    ((zerop (length (fragment-result (first (fragment-children parent)))))
-                      (find-package "KEYWORD"))
-                    (t
-                      (find-package (fragment-result (first (fragment-children parent))))))))
-        (case symbol-type
-          (:local-symbol
-            (setf results
-                (nconc results
-                       (inspect-package (fragment-result frag))
-                       (inspect-method (fragment-result frag)
-                                        pkg
-                                        '(:internal :external :inherited))
-                       (inspect-symbol (fragment-result frag)
-                                        pkg
-                                        '(:internal :external :inherited)))))
-          (:external-symbol
-            (setf results
-                (nconc results
-                       (inspect-method (fragment-result frag)
-                                        pkg
-                                        '(:external))
-                       (inspect-symbol (fragment-result frag)
-                                        pkg
-                                        '(:external)))))
-          (:internal-symbol
-            (setf results
-                (nconc results
-                       (inspect-method (fragment-result frag)
-                                        pkg
-                                        '(:internal))
-                       (inspect-symbol (fragment-result frag)
-                                        pkg
-                                        '(:internal))))))))))
+(defmethod inspect-fragment ((frag package-marker-fragment))
+  (inspect-fragment (fragment-parent frag)))
 
 
+(defmethod inspect-fragment ((frag symbol-fragment))
+  (with-slots (status position children)
+              frag
+    (let ((symbol-name (fragment-value (car (last children)))))
+      (if (eql :local status)
+        (nconc (inspect-package symbol-name)
+               (inspect-method symbol-name *package* '(:internal :external :inherited))
+               (inspect-symbol symbol-name *package* '(:internal :external :inherited)))
+        (let ((pkg (find-package (if (zerop (length (fragment-value (first children))))
+                                  "KEYWORD"
+                                  (fragment-value (first children))))))
+          (nconc (inspect-method symbol-name pkg (list status))
+                 (inspect-symbol symbol-name pkg (list status))))))))
+
+
+(defmethod inspect-fragment ((frag package-name-fragment))
+  (inspect-package (fragment-value frag)))
 
 
 (defmethod jupyter:inspect-code ((k kernel) code cursor-pos detail-level)
   (declare (ignore detail-level))
   ;(jupyter:inform :error k "~A ~A" code cursor-pos)
-  (when-let ((result (inspect-fragment (locate-fragment code cursor-pos) nil)))
+  (when-let ((result (inspect-fragment (locate-fragment code (1- cursor-pos)))))
     (jupyter:make-inline-result (format nil "~{~&~A~}" result) :mime-type "text/markdown")))
 

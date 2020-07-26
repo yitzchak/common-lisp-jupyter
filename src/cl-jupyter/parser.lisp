@@ -10,14 +10,14 @@
      :accessor fragment-position
      :initarg :position
      :initform nil)
-   (result
-     :accessor fragment-result
-     :initarg :result
+   (value
+     :accessor fragment-value
+     :initarg :value
      :initform nil)
-   (types
-     :accessor fragment-types
-     :initarg :types
-     :initform (list :expr))
+   (status
+     :accessor fragment-status
+     :initarg :status
+     :initform nil)
    (children
      :accessor fragment-children
      :initarg :children
@@ -30,8 +30,31 @@
      :initarg :end)))
 
 
-(defun make-fragment (&rest initargs)
-  (apply #'make-instance 'fragment initargs))
+(defclass symbol-name-fragment (fragment)
+  ())
+
+
+(defclass package-name-fragment (fragment)
+  ())
+
+
+(defclass package-marker-fragment (fragment)
+  ())
+
+
+(defclass symbol-fragment (fragment)
+  ())
+
+
+(defclass skipped-fragment (fragment)
+  ())
+
+
+(defmethod initialize-instance :after ((instance fragment) &rest initargs &key &allow-other-keys)
+  (declare (ignore initargs))
+  (jupyter::dolist* (position child (fragment-children instance))
+    (setf (fragment-position child) position)
+    (setf (fragment-parent child) instance)))
 
 
 (defclass my-client (eclector.parse-result:parse-result-client)
@@ -44,80 +67,52 @@
                                    position-package-marker-2)
   (cond
     (position-package-marker-2
-      (let ((parent (make-fragment :types (list :internal-symbol)
-                                   :start 0
-                                   :end (length token))))
-        (setf (fragment-children parent)
-              (list (make-fragment :result (subseq token 0 position-package-marker-1)
-                                   :types (list :package-name)
-                                   :position 0
-                                   :parent parent
-                                   :start 0
-                                   :end position-package-marker-1)
-                    (make-fragment :result (subseq token position-package-marker-1 (1+ position-package-marker-2))
-                                   :types (list :package-marker)
-                                   :position 0
-                                   :parent parent
-                                   :start position-package-marker-1
-                                   :end (1+ position-package-marker-2))
-                    (make-fragment :result (subseq token (1+ position-package-marker-2))
-                                   :types (list :symbol-name)
-                                   :position 1
-                                   :parent parent
-                                   :start (1+ position-package-marker-2)
-                                   :end (length token))))
-        parent))
+      (make-instance 'symbol-fragment
+                     :status :internal
+                     :start 0
+                     :end (length token)
+                     :children (list (make-instance 'package-name-fragment
+                                                    :value (subseq token 0 position-package-marker-1)
+                                                    :start 0
+                                                    :end position-package-marker-1)
+                                     (make-instance 'package-marker-fragment
+                                                    :value (subseq token position-package-marker-1 (1+ position-package-marker-2))
+                                                    :start  (1+ position-package-marker-2)
+                                                    :end (length token))
+                                     (make-instance 'symbol-name-fragment
+                                                    :value (subseq token (1+ position-package-marker-2))
+                                                    :start (1+ position-package-marker-2)
+                                                    :end (length token)))))
     (position-package-marker-1
-      (let ((parent (make-fragment :types (list :external-symbol)
-                                   :start 0
-                                   :end (length token))))
-        (setf (fragment-children parent)
-              (list (make-fragment :result (subseq token 0 position-package-marker-1)
-                                   :types (list :package-name)
-                                   :position 0
-                                   :parent parent
-                                   :start 0
-                                   :end position-package-marker-1)
-                    (make-fragment :result (subseq token position-package-marker-1 (1+ position-package-marker-1))
-                                   :types (list :package-marker)
-                                   :position 0
-                                   :parent parent
-                                   :start position-package-marker-1
-                                   :end (1+ position-package-marker-1))
-                    (make-fragment :result (subseq token (1+ position-package-marker-1))
-                                   :types (list :symbol-name)
-                                   :position 1
-                                   :parent parent
-                                   :start (1+ position-package-marker-1)
-                                   :end (length token))))
-        parent))
+      (make-instance 'symbol-fragment
+                     :status :external
+                     :start 0
+                     :end (length token)
+                     :children (list (make-instance 'package-name-fragment
+                                                    :value (subseq token 0 position-package-marker-1)
+                                                    :start 0
+                                                    :end position-package-marker-1)
+                                     (make-instance 'package-marker-fragment
+                                                    :value (subseq token position-package-marker-1 (1+ position-package-marker-1))
+                                                    :start position-package-marker-1
+                                                    :end (1+ position-package-marker-1))
+                                     (make-instance 'symbol-name-fragment
+                                                    :value (subseq token (1+ position-package-marker-1))
+                                                    :start (1+ position-package-marker-1)
+                                                    :end (length token)))))
     (t
-      (let ((parent (make-fragment :types (list :local-symbol)
-                                   :start 0
-                                   :end (length token))))
-        (setf (fragment-children parent)
-              (list (make-fragment :result token
-                                   :types (list :symbol-name)
-                                   :position 0
-                                   :parent parent
-                                   :start 0
-                                   :end (length token))))
-        parent))))
+      (make-instance 'symbol-fragment
+                     :status :local
+                     :start 0
+                     :end (length token)
+                     :children (list (make-instance 'symbol-name-fragment
+                                                    :value token
+                                                    :start 0
+                                                    :end (length token)))))))
 
 
 (defmethod eclector.parse-result:make-expression-result ((client my-client) result children source)
-  (let ((parent (make-fragment :result result :start (car source) :end (cdr source) :children children)))
-    (prog ((head children)
-           (position 0)
-           child)
-     next
-      (when head
-        (setq child (pop head))
-        (setf (fragment-parent child) parent)
-        (setf (fragment-position child) position)
-        (incf position)
-        (go next)))
-    parent))
+  (make-instance 'fragment :value result :start (car source) :end (cdr source) :children children))
 
 
 (defun fragment-shift (frag offset)
@@ -134,14 +129,14 @@
 
 (defmethod eclector.parse-result:make-skipped-input-result ((client my-client) stream reason source)
   (declare (ignore stream))
-  (make-fragment :types (list reason) :start (car source) :end (cdr source)))
+  (make-instance 'skipped-fragment :status reason :start (car source) :end (cdr source)))
 
 
 (defun read-fragment (stream)
-  ;(ignore-errors
+  (ignore-errors
     (handler-bind
         ((error #'eclector.base:recover))
-      (eclector.parse-result:read (make-instance 'my-client) stream nil)));)
+      (eclector.parse-result:read (make-instance 'my-client) stream nil))))
 
 
 (defun find-fragment (frag pos)
@@ -152,7 +147,7 @@
     ((null (fragment-children frag))
       (values frag t))
     (t
-      (dolist (child (fragment-children frag) (values frag t))
+      (dolist (child (fragment-children frag) (values nil t))
         (let ((fc (find-fragment child pos)))
           (when fc
             (return (values fc t))))))))
@@ -162,9 +157,7 @@
   (with-input-from-string (stream code)
     (do ((frag (read-fragment stream) (read-fragment stream)))
         ((null frag))
-      ;(jupyter:inform :error nil "frag ~A ~A" (fragment-result frag) (fragment-types frag))
       (multiple-value-bind (enclosing-frag contained)
                            (find-fragment frag pos)
-        ;(jupyter:inform :error nil "cfrag ~A ~A ~A" contained (fragment-result enclosing-frag) (fragment-types enclosing-frag))
         (when contained
           (return enclosing-frag))))))
