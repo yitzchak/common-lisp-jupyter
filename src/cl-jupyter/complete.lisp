@@ -18,24 +18,39 @@
                          (find-symbol partial-name package)
       (when (and (member status statuses :test #'eql)
                  (boundp sym))
-        (let ((cls (class-of (symbol-value sym))))
+        (let* ((cls (class-of (symbol-value sym)))
+               (supers (remove-if (lambda (cls)
+                                    (eql t (class-name cls)))
+                                  (closer-mop:class-precedence-list cls))))
           (mapcan (lambda (method)
                     (do* (matches
                           (name (closer-mop:generic-function-name (closer-mop:method-generic-function method)))
                           (specializers (closer-mop:method-specializers method))
                           (lambda-list (closer-mop:method-lambda-list method))
-                          (pos (position cls specializers :test #'eql)
-                               (position cls specializers :test #'eql :start (1+ pos))))
+                          (pos (position-if (lambda (spec)
+                                              (member spec supers))
+                                            specializers)
+                               (position-if (lambda (spec)
+                                              (member spec supers))
+                                            specializers
+                                            :start (1+ pos))))
                          ((null pos) matches)
-                        (push (list :match (format nil "~((~S~{ ~A~} ~S~{ ~A~})~)"
-                                                name
-                                                (subseq lambda-list 0 pos)
-                                                sym
-                                                (subseq lambda-list (1+ pos)))
-                              :start start
-                              :end end)
+                        (push (list :match (if (listp name)
+                                             (format nil "~((setf (~S~{ ~A~} ~S~{ ~A~}) ~A)~)"
+                                                     (second name)
+                                                     (subseq lambda-list 1 pos)
+                                                     sym
+                                                     (subseq lambda-list (1+ pos))
+                                                     (first lambda-list))
+                                             (format nil "~((~S~{ ~A~} ~S~{ ~A~})~)"
+                                                     name
+                                                     (subseq lambda-list 0 pos)
+                                                     sym
+                                                     (subseq lambda-list (1+ pos))))
+                                    :start start
+                                    :end end)
                               matches)))
-                  (closer-mop:specializer-direct-methods cls)))))))
+                  (find-methods cls)))))))
 
 
 (defun complete-symbol (partial-name start end package func statuses)

@@ -17,6 +17,7 @@
      :iterate
      :jsown
      :pzmq
+     #+sbcl :sb-introspect
      :trivial-garbage
      :trivial-gray-streams
      :trivial-mimes)
@@ -56,6 +57,10 @@
          (:file "iopub")
          (:file "results")
          (:file "comm")
+         (:module formatters
+          :serial t
+          :components
+           ((:file "markdown")))
          (:module widgets
           :serial t
           :components
@@ -89,7 +94,8 @@
          (:module cl-jupyter
           :serial t
           :components
-            ((:file "parser")
+            ((:file "utils")
+             (:file "parser")
              (:file "kernel")
              (:file "complete")
              (:file "inspect")
