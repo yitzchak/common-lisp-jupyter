@@ -54,3 +54,26 @@
                                             (every #'visible-symbol-p (cdr name))))))
                   (closer-mop:specializer-direct-methods cls))))
             (closer-mop:class-precedence-list cls))))
+
+
+(defun method-specialized-lambda-list (method)
+  (do* ((lambda-list (closer-mop:method-lambda-list method) (cdr lambda-list))
+        (specializers (closer-mop:method-specializers method) (cdr specializers))
+        specialized-lambda-list)
+      ((null lambda-list) (nreverse specialized-lambda-list))
+    (cond
+      ((and specializers
+            (eql t (class-name (car specializers))))
+        (push (car lambda-list)
+              specialized-lambda-list))
+      ((and specializers
+            (subtypep (car specializers) 'closer-mop:eql-specializer))
+        (push (list (car lambda-list)
+                    (list 'eql (closer-mop:eql-specializer-object	(var specializers))))
+              specialized-lambda-list))
+      (specializers
+        (push (list (car lambda-list) (class-name (car specializers)))
+              specialized-lambda-list))
+      (t
+        (push (car lambda-list)
+              specialized-lambda-list)))))

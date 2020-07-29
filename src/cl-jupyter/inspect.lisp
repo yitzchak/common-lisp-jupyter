@@ -66,9 +66,10 @@
       (format stream "~%~%### Methods~%")
       (dolist (method methods)
         (let ((name (closer-mop:generic-function-name (closer-mop:method-generic-function method)))
-              (lambda-list (closer-mop:method-lambda-list method))
+              (lambda-list (method-specialized-lambda-list method))
               (mdf:*indent-level* 1))
-          (format stream "~%- foo~@[ &mdash; ~:/mdf:text/~]~%~%~@/mdf:code/"
+          (format stream "~%- ~/mdf:text/~@[ &mdash; ~:/mdf:text/~]~%~%~@/mdf:code/~%~%"
+                  (if (listp name) (second name) name)
                   (documentation method t)
                   (if (listp name)
                     `(setf (,(second name) ,@(cdr lambda-list)) ,(first lambda-list))
