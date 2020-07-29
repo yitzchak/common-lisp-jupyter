@@ -8,7 +8,7 @@
 
 (defun inspect-package (stream name detail-level)
   (when-let ((pkg (find-package name)))
-    (format stream "# ~:/mdf:text/ [package]~@[~%~%~:/mdf:text/~]~@[~%~%## Nicknames~%~%~{~@/mdf:text/~^, ~}~]"
+    (format stream "# ~:/mdf:text/ [package]~@[~%~%~:/mdf:text/~]~@[~%~%## Nicknames~%~%~(~{~@/mdf:text/~^, ~}~)~]"
                     (package-name pkg)
                     (documentation pkg t)
                     (package-nicknames pkg))
@@ -34,6 +34,8 @@
   (when (fboundp sym)
     (format stream "~%~%## ~A~@[~%~%~:/mdf:text/~]~%~%~@/mdf:code/"
                    (cond
+                     ((special-operator-p sym)
+                       "Special")
                      ((macro-function sym)
                        "Macro")
                      ((typep (fdefinition sym) 'standard-generic-function)
@@ -59,7 +61,18 @@
                          (documentation slot t))
                        (closer-mop:slot-definition-initargs slot)
                        (unless (eql :instance (closer-mop:slot-definition-allocation slot))
-                         (closer-mop:slot-definition-allocation slot)))))))
+                         (closer-mop:slot-definition-allocation slot)))))
+    (when-let ((methods (find-methods cls)))
+      (format stream "~%~%### Methods~%")
+      (dolist (method methods)
+        (let ((name (closer-mop:generic-function-name (closer-mop:method-generic-function method)))
+              (lambda-list (closer-mop:method-lambda-list method))
+              (mdf:*indent-level* 1))
+          (format stream "~%- foo~@[ &mdash; ~:/mdf:text/~]~%~%~@/mdf:code/"
+                  (documentation method t)
+                  (if (listp name)
+                    `(setf (,(second name) ,@(cdr lambda-list)) ,(first lambda-list))
+                    `(,name ,@lambda-list))))))))
 
 
 (defun inspect-symbol (stream name package statuses detail-level)

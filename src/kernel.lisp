@@ -193,8 +193,8 @@
 
 (defgeneric complete-code (kernel code cursor-pos)
   (:documentation "Complete code at cursor-pos. Successful completion should
-  return three values, first a list of strings, then the cursor start position
-  and finally the cursor end position."))
+  return three values, first a list of match plists with the identifiers :text and :type, then the
+  cursor start position and finally the cursor end position."))
 
 (defmethod complete-code (kernel code cursor-pos))
 
@@ -596,7 +596,18 @@
             (with-slots (ename evalue) result
               (send-complete-reply-error shell msg ename evalue)))
           (result
-            (send-complete-reply-ok shell msg result start end))
+            (send-complete-reply-ok shell msg
+                                    (mapcar (lambda (match)
+                                              (getf match :text))
+                                            result)
+                                    start end
+                                    (json-new-obj
+                                      ("_jupyter_types_experimental" (mapcan (lambda (match)
+                                                                               (when (getf match :type)
+                                                                                 (list (json-new-obj
+                                                                                         ("text" (getf match :text))
+                                                                                         ("type" (getf match :type))))))
+                                                                             result)))))
           (t
             (send-complete-reply-ok shell msg nil cursor-pos cursor-pos)))))))
 

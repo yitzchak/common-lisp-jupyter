@@ -26,7 +26,7 @@
                     (do* (matches
                           (name (closer-mop:generic-function-name (closer-mop:method-generic-function method)))
                           (specializers (closer-mop:method-specializers method))
-                          (lambda-list (closer-mop:method-lambda-list method))
+                          (lambda-list (parse-ordinary-lambda-list (closer-mop:method-lambda-list method)))
                           (pos (position-if (lambda (spec)
                                               (member spec supers))
                                             specializers)
@@ -35,19 +35,20 @@
                                             specializers
                                             :start (1+ pos))))
                          ((null pos) matches)
-                        (push (list :match (if (listp name)
-                                             (format nil "~((setf (~S~{ ~A~} ~S~{ ~A~}) ~A)~)"
-                                                     (second name)
-                                                     (subseq lambda-list 1 pos)
-                                                     sym
-                                                     (subseq lambda-list (1+ pos))
-                                                     (first lambda-list))
-                                             (format nil "~((~S~{ ~A~} ~S~{ ~A~})~)"
-                                                     name
-                                                     (subseq lambda-list 0 pos)
-                                                     sym
-                                                     (subseq lambda-list (1+ pos))))
+                        (push (list :text (if (listp name)
+                                            (format nil "~((setf (~S~{ ~A~} ~S~{ ~A~}) ~A)~)"
+                                                    (second name)
+                                                    (subseq lambda-list 1 pos)
+                                                    sym
+                                                    (subseq lambda-list (1+ pos))
+                                                    (first lambda-list))
+                                            (format nil "~((~S~{ ~A~} ~S~{ ~A~})~)"
+                                                    name
+                                                    (subseq lambda-list 0 pos)
+                                                    sym
+                                                    (subseq lambda-list (1+ pos))))
                                     :start start
+                                    :type "method"
                                     :end end)
                               matches)))
                   (find-methods cls)))))))
@@ -63,9 +64,32 @@
             (when (and (member status statuses :test #'eql)
                        (starts-with-subseq partial-name sym-name)
                        (or (and func (fboundp sym))
-                           (and (not func) (boundp sym))))
-              (push (list :match (string-downcase sym-name)
+                           (and (not func)
+                                (or (not (fboundp sym))
+                                    (boundp sym)))))
+              (push (list :text (string-downcase sym-name)
                           :start start
+                          :type (cond
+                                  ((special-operator-p sym)
+                                    "special")
+                                  ((and func
+                                        (macro-function sym))
+                                    "macro")
+                                  (func
+                                    "function")
+                                  ((keywordp sym)
+                                    "keyword")
+                                  ((and (boundp sym)
+                                        (constantp sym))
+                                    "constant")
+                                  ((boundp sym)
+                                    "variable")
+                                  ((subtypep (find-class sym nil) (find-class 'structure-object))
+                                    "structure")
+                                  ((find-class sym nil)
+                                    "class")
+                                  (t
+                                    "symbol"))
                           :end end)
                     matches))))))))
 
@@ -82,7 +106,8 @@
 
 (defun complete-package (partial-name start end &key include-marker)
   (mapcar (lambda (name)
-            (list :match (format nil "~(~A~)~:[~;:~]" name include-marker)
+            (list :text (format nil "~(~A~)~:[~;:~]" name include-marker)
+                  :type "package"
                   :start start
                   :end end))
           (find-matches partial-name
@@ -146,13 +171,15 @@
       (sort
         (remove-duplicates
           (mapcar (lambda (match)
-                    (concatenate 'string
-                                 (subseq code start (getf match :start))
-                                 (getf match :match)
-                                 (subseq code (getf match :end) end)))
+                    (list :text (concatenate 'string
+                                             (subseq code start (getf match :start))
+                                             (getf match :text)
+                                             (subseq code (getf match :end) end))
+                          :type (getf match :type)))
                   matches)
-          :test #'string-equal)
-        #'string-lessp)
+          :test #'equal)
+        #'string-lessp
+        :key (lambda (match) (getf match :text)))
       start
       end)))
 

@@ -25,7 +25,9 @@
     (write-string value stream)
     (write value :escape (not at) :case :downcase :pretty t :stream stream))
   (terpri stream)
-  (indent stream))
+  (indent stream)
+  (write-string "```" stream))
+
 
 
 (defun text (stream value colon at &rest args)
