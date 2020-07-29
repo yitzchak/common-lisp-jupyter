@@ -8,12 +8,17 @@
 
 (defun inspect-package (stream name detail-level)
   (when-let ((pkg (find-package name)))
-    (format stream "# ~:/mdf:text/ [package]~@[~%~%~:/mdf:text/~]~@[~%~%## Nicknames~%~%~{~@/mdf:text/~#[~;, and ~:;, ~]~}~]"
+    (format stream "# ~:/mdf:text/ [package]~@[~%~%~:/mdf:text/~]~@[~%~%## Nicknames~%~%~{~@/mdf:text/~^, ~}~]"
                     (package-name pkg)
                     (documentation pkg t)
                     (package-nicknames pkg))
     (unless (zerop detail-level)
-      (format stream "~%~%## Exports"))))
+      (let (exports)
+        (do-external-symbols (sym pkg)
+          (push sym exports))
+        (when exports
+          (format stream "~%~%## Exports~%~%~{~@/mdf:text/~^, ~}"
+                         exports))))))
 
 
 (defun inspect-method (stream name package statuses detail-level))
@@ -38,7 +43,7 @@
                    (documentation sym 'function)
                    (cons sym (lambda-list sym))))
   (when-let ((cls (find-class sym nil)))
-    (format stream "~%~%## ~:[Class~;Structure~]~@[~%~%~:/mdf:text/~]~%~%### Precedence List~%~%~{~/mdf:text/~#[~;, ~:;, ~]~}"
+    (format stream "~%~%## ~:[Class~;Structure~]~@[~%~%~:/mdf:text/~]~%~%### Precedence List~%~%~{~@/mdf:text/~^, ~}"
                    (subtypep cls (find-class 'structure-object))
                    (documentation sym 'type)
                    (mapcar #'class-name (closer-mop:class-precedence-list cls)))
@@ -49,7 +54,9 @@
                        (closer-mop:slot-definition-name slot)
                        (unless (eql t (closer-mop:slot-definition-type slot))
                          (closer-mop:slot-definition-type slot))
-                       (documentation slot t)
+                       (if (listp (documentation slot t))
+                         (first (documentation slot t))
+                         (documentation slot t))
                        (closer-mop:slot-definition-initargs slot)
                        (unless (eql :instance (closer-mop:slot-definition-allocation slot))
                          (closer-mop:slot-definition-allocation slot)))))))
@@ -89,7 +96,7 @@
 
 
 (defmethod inspect-fragment (stream (frag package-name-fragment) detail-level)
-  (inspect-package stream (fragment-value frag)) detail-level)
+  (inspect-package stream (fragment-value frag) detail-level))
 
 
 (defmethod jupyter:inspect-code ((k kernel) code cursor-pos detail-level)

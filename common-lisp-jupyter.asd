@@ -17,7 +17,6 @@
      :iterate
      :jsown
      :pzmq
-     #+sbcl :sb-introspect
      :trivial-garbage
      :trivial-gray-streams
      :trivial-mimes)
