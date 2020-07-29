@@ -1,9 +1,6 @@
 (in-package #:common-lisp-jupyter)
 
 
-#+sbcl (require :sb-introspect)
-
-
 (defun lambda-list (sym)
   #+ccl
     (ccl:arglist sym)

@@ -295,3 +295,7 @@
     #:to-notebook))
 
 (in-package #:jupyter)
+
+
+#+sbcl (require :sb-introspect)
+

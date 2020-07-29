@@ -11,7 +11,7 @@
 
 (defun write-escaped-string (text &optional stream)
   (dotimes (pos (length text))
-    (when (position (char text pos) "\\`*_{}[]()#+-.!")
+    (when (position (char text pos) "\\`*_{}[]#+-!")
       (write-char #\\ stream))
     (write-char (char text pos) stream)))
 
