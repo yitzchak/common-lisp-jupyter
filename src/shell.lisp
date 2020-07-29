@@ -71,7 +71,7 @@
                               (json-new-obj
                                 ("status" "ok")
                                 ("found" (if data t nil))
-                                ("data" data)
+                                ("data" (or data (json-empty-obj)))
                                 ("metadata" (json-empty-obj)))
                               :parent parent-msg)))
 
@@ -85,7 +85,7 @@
                                 ("traceback" nil))
                               :parent parent-msg)))
 
-(defun send-complete-reply-ok (shell parent-msg matches start end)
+(defun send-complete-reply-ok (shell parent-msg matches start end &optional metadata)
   (message-send shell
                 (make-message (channel-session shell) "complete_reply"
                               (json-new-obj
@@ -93,7 +93,7 @@
                                 ("matches" matches)
                                 ("cursor_start" start)
                                 ("cursor_end" end)
-                                ("metadata" (json-empty-obj)))
+                                ("metadata" (or metadata (json-empty-obj))))
                               :parent parent-msg)))
 
 (defun send-comm-info-reply (shell parent-msg comms)

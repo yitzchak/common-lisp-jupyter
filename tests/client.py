@@ -1,5 +1,6 @@
 import unittest
 import jupyter_kernel_test
+import jupyter_client
 
 TIMEOUT = 240
 
@@ -9,8 +10,6 @@ class MyKernelTests(jupyter_kernel_test.KernelTests):
     @classmethod
     def tearDownClass(cls):
         cls.kc.shutdown()
-
-    kernel_name = "common-lisp"
 
     language_name = "common-lisp"
 
@@ -33,12 +32,28 @@ class MyKernelTests(jupyter_kernel_test.KernelTests):
 
     completion_samples = [
         {
-            'text': 'z',
+            'text': '(z',
             'matches': {'zerop'},
         },
         {
-            'text': 'cl:car',
-            'matches': {'cl:car'},
+            'text': '(cl:cd',
+            'matches': {
+                'cdaadr',
+                'cddaar',
+                'cdadar',
+                'cdar',
+                'cddadr',
+                'cdadr',
+                'cdddr',
+                'cdaaar',
+                'cddddr',
+                'cddr',
+                'cdaar',
+                'cdddar',
+                'cddar',
+                'cdaddr',
+                'cdr'
+            },
         },
     ]
 
@@ -112,6 +127,15 @@ class MyKernelTests(jupyter_kernel_test.KernelTests):
             else:
                 self.assertEqual(msg['msg_type'], "stream", "Output message must be stream or result")
                 self.assertEqual(msg['content']['name'], 'stdout', "Stream must be stdout")
+
+
+def load_tests(loader, tests, pattern):
+    suite = unittest.TestSuite()
+    mgr = jupyter_client.kernelspec.KernelSpecManager()
+    for name, spec in mgr.get_all_specs().items():
+        if spec['spec']['language'] == "common-lisp":
+            suite.addTests(loader.loadTestsFromTestCase(type(name, (MyKernelTests,), dict(kernel_name = name))))
+    return suite
 
 
 if __name__ == '__main__':

@@ -68,14 +68,20 @@ Standard MIME types
 (defmethod render ((res inline-result))
   (let ((value (inline-result-value res))
         (mime-type (inline-result-mime-type res)))
-    (if (equal mime-type *plain-text-mime-type*)
-      (json-new-obj
-        (mime-type value))
-      (json-new-obj
-        (*plain-text-mime-type* "inline-value")
-        (mime-type (if (or (stringp value) (ends-with-subseq "json" mime-type))
-                       value
-                       (cl-base64:usb8-array-to-base64-string value)))))))
+    (cond
+      ((equal mime-type *plain-text-mime-type*)
+        (json-new-obj
+          (mime-type value)))
+      ((equal mime-type *markdown-mime-type*)
+        (json-new-obj
+          (*plain-text-mime-type* value)
+          (mime-type value)))
+      (t
+        (json-new-obj
+          (*plain-text-mime-type* "inline-value")
+          (mime-type (if (or (stringp value) (ends-with-subseq "json" mime-type))
+                         value
+                         (cl-base64:usb8-array-to-base64-string value))))))))
 
 (defclass file-result (result)
   ((path :initarg :path

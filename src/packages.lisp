@@ -1,5 +1,6 @@
 (defpackage #:jupyter
   (:use #:common-lisp #:alexandria #:iterate)
+  (:documentation "Core package for Jupyter support including kernel and installer abstract classes.")
   (:export
     ; utils
     #:json-getf
@@ -84,8 +85,20 @@
     #:user-image-installer
     #:user-installer))
 
+
+(defpackage #:jupyter/markdown-formatter
+  (:use #:common-lisp)
+  (:nicknames :mdf)
+  (:documentation "Various format extensions for markdown")
+  (:export
+    #:code
+    #:*indent-level*
+    #:text))
+
+
 (defpackage #:jupyter-widgets
   (:use #:common-lisp #:alexandria #:iterate)
+  (:documentation "Package for core Jupyter Widget support.")
   (:export
     #:accordion
     #:audio
@@ -268,6 +281,7 @@
 (defpackage #:common-lisp-jupyter
   (:nicknames :cl-jupyter)
   (:use #:common-lisp #:alexandria #:iterate)
+  (:documentation "Provides Common Lisp kernel support.")
   (:export
     #:install
     #:install-image
@@ -276,7 +290,12 @@
 
 (defpackage #:jupyter-convert
   (:use #:common-lisp #:alexandria #:iterate)
+  (:documentation "Provides LISP source code conversion to notebooks.")
   (:export
     #:to-notebook))
 
 (in-package #:jupyter)
+
+
+#+sbcl (require :sb-introspect)
+
