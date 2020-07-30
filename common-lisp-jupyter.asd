@@ -8,6 +8,7 @@
      :babel
      :bordeaux-threads
      :cl-base64
+     :cl-indentify
      :closer-mop
      :dissect
      ; This should be `(:feature (:not :clasp) :ironclad)` but some distributions still don't have

@@ -157,7 +157,7 @@
   (complete-package (fragment-value frag) (fragment-start frag) (fragment-end frag)))
 
 
-(defmethod jupyter:complete-code ((k kernel) code cursor-pos)
+(defun do-complete-code (code cursor-pos)
   (let* ((matches (complete-fragment (locate-fragment code (1- cursor-pos))))
          (start (apply #'min (or (mapcar (lambda (match)
                                            (getf match :start))
@@ -182,6 +182,24 @@
         :key (lambda (match) (getf match :text)))
       start
       end)))
+
+
+(defun do-indent-code (code cursor-pos)
+  (when (zerop (hash-table-count cl-indentify:*indent-templates*))
+    (cl-indentify:load-default-templates)
+    (cl-indentify:load-user-templates))
+  (values
+    (list (list :text (with-output-to-string (output-stream)
+                        (with-input-from-string (input-stream code)
+                          (cl-indentify:indentify input-stream output-stream)))))
+    0
+    (length code)))
+
+
+(defmethod jupyter:complete-code ((k kernel) code cursor-pos)
+  (if (position (char code (1- cursor-pos)) "()")
+    (do-indent-code code cursor-pos)
+    (do-complete-code code cursor-pos)))
 
 
 (defmethod jupyter:code-is-complete ((k kernel) code)
