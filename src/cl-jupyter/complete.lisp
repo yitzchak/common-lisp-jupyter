@@ -185,13 +185,11 @@
 
 
 (defun do-indent-code (code cursor-pos)
-  (when (zerop (hash-table-count cl-indentify:*indent-templates*))
-    (cl-indentify:load-default-templates)
-    (cl-indentify:load-user-templates))
+  (indentify:initialize-templates)
   (values
     (list (list :text (with-output-to-string (output-stream)
                         (with-input-from-string (input-stream code)
-                          (cl-indentify:indentify input-stream output-stream)))))
+                          (indentify:indentify input-stream output-stream)))))
     0
     (length code)))
 
