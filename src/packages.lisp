@@ -35,6 +35,9 @@
     #:svg
     #:svg-file
     #:text
+    ; matches
+    #:match-set-add
+    #:make-offset-match-set
     ; kernel
     #:*page-output*
     #:clear

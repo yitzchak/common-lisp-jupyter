@@ -89,6 +89,7 @@
              (:file "toggle-button")
              (:file "valid")))
          (:file "history")
+         (:file "matches")
          (:file "kernel")
          (:file "installer")
          (:module cl-jupyter

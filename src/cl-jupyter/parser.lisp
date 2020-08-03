@@ -133,10 +133,10 @@
 
 
 (defun read-fragment (stream)
-  (ignore-errors
+  ;(ignore-errors
     (handler-bind
         ((error #'eclector.base:recover))
-      (eclector.parse-result:read (make-instance 'my-client) stream nil))))
+      (eclector.parse-result:read (make-instance 'my-client) stream nil)));)
 
 
 (defun find-fragment (frag pos)

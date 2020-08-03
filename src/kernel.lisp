@@ -191,12 +191,11 @@
 
 (defmethod inspect-code (kernel code cursor-pos detail-level))
 
-(defgeneric complete-code (kernel code cursor-pos)
-  (:documentation "Complete code at cursor-pos. Successful completion should
-  return three values, first a list of match plists with the identifiers :text and :type, then the
-  cursor start position and finally the cursor end position."))
+(defgeneric complete-code (kernel match-set code cursor-pos)
+  (:documentation "Complete code at cursor-pos. Successful matches should be added to match-set
+  via match-set-add."))
 
-(defmethod complete-code (kernel code cursor-pos))
+(defmethod complete-code (kernel match-set code cursor-pos))
 
 ;; Start all channels.
 (defmethod start ((k kernel))
@@ -472,7 +471,8 @@
               ("file_extension" file-extension)
               ("pygments_lexer" pygments-lexer)
               ("codemirror_mode" codemirror-mode))))
-      :parent msg))))
+      :parent msg)))
+  t)
 
 #|
 
@@ -574,7 +574,8 @@
           (send-inspect-reply-error shell msg ename evalue))
         (send-inspect-reply-ok shell msg
           (let ((*package* package))
-            (render result)))))))
+            (render result))))))
+  t)
 
 #|
 
@@ -587,29 +588,25 @@
   (with-slots (shell package) kernel
     (let* ((content (message-content msg))
            (code (json-getf content "code"))
-           (cursor-pos (json-getf content "cursor_pos")))
-      (multiple-value-bind (result start end)
-                           (let ((*package* package))
-                              (complete-code kernel code cursor-pos))
-        (cond
-          ((eval-error-p result)
-            (with-slots (ename evalue) result
-              (send-complete-reply-error shell msg ename evalue)))
-          (result
-            (send-complete-reply-ok shell msg
-                                    (mapcar (lambda (match)
-                                              (getf match :text))
-                                            result)
-                                    start end
-                                    (json-new-obj
-                                      ("_jupyter_types_experimental" (mapcan (lambda (match)
-                                                                               (when (getf match :type)
-                                                                                 (list (json-new-obj
-                                                                                         ("text" (getf match :text))
-                                                                                         ("type" (getf match :type))))))
-                                                                             result)))))
-          (t
-            (send-complete-reply-ok shell msg nil cursor-pos cursor-pos)))))))
+           (cursor-pos (json-getf content "cursor_pos"))
+           (match-set (make-match-set :start cursor-pos :end cursor-pos :code code))
+           (result (let ((*package* package))
+                     (complete-code kernel match-set code cursor-pos))))
+      (if (eval-error-p result)
+        (with-slots (ename evalue) result
+          (send-complete-reply-error shell msg ename evalue))
+        (send-complete-reply-ok shell msg
+                                (mapcar #'match-text (match-set-matches match-set))
+                                (match-set-start match-set)
+                                (match-set-end match-set)
+                                (json-new-obj
+                                  ("_jupyter_types_experimental" (mapcan (lambda (match)
+                                                                           (when (match-type match)
+                                                                             (list (json-new-obj
+                                                                                     ("text" (match-text match))
+                                                                                     ("type" (match-type match))))))
+                                                                         (match-set-matches match-set))))))))
+  t)
 
 
 (defun handle-comm-info-request (kernel msg)
@@ -697,7 +694,8 @@
                        (second item)
                        (list (third item) :null)))
             results)
-          results)))))
+          results))))
+          t)
 
 (defun send-result (result)
   "Send a result either as display data or an execute result."
