@@ -1,6 +1,35 @@
 (in-package #:common-lisp-jupyter)
 
 
+(defparameter +clhs-map+ "http://www.lispworks.com/documentation/HyperSpec/Data/Map_Sym.txt")
+
+
+(defmethod multilang-documentation:canonicalize-doctype ((name symbol) (type (eql :clhs)))
+  (cons name :clhs))
+
+
+(defun load-clhs-map ()
+  (handler-case
+      (do* ((stream (dex:get +clhs-map+ :want-stream t))
+            (name (read-line stream nil) (read-line stream nil))
+            (link (read-line stream nil) (read-line stream nil)))
+           ((or (null name) (null link)))
+        (setf (multilang-documentation:documentation (find-symbol name 'common-lisp) :clhs)
+              (quri:merge-uris (quri:uri +clhs-map+) (quri:uri link))))
+    (dex:http-request-bad-request ())
+    (dex:http-request-failed ())))
+
+
+(defgeneric get-references (object)
+  (:documentation "Get reference links for object")
+  (:method (object)))
+
+
+(defmethod get-references ((object symbol))
+  (when (eql :external (nth-value 1 (find-symbol (symbol-name object) 'common-lisp)))
+    (list (cons "CLHS" (multilang-documentation:documentation symbol 'clhs)))))
+
+
 (defgeneric inspect-fragment (stream frag detail-level)
   (:method (stream frag detail-level)
     (declare (ignore stream frag detail-level))))
