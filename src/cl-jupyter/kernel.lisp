@@ -25,6 +25,13 @@
                   ("Common Lisp HyperSpec" . "http://www.lispworks.com/documentation/HyperSpec/Front/index.htm"))))
 
 
+(defmethod jupyter:start :after ((k kernel))
+  (bordeaux-threads:make-thread
+    (lambda ()
+      (jupyter:inform :info k "Loading CLHS map")
+      (load-clhs-map))))
+
+
 (defun my-read (&optional input-stream (eof-error-p t) eof-value recursive-p)
   (jupyter:handling-errors
     (read input-stream eof-error-p eof-value recursive-p)))

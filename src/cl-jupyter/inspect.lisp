@@ -1,7 +1,8 @@
 (in-package #:common-lisp-jupyter)
 
 
-(defparameter +clhs-map+ "http://www.lispworks.com/documentation/HyperSpec/Data/Map_Sym.txt")
+(defparameter +clhs-map-root+ "http://www.lispworks.com/documentation/HyperSpec/Data/")
+(defparameter +clhs-map-name+ "Map_Sym.txt")
 
 
 (defmethod multilang-documentation:canonicalize-doctype ((name symbol) (type (eql :clhs)))
@@ -10,24 +11,21 @@
 
 (defun load-clhs-map ()
   (handler-case
-      (do* ((stream (dex:get +clhs-map+ :want-stream t))
-            (name (read-line stream nil) (read-line stream nil))
-            (link (read-line stream nil) (read-line stream nil)))
-           ((or (null name) (null link)))
-        (setf (multilang-documentation:documentation (find-symbol name 'common-lisp) :clhs)
-              (quri:merge-uris (quri:uri +clhs-map+) (quri:uri link))))
+      (let ((stream (dex:get (quri:merge-uris +clhs-map-name+ +clhs-map-root+) :want-stream t)))
+        (unwind-protect
+            (do* ((name (read-line stream nil) (read-line stream nil))
+                  (link (read-line stream nil) (read-line stream nil))
+                  (sym (when name
+                         (find-symbol name 'common-lisp))
+                       (when name
+                         (find-symbol name 'common-lisp))))
+                 ((or (null name) (null link)))
+              (when sym
+                (setf (multilang-documentation:documentation* sym :clhs :en)
+                      (quri:render-uri (quri:merge-uris link +clhs-map-root+)))))
+          (close stream)))
     (dex:http-request-bad-request ())
     (dex:http-request-failed ())))
-
-
-(defgeneric get-references (object)
-  (:documentation "Get reference links for object")
-  (:method (object)))
-
-
-(defmethod get-references ((object symbol))
-  (when (eql :external (nth-value 1 (find-symbol (symbol-name object) 'common-lisp)))
-    (list (cons "CLHS" (multilang-documentation:documentation symbol 'clhs)))))
 
 
 (defgeneric inspect-fragment (stream frag detail-level)
@@ -57,40 +55,40 @@
   (format stream "~%~%# ~/mdf:text/ \\[symbol\\]" sym)
   (when (boundp sym)
     (format stream "~%~%## ~:[Dynamic~;Constant~] Variable~@[~%~%~:/mdf:text/~]~%~%~@/mdf:code/"
-                   (constantp sym)
-                   (documentation sym 'variable)
-                   (symbol-value sym)))
+            (constantp sym)
+            (documentation sym 'variable)
+            (symbol-value sym)))
   (when (fboundp sym)
     (format stream "~%~%## ~A~@[~%~%~:/mdf:text/~]~%~%~@/mdf:code/"
-                   (cond
-                     ((special-operator-p sym)
-                       "Special")
-                     ((macro-function sym)
-                       "Macro")
-                     ((typep (fdefinition sym) 'standard-generic-function)
-                       "Generic Function")
-                     (t
-                       "Function"))
-                   (documentation sym 'function)
-                   (cons sym (lambda-list sym))))
+            (cond
+              ((special-operator-p sym)
+                "Special")
+              ((macro-function sym)
+                "Macro")
+              ((typep (fdefinition sym) 'standard-generic-function)
+                "Generic Function")
+              (t
+                "Function"))
+            (documentation sym 'function)
+            (cons sym (lambda-list sym))))
   (when-let ((cls (find-class sym nil)))
     (format stream "~%~%## ~:[Class~;Structure~]~@[~%~%~:/mdf:text/~]~%~%### Precedence List~%~%~{~@/mdf:text/~^, ~}"
-                   (subtypep cls (find-class 'structure-object))
-                   (documentation sym 'type)
-                   (mapcar #'class-name (closer-mop:class-precedence-list cls)))
+            (subtypep cls (find-class 'structure-object))
+            (documentation sym 'type)
+            (mapcar #'class-name (closer-mop:class-precedence-list cls)))
     (when (closer-mop:class-slots cls)
       (format stream "~%~%### Slots~%")
       (dolist (slot (closer-mop:class-slots cls))
         (format stream "~%- ~/mdf:text/~@[ \\[~/mdf:text/\\]~]~@[ &mdash; ~:/mdf:text/~]~{~%    - :initarg ~/mdf:text/~}~@[~%    - :allocation ~/mdf:text/~]"
-                       (closer-mop:slot-definition-name slot)
-                       (unless (eql t (closer-mop:slot-definition-type slot))
-                         (closer-mop:slot-definition-type slot))
-                       (if (listp (documentation slot t))
-                         (first (documentation slot t))
-                         (documentation slot t))
-                       (closer-mop:slot-definition-initargs slot)
-                       (unless (eql :instance (closer-mop:slot-definition-allocation slot))
-                         (closer-mop:slot-definition-allocation slot)))))
+                (closer-mop:slot-definition-name slot)
+                (unless (eql t (closer-mop:slot-definition-type slot))
+                  (closer-mop:slot-definition-type slot))
+                (if (listp (documentation slot t))
+                  (first (documentation slot t))
+                  (documentation slot t))
+                (closer-mop:slot-definition-initargs slot)
+                (unless (eql :instance (closer-mop:slot-definition-allocation slot))
+                  (closer-mop:slot-definition-allocation slot)))))
     (when-let ((methods (find-methods cls)))
       (format stream "~%~%### Methods~%")
       (dolist (method methods)
@@ -102,7 +100,9 @@
                   (documentation method t)
                   (if (listp name)
                     `(setf (,(second name) ,@(cdr lambda-list)) ,(first lambda-list))
-                    `(,name ,@lambda-list))))))))
+                    `(,name ,@lambda-list)))))))
+  (when-let ((clhs-link (multilang-documentation:documentation sym :clhs)))
+    (format stream "~%~%### References~%~%1. [CLHS](~A)" clhs-link)))
 
 
 (defun inspect-symbol (stream name package statuses detail-level)
