@@ -35,7 +35,7 @@
 
 (defun inspect-package (stream name detail-level)
   (when-let ((pkg (find-package name)))
-    (format stream "# ~:/mdf:text/ [package]~@[~%~%~:/mdf:text/~]~@[~%~%## Nicknames~%~%~(~{~@/mdf:text/~^, ~}~)~]"
+    (format stream "# ~:/mdf:text/ [package]~@[~%~%~:/mdf:pre/~]~@[~%~%## Nicknames~%~%~(~{~@/mdf:text/~^, ~}~)~]"
                     (package-name pkg)
                     (documentation pkg t)
                     (package-nicknames pkg))
@@ -51,15 +51,30 @@
 (defun inspect-method (stream name package statuses detail-level))
 
 
-(defun do-inspect-symbol (stream sym detail-level)
-  (format stream "~%~%# ~/mdf:text/ \\[symbol\\]" sym)
+(defun inspect-symbol-system (stream sym detail-level)
+  #+asdf3.1
+  (when-let* ((system-name (asdf/package-inferred-system::package-name-system (package-name (symbol-package sym))))
+              (system (asdf:find-system system-name nil)))
+    (if (asdf:system-homepage system)
+      (format stream "~%~%From system [~A](~A)" system-name (asdf:system-homepage system))
+      (format stream "~%~%From system ~A" system-name))
+    (when-let ((license (asdf:system-license system)))
+      (format stream " (~A)" license))
+    (when-let ((author (asdf:system-author system)))
+      (format stream " by ~A" author))))
+
+
+(defun inspect-symbol-variable (stream sym detail-level)
   (when (boundp sym)
-    (format stream "~%~%## ~:[Dynamic~;Constant~] Variable~@[~%~%~:/mdf:text/~]~%~%~@/mdf:code/"
+    (format stream "~%~%## ~:[Dynamic~;Constant~] Variable~@[~%~%~:/mdf:pre/~]~%~%~@/mdf:code/"
             (constantp sym)
             (documentation sym 'variable)
-            (symbol-value sym)))
+            (symbol-value sym))))
+
+
+(defun inspect-symbol-function (stream sym detail-level)
   (when (fboundp sym)
-    (format stream "~%~%## ~A~@[~%~%~:/mdf:text/~]~%~%~@/mdf:code/"
+    (format stream "~%~%## ~A~@[~%~%~:/mdf:pre/~%~%~]~%~%### Syntax~%~%~@/mdf:code/"
             (cond
               ((special-operator-p sym)
                 "Special")
@@ -70,9 +85,12 @@
               (t
                 "Function"))
             (documentation sym 'function)
-            (cons sym (lambda-list sym))))
+            (cons sym (lambda-list sym)))))
+
+
+(defun inspect-symbol-class (stream sym detail-level)
   (when-let ((cls (find-class sym nil)))
-    (format stream "~%~%## ~:[Class~;Structure~]~@[~%~%~:/mdf:text/~]~%~%### Precedence List~%~%~{~@/mdf:text/~^, ~}"
+    (format stream "~%~%## ~:[Class~;Structure~]~@[~%~%~:/mdf:pre/~]~%~%### Precedence List~%~%~{~@/mdf:text/~^, ~}"
             (subtypep cls (find-class 'structure-object))
             (documentation sym 'type)
             (mapcar #'class-name (closer-mop:class-precedence-list cls)))
@@ -100,9 +118,17 @@
                   (documentation method t)
                   (if (listp name)
                     `(setf (,(second name) ,@(cdr lambda-list)) ,(first lambda-list))
-                    `(,name ,@lambda-list)))))))
+                    `(,name ,@lambda-list))))))))
+
+
+(defun do-inspect-symbol (stream sym detail-level)
+  (format stream "~%~%# ~/mdf:text/ \\[symbol\\]" sym)
+  (inspect-symbol-system stream sym detail-level)
   (when-let ((clhs-link (multilang-documentation:documentation sym :clhs)))
-    (format stream "~%~%### References~%~%1. [CLHS](~A)" clhs-link)))
+    (format stream "~%~%See also: [CLHS](~A)" clhs-link))
+  (inspect-symbol-variable stream sym detail-level)
+  (inspect-symbol-function stream sym detail-level)
+  (inspect-symbol-class stream sym detail-level))
 
 
 (defun inspect-symbol (stream name package statuses detail-level)

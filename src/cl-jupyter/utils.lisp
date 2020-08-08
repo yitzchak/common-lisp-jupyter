@@ -1,20 +1,23 @@
 (in-package #:common-lisp-jupyter)
 
 
+#+sbcl (require :sb-introspect)
+
+
 (defun lambda-list (sym)
   #+ccl
     (ccl:arglist sym)
-  #-ccl
-    (let ((func (or (macro-function sym)
-                    (fdefinition sym))))
-      #+(or clasp ecl)
-        (ext:function-lambda-list func)
-      #+lispworks
-        (lw:function-lambda-list func)
-      #+sbcl
-        (sb-introspect:function-lambda-list func)
-      #-(or clasp ecl lispworks sbcl)
-        (second (function-lambda-expression func))))
+  #+clisp
+    (system::arglist sym)
+  #+(or clasp ecl)
+    (ext:function-lambda-list sym)
+  #+sbcl
+    (sb-introspect:function-lambda-list sym)
+  #+lispworks
+    (lispworks:function-lambda-list sym)
+  #-(or ccl clisp clasp ecl lispworks sbcl)
+    (second (function-lambda-expression (or (macro-function sym)
+                                            (fdefinition sym)))))
 
 
 (defun visible-symbol-p (sym)
@@ -63,13 +66,13 @@
       ((null lambda-list) (nreverse specialized-lambda-list))
     (cond
       ((and specializers
-            (eql t (class-name (car specializers))))
-        (push (car lambda-list)
+            (typep (car specializers) 'closer-mop:eql-specializer))
+        (push (list (car lambda-list)
+                    (list 'eql (closer-mop:eql-specializer-object (car specializers))))
               specialized-lambda-list))
       ((and specializers
-            (subtypep (car specializers) 'closer-mop:eql-specializer))
-        (push (list (car lambda-list)
-                    (list 'eql (closer-mop:eql-specializer-object	(var specializers))))
+            (eql t (class-name (car specializers))))
+        (push (car lambda-list)
               specialized-lambda-list))
       (specializers
         (push (list (car lambda-list) (class-name (car specializers)))

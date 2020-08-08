@@ -1,6 +1,5 @@
 (asdf:defsystem #:common-lisp-jupyter
   :description "A Common Lisp kernel for Jupyter along with a library for building Jupyter kernels."
-  :version "0.1"
   :author "Tarn W. Burton"
   :license "MIT"
   :depends-on
@@ -106,4 +105,17 @@
              (:file "installer")
              (:file "overrides")
              (:file "ros-install")))
-         (:file "convert")))))
+         (:file "convert"))))
+  . #+asdf3
+      (:version "0.1"
+       :homepage "https://yitzchak.github.io/common-lisp-jupyter/"
+       :bug-tracker "https://github.com/yitzchak/common-lisp-jupyter/issues")
+    #-asdf3 ())
+
+
+#+asdf3.1
+  (asdf:register-system-packages "common-lisp-jupyter"
+                                 '(:jupyter :common-lisp-jupyter :jupyter-convert
+                                   :jupyter/markdown-formatter :jupyter-widgets))
+
+

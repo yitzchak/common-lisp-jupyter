@@ -22,7 +22,16 @@
     :pygments-lexer "common-lisp"
     :codemirror-mode "text/x-common-lisp"
     :help-links '(("Common Lisp Documentation" . "https://common-lisp.net/documentation")
-                  ("Common Lisp HyperSpec" . "http://www.lispworks.com/documentation/HyperSpec/Front/index.htm"))))
+                  ("Common Lisp HyperSpec" . "http://www.lispworks.com/documentation/HyperSpec/Front/index.htm")
+                  ("Practical Common Lisp" . "http://www.gigamonkeys.com/book/")
+                  ("The Common Lisp Cookbook" . "https://lispcookbook.github.io/cl-cookbook/")
+                  #+abcl ("ABCL Website" . "https://common-lisp.net/project/armedbear/")
+                  #+ccl ("CCL Website" . "https://ccl.clozure.com/")
+                  #+clasp ("CLASP Website" . "https://github.com/clasp-developers/clasp")
+                  #+clisp ("CLISP Website" . "https://clisp.sourceforge.io/")
+                  #+cmucl ("CMUCL Website" . "https://common-lisp.net/project/cmucl/")
+                  #+ecl ("ECL Website" . "https://common-lisp.net/project/ecl/")
+                  #+sbcl ("SBCL Website" . "http://sbcl.org/"))))
 
 
 (defmethod jupyter:start :after ((k kernel))

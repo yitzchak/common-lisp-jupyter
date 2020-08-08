@@ -96,6 +96,7 @@
   (:export
     #:code
     #:*indent-level*
+    #:pre
     #:text))
 
 
