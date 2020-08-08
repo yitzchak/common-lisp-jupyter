@@ -11,7 +11,7 @@
 
 (defun load-clhs-map ()
   (handler-case
-      (let ((stream (dex:get (quri:merge-uris +clhs-map-name+ +clhs-map-root+) :want-stream t)))
+      (let ((stream (drakma:http-request (puri:merge-uris +clhs-map-name+ +clhs-map-root+) :want-stream t)))
         (unwind-protect
             (do* ((name (read-line stream nil) (read-line stream nil))
                   (link (read-line stream nil) (read-line stream nil))
@@ -22,10 +22,9 @@
                  ((or (null name) (null link)))
               (when sym
                 (setf (multilang-documentation:documentation* sym :clhs :en)
-                      (quri:render-uri (quri:merge-uris link +clhs-map-root+)))))
+                      (puri:render-uri (puri:merge-uris link +clhs-map-root+) nil))))
           (close stream)))
-    (dex:http-request-bad-request ())
-    (dex:http-request-failed ())))
+    (drakma:drakma-error ())))
 
 
 (defgeneric inspect-fragment (stream frag detail-level)

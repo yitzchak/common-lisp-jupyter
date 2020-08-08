@@ -9,7 +9,7 @@
      :cl-base64
      :cl-indentify
      :closer-mop
-     :dexador
+     :drakma
      :dissect
      ; This should be `(:feature (:not :clasp) :ironclad)` but some distributions still don't have
      ; ASDF 3
@@ -19,7 +19,7 @@
      :jsown
      :multilang-documentation
      :pzmq
-     :quri
+     :puri
      :trivial-garbage
      :trivial-gray-streams
      :trivial-mimes)
