@@ -679,6 +679,11 @@
   (inspect-package stream (fragment-value frag) detail-level))
 
 
+(defmethod inspect-fragment (stream (frag fragment) detail-level)
+  (when (fragment-children frag)
+    (inspect-fragment stream (first (fragment-children frag)) detail-level)))
+
+
 (defmethod jupyter:inspect-code ((k kernel) code cursor-pos detail-level)
   (jupyter:make-inline-result
     (with-output-to-string (stream)

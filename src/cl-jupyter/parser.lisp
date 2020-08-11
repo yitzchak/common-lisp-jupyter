@@ -147,7 +147,7 @@
     ((null (fragment-children frag))
       (values frag t))
     (t
-      (dolist (child (fragment-children frag) (values nil t))
+      (dolist (child (fragment-children frag) (values frag t))
         (let ((fc (find-fragment child pos)))
           (when fc
             (return (values fc t))))))))

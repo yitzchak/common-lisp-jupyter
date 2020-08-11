@@ -97,6 +97,15 @@
       (jupyter:match-set-add match-set (format nil "~(~A~)~:[~;:~]" name include-marker) start end :type "package"))))
 
 
+(defun complete-pathname (match-set partial-name start end)
+  (dolist (path (directory (concatenate 'string partial-name "*")))
+    (jupyter:match-set-add
+      match-set
+      (write-to-string path)
+      start end
+      :type "pathname")))
+
+
 (defmethod complete-fragment (match-set (frag symbol-name-fragment))
   (complete-fragment match-set (fragment-parent frag)))
 
@@ -134,6 +143,12 @@
 
 (defmethod complete-fragment (match-set (frag package-name-fragment))
   (complete-package match-set (fragment-value frag) (fragment-start frag) (fragment-end frag)))
+
+
+(defmethod complete-fragment (match-set (frag fragment))
+  (when (and (fragment-parent frag)
+             (pathnamep (fragment-value (fragment-parent frag))))
+    (complete-pathname match-set (fragment-value frag) (fragment-start frag) (fragment-end frag))))
 
 
 (defun do-complete-code (match-set code cursor-pos)
