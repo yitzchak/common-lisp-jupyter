@@ -97,13 +97,27 @@
       (jupyter:match-set-add match-set (format nil "~(~A~)~:[~;:~]" name include-marker) start end :type "package"))))
 
 
-(defun complete-pathname (match-set partial-name start end)
-  (dolist (path (directory (concatenate 'string partial-name "*")))
-    (jupyter:match-set-add
-      match-set
-      (write-to-string path)
-      start end
-      :type "pathname")))
+(defun complete-pathname (match-set partial-name start end &optional include-sharpsign-p)
+  (let* ((path (pathname partial-name))
+         (dir (make-pathname :host (pathname-host path)
+                             :device (pathname-device path)
+                             :directory  (pathname-directory path)
+                             :name :wild
+                             :type :wild))
+         (file (file-namestring path)))
+    (dolist (d (directory dir))
+      (let* ((part (if (zerop (length (file-namestring d)))
+                    (make-pathname :directory (list :relative (car (last (pathname-directory d)))))
+                    (pathname (file-namestring d))))
+            (completed (merge-pathnames part (make-pathname :host (pathname-host path)
+                             :device (pathname-device path)
+                             :directory  (pathname-directory path)))))
+        (when (or (not file)
+                  (starts-with-subseq file (namestring part)))
+          (jupyter:match-set-add match-set
+                                 (string-right-trim "\"" (write-to-string (if include-sharpsign-p completed (namestring completed))))
+                                 start end
+                                 :type "pathname"))))))
 
 
 (defmethod complete-fragment (match-set (frag symbol-name-fragment))
@@ -146,9 +160,9 @@
 
 
 (defmethod complete-fragment (match-set (frag fragment))
-  (when (and (fragment-parent frag)
-             (pathnamep (fragment-value (fragment-parent frag))))
-    (complete-pathname match-set (fragment-value frag) (fragment-start frag) (fragment-end frag))))
+  (when (and frag
+             (stringp (fragment-value frag)))
+    (complete-pathname match-set (fragment-value frag) (fragment-start frag) (fragment-end frag) nil)))
 
 
 (defun do-complete-code (match-set code cursor-pos)
