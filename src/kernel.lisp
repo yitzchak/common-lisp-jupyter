@@ -166,7 +166,11 @@
    (comms
      :initform (make-hash-table :test #'equal)
      :reader kernel-comms
-     :documentation "Currently open comms."))
+     :documentation "Currently open comms.")
+   (control-thread
+     :accessor kernel-control-thread
+     :initform nil
+     :documentation "Control thread"))
   (:documentation "Kernel state representation."))
 
 (defgeneric evaluate-code (kernel code)
@@ -288,12 +292,16 @@
     (start control)
     (start history)
     (send-status iopub "starting")
-    (send-status iopub "idle")))
+    (send-status iopub "idle")
+    (setf (kernel-control-thread k)
+          (bordeaux-threads:make-thread (lambda ()
+                                          (run-control k))))))
 
 ;; Stop all channels and destroy the control.
 (defmethod stop ((k kernel))
   (with-slots (sink ctx hb iopub shell stdin control history mac name) k
     (inform :info k "Stopping ~A kernel" name)
+    (bordeaux-threads:destroy-thread (kernel-control-thread k))
     (stop hb)
     (stop iopub)
     (stop shell)
@@ -304,6 +312,20 @@
     (stop sink)
     (pzmq:ctx-destroy ctx)))
 
+
+(defun run-control (kernel)
+  (handler-case
+      (prog (msg)
+       read-next
+        (inform :info kernel "Waiting for control message")
+        (setq msg (message-recv (kernel-control kernel)))
+        (inform :info kernel "Recieved ~A" (message-content msg))
+        (when (handle-control-message kernel msg)
+          (go read-next)))
+    (error (err)
+      (inform :err kernel (dissect:present err nil)))))
+
+
 (defun run-kernel (kernel-class connection-file)
   "Run a kernel based on a kernel class and a connection file."
   (unless (stringp connection-file)
@@ -313,13 +335,15 @@
                                   :connection-file connection-file))
     (initially
       (start kernel))
-    (for msg = (dequeue (kernel-request-queue kernel)))
+    (for msg = (message-recv (kernel-shell kernel)))
     (send-status-update (kernel-iopub kernel) msg "busy")
-    (while (handle-message kernel msg))
+    (while (handle-shell-message kernel msg))
     (after-each
       (send-status-update (kernel-iopub kernel) msg "idle"))
+    (while (bordeaux-threads:thread-alive-p (kernel-control-thread kernel)))
     (finally-protected
       (stop kernel))))
+
 
 (defun make-eval-error (err msg &key (quit nil))
   (make-error-result (symbol-name (class-name (class-of err))) msg :quit quit))
@@ -415,11 +439,34 @@
 
 #|
 
-### Message type: Handle kernel messages ###
+### Message type: Handle control messages ###
 
 |#
 
-(defun handle-message (kernel msg)
+(defun handle-control-message (kernel msg)
+  (let ((msg-type (format nil "~A~@[/~A~]" (json-getf (message-header msg) "msg_type")
+                                           (json-getf (message-content msg) "command")))
+        (*kernel* kernel)
+        (*message* msg))
+    (cond
+      ((equal msg-type "shutdown_request")
+        (send-status-update (kernel-iopub kernel) msg "busy")
+        (handle-shutdown-request kernel msg)
+        (send-status-update (kernel-iopub kernel) msg "idle"))
+      (t
+        (send-status-update (kernel-iopub kernel) msg "busy")
+        (inform :warn kernel "Ignoring ~A message since there is no appropriate handler." msg-type)
+        (send-status-update (kernel-iopub kernel) msg "idle")
+        t))))
+
+
+#|
+
+### Message type: Handle shell messages ###
+
+|#
+
+(defun handle-shell-message (kernel msg)
   (let ((msg-type (json-getf (message-header msg) "msg_type"))
         (*kernel* kernel)
         (*message* msg))
@@ -434,7 +481,6 @@
       ("inspect_request" (handle-inspect-request kernel msg))
       ("is_complete_request" (handle-is-complete-request kernel msg))
       ("kernel_info_request" (handle-kernel-info-request kernel msg))
-      ("shutdown_request" (handle-shutdown-request kernel msg))
       (otherwise
         (inform :warn kernel "Ignoring ~A message since there is no appropriate handler." msg-type)
         t))))

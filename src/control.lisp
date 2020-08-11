@@ -10,16 +10,6 @@
   ()
   (:documentation "Control channel class."))
 
-(defmethod start :after ((instance control-channel))
-  (setf (channel-thread instance)
-        (bordeaux-threads:make-thread
-          (lambda ()
-            (inform :info instance "Starting thread")
-            (do ((msg (message-recv instance) (message-recv instance)))
-                (nil)
-              (inform :info instance "Received ~A message" (json-getf (message-header msg) "msg_type"))
-              (enqueue (channel-request-queue instance) msg :high-priority t))))))
-
 #|
 
 # Message sending functions
