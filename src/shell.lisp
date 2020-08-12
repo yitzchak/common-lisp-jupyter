@@ -10,16 +10,6 @@
   ()
   (:documentation "SHELL channel class."))
 
-(defmethod start :after ((instance shell-channel))
-  (setf (channel-thread instance)
-        (bordeaux-threads:make-thread
-          (lambda ()
-            (inform :info instance "Starting thread")
-            (do ((msg (message-recv instance) (message-recv instance)))
-                (nil)
-              (inform :info instance "Received ~A message" (json-getf (message-header msg) "msg_type"))
-              (enqueue (channel-request-queue instance) msg))))))
-
 #|
 
 # Message sending functions

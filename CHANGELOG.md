@@ -7,6 +7,7 @@ of how the versioning scheme that this project does not use is clearly superior
 to random natural numbers and how incrementing the minor version number
 indicates backward compatible changes, unless it does not.
 
+- 2020-08-12 — Add support for interrupt_request
 - 2020-07-29 — Improve code inspection and completion
 - 2020-07-19 — Add CLISP support
 - 2020-06-19 — Add basic debugger and handle errors in comm messages.

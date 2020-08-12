@@ -224,7 +224,8 @@
             (json-new-obj
               ("argv" (command-line instance))
               ("display_name" display-name)
-              ("language" language)))
+              ("language" language)
+              ("interrupt_method" "message")))
           stream)))))
 
 (defun install-resources (instance)

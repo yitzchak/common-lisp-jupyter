@@ -166,7 +166,16 @@
    (comms
      :initform (make-hash-table :test #'equal)
      :reader kernel-comms
-     :documentation "Currently open comms."))
+     :documentation "Currently open comms.")
+   (control-thread
+     :accessor kernel-control-thread
+     :initarg :control-thread
+     :initform nil
+     :documentation "Control thread")
+   (shell-thread
+     :accessor kernel-shell-thread
+     :initform nil
+     :documentation "Shell thread"))
   (:documentation "Kernel state representation."))
 
 (defgeneric evaluate-code (kernel code)
@@ -288,12 +297,16 @@
     (start control)
     (start history)
     (send-status iopub "starting")
-    (send-status iopub "idle")))
+    (send-status iopub "idle")
+    (setf (kernel-shell-thread k)
+          (bordeaux-threads:make-thread (lambda ()
+                                          (run-shell k))))))
 
 ;; Stop all channels and destroy the control.
 (defmethod stop ((k kernel))
   (with-slots (sink ctx hb iopub shell stdin control history mac name) k
     (inform :info k "Stopping ~A kernel" name)
+    (bordeaux-threads:destroy-thread (kernel-shell-thread k))
     (stop hb)
     (stop iopub)
     (stop shell)
@@ -304,22 +317,45 @@
     (stop sink)
     (pzmq:ctx-destroy ctx)))
 
+
+(defun run-shell (kernel)
+  (catch 'kernel-shutdown
+    (prog (msg)
+     read-next
+      (catch 'kernel-interrupt
+        (progn
+          (setq msg (message-recv (kernel-shell kernel)))
+          (unless (handle-shell-message kernel msg)
+            (bordeaux-threads:interrupt-thread
+              (kernel-control-thread kernel)
+              (lambda ()
+                (throw 'kernel-shutdown nil)))
+            (return))))
+      (go read-next))))
+
+
+(defun run-control (kernel)
+  (catch 'kernel-shutdown
+    (prog (msg)
+     read-next
+      (inform :info kernel "Waiting for control message")
+      (setq msg (message-recv (kernel-control kernel)))
+      (when (handle-control-message kernel msg)
+        (go read-next)))))
+
+
 (defun run-kernel (kernel-class connection-file)
   "Run a kernel based on a kernel class and a connection file."
   (unless (stringp connection-file)
     (error "Wrong connection file argument (expecting a string)"))
-  (iter
-    (with kernel = (make-instance kernel-class
-                                  :connection-file connection-file))
-    (initially
-      (start kernel))
-    (for msg = (dequeue (kernel-request-queue kernel)))
-    (send-status-update (kernel-iopub kernel) msg "busy")
-    (while (handle-message kernel msg))
-    (after-each
-      (send-status-update (kernel-iopub kernel) msg "idle"))
-    (finally-protected
+  (let ((kernel (make-instance kernel-class
+                               :connection-file connection-file
+                               :control-thread (bordeaux-threads:current-thread))))
+    (start kernel)
+    (unwind-protect
+        (run-control kernel)
       (stop kernel))))
+
 
 (defun make-eval-error (err msg &key (quit nil))
   (make-error-result (symbol-name (class-name (class-of err))) msg :quit quit))
@@ -387,6 +423,7 @@
      (serious-condition (err)
        (make-eval-error err (format nil "~A" err)))))
 
+
 (defmacro debugging-errors (&body body)
   `(if *debugger*
      (let ((*debugger-hook* #'my-debugger))
@@ -415,29 +452,68 @@
 
 #|
 
-### Message type: Handle kernel messages ###
+### Message type: Handle control messages ###
 
 |#
 
-(defun handle-message (kernel msg)
+(defun handle-control-message (kernel msg)
+  (let ((msg-type (format nil "~A~@[/~A~]" (json-getf (message-header msg) "msg_type")
+                          (json-getf (message-content msg) "command")))
+        (*kernel* kernel)
+        (*message* msg))
+    (unwind-protect
+        (progn
+          (send-status-update (kernel-iopub kernel) msg "busy")
+          (switch (msg-type :test #'equal)
+            ("interrupt_request"
+              (handle-interrupt-request kernel msg)
+              t)
+            ("shutdown_request"
+              (handle-shutdown-request kernel msg)
+              nil)
+            (otherwise
+              (inform :warn kernel "Ignoring ~A message since there is no appropriate handler." msg-type)
+              t)))
+      (send-status-update (kernel-iopub kernel) msg "idle"))))
+
+#|
+
+### Message type: Handle shell messages ###
+
+|#
+
+(defun handle-shell-message (kernel msg)
   (let ((msg-type (json-getf (message-header msg) "msg_type"))
         (*kernel* kernel)
         (*message* msg))
-    (switch (msg-type :test #'equal)
-      ("comm_close" (handle-comm-close kernel msg))
-      ("comm_info_request" (handle-comm-info-request kernel msg))
-      ("comm_msg" (handle-comm-message kernel msg))
-      ("comm_open" (handle-comm-open kernel msg))
-      ("complete_request" (handle-complete-request kernel msg))
-      ("execute_request" (handle-execute-request kernel msg))
-      ("history_request" (handle-history-request kernel msg))
-      ("inspect_request" (handle-inspect-request kernel msg))
-      ("is_complete_request" (handle-is-complete-request kernel msg))
-      ("kernel_info_request" (handle-kernel-info-request kernel msg))
-      ("shutdown_request" (handle-shutdown-request kernel msg))
-      (otherwise
-        (inform :warn kernel "Ignoring ~A message since there is no appropriate handler." msg-type)
-        t))))
+    (unwind-protect
+        (progn
+          (send-status-update (kernel-iopub kernel) msg "busy")
+          (switch (msg-type :test #'equal)
+            ("comm_close"
+              (handle-comm-close kernel msg))
+            ("comm_info_request"
+              (handle-comm-info-request kernel msg))
+            ("comm_msg"
+              (handle-comm-message kernel msg))
+            ("comm_open"
+              (handle-comm-open kernel msg))
+            ("complete_request"
+              (handle-complete-request kernel msg))
+            ("execute_request"
+              (handle-execute-request kernel msg))
+            ("history_request"
+              (handle-history-request kernel msg))
+            ("inspect_request"
+              (handle-inspect-request kernel msg))
+            ("is_complete_request"
+              (handle-is-complete-request kernel msg))
+            ("kernel_info_request"
+              (handle-kernel-info-request kernel msg))
+            (otherwise
+              (inform :warn kernel "Ignoring ~A message since there is no appropriate handler." msg-type)
+              t)))
+      (send-status-update (kernel-iopub kernel) msg "idle"))))
 
 #|
 
@@ -482,25 +558,27 @@
 
 (defun handle-execute-request (kernel msg)
   (inform :info kernel "Handling execute_request message")
-  (let ((code (json-getf (message-content msg) "code")))
-    (with-slots (execution-count history iopub package prompt-prefix prompt-suffix shell stdin input-queue)
-                kernel
+  (with-slots (execution-count history iopub package prompt-prefix prompt-suffix shell stdin input-queue)
+              kernel
+    (let* ((code (json-getf (message-content msg) "code"))
+           (results (list (make-error-result "interrupt" "Execution interrupted")))
+           (*payload* (make-array 16 :adjustable t :fill-pointer 0))
+           (*page-output* (make-string-output-stream))
+           (*query-io* (make-stdin-stream stdin msg))
+           (*standard-input* *query-io*)
+           (*error-output* (make-iopub-stream iopub msg "stderr"
+                                              prompt-prefix prompt-suffix))
+           (*standard-output* (make-iopub-stream iopub msg "stdout"
+                                                 prompt-prefix prompt-suffix))
+           (*debug-io* *standard-output*)
+           (*trace-output* *standard-output*))
       (setq execution-count (1+ execution-count))
       (add-cell history execution-count code)
-      (let* ((*payload* (make-array 16 :adjustable t :fill-pointer 0))
-             (*page-output* (make-string-output-stream))
-             (*query-io* (make-stdin-stream stdin msg))
-             (*standard-input* *query-io*)
-             (*error-output* (make-iopub-stream iopub msg "stderr"
-                                                prompt-prefix prompt-suffix))
-             (*standard-output* (make-iopub-stream iopub msg "stdout"
-                                                   prompt-prefix prompt-suffix))
-             (*debug-io* *standard-output*)
-             (*trace-output* *standard-output*)
-             (results (let* ((*package* package)
-                             (r (evaluate-code kernel code)))
-                        (setf package *package*)
-                        r)))
+      (unwind-protect
+          (setq results (let* ((*package* package)
+                               (r (evaluate-code kernel code)))
+                          (setf package *package*)
+                          r))
         (dolist (result results)
           (send-result result))
         ;broadcast the code to connected frontends
@@ -536,7 +614,23 @@
          (content (message-content msg))
          (restart (json-getf content "restart")))
     (send-shutdown-reply control msg restart)
+    (bordeaux-threads:interrupt-thread (kernel-shell-thread kernel) (lambda () (throw 'kernel-shutdown nil)))
     nil))
+
+#|
+
+### Message type: interrupt_request ###
+
+|#
+
+(defun handle-interrupt-request (kernel msg)
+  (inform :info kernel "Handling interrupt_request message")
+  (let* ((control (kernel-control kernel))
+         (content (message-content msg)))
+    (bordeaux-threads:interrupt-thread (kernel-shell-thread kernel) (lambda () (throw 'kernel-interrupt nil)))
+    (sleep 1)
+    (send-interrupt-reply control msg)
+    t))
 
 #|
 
