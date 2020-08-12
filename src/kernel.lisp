@@ -323,17 +323,14 @@
     (prog (msg)
      read-next
       (catch 'kernel-interrupt
-        (unwind-protect
-            (progn
-              (setq msg (message-recv (kernel-shell kernel)))
-              (send-status-update (kernel-iopub kernel) msg "busy")
-              (unless (handle-shell-message kernel msg)
-                (bordeaux-threads:interrupt-thread
-                  (kernel-control-thread kernel)
-                  (lambda ()
-                    (throw 'kernel-shutdown nil)))
-                (return)))
-          (send-status-update (kernel-iopub kernel) msg "idle")))
+        (progn
+          (setq msg (message-recv (kernel-shell kernel)))
+          (unless (handle-shell-message kernel msg)
+            (bordeaux-threads:interrupt-thread
+              (kernel-control-thread kernel)
+              (lambda ()
+                (throw 'kernel-shutdown nil)))
+            (return))))
       (go read-next))))
 
 
@@ -461,24 +458,23 @@
 
 (defun handle-control-message (kernel msg)
   (let ((msg-type (format nil "~A~@[/~A~]" (json-getf (message-header msg) "msg_type")
-                                           (json-getf (message-content msg) "command")))
+                          (json-getf (message-content msg) "command")))
         (*kernel* kernel)
         (*message* msg))
-    (cond
-      ((equal msg-type "interrupt_request")
-        (handle-interrupt-request kernel msg)
-        t)
-      ((equal msg-type "shutdown_request")
-        (send-status-update (kernel-iopub kernel) msg "busy")
-        (handle-shutdown-request kernel msg)
-        (send-status-update (kernel-iopub kernel) msg "idle")
-        nil)
-      (t
-        (send-status-update (kernel-iopub kernel) msg "busy")
-        (inform :warn kernel "Ignoring ~A message since there is no appropriate handler." msg-type)
-        (send-status-update (kernel-iopub kernel) msg "idle")
-        t))))
-
+    (unwind-protect
+        (progn
+          (send-status-update (kernel-iopub kernel) msg "busy")
+          (switch (msg-type :test #'equal)
+            ("interrupt_request"
+              (handle-interrupt-request kernel msg)
+              t)
+            ("shutdown_request"
+              (handle-shutdown-request kernel msg)
+              nil)
+            (otherwise
+              (inform :warn kernel "Ignoring ~A message since there is no appropriate handler." msg-type)
+              t)))
+      (send-status-update (kernel-iopub kernel) msg "idle"))))
 
 #|
 
@@ -490,20 +486,34 @@
   (let ((msg-type (json-getf (message-header msg) "msg_type"))
         (*kernel* kernel)
         (*message* msg))
-    (switch (msg-type :test #'equal)
-      ("comm_close" (handle-comm-close kernel msg))
-      ("comm_info_request" (handle-comm-info-request kernel msg))
-      ("comm_msg" (handle-comm-message kernel msg))
-      ("comm_open" (handle-comm-open kernel msg))
-      ("complete_request" (handle-complete-request kernel msg))
-      ("execute_request" (handle-execute-request kernel msg))
-      ("history_request" (handle-history-request kernel msg))
-      ("inspect_request" (handle-inspect-request kernel msg))
-      ("is_complete_request" (handle-is-complete-request kernel msg))
-      ("kernel_info_request" (handle-kernel-info-request kernel msg))
-      (otherwise
-        (inform :warn kernel "Ignoring ~A message since there is no appropriate handler." msg-type)
-        t))))
+    (unwind-protect
+        (progn
+          (send-status-update (kernel-iopub kernel) msg "busy")
+          (switch (msg-type :test #'equal)
+            ("comm_close"
+              (handle-comm-close kernel msg))
+            ("comm_info_request"
+              (handle-comm-info-request kernel msg))
+            ("comm_msg"
+              (handle-comm-message kernel msg))
+            ("comm_open"
+              (handle-comm-open kernel msg))
+            ("complete_request"
+              (handle-complete-request kernel msg))
+            ("execute_request"
+              (handle-execute-request kernel msg))
+            ("history_request"
+              (handle-history-request kernel msg))
+            ("inspect_request"
+              (handle-inspect-request kernel msg))
+            ("is_complete_request"
+              (handle-is-complete-request kernel msg))
+            ("kernel_info_request"
+              (handle-kernel-info-request kernel msg))
+            (otherwise
+              (inform :warn kernel "Ignoring ~A message since there is no appropriate handler." msg-type)
+              t)))
+      (send-status-update (kernel-iopub kernel) msg "idle"))))
 
 #|
 
@@ -619,9 +629,7 @@
          (content (message-content msg)))
     (bordeaux-threads:interrupt-thread (kernel-shell-thread kernel) (lambda () (throw 'kernel-interrupt nil)))
     (sleep 1)
-    (send-status-update (kernel-iopub kernel) msg "busy")
     (send-interrupt-reply control msg)
-    (send-status-update (kernel-iopub kernel) msg "idle")
     t))
 
 #|
