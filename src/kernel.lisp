@@ -169,11 +169,11 @@
      :documentation "Currently open comms.")
    (control-thread
      :accessor kernel-control-thread
+     :initarg :control-thread
      :initform nil
      :documentation "Control thread")
    (shell-thread
      :accessor kernel-shell-thread
-     :initarg :shell-thread
      :initform nil
      :documentation "Shell thread"))
   (:documentation "Kernel state representation."))
@@ -298,15 +298,15 @@
     (start history)
     (send-status iopub "starting")
     (send-status iopub "idle")
-    (setf (kernel-control-thread k)
+    (setf (kernel-shell-thread k)
           (bordeaux-threads:make-thread (lambda ()
-                                          (run-control k))))))
+                                          (run-shell k))))))
 
 ;; Stop all channels and destroy the control.
 (defmethod stop ((k kernel))
   (with-slots (sink ctx hb iopub shell stdin control history mac name) k
     (inform :info k "Stopping ~A kernel" name)
-    (bordeaux-threads:destroy-thread (kernel-control-thread k))
+    (bordeaux-threads:destroy-thread (kernel-shell-thread k))
     (stop hb)
     (stop iopub)
     (stop shell)
@@ -318,16 +318,33 @@
     (pzmq:ctx-destroy ctx)))
 
 
+(defun run-shell (kernel)
+  (catch 'kernel-shutdown
+    (prog (msg)
+     read-next
+      (catch 'kernel-interrupt
+        (unwind-protect
+            (progn
+              (setq msg (message-recv (kernel-shell kernel)))
+              (send-status-update (kernel-iopub kernel) msg "busy")
+              (unless (handle-shell-message kernel msg)
+                (bordeaux-threads:interrupt-thread
+                  (kernel-control-thread kernel)
+                  (lambda ()
+                    (throw 'kernel-shutdown nil)))
+                (return)))
+          (send-status-update (kernel-iopub kernel) msg "idle")))
+      (go read-next))))
+
+
 (defun run-control (kernel)
-  (handler-case
-      (prog (msg)
-       read-next
-        (inform :info kernel "Waiting for control message")
-        (setq msg (message-recv (kernel-control kernel)))
-        (when (handle-control-message kernel msg)
-          (go read-next)))
-    (error (err)
-      (inform :err kernel (dissect:present err nil)))))
+  (catch 'kernel-shutdown
+    (prog (msg)
+     read-next
+      (inform :info kernel "Waiting for control message")
+      (setq msg (message-recv (kernel-control kernel)))
+      (when (handle-control-message kernel msg)
+        (go read-next)))))
 
 
 (defun run-kernel (kernel-class connection-file)
@@ -336,21 +353,10 @@
     (error "Wrong connection file argument (expecting a string)"))
   (let ((kernel (make-instance kernel-class
                                :connection-file connection-file
-                               :shell-thread (bordeaux-threads:current-thread))))
+                               :control-thread (bordeaux-threads:current-thread))))
+    (start kernel)
     (unwind-protect
-        (catch 'kernel-shutdown
-          (prog (msg)
-            (start kernel)
-           read-next
-            (catch 'kernel-interrupt
-              (unwind-protect
-                  (progn
-                    (setq msg (message-recv (kernel-shell kernel)))
-                    (send-status-update (kernel-iopub kernel) msg "busy")
-                    (unless (handle-shell-message kernel msg)
-                      (return)))
-                (send-status-update (kernel-iopub kernel) msg "idle")))
-            (go read-next)))
+        (run-control kernel)
       (stop kernel))))
 
 
