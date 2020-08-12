@@ -170,7 +170,12 @@
    (control-thread
      :accessor kernel-control-thread
      :initform nil
-     :documentation "Control thread"))
+     :documentation "Control thread")
+   (shell-thread
+     :accessor kernel-shell-thread
+     :initarg :shell-thread
+     :initform nil
+     :documentation "Shell thread"))
   (:documentation "Kernel state representation."))
 
 (defgeneric evaluate-code (kernel code)
@@ -319,7 +324,6 @@
        read-next
         (inform :info kernel "Waiting for control message")
         (setq msg (message-recv (kernel-control kernel)))
-        (inform :info kernel "Recieved ~A" (message-content msg))
         (when (handle-control-message kernel msg)
           (go read-next)))
     (error (err)
@@ -330,18 +334,23 @@
   "Run a kernel based on a kernel class and a connection file."
   (unless (stringp connection-file)
     (error "Wrong connection file argument (expecting a string)"))
-  (iter
-    (with kernel = (make-instance kernel-class
-                                  :connection-file connection-file))
-    (initially
-      (start kernel))
-    (for msg = (message-recv (kernel-shell kernel)))
-    (send-status-update (kernel-iopub kernel) msg "busy")
-    (while (handle-shell-message kernel msg))
-    (after-each
-      (send-status-update (kernel-iopub kernel) msg "idle"))
-    (while (bordeaux-threads:thread-alive-p (kernel-control-thread kernel)))
-    (finally-protected
+  (let ((kernel (make-instance kernel-class
+                               :connection-file connection-file
+                               :shell-thread (bordeaux-threads:current-thread))))
+    (unwind-protect
+        (catch 'kernel-shutdown
+          (prog (msg)
+            (start kernel)
+           read-next
+            (catch 'kernel-interrupt
+              (unwind-protect
+                  (progn
+                    (setq msg (message-recv (kernel-shell kernel)))
+                    (send-status-update (kernel-iopub kernel) msg "busy")
+                    (unless (handle-shell-message kernel msg)
+                      (return)))
+                (send-status-update (kernel-iopub kernel) msg "idle")))
+            (go read-next)))
       (stop kernel))))
 
 
@@ -411,6 +420,7 @@
      (serious-condition (err)
        (make-eval-error err (format nil "~A" err)))))
 
+
 (defmacro debugging-errors (&body body)
   `(if *debugger*
      (let ((*debugger-hook* #'my-debugger))
@@ -449,10 +459,14 @@
         (*kernel* kernel)
         (*message* msg))
     (cond
+      ((equal msg-type "interrupt_request")
+        (handle-interrupt-request kernel msg)
+        t)
       ((equal msg-type "shutdown_request")
         (send-status-update (kernel-iopub kernel) msg "busy")
         (handle-shutdown-request kernel msg)
-        (send-status-update (kernel-iopub kernel) msg "idle"))
+        (send-status-update (kernel-iopub kernel) msg "idle")
+        nil)
       (t
         (send-status-update (kernel-iopub kernel) msg "busy")
         (inform :warn kernel "Ignoring ~A message since there is no appropriate handler." msg-type)
@@ -528,25 +542,27 @@
 
 (defun handle-execute-request (kernel msg)
   (inform :info kernel "Handling execute_request message")
-  (let ((code (json-getf (message-content msg) "code")))
-    (with-slots (execution-count history iopub package prompt-prefix prompt-suffix shell stdin input-queue)
-                kernel
+  (with-slots (execution-count history iopub package prompt-prefix prompt-suffix shell stdin input-queue)
+              kernel
+    (let* ((code (json-getf (message-content msg) "code"))
+           (results (list (make-error-result "interrupt" "Execution interrupted")))
+           (*payload* (make-array 16 :adjustable t :fill-pointer 0))
+           (*page-output* (make-string-output-stream))
+           (*query-io* (make-stdin-stream stdin msg))
+           (*standard-input* *query-io*)
+           (*error-output* (make-iopub-stream iopub msg "stderr"
+                                              prompt-prefix prompt-suffix))
+           (*standard-output* (make-iopub-stream iopub msg "stdout"
+                                                 prompt-prefix prompt-suffix))
+           (*debug-io* *standard-output*)
+           (*trace-output* *standard-output*))
       (setq execution-count (1+ execution-count))
       (add-cell history execution-count code)
-      (let* ((*payload* (make-array 16 :adjustable t :fill-pointer 0))
-             (*page-output* (make-string-output-stream))
-             (*query-io* (make-stdin-stream stdin msg))
-             (*standard-input* *query-io*)
-             (*error-output* (make-iopub-stream iopub msg "stderr"
-                                                prompt-prefix prompt-suffix))
-             (*standard-output* (make-iopub-stream iopub msg "stdout"
-                                                   prompt-prefix prompt-suffix))
-             (*debug-io* *standard-output*)
-             (*trace-output* *standard-output*)
-             (results (let* ((*package* package)
-                             (r (evaluate-code kernel code)))
-                        (setf package *package*)
-                        r)))
+      (unwind-protect
+          (setq results (let* ((*package* package)
+                               (r (evaluate-code kernel code)))
+                          (setf package *package*)
+                          r))
         (dolist (result results)
           (send-result result))
         ;broadcast the code to connected frontends
@@ -582,7 +598,25 @@
          (content (message-content msg))
          (restart (json-getf content "restart")))
     (send-shutdown-reply control msg restart)
+    (bordeaux-threads:interrupt-thread (kernel-shell-thread kernel) (lambda () (throw 'kernel-shutdown nil)))
     nil))
+
+#|
+
+### Message type: interrupt_request ###
+
+|#
+
+(defun handle-interrupt-request (kernel msg)
+  (inform :info kernel "Handling interrupt_request message")
+  (let* ((control (kernel-control kernel))
+         (content (message-content msg)))
+    (bordeaux-threads:interrupt-thread (kernel-shell-thread kernel) (lambda () (throw 'kernel-interrupt nil)))
+    (sleep 1)
+    (send-status-update (kernel-iopub kernel) msg "busy")
+    (send-interrupt-reply control msg)
+    (send-status-update (kernel-iopub kernel) msg "idle")
+    t))
 
 #|
 

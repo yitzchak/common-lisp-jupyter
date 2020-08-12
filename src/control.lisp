@@ -23,4 +23,10 @@
                                 ("restart" (if restart t :f)))
                               :parent parent-msg)))
 
-              
+(defun send-interrupt-reply (ch parent-msg)
+  (message-send ch
+                (make-message (channel-session ch) "interrupt_reply"
+                              (json-new-obj)
+                              :parent parent-msg)))
+
+                            
