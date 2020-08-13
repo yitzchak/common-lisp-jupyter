@@ -9,7 +9,6 @@
      :cl-base64
      :cl-indentify
      :closer-mop
-     :drakma
      :dissect
      ; This should be `(:feature (:not :clasp) :ironclad)` but some distributions still don't have
      ; ASDF 3
