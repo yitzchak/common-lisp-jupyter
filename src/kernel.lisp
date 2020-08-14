@@ -213,7 +213,7 @@
                session shell shell-port signature-scheme sink stdin stdin-port control
                transport)
               k
-    (setq sink (make-instance 'sink
+    (setf sink (make-instance 'sink
                               :path (uiop:xdg-runtime-dir
                               (make-pathname :directory '(:relative "common-lisp-jupyter")
                                              :name (pathname-name connection-file)
@@ -224,7 +224,7 @@
     (let* ((config-js (jsown:parse (read-file-into-string connection-file)))
            (encoded-key (json-getf config-js "key")))
            (inform :info k "~A" config-js)
-      (setq transport (json-getf config-js "transport")
+      (setf transport (json-getf config-js "transport")
             ip (json-getf config-js "ip")
             shell-port (json-getf config-js "shell_port")
             stdin-port (json-getf config-js "stdin_port")
@@ -235,7 +235,8 @@
                   nil
                   (babel:string-to-octets encoded-key :encoding :ASCII))
             signature-scheme (json-getf config-js "signature_scheme")))
-    (setq session (make-uuid)
+    (setf *uuid-random-state* (make-random-state t)
+          session (make-uuid)
           ctx (pzmq:ctx-new)
           mac (make-instance 'mac
                              :sink sink
@@ -300,13 +301,15 @@
     (send-status iopub "idle")
     (setf (kernel-shell-thread k)
           (bordeaux-threads:make-thread (lambda ()
-                                          (run-shell k))))))
+                                          (run-shell k))
+                                        :name "SHELL Thread"))))
 
 ;; Stop all channels and destroy the control.
 (defmethod stop ((k kernel))
   (with-slots (sink ctx hb iopub shell stdin control history mac name) k
     (inform :info k "Stopping ~A kernel" name)
-    (bordeaux-threads:destroy-thread (kernel-shell-thread k))
+    (when (bordeaux-threads:thread-alive-p (kernel-shell-thread k))
+      (bordeaux-threads:destroy-thread (kernel-shell-thread k)))
     (stop hb)
     (stop iopub)
     (stop shell)
