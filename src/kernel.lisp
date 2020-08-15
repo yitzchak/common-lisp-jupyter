@@ -601,9 +601,9 @@
                 (set-next-input (dequeue input-queue)))
               (unless (zerop (length p))
                 (page (make-inline-result p)))
-              (send-execute-reply-ok shell msg execution-count (coerce *payload* 'list)))))
-        ;; return t if there is no quit errors present
-        (notany #'quit-eval-error-p results)))))
+              (send-execute-reply-ok shell msg execution-count (coerce *payload* 'list))))))
+      ;; return t if there is no quit errors present
+      (notany #'quit-eval-error-p results))))
 
 #|
 
