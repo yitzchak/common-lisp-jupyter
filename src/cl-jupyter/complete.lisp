@@ -99,24 +99,30 @@
 
 (defun complete-pathname (match-set partial-name start end &optional include-sharpsign-p)
   (let* ((path (pathname partial-name))
-         (dir (make-pathname :host (pathname-host path)
-                             :device (pathname-device path)
-                             :directory  (pathname-directory path)
-                             :name :wild
-                             :type :wild))
          (file (file-namestring path)))
-    (dolist (d (directory dir))
+    (dolist (d (append (directory (make-pathname :host (pathname-host path)
+                                                 :device (pathname-device path)
+                                                 :directory (pathname-directory path)
+                                                 :name :wild
+                                                 :type :wild))
+                       (directory (make-pathname :host (pathname-host path)
+                                                 :device (pathname-device path)
+                                                 :directory (append (or (pathname-directory path)
+                                                                        (list :relative))
+                                                                    (list :wild))))))
       (let* ((part (if (zerop (length (file-namestring d)))
-                    (make-pathname :directory (list :relative (car (last (pathname-directory d)))))
-                    (pathname (file-namestring d))))
-            (completed (merge-pathnames part (make-pathname :host (pathname-host path)
-                             :device (pathname-device path)
-                             :directory  (pathname-directory path)))))
+                     (make-pathname :directory (list :relative (car (last (pathname-directory d)))))
+                     (pathname (file-namestring d))))
+             (completed (merge-pathnames part (make-pathname :host (pathname-host path)
+                                                             :device (pathname-device path)
+                                                             :directory  (pathname-directory path)))))
         (when (or (not file)
                   (starts-with-subseq file (namestring part)))
           (jupyter:match-set-add match-set
                                  (string-right-trim "\"" (write-to-string (if include-sharpsign-p completed (namestring completed))))
-                                 start end
+                                 start (if (> (- end start) (1+ (length partial-name)))
+                                         (1- end)
+                                         end)
                                  :type "pathname"))))))
 
 
