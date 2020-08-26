@@ -721,10 +721,18 @@
 
 (defun handle-comm-open (kernel msg)
   (inform :info kernel "Handling comm_open message")
-  (with-slots (iopub comms) kernel
+  (with-slots (iopub comms prompt-prefix prompt-suffix stdin) kernel
     (let* ((content (message-content msg))
            (metadata (message-metadata msg))
            (buffers (message-buffers msg))
+           (*query-io* (make-stdin-stream stdin msg))
+           (*standard-input* *query-io*)
+           (*error-output* (make-iopub-stream iopub msg "stderr"
+                                              prompt-prefix prompt-suffix))
+           (*standard-output* (make-iopub-stream iopub msg "stdout"
+                                                 prompt-prefix prompt-suffix))
+           (*debug-io* *standard-output*)
+           (*trace-output* *standard-output*)
            (id (json-getf content "comm_id"))
            (target-name (json-getf content "target_name"))
            (data (json-getf content "data"))
@@ -739,10 +747,18 @@
 
 (defun handle-comm-message (kernel msg)
   (inform :info kernel "Handling comm_msg message")
-  (with-slots (comms) kernel
+  (with-slots (comms prompt-prefix prompt-suffix stdin iopub) kernel
     (let* ((content (message-content msg))
            (metadata (message-metadata msg))
            (buffers (message-buffers msg))
+           (*query-io* (make-stdin-stream stdin msg))
+           (*standard-input* *query-io*)
+           (*error-output* (make-iopub-stream iopub msg "stderr"
+                                              prompt-prefix prompt-suffix))
+           (*standard-output* (make-iopub-stream iopub msg "stdout"
+                                                 prompt-prefix prompt-suffix))
+           (*debug-io* *standard-output*)
+           (*trace-output* *standard-output*)
            (id (json-getf content "comm_id"))
            (data (json-getf content "data"))
            (inst (gethash id comms)))
@@ -753,10 +769,18 @@
 
 (defun handle-comm-close (kernel msg)
   (inform :info kernel "Handling comm_close")
-  (with-slots (comms) kernel
+  (with-slots (comms prompt-prefix prompt-suffix stdin iopub) kernel
     (let* ((content (message-content msg))
            (metadata (message-metadata msg))
            (buffers (message-buffers msg))
+           (*query-io* (make-stdin-stream stdin msg))
+           (*standard-input* *query-io*)
+           (*error-output* (make-iopub-stream iopub msg "stderr"
+                                              prompt-prefix prompt-suffix))
+           (*standard-output* (make-iopub-stream iopub msg "stdout"
+                                                 prompt-prefix prompt-suffix))
+           (*debug-io* *standard-output*)
+           (*trace-output* *standard-output*)
            (id (json-getf content "comm_id"))
            (data (json-getf content "data"))
            (inst (gethash id comms)))
