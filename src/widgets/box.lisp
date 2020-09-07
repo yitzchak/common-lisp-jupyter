@@ -41,6 +41,7 @@
    (selected-index
      :initarg :selected-index
      :accessor widget-selected-index
+     :initform nil
      :documentation "The index of the selected page. This is either an integer selecting a particular sub-widget, or nil to have no widgets selected."
      :trait :int))
   (:metaclass trait-metaclass)

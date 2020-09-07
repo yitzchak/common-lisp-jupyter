@@ -101,7 +101,8 @@
     (for type next (trait-type def))
     (when (and (or (not nm) (eql trait-name nm))
                (slot-boundp w name)
-               type)
+               type
+               (not (eql type t)))
       (jupyter:json-extend-obj state
         ((symbol-to-snake-case name)
           (serialize-trait w type trait-name (slot-value w name)))))
@@ -257,4 +258,4 @@
 
 (defun display (widget &rest args &key &allow-other-keys)
   (jupyter:send-result (apply #'%display widget args))
-  nil)
+  (values))

@@ -152,6 +152,9 @@
 (defmethod serialize-trait (object (type (eql :unicode)) name (value (eql nil)))
   :null)
 
+(defmethod serialize-trait (object (type (eql :string)) name (value (eql nil)))
+  :null)
+
 ; Widget
 
 (defmethod serialize-trait (object (type (eql :widget)) name (value (eql nil)))
