@@ -9,6 +9,7 @@
      :trait :unicode)
    (children
      :initarg :children
+     :initform nil
      :accessor widget-children
      :documentation "List of widget children."
      :trait :widget-list))
@@ -34,7 +35,7 @@
 (defclass accordion (box)
   ((%titles
      :initarg :%titles
-     :initform ""
+     :initform nil
      :accessor widget-%titles
      :documentation "Titles of the pages."
      :trait :unicode-list)
