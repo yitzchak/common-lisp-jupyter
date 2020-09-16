@@ -25,7 +25,7 @@
      :initform nil
      :accessor widget-metadata
      :documentation "List of file metadata"
-     :trait :object-list)
+     :trait :alist-list)
    (multiple
      :initarg :multiple
      :initform nil

@@ -82,6 +82,23 @@
 (defmethod deserialize-trait (object (type (eql :dict)) name (value list))
   (cdr value))
 
+; alist list
+
+(defmethod serialize-trait (object (type (eql :alist-list)) name (value (eql nil)))
+  :empty-list)
+
+(defmethod deserialize-trait (object (type (eql :alist-list)) name (value (eql :empty-list)))
+  nil)
+
+(defmethod serialize-trait (object (type (eql :alist-list)) name (value list))
+  (mapcar (lambda (alist)
+            (cons :obj alist))
+          value))
+
+(defmethod deserialize-trait (object (type (eql :alist-list)) name (value list))
+  (mapcar #'cdr value))
+
+
 ; Integer
 
 (defmethod serialize-trait (object (type (eql :int)) name (value (eql nil)))
