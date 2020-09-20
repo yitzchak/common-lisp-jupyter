@@ -7,6 +7,12 @@
 (defmethod serialize-trait (object (type (eql :bool)) name (value (eql nil)))
   :false)
 
+(defmethod deserialize-trait (object (type (eql :bool)) name (value (eql :false)))
+  nil)
+
+(defmethod deserialize-trait (object (type (eql :bool)) name (value (eql :true)))
+  t)
+
 ; color
 
 (defparameter *color-names*

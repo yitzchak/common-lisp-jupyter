@@ -135,9 +135,9 @@
 (defun read-string-part (ch msg)
   (pzmq:msg-recv msg (channel-socket ch))
   (handler-case
-    (cffi:foreign-string-to-lisp (pzmq:msg-data msg)
-                                 :count (pzmq:msg-size msg)
-                                 :encoding :utf-8)
+      (cffi:foreign-string-to-lisp (pzmq:msg-data msg)
+                                   :count (pzmq:msg-size msg)
+                                   :encoding :utf-8)
     (babel-encodings:character-decoding-error ()
       (inform :warn ch "Unable to decode message part.")
       "")))
@@ -169,6 +169,7 @@
 
 (defun message-recv (ch)
   (multiple-value-bind (identities body buffers) (recv-parts ch)
+    (inform :info ch "~S" body)
     (unless (equal (car body) (compute-signature (channel-mac ch) (cdr body)))
       (inform :warn ch "Signature mismatch on received message."))
     (destructuring-bind (header parent-header metadata content) (mapcar #'jsown:parse (cdr body))
