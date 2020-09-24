@@ -281,7 +281,10 @@
     #:widget-%view-name
     #:widget-visibility
     #:widget-width
-    #:with-output))
+    #:with-output
+    ;; interactive
+    #:make-interactive-alist
+    #:make-interactive-plist))
 
 (defpackage #:common-lisp-jupyter
   (:nicknames :cl-jupyter)
