@@ -62,6 +62,15 @@
                        :max (getf schema :max 100d0)
                        :value (or value
                                   (getf schema :default 0d0))))
+      (:float-range
+        (make-instance 'float-range-slider)
+                       :description (getf schema :description "")
+                       :on-trait-change (list (cons :value observer))
+                       :step (getf schema :step 0.1d0)
+                       :min (getf schema :min 0d0)
+                       :max (getf schema :max 100d0)
+                       :value (or value
+                                  (getf schema :default (list 0d0 1d0))))
       (:int
         (make-instance (ecase (getf schema :style :text)
                          (:slider
@@ -77,6 +86,37 @@
                        :max (getf schema :max 100)
                        :value (or value
                                   (getf schema :default 0))))
+      (:int-range
+        (make-instance 'int-range-slider
+                       :description (getf schema :description "")
+                       :on-trait-change (list (cons :value observer))
+                       :step (getf schema :step 1)
+                       :min (getf schema :min 0)
+                       :max (getf schema :max 100)
+                       :value (or value
+                                  (getf schema :default (list 0 10)))))
+      (:option
+        (make-instance (ecase (getf schema :style :select)
+                         (:dropdown
+                           'dropdown)
+                         (:radio
+                           'radio-buttons)
+                         (:slider
+                           'selection-slider)
+                         (:select
+                           'select))
+                       :description (getf schema :description "")
+                       :on-trait-change (list (cons :value observer))
+                       :%options-labels (getf schema :options)
+                       :value (or value
+                                  (getf schema :default nil))))
+      (:option-range
+        (make-instance 'selection-range-slider)
+                       :description (getf schema :description "")
+                       :on-trait-change (list (cons :value observer))
+                       :%options-labels (getf schema :options)
+                       :value (or value
+                                  (getf schema :default nil)))
       (:string
         (make-instance (ecase (getf schema :style :text)
                          (:area

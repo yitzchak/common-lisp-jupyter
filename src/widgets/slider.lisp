@@ -51,7 +51,7 @@
 (defclass float-range-slider (number-slider float-min-max-slots float-step-slot)
   ((value
      :initarg :value
-     :initform '(0.0d0 1.0d0)
+     :initform (list 0.0d0 1.0d0)
      :accessor widget-value
      :documentation "Float range"
      :trait :float-list))
@@ -83,7 +83,7 @@ value."))
 (defclass int-range-slider (number-slider int-min-max-slots int-step-slot)
   ((value
      :initarg :value
-     :initform '(0 1)
+     :initform (list 0 1)
      :accessor widget-value
      :documentation "Int range value"
      :trait :int-list))
@@ -114,7 +114,10 @@ value."))
 
 
 (defclass label-slider (base-slider %options-labels-slot)
-  ()
+  ((options
+    :accessor widget-options
+    :initarg :options
+    :documentation "The option values that correspond to the labels"))
   (:metaclass trait-metaclass))
 
 
@@ -143,3 +146,25 @@ value."))
   (:documentation "Slider to select a single item from a list or dictionary."))
 
 (register-widget selection-slider)
+
+(defmethod widget-value ((instance selection-slider))
+  (select-value instance (widget-index instance)))
+
+(defmethod (setf widget-value) (new-value (instance selection-slider))
+  (setf (widget-index instance)
+        (position new-value
+                  (if (slot-boundp instance 'options)
+                    (widget-options instance)
+                    (widget-%options-labels instance))
+                  :test #'equal)))
+
+(defmethod on-trait-change :after ((instance selection-slider) type (name (eql :index)) old-value new-value source)
+  (jupyter::enqueue *trait-notifications*
+    (list instance :any :value (select-value instance old-value) (select-value instance new-value) source)))
+
+
+(defmethod initialize-instance :after ((instance selection-slider) &rest initargs &key &allow-other-keys)
+  (let ((value (getf initargs :value)))
+    (when value
+      (setf (widget-value instance) value))))
+
