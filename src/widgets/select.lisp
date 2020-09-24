@@ -50,6 +50,12 @@
     (list instance :any :value (select-value instance old-value) (select-value instance new-value) source)))
 
 
+(defmethod initialize-instance :after ((instance select) &rest initargs &key &allow-other-keys)
+  (let ((value (getf initargs :value)))
+    (when value
+      (setf (widget-value instance) value))))
+
+
 (defclass select-multiple (base-select)
   ((index
      :initarg :index

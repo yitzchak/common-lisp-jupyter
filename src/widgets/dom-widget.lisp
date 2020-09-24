@@ -121,6 +121,12 @@
      :accessor widget-justify-content
      :documentation "The justify-content CSS attribute."
      :trait :unicode)
+   (justify-items
+     :initarg :justify-items
+     :initform nil
+     :accessor widget-justify-items
+     :documentation "The justify-items CSS attribute."
+     :trait :unicode)
    (left
      :initarg :left
      :initform nil
