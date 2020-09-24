@@ -225,6 +225,7 @@
     #:widget-index
     #:widget-interval
     #:widget-justify-content
+    #:widget-justify-items
     #:widget-layout
     #:widget-left
     #:widget-loop
@@ -244,7 +245,7 @@
     #:widget-multiple
     #:widget-name
     #:widget-object-fit
-    #:widget-object-positon
+    #:widget-object-position
     #:widget-on-trait-change
     #:widget-options
     #:widget-%options-labels
