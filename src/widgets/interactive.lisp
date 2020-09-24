@@ -107,7 +107,8 @@
                            'select))
                        :description (getf schema :description "")
                        :on-trait-change (list (cons :value observer))
-                       :%options-labels (getf schema :options)
+                       :%options-labels (getf schema :options (getf schema :labels))
+                       :options (getf schema :options)
                        :value (or value
                                   (getf schema :default nil))))
       (:option-range
@@ -182,8 +183,8 @@
         (key-var (gensym))
         (test-var (gensym)))
     `(let* ((,schemas-var ,schemas)
-            (,key-var ,key)
-            (,test-var ,test)
+            (,key-var (or ,key #'identity))
+            (,test-var (or ,test #'eql))
             (,indicators-var (mapcar (lambda (schema)
                                        (getf schema :indicator))
                                      ,schemas-var)))
