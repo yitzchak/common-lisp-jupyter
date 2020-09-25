@@ -4,13 +4,13 @@
 ; bounded int - int-slider, bounded-int-text
 ; bounded float - float-slider, bounded-float-text
 ; bounded log float - float-log-slider
-; int interval - int-range-slider
+; int range - int-range-slider
 ; float interval - float-range-slider
 ; int - int-text
 ; float - float-text
 ; boolean - toggle-button, checkbox
 ; option - dropdown, radio-buttons, select, selection-slider, toggle-buttons
-; option interval - selection-range-slider
+; option range - selection-range-slider
 ; option set - select-multiple
 ; text
 ; text-area
@@ -44,6 +44,20 @@
                                               :justify-item "start")
                        :value (or value
                                   (getf schema :default nil))))
+      (:color
+        (make-instance 'color-picker
+                       :description (getf schema :description "")
+                       :on-trait-change (list (cons :value observer))
+                       :options (getf schema :options)
+                       :value (or value
+                                  (getf schema :default "black"))))
+      (:date
+        (make-instance 'date-picker
+                       :description (getf schema :description "")
+                       :on-trait-change (list (cons :value observer))
+                       :options (getf schema :options)
+                       :value (or value
+                                  (getf schema :default))))
       (:float
         (make-instance (ecase (getf schema :style :text)
                          (:log-slider
