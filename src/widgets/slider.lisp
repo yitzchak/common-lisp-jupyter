@@ -136,6 +136,28 @@ value."))
 
 (register-widget selection-range-slider)
 
+(defmethod widget-value ((instance selection-range-slider))
+  (select-values instance (widget-index instance)))
+
+(defmethod (setf widget-value) (new-value (instance selection-range-slider))
+  (setf (widget-index instance)
+        (mapcar (lambda (value)
+                  (position value
+                            (if (slot-boundp instance 'options)
+                              (widget-options instance)
+                              (widget-%options-labels instance))
+                            :test #'equal))
+                new-value)))
+
+(defmethod on-trait-change :after ((instance selection-range-slider) type (name (eql :index)) old-value new-value source)
+  (jupyter::enqueue *trait-notifications*
+    (list instance :any :value (select-values instance old-value) (select-values instance new-value) source)))
+
+
+(defmethod initialize-instance :after ((instance selection-range-slider) &rest initargs &key &allow-other-keys)
+  (let ((value (getf initargs :value)))
+    (when value
+      (setf (widget-value instance) value))))
 
 (defclass selection-slider (label-slider index-slot)
   ()

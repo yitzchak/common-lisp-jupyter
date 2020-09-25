@@ -34,6 +34,11 @@
            (widget-options instance)
            (widget-%options-labels instance)))))
 
+(defun select-values (instance indices)
+  (mapcar (lambda (index)
+            (select-value instance index))
+          indices))
+
 (defmethod widget-value ((instance select))
   (select-value instance (widget-index instance)))
 
@@ -62,7 +67,11 @@
      :initform nil
      :accessor widget-index
      :documentation "Selected indicies"
-     :trait :int-list))
+     :trait :int-list)
+   (options
+    :accessor widget-options
+    :initarg :options
+    :documentation "The option values that correspond to the labels"))
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "SelectMultipleModel"
@@ -71,6 +80,29 @@
     "Listbox that allows many items to be selected at any given time."))
 
 (register-widget select-multiple)
+
+(defmethod widget-value ((instance select-multiple))
+  (select-values instance (widget-index instance)))
+
+(defmethod (setf widget-value) (new-value (instance select-multiple))
+  (setf (widget-index instance)
+        (mapcar (lambda (value)
+                  (position value
+                            (if (slot-boundp instance 'options)
+                              (widget-options instance)
+                              (widget-%options-labels instance))
+                            :test #'equal))
+                new-value)))
+
+(defmethod on-trait-change :after ((instance select-multiple) type (name (eql :index)) old-value new-value source)
+  (jupyter::enqueue *trait-notifications*
+    (list instance :any :value (select-values instance old-value) (select-values instance new-value) source)))
+
+
+(defmethod initialize-instance :after ((instance select-multiple) &rest initargs &key &allow-other-keys)
+  (let ((value (getf initargs :value)))
+    (when value
+      (setf (widget-value instance) value))))
 
 
 (defclass radio-buttons (select)

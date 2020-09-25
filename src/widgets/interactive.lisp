@@ -9,9 +9,9 @@
 ; int - int-text
 ; float - float-text
 ; boolean - toggle-button, checkbox
-; option - dropdown, radio-buttons, select, selection-slider
+; option - dropdown, radio-buttons, select, selection-slider, toggle-buttons
 ; option interval - selection-range-slider
-; option set - toggle-buttons, select-multiple
+; option set - select-multiple
 ; text
 ; text-area
 ; date date-picker
@@ -104,20 +104,34 @@
                          (:slider
                            'selection-slider)
                          (:select
-                           'select))
+                           'select)
+                         (:toggle
+                           'toggle-buttons))
                        :description (getf schema :description "")
                        :on-trait-change (list (cons :value observer))
-                       :%options-labels (getf schema :options (getf schema :labels))
+                       :%options-labels (or (getf schema :labels)
+                                            (getf schema :options))
                        :options (getf schema :options)
                        :value (or value
                                   (getf schema :default nil))))
       (:option-range
-        (make-instance 'selection-range-slider)
+        (make-instance 'selection-range-slider
                        :description (getf schema :description "")
                        :on-trait-change (list (cons :value observer))
-                       :%options-labels (getf schema :options)
+                       :%options-labels (or (getf schema :labels)
+                                            (getf schema :options))
+                       :options (getf schema :options)
                        :value (or value
-                                  (getf schema :default nil)))
+                                  (getf schema :default nil))))
+      (:option-set
+        (make-instance 'select-multiple
+                       :description (getf schema :description "")
+                       :on-trait-change (list (cons :value observer))
+                       :%options-labels (or (getf schema :labels)
+                                            (getf schema :options))
+                       :options (getf schema :options)
+                       :value (or value
+                                  (getf schema :default nil))))
       (:string
         (make-instance (ecase (getf schema :style :text)
                          (:area
