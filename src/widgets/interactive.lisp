@@ -58,6 +58,17 @@
                        :options (getf schema :options)
                        :value (or value
                                   (getf schema :default))))
+      (:file
+        (make-instance 'file-upload
+                       :description (getf schema :description "")
+                       :on-trait-change (list (cons :value observer))
+                       :accept (getf schema :accept)))
+      (:file-multiple
+        (make-instance 'file-upload
+                       :description (getf schema :description "")
+                       :on-trait-change (list (cons :value observer))
+                       :multiple t
+                       :accept (getf schema :accept)))
       (:float
         (make-instance (ecase (getf schema :style :text)
                          (:log-slider
@@ -77,14 +88,14 @@
                        :value (or value
                                   (getf schema :default 0d0))))
       (:float-range
-        (make-instance 'float-range-slider)
+        (make-instance 'float-range-slider
                        :description (getf schema :description "")
                        :on-trait-change (list (cons :value observer))
                        :step (getf schema :step 0.1d0)
                        :min (getf schema :min 0d0)
                        :max (getf schema :max 100d0)
                        :value (or value
-                                  (getf schema :default (list 0d0 1d0))))
+                                  (getf schema :default (list 0d0 1d0)))))
       (:int
         (make-instance (ecase (getf schema :style :text)
                          (:slider
@@ -137,7 +148,7 @@
                        :options (getf schema :options)
                        :value (or value
                                   (getf schema :default nil))))
-      (:option-set
+      (:option-multiple
         (make-instance 'select-multiple
                        :description (getf schema :description "")
                        :on-trait-change (list (cons :value observer))

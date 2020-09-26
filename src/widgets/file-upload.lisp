@@ -39,3 +39,30 @@
 
 (register-widget file-upload)
 
+
+(defmethod widget-value ((instance file-upload))
+  (mapcar (lambda (content metadata)
+            (acons "content" content (copy-alist metadata)))
+          (widget-data instance) (widget-metadata instance)))
+
+
+(defun file-upload-value-notify (instance)
+  (when (and (slot-boundp instance 'data)
+             (slot-boundp instance 'metadata)
+             (= (length (widget-data instance)) (length (widget-metadata instance)))
+             (every (lambda (content metadata)
+                      (= (length content) (cdr (assoc "size" metadata :test #'equal))))
+                    (widget-data instance) (widget-metadata instance)))
+    (jupyter::enqueue *trait-notifications*
+                      (list instance :any :value nil (widget-value instance) nil))))
+
+
+(defmethod on-trait-change :after ((instance file-upload) type (name (eql :data)) old-value new-value source)
+  (declare (ignore type name old-value new-value source))
+  (file-upload-value-notify instance))
+
+
+(defmethod on-trait-change :after ((instance file-upload) type (name (eql :metadata)) old-value new-value source)
+  (declare (ignore type name old-value new-value source))
+  (file-upload-value-notify instance))
+
