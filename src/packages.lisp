@@ -143,6 +143,7 @@
     #:label
     #:layout
     #:link
+    #:notify-trait-change
     #:observe
     #:on-button-click
     #:on-custom-message

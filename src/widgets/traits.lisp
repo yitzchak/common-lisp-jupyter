@@ -86,6 +86,12 @@
         value))
     class object slot))
 
+
+(defun notify-trait-change (object type name old-value new-value &optional (source *trait-source*))
+  (jupyter::enqueue *trait-notifications*
+    (list object type name old-value new-value source)))
+
+
 (defmethod (setf closer-mop:slot-value-using-class)
            :around (value (mc trait-metaclass) object (slot effective-trait))
   (let ((type (trait-type slot)))
