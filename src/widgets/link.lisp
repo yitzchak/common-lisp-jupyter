@@ -42,9 +42,17 @@
             new-value))))
 
 
-(defgeneric link (source source-trait target target-trait)
+(defun trait (instance name)
+  (dolist (def (closer-mop:class-slots (class-of instance)))
+    (when (string= (symbol-name name) (symbol-name (closer-mop:slot-definition-name def)))
+      (return (closer-mop:slot-value-using-class (class-of instance) instance def)))))
+
+
+(defgeneric link (source source-trait target target-trait &optional sync)
   (:documentation "Create a link between traits in the client if possible")
-  (:method (source source-trait target target-trait)
+  (:method (source source-trait target target-trait &optional sync)
+    (when sync
+      (setf (trait target target-trait) (trait source source-trait)))
     (observe
       source source-trait
       (lambda (instance type name old-value new-value src)
@@ -55,21 +63,27 @@
       (lambda (instance type name old-value new-value src)
         (declare (ignore instance type name old-value src))
         (setf (trait source source-trait) new-value))))
-  (:method ((source widget) source-trait (target widget) target-trait)
+  (:method ((source widget) source-trait (target widget) target-trait &optional sync)
+    (when sync
+      (setf (trait target target-trait) (trait source source-trait)))
     (make-instance 'link
                    :source (list source source-trait)
                    :target (list target target-trait))))
 
 
-(defgeneric directional-link (source source-trait target target-trait)
+(defgeneric directional-link (source source-trait target target-trait &optional sync)
   (:documentation "Create a link between traits in the client if possible")
-  (:method (source source-trait target target-trait)
+  (:method (source source-trait target target-trait &optional sync)
+    (when sync
+      (setf (trait target target-trait) (trait source source-trait)))
     (observe
       source source-trait
       (lambda (instance type name old-value new-value src)
         (declare (ignore instance type name old-value src))
         (setf (trait target target-trait) new-value))))
-  (:method ((source widget) source-trait (target widget) target-trait)
+  (:method ((source widget) source-trait (target widget) target-trait &optional sync)
+    (when sync
+      (setf (trait target target-trait) (trait source source-trait)))
     (make-instance 'directional-link
                    :source (list source source-trait)
                    :target (list target target-trait))))                    
