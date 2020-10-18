@@ -693,7 +693,7 @@
         (with-slots (ename evalue) result
           (send-complete-reply-error shell msg ename evalue))
         (send-complete-reply-ok shell msg
-                                (mapcar #'match-text (match-set-matches match-set))
+                                (sort (mapcar #'match-text (match-set-matches match-set)) #'string<)
                                 (match-set-start match-set)
                                 (match-set-end match-set)
                                 (json-new-obj
