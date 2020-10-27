@@ -285,6 +285,7 @@
     #:with-output
     ;; interactive
     #:make-interactive-alist
+    #:make-interactive-hash-table
     #:make-interactive-plist))
 
 (defpackage #:common-lisp-jupyter
