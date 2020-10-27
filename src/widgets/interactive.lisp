@@ -235,3 +235,27 @@
                                            (make-alist-observer ,place indicator ,key-var ,test-var))
                                          ,indicators-var)))))
 
+
+(defmacro make-hash-table-observer (place indicator)
+  (let ((indicator-var (gensym)))
+    `(let ((,indicator-var ,indicator))
+       (lambda (instance type name old-value new-value source)
+         (declare (ignore instance type name old-value source))
+         (setf (gethash ,indicator-var ,place) new-value)))))
+
+
+(defmacro make-interactive-hash-table (schemas place)
+  (let ((schemas-var (gensym))
+        (indicators-var (gensym)))
+    `(let* ((,schemas-var ,schemas)
+            (,indicators-var (mapcar (lambda (schema)
+                                       (getf schema :indicator))
+                                     ,schemas-var)))
+       (make-interactive-widgets ,schemas-var
+                                 (mapcar (lambda (indicator)
+                                           (gethash indicator ,place))
+                                         ,indicators-var)
+                                 (mapcar (lambda (indicator)
+                                           (make-hash-table-observer ,place indicator))
+                                         ,indicators-var)))))
+
