@@ -101,15 +101,12 @@
 (defun send-parts (ch identities body buffers)
   (with-slots (send-lock socket) ch
     (bordeaux-threads:with-lock-held (send-lock)
-      (iter
-        (for part in identities)
+      (dolist (part identities)
         (send-binary-part ch part))
       (send-binary-part ch +IDS-MSG-DELIMITER+)
-      (iter
-        (for part in body)
+      (dolist (part body)
         (send-string-part ch part))
-      (iter
-        (for part in buffers)
+      (dolist (part buffers)
         (send-binary-part ch part))
       (pzmq:send socket nil))))
 

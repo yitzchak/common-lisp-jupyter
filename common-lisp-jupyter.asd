@@ -19,6 +19,7 @@
      :multilang-documentation
      :pzmq
      :puri
+     :trivial-do
      :trivial-garbage
      :trivial-gray-streams
      :trivial-mimes)

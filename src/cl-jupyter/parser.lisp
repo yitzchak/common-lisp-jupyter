@@ -52,7 +52,7 @@
 
 (defmethod initialize-instance :after ((instance fragment) &rest initargs &key &allow-other-keys)
   (declare (ignore initargs))
-  (jupyter::dolist* (position child (fragment-children instance))
+  (trivial-do:dolist* (position child (fragment-children instance))
     (setf (fragment-position child) position)
     (setf (fragment-parent child) instance)))
 
