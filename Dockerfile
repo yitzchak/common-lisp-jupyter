@@ -22,7 +22,7 @@ RUN git clone https://aur.archlinux.org/roswell.git && \
   cd roswell && makepkg
 
 USER root
-RUN ls -t roswell/*.pkg.tar.xz | xargs pacman -U --noconfirm
+RUN ls -t roswell/*.pkg.tar.zst | xargs pacman -U --noconfirm
 
 USER ${NB_USER}
 RUN rm -rf roswell; \
