@@ -59,7 +59,8 @@ features.
 - COMM message handling and registration.
 
 - Lisp interface to core IPython widgets is included in the `jupyter-widgets`
-  package.
+  package. Additional widgets are available in [cytoscape-clj][], [kekule-clj][],
+  [nglview-cl][], and [sheet-clj][]
 
 ## Installation
 
@@ -239,23 +240,27 @@ during the installation phase of Roswell.
 [appveyor]: https://ci.appveyor.com/project/yitzchak/common-lisp-jupyter/branch/master
 [Bordeaux Threads]: https://common-lisp.net/project/bordeaux-threads/
 [CCL]: https://ccl.clozure.com/
-[cl-jupyter.lisp]: https://github.com/yitzchak/common-lisp-jupyter/blob/master/src/cl-kernel.lisp
 [cl-jupyter]: https://github.com/fredokun/cl-jupyter/
+[cl-jupyter.lisp]: https://github.com/yitzchak/common-lisp-jupyter/blob/master/src/cl-kernel.lisp
+[cytoscape-clj]: https://github.com/yitzchak/cytoscape-clj
 [ECL]: https://common-lisp.net/project/ecl/
 [jsown]: http://quickdocs.org/jsown/
 [julia.ipynb]: http://nbviewer.jupyter.org/github/yitzchak/common-lisp-jupyter/blob/master/examples/julia.ipynb
 [Jupyter]: https://jupyter.org/
+[kekule-clj]: https://github.com/yitzchak/kekule-clj
 [Maxima-Jupyter]: https://github.com/robert-dodier/maxima-jupyter/
 [mybinder-badge]: https://mybinder.org/badge_logo.svg
 [mybinder]: https://mybinder.org/v2/gh/yitzchak/common-lisp-jupyter/master?urlpath=lab
 [nbviewer]: http://nbviewer.jupyter.org
+[nglview-cl]: https://github.com/cando-developers/nglview-cl
 [quicklisp-badge]: http://quickdocs.org/badge/common-lisp-jupyter.svg
 [quicklisp-clj]: http://quickdocs.org/common-lisp-jupyter
 [Quicklisp]: https://www.quicklisp.org/
 [repo2docker]: https://repo2docker.readthedocs.io/en/latest/
-[Roswell Installation Guide]: https://github.com/roswell/roswell/wiki/Installation
 [Roswell]: https://github.com/roswell/roswell
+[Roswell Installation Guide]: https://github.com/roswell/roswell/wiki/Installation
 [SBCL]: http://www.sbcl.org/
+[sheet-clj]: https://github.com/yitzchak/sheet-clj
 [travis-badge]: https://travis-ci.com/yitzchak/common-lisp-jupyter.svg?branch=master
 [travis]: https://travis-ci.com/yitzchak/common-lisp-jupyter
 [uiop:dump-image]: https://common-lisp.net/project/asdf/uiop.html#index-dump_002dimage
