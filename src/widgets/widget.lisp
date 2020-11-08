@@ -213,7 +213,7 @@
     (send-state w name)))
 
 (defmethod initialize-instance :around ((instance widget) &rest rest &key &allow-other-keys)
-  (with-trait-silence
+  (with-trait-silence instance
     (prog1
       (call-next-method)
       (unless (getf rest :create-comm)
@@ -238,10 +238,9 @@
                                      view-module-version view-name))
          (class (gethash name *widgets*)))
     (when class
-      (with-trait-silence
-        (let ((w (make-instance class :create-comm t)))
-          (update-state w data buffers)
-          w)))))
+      (let ((w (make-instance class :create-comm t)))
+        (update-state w data buffers)
+        w))))
 
 (defun observe (instance name/s handler)
   (setf (widget-on-trait-change instance)

@@ -213,7 +213,7 @@
                                                               ,indicators-var)
                                                       (mapcar (lambda (indicator)
                                                                 (make-plist-observer ,place indicator))
-                                                              ,indicators-var)))
+                                                              ,indicators-var))
           (when ,owner-var
             (observe ,owner-var ,name-var
               (lambda (owner type name old-value new-value source)
@@ -222,7 +222,7 @@
                            (funcall setter (getf new-value indicator)))
                          ,schemas-var
                          ,setters-var))))
-          ,controls-var)))
+          ,controls-var))))
 
 
 (defmacro make-alist-observer (place indicator key test)
