@@ -8,8 +8,9 @@
 
 (defmethod on-trait-change (object type name old-value new-value source))
 
-(defmacro with-trait-silence (&body body)
-  `(let ((*trait-silence* t)) ,@body))
+(defmacro with-trait-silence (instance &body body)
+  `(let ((*trait-silence* (cons ,instance *trait-silence*)))
+     ,@body))
 
 (defgeneric validate-trait (object type name value))
 
@@ -95,7 +96,8 @@
 (defmethod (setf closer-mop:slot-value-using-class)
            :around (value (mc trait-metaclass) object (slot effective-trait))
   (let ((type (trait-type slot)))
-    (if (and (not *trait-silence*) type)
+    (if (and type
+             (not (position object *trait-silence*)))
       (let* ((name (closer-mop:slot-definition-name slot))
              (trait-name (trait-name name))
              (old-value (if (slot-boundp object name) (slot-value object name) :unbound))
