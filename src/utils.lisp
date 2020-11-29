@@ -117,3 +117,18 @@
                   (cdr pair)))
           (cdr value)))
 
+(defun json-to-nested-plist (value &key symbol-case)
+  (if (and (listp value)
+           (eql :obj (car value)))
+    (mapcan (lambda (pair)
+              (list (case symbol-case
+                      (:snake
+                        (snake-case-to-symbol (car pair)))
+                      (:camel
+                        (camel-case-to-symbol (car pair)))
+                      (otherwise
+                        (intern (car pair) "KEYWORD")))
+                    (json-to-nested-plist (cdr pair) :symbol-case symbol-case)))
+            (cdr value))
+    value))
+

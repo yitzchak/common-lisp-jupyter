@@ -108,13 +108,22 @@
           (serialize-trait w type trait-name (slot-value w name)))))
     (finally (return state))))
 
+
+(defun binary-value-p (value)
+  (and (vectorp value)
+       (position (array-element-type value)
+                 '((unsigned-byte 8))
+                   ;single-float)
+                 :test #'equal)))
+
+
 (defun extract-buffers (state &optional path)
   (cond
     ((and (listp state) (eq (first state) :obj))
       (iter
         (for (k . v) in (cdr state))
         (cond
-          ((and (vectorp v) (equal (array-element-type v) '(unsigned-byte 8)))
+          ((binary-value-p v)
             (collect (append path (list k)) into buffer-paths)
             (collect v into buffers)
             (jsown:remkey state k))
@@ -128,7 +137,7 @@
       (iter
         (for v in-sequence state with-index i)
         (cond
-          ((and (vectorp v) (equal (array-element-type v) '(unsigned-byte 8)))
+          ((binary-value-p v)
             (collect (append path (list i)) into buffer-paths)
             (collect v into buffers)
             (setf (elt state i) :null))

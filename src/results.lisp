@@ -267,8 +267,7 @@ following function will make sure that trivial-mimes database reflects this.
 |#
 
 (defun check-mime-db ()
-  (iter
-    (for ext in '("tex" "latex" "tikz"))
+  (dolist (ext '("tex" "latex" "tikz"))
     (setf (gethash ext trivial-mimes:*mime-db*) *latex-mime-type*)))
 
 (check-mime-db)
