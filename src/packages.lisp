@@ -9,6 +9,7 @@
     #:json-extend-obj
     #:json-to-plist
     #:json-keyp
+    #:json-to-nested-plist
     ; log
     #:inform
     ; results
