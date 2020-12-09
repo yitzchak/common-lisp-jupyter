@@ -160,6 +160,24 @@
                   (cdr pair)))
           (cdr value)))
 
+; plist list snake case
+
+(defmethod serialize-trait (object (type (eql :plist-list-snake-case)) name (value (eql nil)))
+  :empty-list)
+
+(defmethod deserialize-trait (object (type (eql :plist-list-snake-case)) name (value (eql :empty-list)))
+  nil)
+
+(defmethod serialize-trait (object (type (eql :plist-list-snake-case)) name (value list))
+  (mapcar (lambda (v)
+            (serialize-trait object :plist-snake-case name v))
+          value))
+
+(defmethod deserialize-trait (object (type (eql :plist-list-snake-case)) name (value list))
+  (mapcar (lambda (v)
+            (deserialize-trait object :plist-snake-case name v))
+          value))
+
 ; Trait Name
 
 (defmethod serialize-trait (object (type (eql :trait-name)) name value)
