@@ -13,7 +13,7 @@
      :initform nil
      :accessor widget-data
      :documentation "List of file content (bytes)"
-     :trait :byte-list)
+     :trait :bytes-list)
    (error
      :initarg :error
      :initform ""

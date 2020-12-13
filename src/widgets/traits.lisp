@@ -20,7 +20,7 @@
 (defgeneric serialize-trait (object type name value))
 
 (defmethod serialize-trait (object type name value)
-  value)
+  (values value nil nil))
 
 (defgeneric deserialize-trait (object type name value))
 
@@ -167,4 +167,10 @@
                     k)))
     "KEYWORD"))
 
+(defun binary-value-p (value)
+  (and (vectorp value)
+       (position (array-element-type value)
+                 '((unsigned-byte 8))
+                   ;single-float)
+                 :test #'equal)))
 

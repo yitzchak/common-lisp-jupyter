@@ -280,7 +280,7 @@
          (setf (gethash ,indicator-var ,place) new-value)))))
 
 
-(defmacro make-interactive-hash-table (schemas place)
+(defmacro make-interactive-hash-table (schemas place &key owner name)
   (let ((schemas-var (gensym))
         (indicators-var (gensym))
         (owner-var (gensym))

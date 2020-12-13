@@ -1,6 +1,5 @@
 (in-package #:jupyter)
 
-(defvar *kernel* nil)
 (defvar *message* nil)
 (defvar *payload* nil)
 (defvar *debugger* nil)
@@ -628,8 +627,7 @@
 
 (defun handle-interrupt-request (kernel msg)
   (inform :info kernel "Handling interrupt_request message")
-  (let* ((control (kernel-control kernel))
-         (content (message-content msg)))
+  (let ((control (kernel-control kernel)))
     (bordeaux-threads:interrupt-thread (kernel-shell-thread kernel) (lambda () (throw 'kernel-interrupt nil)))
     (sleep 1)
     (send-interrupt-reply control msg)

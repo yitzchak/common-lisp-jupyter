@@ -92,29 +92,29 @@
         ("version_minor" 0)
         ("model_id" (jupyter:comm-id w))))))
 
-(defmethod to-json-state (w &optional nm)
-  (iter
-    (with state = (jupyter:json-empty-obj))
-    (for def in (closer-mop:class-slots (class-of w)))
-    (for name next (closer-mop:slot-definition-name def))
-    (for trait-name next (trait-name name))
-    (for type next (trait-type def))
-    (when (and (or (not nm) (eql trait-name nm))
-               (slot-boundp w name)
-               type
-               (not (eql type t)))
-      (jupyter:json-extend-obj state
-        ((symbol-to-snake-case name)
-          (serialize-trait w type trait-name (slot-value w name)))))
-    (finally (return state))))
-
-
-(defun binary-value-p (value)
-  (and (vectorp value)
-       (position (array-element-type value)
-                 '((unsigned-byte 8))
-                   ;single-float)
-                 :test #'equal)))
+;
+(defun to-json-state (w &optional nm)
+  (let ((state (jupyter:json-empty-obj))
+        buffer-paths
+        buffers)
+    (dolist (def (closer-mop:class-slots (class-of w)) (values state buffer-paths buffers))
+      (let* ((name (closer-mop:slot-definition-name def))
+             (trait-name (trait-name name))
+             (type (trait-type def))
+             (path-name (symbol-to-snake-case name)))
+        (when (and (or (not nm) (eql trait-name nm))
+                   (slot-boundp w name)
+                   type
+                   (not (eql type t)))
+          (multiple-value-bind (value sub-buffer-paths sub-buffers)
+                               (serialize-trait w type trait-name (slot-value w name))
+            (when sub-buffers
+              (setf buffer-paths (nconc buffer-paths (mapcar (lambda (buffer-path)
+                                                               (cons path-name buffer-path))
+                                                             sub-buffer-paths))
+                    buffers (nconc buffers sub-buffers)))
+            (jupyter:json-extend-obj state
+              (path-name value))))))))
 
 
 (defun extract-buffers (state &optional path)
@@ -169,14 +169,14 @@
     (inject-buffer state buffer-path buffer)))
 
 (defun send-state (w &optional name)
-  (let ((state (to-json-state w name)))
-    (multiple-value-bind (buffer-paths buffers) (extract-buffers state)
-      (jupyter:send-comm-message w
-        (jupyter:json-new-obj ("method" "update")
-                      ("state" state)
-                      ("buffer_paths" buffer-paths))
-        (jupyter:json-new-obj ("version" +protocol-version+))
-        buffers))))
+  (multiple-value-bind (state buffer-paths buffers)
+                       (to-json-state w name)
+    (jupyter:send-comm-message w
+      (jupyter:json-new-obj ("method" "update")
+                            ("state" state)
+                            ("buffer_paths" buffer-paths))
+      (jupyter:json-new-obj ("version" +protocol-version+))
+      buffers)))
 
 (defun update-state (w data buffers)
   (let ((*trait-source* nil))
@@ -226,13 +226,13 @@
     (prog1
       (call-next-method)
       (unless (getf rest :create-comm)
-        (let ((state (to-json-state instance)))
-          (multiple-value-bind (buffer-paths buffers) (extract-buffers state)
-            (jupyter:send-comm-open instance
-              (jupyter:json-new-obj ("state" state)
-                            ("buffer_paths" buffer-paths))
-              (jupyter:json-new-obj ("version" +protocol-version+))
-              buffers)))))))
+        (multiple-value-bind (state buffer-paths buffers)
+                             (to-json-state instance)
+          (jupyter:send-comm-open instance
+            (jupyter:json-new-obj ("state" state)
+                          ("buffer_paths" buffer-paths))
+            (jupyter:json-new-obj ("version" +protocol-version+))
+            buffers))))))
 
 (defmethod jupyter:create-comm ((target-name (eql :|jupyter.widget|)) id data metadata buffers)
   (let* ((state (jupyter:json-getf data "state"))

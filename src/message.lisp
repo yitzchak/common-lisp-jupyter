@@ -86,9 +86,11 @@
 |#
 
 (defun send-string-part (ch part)
+  (jupyter:inform :info ch "~A" part)
   (pzmq:send (channel-socket ch) part :sndmore t))
 
 (defun send-binary-part (ch part)
+  (jupyter:inform :info ch "binary part ~A" (length part))
   (let ((len (length part)))
     (cond
       ((typep part '(array single-float *))
