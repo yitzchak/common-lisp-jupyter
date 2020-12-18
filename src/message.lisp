@@ -39,6 +39,17 @@
      :accessor message-buffers))
   (:documentation "Representation of IPython messages"))
 
+
+(defmethod initialize-instance :after ((instance message) &rest initargs &key &allow-other-keys)
+  (let ((buffers (message-buffers instance)))
+    (when buffers
+      (trivial-garbage:finalize
+        instance
+        (lambda () (mapcar (lambda (buffer)
+                             (static-vectors:free-static-vector buffer))
+                           buffers))))))
+
+
 (defun date-now ()
   (multiple-value-bind (s m h dt mth yr day)
         (get-decoded-time)
@@ -86,11 +97,9 @@
 |#
 
 (defun send-string-part (ch part)
-  (jupyter:inform :info ch "~A" part)
   (pzmq:send (channel-socket ch) part :sndmore t))
 
 (defun send-binary-part (ch part)
-  (jupyter:inform :info ch "binary part ~A" (length part))
   (let ((len (length part)))
     (cond
       ((typep part '(array single-float *))
@@ -127,9 +136,20 @@
 (defun read-binary-part (ch msg)
   (pzmq:msg-recv msg (channel-socket ch))
   (cffi:foreign-array-to-lisp (pzmq:msg-data msg)
-                            (list :array :uint8 (pzmq:msg-size msg))
-                            ; explicitly defined element type is needed for CLISP
-                            :element-type '(unsigned-byte 8)))
+                              (list :array :uint8 (pzmq:msg-size msg))
+                              ; explicitly defined element type is needed for CLISP
+                              :element-type '(unsigned-byte 8)))
+
+
+(defun read-buffer-part (ch msg)
+  (pzmq:msg-recv msg (channel-socket ch))
+  (let* ((size (pzmq:msg-size msg))
+         (result (static-vectors:make-static-vector size :element-type '(unsigned-byte 8))))
+    (static-vectors:replace-foreign-memory (static-vectors:static-vector-pointer result)
+                                           (pzmq:msg-data msg)
+                                           size)
+    result))
+
 
 (defun read-string-part (ch msg)
   (pzmq:msg-recv msg (channel-socket ch))
@@ -164,10 +184,10 @@
           ; The remaining parts should be binary buffers
           (iter
             (while (more-parts ch msg))
-            (collect (read-binary-part ch msg))))))))
+            (collect (read-buffer-part ch msg))))))))
 
 (defun message-recv (ch)
-  (multiple-value-bind (identities body buffers) (recv-parts ch)
+ (multiple-value-bind (identities body buffers) (recv-parts ch)
     (unless (equal (car body) (compute-signature (channel-mac ch) (cdr body)))
       (inform :warn ch "Signature mismatch on received message."))
     (destructuring-bind (header parent-header metadata content) (mapcar #'jsown:parse (cdr body))

@@ -12,29 +12,41 @@
     (values :null (list nil) (list value))
     (values value nil nil)))
 
-; Bytes
+; Buffer
 
-(defmethod serialize-trait (object (type (eql :bytes)) name (value (eql nil)))
+(defmethod serialize-trait (object (type (eql :buffer)) name (value (eql nil)))
   (declare (ignore object type name value))
   (values :null nil nil))
 
-(defmethod serialize-trait (object (type (eql :bytes)) name value)
+(defmethod serialize-trait (object (type (eql :buffer)) name value)
   (declare (ignore object type name))
   (values :null (list nil) (list value)))
 
-; Bytes List
+(defmethod deserialize-trait (object (type (eql :buffer)) name (value vector))
+  (declare (ignore object type name))
+  (if (binary-value-p value)
+    (let ((result (static-vectors:make-static-vector (length value)
+                                                     :element-type '(unsigned-byte 8))))
+      (trivial-garbage:finalize object (lambda () (static-vectors:free-static-vector result)))
+      (static-vectors:replace-foreign-memory (static-vectors:static-vector-pointer result)
+                                             (static-vectors:static-vector-pointer value)
+                                             (length value))
+      result)
+    value))
 
-(defmethod serialize-trait (object (type (eql :bytes-list)) name (value (eql nil)))
+; Buffer List
+
+(defmethod serialize-trait (object (type (eql :buffer-list)) name (value (eql nil)))
   (declare (ignore object type name value))
   (values :empty-list nil nil))
 
-(defmethod serialize-trait (object (type (eql :bytes-list)) name value)
+(defmethod serialize-trait (object (type (eql :buffer-list)) name value)
   (declare (ignore type name))
   (declare (ignore type name))
   (let (arr buffer-paths buffers)
     (trivial-do:dolist* (index v value (values (nreverse arr) buffer-paths buffers))
       (multiple-value-bind (sv sub-buffer-paths sub-buffers)
-                           (serialize-trait object :bytes nil v)
+                           (serialize-trait object :buffer nil v)
         (setf buffer-paths (nconc buffer-paths
                                   (mapcar (lambda (sp) (cons index sp)) sub-buffer-paths))
               buffers (nconc buffers sub-buffers))
@@ -42,9 +54,15 @@
 
 ; Bool
 
-(defmethod serialize-trait (object (type (eql :bool)) name (value (eql nil)))
-  (declare (ignore object type name value))
-  (values :false nil nil))
+(defmethod serialize-trait (object (type (eql :bool)) name value)
+  (declare (ignore object type name))
+  (cond
+    ((eql :null value)
+      :null)
+    (value
+      :true)
+    (t
+      :false)))
 
 (defmethod deserialize-trait (object (type (eql :bool)) name (value (eql :false)))
   (declare (ignore object type name value))
@@ -188,15 +206,27 @@
   (declare (ignore object type name))
   (mapcar (lambda (x) (coerce x 'double-float)) value))
 
-; Binary Float Vector
+; Single Float Buffer
 
-(defmethod serialize-trait (object (type (eql :binary-float-vector)) name (value (eql nil)))
+(defmethod serialize-trait (object (type (eql :single-float-buffer)) name (value (eql nil)))
   (declare (ignore object type name value))
   (values :null nil nil))
 
-(defmethod serialize-trait (object (type (eql :binary-float-vector)) name value)
+(defmethod serialize-trait (object (type (eql :single-float-buffer)) name value)
   (declare (ignore object type name))
-  (values :null (list nil) value))
+  (values :null (list nil) (list value)))
+
+(defmethod deserialize-trait (object (type (eql :single-float-buffer)) name (value vector))
+  (declare (ignore object type name))
+  (if (binary-value-p value)
+    (let ((result (static-vectors:make-static-vector (/ (length value) 4)
+                                                     :element-type 'single-float)))
+      (trivial-garbage:finalize object (lambda () (static-vectors:free-static-vector result)))
+      (static-vectors:replace-foreign-memory (static-vectors:static-vector-pointer result)
+                                             (static-vectors:static-vector-pointer value)
+                                             (length value))
+      result)
+    value))
 
 ; Link
 
