@@ -196,6 +196,10 @@
 
 ; Float
 
+(defmethod serialize-trait (object (type (eql :float)) name (value (eql nil)))
+  (declare (ignore object type name value))
+  (values :null nil nil))
+
 (defmethod deserialize-trait (object (type (eql :float)) name value)
   (declare (ignore object type name))
   (coerce value 'double-float))
@@ -227,6 +231,24 @@
                                              (length value))
       result)
     value))
+
+; Single Float Buffer List
+
+(defmethod serialize-trait (object (type (eql :single-float-buffer-list)) name (value (eql nil)))
+  (declare (ignore object type name value))
+  (values :empty-list nil nil))
+
+(defmethod serialize-trait (object (type (eql :single-float-buffer-list)) name value)
+  (declare (ignore type name))
+  (declare (ignore type name))
+  (let (arr buffer-paths buffers)
+    (trivial-do:dolist* (index v value (values (nreverse arr) buffer-paths buffers))
+      (multiple-value-bind (sv sub-buffer-paths sub-buffers)
+                           (serialize-trait object :single-float-buffer nil v)
+        (setf buffer-paths (nconc buffer-paths
+                                  (mapcar (lambda (sp) (cons index sp)) sub-buffer-paths))
+              buffers (nconc buffers sub-buffers))
+        (push sv arr)))))
 
 ; Link
 
