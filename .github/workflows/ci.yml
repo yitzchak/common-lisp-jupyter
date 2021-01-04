@@ -34,7 +34,7 @@ jobs:
 
     - name: install jupyter
       shell: bash
-      run: pip3 install --user wheel jupyter jupyter_kernel_test
+      run: pip install --upgrade pip setuptools wheel jupyter jupyter_kernel_test
 
     - name: cache .roswell
       id: cache-dot-roswell
