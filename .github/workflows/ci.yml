@@ -4,8 +4,8 @@ name: CI
 # pull requests to master
 on:
   push:
-  pull_request:
     branches: [ master ]
+  pull_request:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -32,10 +32,13 @@ jobs:
     # Check out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
 
-    - name: install jupyter
-      shell: bash
+    - name: Set up Python
+      uses: actions/setup-python@v2
       with:
         python-version: '3.x'
+
+    - name: install jupyter
+      shell: bash
       run: pip install --upgrade pip setuptools wheel jupyter jupyter_kernel_test
 
     - name: cache .roswell
@@ -68,6 +71,4 @@ jobs:
       run: ros install ./common-lisp-jupyter.asd
     - name: load code and run tests
       shell: bash
-      with:
-        python-version: '3.x'
       run: python tests/client.py
