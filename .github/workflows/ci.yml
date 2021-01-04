@@ -29,6 +29,11 @@ jobs:
         echo "::set-env name=ROSWELL_INSTALL_DIR::$HOME/ros"
         echo "::add-path::$HOME/ros/bin"
 
+    - name: ubuntu specific
+      if: matrix.os == 'ubuntu-latest'
+      shell: bash
+      run: sudo apt-get install g++-multilib libzmq3-dev libzmq3-dev:i386
+
     # Check out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
 
@@ -41,21 +46,13 @@ jobs:
       shell: bash
       run: pip install --upgrade pip setuptools wheel jupyter jupyter_kernel_test
 
-    - name: cache .roswell
-      id: cache-dot-roswell
-      uses: actions/cache@v1
-      with:
-        path: ~/.roswell
-        key: ${{ runner.os }}-dot-roswell-${{ matrix.lisp }}-${{ hashFiles('**/*.asd') }}
-        restore-keys: |
-          ${{ runner.os }}-dot-roswell-${{ matrix.lisp }}-
-          ${{ runner.os }}-dot-roswell-
     - name: install roswell
       shell: bash
       # always run install, since it does some global installs and setup that isn't cached
       env:
        LISP: ${{ matrix.lisp }}
       run: curl -L https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | sh -x
+
     - name: run lisp
       continue-on-error: true
       shell: bash
@@ -63,12 +60,15 @@ jobs:
         ros -e '(format t "~a:~a on ~a~%...~%~%" (lisp-implementation-type) (lisp-implementation-version) (machine-type))'
         ros -e '(format t " fixnum bits:~a~%" (integer-length most-positive-fixnum))'
         ros -e "(ql:quickload 'trivial-features)" -e '(format t "features = ~s~%" *features*)'
+
     - name: update ql dist if we have one cached
       shell: bash
       run: ros -e "(ql:update-all-dists :prompt nil)"
+
     - name: install code
       shell: bash
       run: ros install ./common-lisp-jupyter.asd
+
     - name: load code and run tests
       shell: bash
       run: python tests/client.py
