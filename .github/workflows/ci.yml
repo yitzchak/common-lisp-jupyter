@@ -67,6 +67,7 @@ jobs:
 
     - name: install code
       shell: bash
+      continue-on-error: true
       run: ros install ./common-lisp-jupyter.asd
 
     - name: load code and run tests
