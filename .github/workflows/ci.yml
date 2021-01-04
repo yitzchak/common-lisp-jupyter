@@ -34,6 +34,8 @@ jobs:
 
     - name: install jupyter
       shell: bash
+      with:
+        python-version: '3.x'
       run: pip install --upgrade pip setuptools wheel jupyter jupyter_kernel_test
 
     - name: cache .roswell
@@ -66,4 +68,6 @@ jobs:
       run: ros install ./common-lisp-jupyter.asd
     - name: load code and run tests
       shell: bash
+      with:
+        python-version: '3.x'
       run: python tests/client.py
