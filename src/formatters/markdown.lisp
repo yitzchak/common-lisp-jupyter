@@ -41,7 +41,7 @@
 ; This isn't really the right way to do pre, but it avoids the silly background formatting of
 ; code blocks without a language type in Jupyter.
 (defun pre (stream value colon at &rest args)
-  (declare (ignore args))
+  (declare (ignore colon at args))
   (indent stream)
   (write-line "```pre" stream)
   (indent stream)

@@ -52,6 +52,7 @@
       (let ((sym-name (symbol-name sym)))
         (multiple-value-bind (s status)
                              (find-symbol sym-name package)
+          (declare (ignore s))
           (when (and (member status statuses :test #'eql)
                      (starts-with-subseq partial-name sym-name)
                      (or (and func (fboundp sym))

@@ -1,5 +1,9 @@
 (in-package #:jupyter)
 
+
+(defvar *kernel* nil)
+
+
 (defclass sink ()
   ((path
      :initarg :path

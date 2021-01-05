@@ -64,7 +64,7 @@
      :initform nil
      :accessor widget-value
      :documentation "The value as a byte string."
-     :trait :byte))
+     :trait :buffer))
   (:metaclass trait-metaclass))
 
 

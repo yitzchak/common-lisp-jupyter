@@ -1,5 +1,6 @@
 (defpackage #:jupyter
   (:use #:common-lisp #:alexandria #:iterate)
+  (:nicknames :j)
   (:documentation "Core package for Jupyter support including kernel and installer abstract classes.")
   (:export
     ; utils
@@ -103,6 +104,7 @@
 
 (defpackage #:jupyter-widgets
   (:use #:common-lisp #:alexandria #:iterate)
+  (:nicknames :jw)
   (:documentation "Package for core Jupyter Widget support.")
   (:export
     #:accordion
@@ -290,7 +292,7 @@
     #:make-interactive-plist))
 
 (defpackage #:common-lisp-jupyter
-  (:nicknames :cl-jupyter)
+  (:nicknames :cl-jupyter :clj)
   (:use #:common-lisp #:alexandria #:iterate)
   (:documentation "Provides Common Lisp kernel support.")
   (:export

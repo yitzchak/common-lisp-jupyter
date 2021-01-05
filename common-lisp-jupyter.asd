@@ -19,6 +19,7 @@
      :multilang-documentation
      :pzmq
      :puri
+     :static-vectors
      :trivial-do
      :trivial-garbage
      :trivial-gray-streams

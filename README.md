@@ -2,8 +2,7 @@
 
 [![Binder][mybinder-badge]][mybinder]
 [![Quicklisp][quicklisp-badge]][quicklisp-clj]
-[![Build Status][travis-badge]][travis]
-[![Build status][appveyor-badge]][appveyor]
+[![Build Status][ci-badge]][ci]
 
 A Common Lisp kernel for Jupyter along with a library for building Jupyter
 kernels, based on [Maxima-Jupyter][] by Robert Dodier which was based on
@@ -236,10 +235,10 @@ during the installation phase of Roswell.
 <!--refs-->
 
 [about.ipynb]: http://nbviewer.jupyter.org/github/yitzchak/common-lisp-jupyter/blob/master/examples/about.ipynb
-[appveyor-badge]: https://ci.appveyor.com/api/projects/status/j2voo262b2v9qq3t/branch/master?svg=true
-[appveyor]: https://ci.appveyor.com/project/yitzchak/common-lisp-jupyter/branch/master
 [Bordeaux Threads]: https://common-lisp.net/project/bordeaux-threads/
 [CCL]: https://ccl.clozure.com/
+[ci]: https://github.com/yitzchak/common-lisp-jupyter/actions/
+[ci-badge]: https://github.com/yitzchak/common-lisp-jupyter/workflows/ci/badge.svg
 [cl-jupyter]: https://github.com/fredokun/cl-jupyter/
 [cl-jupyter.lisp]: https://github.com/yitzchak/common-lisp-jupyter/blob/master/src/cl-kernel.lisp
 [cytoscape-clj]: https://github.com/yitzchak/cytoscape-clj
@@ -261,8 +260,6 @@ during the installation phase of Roswell.
 [Roswell Installation Guide]: https://github.com/roswell/roswell/wiki/Installation
 [SBCL]: http://www.sbcl.org/
 [sheet-clj]: https://github.com/yitzchak/sheet-clj
-[travis-badge]: https://travis-ci.com/yitzchak/common-lisp-jupyter.svg?branch=master
-[travis]: https://travis-ci.com/yitzchak/common-lisp-jupyter
 [uiop:dump-image]: https://common-lisp.net/project/asdf/uiop.html#index-dump_002dimage
 [widgets.ipynb]: http://nbviewer.jupyter.org/github/yitzchak/common-lisp-jupyter/blob/master/examples/widgets.ipynb
 [Windows Installation]: https://github.com/yitzchak/common-lisp-jupyter/wiki/Windows-Installation

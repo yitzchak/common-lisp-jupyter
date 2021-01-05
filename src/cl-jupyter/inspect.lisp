@@ -559,10 +559,12 @@
                          exports))))))
 
 
-(defun inspect-method (stream name package statuses detail-level))
+(defun inspect-method (stream name package statuses detail-level)
+  (declare (ignore stream name package statuses detail-level)))
 
 
 (defun inspect-symbol-system (stream sym detail-level)
+  (declare (ignore detail-level))
   #+asdf3.1
   (when-let* ((system-name (asdf/package-inferred-system::package-name-system (package-name (symbol-package sym))))
               (system (asdf:find-system system-name nil)))
@@ -576,6 +578,7 @@
 
 
 (defun inspect-symbol-variable (stream sym detail-level)
+  (declare (ignore detail-level))
   (when (boundp sym)
     (format stream "~%~%## ~:[Dynamic~;Constant~] Variable~@[~%~%~:/mdf:pre/~]~%~%~@/mdf:code/"
             (constantp sym)
@@ -584,6 +587,7 @@
 
 
 (defun inspect-symbol-function (stream sym detail-level)
+  (declare (ignore detail-level))
   (when (fboundp sym)
     (format stream "~%~%## ~A~@[~%~%~:/mdf:pre/~%~%~]~%~%### Syntax~%~%~@/mdf:code/"
             (cond
@@ -601,6 +605,7 @@
 
 
 (defun inspect-symbol-class (stream sym detail-level)
+  (declare (ignore detail-level))
   (when-let ((cls (find-class sym nil)))
     (format stream "~%~%## ~:[Class~;Structure~]~@[~%~%~:/mdf:pre/~]~%~%### Precedence List~%~%~{~@/mdf:text/~^, ~}"
             (subtypep cls (find-class 'structure-object))

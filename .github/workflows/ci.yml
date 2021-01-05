@@ -1,0 +1,69 @@
+name: ci
+
+# Controls when the action will run. Triggers the workflow on push for any branch, and
+# pull requests to master
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  test:
+    name: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+
+    # run the job on every combination of "os" above
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    # tell git not to convert line endings
+    # change roswell install dir and add it to path
+    - name: Windows specific
+      if: matrix.os == 'windows-latest'
+      run: |
+        git config --global core.autocrlf false
+        echo "::set-env name=ROSWELL_INSTALL_DIR::$HOME/ros"
+        echo "::add-path::$HOME/ros/bin"
+
+    - name: Ubuntu specific
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get install libzmq3-dev
+        echo "$HOME/.roswell/bin" >> $GITHUB_PATH
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install Jupyter and Roswell
+      run: |
+        pip install --upgrade pip setuptools wheel jupyter jupyter_kernel_test
+        curl -L https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | sh -x
+        ros install ccl-bin
+        ros use sbcl-bin
+
+    - name: System information
+      run: |
+        jupyter --version
+        ros version
+        ros list installed
+
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Install Jupyter kernels
+      continue-on-error: true
+      run: |
+        ros install ./common-lisp-jupyter.asd
+        ros run --lisp ccl-bin --eval '(ql:quickload :common-lisp-jupyter)' --eval '(clj:roswell-install "ccl-bin")'
+
+    - name: Run kernel tests
+      run: |
+        python tests/client.py

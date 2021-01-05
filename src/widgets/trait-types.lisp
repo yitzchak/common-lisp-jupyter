@@ -2,15 +2,74 @@
 
 (defparameter +widget-prefix+ "IPY_MODEL_")
 
+; vector
+
+(defmethod serialize-trait (object type name (value vector))
+  (declare (ignore object type name))
+  (if (position (array-element-type value)
+                '((unsigned-byte 8))
+                :test #'equal)
+    (values :null (list nil) (list value))
+    (values value nil nil)))
+
+; Buffer
+
+(defmethod serialize-trait (object (type (eql :buffer)) name (value (eql nil)))
+  (declare (ignore object type name value))
+  (values :null nil nil))
+
+(defmethod serialize-trait (object (type (eql :buffer)) name value)
+  (declare (ignore object type name))
+  (values :null (list nil) (list value)))
+
+(defmethod deserialize-trait (object (type (eql :buffer)) name (value vector))
+  (declare (ignore object type name))
+  (if (binary-value-p value)
+    (let ((result (static-vectors:make-static-vector (length value)
+                                                     :element-type '(unsigned-byte 8))))
+      (trivial-garbage:finalize object (lambda () (static-vectors:free-static-vector result)))
+      (static-vectors:replace-foreign-memory (static-vectors:static-vector-pointer result)
+                                             (static-vectors:static-vector-pointer value)
+                                             (length value))
+      result)
+    value))
+
+; Buffer List
+
+(defmethod serialize-trait (object (type (eql :buffer-list)) name (value (eql nil)))
+  (declare (ignore object type name value))
+  (values :empty-list nil nil))
+
+(defmethod serialize-trait (object (type (eql :buffer-list)) name value)
+  (declare (ignore type name))
+  (declare (ignore type name))
+  (let (arr buffer-paths buffers)
+    (trivial-do:dolist* (index v value (values (nreverse arr) buffer-paths buffers))
+      (multiple-value-bind (sv sub-buffer-paths sub-buffers)
+                           (serialize-trait object :buffer nil v)
+        (setf buffer-paths (nconc buffer-paths
+                                  (mapcar (lambda (sp) (cons index sp)) sub-buffer-paths))
+              buffers (nconc buffers sub-buffers))
+        (push sv arr)))))
+
 ; Bool
 
-(defmethod serialize-trait (object (type (eql :bool)) name (value (eql nil)))
-  :false)
+(defmethod serialize-trait (object (type (eql :bool)) name value)
+  (declare (ignore object type name))
+  (cond
+    ((eql :null value)
+      :null)
+    (value
+      :true)
+    (t
+      :false)))
 
 (defmethod deserialize-trait (object (type (eql :bool)) name (value (eql :false)))
+  (declare (ignore object type name value))
   nil)
 
 (defmethod deserialize-trait (object (type (eql :bool)) name (value (eql :true)))
+  (declare (ignore object type name value))
   t)
 
 ; color
@@ -60,87 +119,169 @@
 ; Date
 
 (defmethod serialize-trait (object (type (eql :date)) name value)
-  (if value
-    (jupyter:json-new-obj
-      ("year" (parse-integer value :start 0 :end 4))
-      ("month" (1- (parse-integer value :start 5 :end 7)))
-      ("date" (parse-integer value :start 8 :end 10)))
-    :null))
+  (declare (ignore object type name))
+  (values (if value
+            (jupyter:json-new-obj
+              ("year" (parse-integer value :start 0 :end 4))
+              ("month" (1- (parse-integer value :start 5 :end 7)))
+              ("date" (parse-integer value :start 8 :end 10)))
+            :null)
+          nil nil))
 
 (defmethod deserialize-trait (object (type (eql :date)) name value)
+  (declare (ignore object type name))
   (when (cdr value)
     (format nil "~4,'0D-~2,'0D-~2,'0D"
                 (jupyter:json-getf value "year")
                 (1+ (jupyter:json-getf value "month"))
                 (jupyter:json-getf value "date"))))
 
-; Dict
+; alist
 
-(defmethod serialize-trait (object (type (eql :dict)) name (value (eql :null)))
+(defmethod serialize-trait (object (type (eql :alist)) name (value (eql :null)))
+  (declare (ignore object type name value))
+  (values :null nil nil))
+
+(defmethod deserialize-trait (object (type (eql :alist)) name (value (eql :null)))
+  (declare (ignore object type name value))
   :null)
 
-(defmethod deserialize-trait (object (type (eql :dict)) name (value (eql :null)))
-  :null)
+(defmethod serialize-trait (object (type (eql :alist)) name (value list))
+  (declare (ignore name type))
+  (let (obj buffer-paths buffers)
+    (trivial-do:doalist (k v value (values (cons :obj obj) buffer-paths buffers))
+      (multiple-value-bind (sv sub-buffer-paths sub-buffers)
+                           (serialize-trait object :json nil v)
+        (setf buffer-paths (nconc buffer-paths
+                                  (mapcar (lambda (sp) (cons k sp)) sub-buffer-paths))
+              buffers (nconc buffers sub-buffers))
+        (setf obj (acons k sv obj))))))
 
-(defmethod serialize-trait (object (type (eql :dict)) name (value list))
-  (cons :obj value))
 
-(defmethod deserialize-trait (object (type (eql :dict)) name (value list))
+(defmethod deserialize-trait (object (type (eql :alist)) name (value list))
+  (declare (ignore object type name))
   (cdr value))
 
 ; alist list
 
 (defmethod serialize-trait (object (type (eql :alist-list)) name (value (eql nil)))
-  :empty-list)
+  (declare (ignore object type name value))
+  (values :empty-list nil nil))
 
 (defmethod deserialize-trait (object (type (eql :alist-list)) name (value (eql :empty-list)))
+  (declare (ignore object type name value))
   nil)
 
 (defmethod serialize-trait (object (type (eql :alist-list)) name (value list))
-  (mapcar (lambda (alist)
-            (cons :obj alist))
-          value))
+  (declare (ignore type name))
+  (let (arr buffer-paths buffers)
+    (trivial-do:dolist* (index v value (values (nreverse arr) buffer-paths buffers))
+      (multiple-value-bind (sv sub-buffer-paths sub-buffers)
+                           (serialize-trait object :alist nil v)
+        (setf buffer-paths (nconc buffer-paths
+                                  (mapcar (lambda (sp) (cons index sp)) sub-buffer-paths))
+              buffers (nconc buffers sub-buffers))
+        (push sv arr)))))
 
 (defmethod deserialize-trait (object (type (eql :alist-list)) name (value list))
+  (declare (ignore object type name))
   (mapcar #'cdr value))
 
 
 ; Integer
 
 (defmethod serialize-trait (object (type (eql :int)) name (value (eql nil)))
-  :null)
+  (declare (ignore object type name value))
+  (values :null nil nil))
 
 ; Float
 
+(defmethod serialize-trait (object (type (eql :float)) name (value (eql nil)))
+  (declare (ignore object type name value))
+  (values :null nil nil))
+
 (defmethod deserialize-trait (object (type (eql :float)) name value)
+  (declare (ignore object type name))
   (coerce value 'double-float))
 
 ; Float List
 
 (defmethod deserialize-trait (object (type (eql :float-list)) name value)
+  (declare (ignore object type name))
   (mapcar (lambda (x) (coerce x 'double-float)) value))
+
+; Single Float Buffer
+
+(defmethod serialize-trait (object (type (eql :single-float-buffer)) name (value (eql nil)))
+  (declare (ignore object type name value))
+  (values :null nil nil))
+
+(defmethod serialize-trait (object (type (eql :single-float-buffer)) name value)
+  (declare (ignore object type name))
+  (values :null (list nil) (list value)))
+
+(defmethod deserialize-trait (object (type (eql :single-float-buffer)) name (value vector))
+  (declare (ignore object type name))
+  (if (binary-value-p value)
+    (let ((result (static-vectors:make-static-vector (/ (length value) 4)
+                                                     :element-type 'single-float)))
+      (trivial-garbage:finalize object (lambda () (static-vectors:free-static-vector result)))
+      (static-vectors:replace-foreign-memory (static-vectors:static-vector-pointer result)
+                                             (static-vectors:static-vector-pointer value)
+                                             (length value))
+      result)
+    value))
+
+; Single Float Buffer List
+
+(defmethod serialize-trait (object (type (eql :single-float-buffer-list)) name (value (eql nil)))
+  (declare (ignore object type name value))
+  (values :empty-list nil nil))
+
+(defmethod serialize-trait (object (type (eql :single-float-buffer-list)) name value)
+  (declare (ignore type name))
+  (declare (ignore type name))
+  (let (arr buffer-paths buffers)
+    (trivial-do:dolist* (index v value (values (nreverse arr) buffer-paths buffers))
+      (multiple-value-bind (sv sub-buffer-paths sub-buffers)
+                           (serialize-trait object :single-float-buffer nil v)
+        (setf buffer-paths (nconc buffer-paths
+                                  (mapcar (lambda (sp) (cons index sp)) sub-buffer-paths))
+              buffers (nconc buffers sub-buffers))
+        (push sv arr)))))
 
 ; Link
 
 (defmethod serialize-trait (object (type (eql :link)) name value)
-  (when value
-    (list (serialize-trait object :widget name (first value))
-          (serialize-trait object :trait-name name (second value)))))
+  (declare (ignore type name))
+  (values (when value
+            (list (serialize-trait object :widget nil (first value))
+                  (serialize-trait object :trait-name nil (second value))))
+          nil nil))
 
 (defmethod deserialize-trait (object (type (eql :link)) name value)
+  (declare (ignore type name))
   (when value
-    (list (deserialize-trait object :widget name (first value))
-          (deserialize-trait object :trait-name name (second value)))))
+    (list (deserialize-trait object :widget nil (first value))
+          (deserialize-trait object :trait-name nil (second value)))))
 
 ; plist snake case
 
 (defmethod serialize-trait (object (type (eql :plist-snake-case)) name value)
-  (cons :obj
-        (mapcar (lambda (pair)
-                  (cons (symbol-to-snake-case (car pair)) (cdr pair)))
-                (alexandria:plist-alist value))))
+  (declare (ignore name type))
+  (let (obj buffer-paths buffers)
+    (trivial-do:doplist (k v value (values (cons :obj obj) buffer-paths buffers))
+      (let ((path (symbol-to-snake-case k)))
+        (multiple-value-bind (sv sub-buffer-paths sub-buffers)
+                             (serialize-trait object :json nil v)
+          (setf buffer-paths (nconc buffer-paths
+                                    (mapcar (lambda (sp) (cons path sp)) sub-buffer-paths))
+                buffers (nconc buffers sub-buffers))
+          (setf obj (acons path sv obj)))))))
+
 
 (defmethod deserialize-trait (object (type (eql :plist-snake-case)) name value)
+  (declare (ignore object type name))
   (mapcan (lambda (pair)
             (list (snake-case-to-symbol (car pair))
                   (cdr pair)))
@@ -149,12 +290,21 @@
 ; plist camel case
 
 (defmethod serialize-trait (object (type (eql :plist-camel-case)) name value)
-  (cons :obj
-    (mapcar (lambda (pair)
-              (cons (symbol-to-camel-case (car pair)) (cdr pair)))
-            (alexandria:plist-alist value))))
+  (declare (ignore name type))
+  (let (obj buffer-paths buffers)
+    (trivial-do:doplist (k v value (values (cons :obj obj) buffer-paths buffers))
+      (let ((path (symbol-to-camel-case k)))
+        (multiple-value-bind (sv sub-buffer-paths sub-buffers)
+                             (serialize-trait object :json nil v)
+          (setf buffer-paths (nconc buffer-paths
+                                    (mapcar (lambda (sp) (cons path sp)) sub-buffer-paths))
+                buffers (nconc buffers sub-buffers))
+          (setf obj (acons path sv obj)))))))
+
+
 
 (defmethod deserialize-trait (object (type (eql :plist-camel-case)) name value)
+  (declare (ignore object type name))
   (mapcan (lambda (pair)
             (list (camel-case-to-symbol (car pair))
                   (cdr pair)))
@@ -163,54 +313,103 @@
 ; plist list snake case
 
 (defmethod serialize-trait (object (type (eql :plist-list-snake-case)) name (value (eql nil)))
-  :empty-list)
+  (declare (ignore object type name value))
+  (values :empty-list nil nil))
 
 (defmethod deserialize-trait (object (type (eql :plist-list-snake-case)) name (value (eql :empty-list)))
+  (declare (ignore object type name value))
   nil)
 
 (defmethod serialize-trait (object (type (eql :plist-list-snake-case)) name (value list))
-  (mapcar (lambda (v)
-            (serialize-trait object :plist-snake-case name v))
-          value))
+  (declare (ignore type name))
+  (let (arr buffer-paths buffers)
+    (trivial-do:dolist* (index v value (values (nreverse arr) buffer-paths buffers))
+      (multiple-value-bind (sv sub-buffer-paths sub-buffers)
+                           (serialize-trait object :plist-snake-case nil v)
+        (setf buffer-paths (nconc buffer-paths
+                                  (mapcar (lambda (sp) (cons index sp)) sub-buffer-paths))
+              buffers (nconc buffers sub-buffers))
+        (push sv arr)))))
 
 (defmethod deserialize-trait (object (type (eql :plist-list-snake-case)) name (value list))
+  (declare (ignore type name))
   (mapcar (lambda (v)
-            (deserialize-trait object :plist-snake-case name v))
+            (deserialize-trait object :plist-snake-case nil v))
+          value))
+
+; plist list camel case
+
+(defmethod serialize-trait (object (type (eql :plist-list-camel-case)) name (value (eql nil)))
+  (declare (ignore object type name value))
+  (values :empty-list nil nil))
+
+(defmethod deserialize-trait (object (type (eql :plist-list-camel-case)) name (value (eql :empty-list)))
+  (declare (ignore object type name value))
+  nil)
+
+(defmethod serialize-trait (object (type (eql :plist-list-camel-case)) name (value list))
+  (declare (ignore type name))
+  (let (arr buffer-paths buffers)
+    (trivial-do:dolist* (index v value (values (nreverse arr) buffer-paths buffers))
+      (multiple-value-bind (sv sub-buffer-paths sub-buffers)
+                           (serialize-trait object :plist-camel-case nil v)
+        (setf buffer-paths (nconc buffer-paths
+                                  (mapcar (lambda (sp) (cons index sp)) sub-buffer-paths))
+              buffers (nconc buffers sub-buffers))
+        (push sv arr)))))
+
+(defmethod deserialize-trait (object (type (eql :plist-list-camel-case)) name (value list))
+  (declare (ignore type name))
+  (mapcar (lambda (v)
+            (deserialize-trait object :plist-camel-case nil v))
           value))
 
 ; Trait Name
 
 (defmethod serialize-trait (object (type (eql :trait-name)) name value)
-  (when value
-    (symbol-to-snake-case value)))
+  (declare (ignore object type name))
+  (values (when value
+            (symbol-to-snake-case value))
+          nil nil))
 
 (defmethod deserialize-trait (object (type (eql :trait-name)) name value)
+  (declare (ignore object type name))
   (when value
     (snake-case-to-symbol value)))
 
 ; Unicode
 
 (defmethod serialize-trait (object (type (eql :unicode)) name (value (eql nil)))
-  :null)
+  (declare (ignore object type name value))
+  (values :null nil nil))
 
 (defmethod serialize-trait (object (type (eql :string)) name (value (eql nil)))
-  :null)
+  (declare (ignore object type name value))
+  (values :null nil nil))
 
 ; Widget
 
 (defmethod serialize-trait (object (type (eql :widget)) name (value (eql nil)))
-  :null)
+  (declare (ignore object type name value))
+  (values :null nil nil))
 
 (defmethod serialize-trait (object type name (value widget))
-  (concatenate 'string +widget-prefix+ (jupyter:comm-id value)))
+  (declare (ignore object type name))
+  (values (concatenate 'string +widget-prefix+ (jupyter:comm-id value))
+          nil nil))
 
 (defmethod deserialize-trait (object (type (eql :widget)) name value)
+  (declare (ignore object type name))
   (jupyter:get-comm (subseq value (length +widget-prefix+))))
 
 ; Widget List
 
 (defmethod serialize-trait (object (type (eql :widget-list)) name value)
-  (mapcar (lambda (v) (serialize-trait object :widget name v)) value))
+  (declare (ignore type name))
+  (values (mapcar (lambda (v)
+                    (serialize-trait object :widget nil v)) value)
+          nil nil))
 
 (defmethod deserialize-trait (object (type (eql :widget-list)) name value)
-  (mapcar (lambda (v) (deserialize-trait object :widget name v)) value))
+  (declare (ignore type name))
+  (mapcar (lambda (v) (deserialize-trait object :widget nil v)) value))
