@@ -7,6 +7,10 @@ on:
     branches: [ master ]
   pull_request:
 
+defaults:
+  run:
+    shell: bash
+
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   test:
@@ -44,11 +48,9 @@ jobs:
         python-version: '3.x'
 
     - name: install jupyter
-      shell: bash
       run: pip install --upgrade pip setuptools wheel jupyter jupyter_kernel_test
 
     - name: install roswell
-      shell: bash
       # always run install, since it does some global installs and setup that isn't cached
       env:
        LISP: ${{ matrix.lisp }}
@@ -56,21 +58,18 @@ jobs:
 
     - name: run lisp
       continue-on-error: true
-      shell: bash
       run: |
         ros -e '(format t "~a:~a on ~a~%...~%~%" (lisp-implementation-type) (lisp-implementation-version) (machine-type))'
         ros -e '(format t " fixnum bits:~a~%" (integer-length most-positive-fixnum))'
         ros -e "(ql:quickload 'trivial-features)" -e '(format t "features = ~s~%" *features*)'
+        ls "$HOME/.local/bin"
 
     - name: update ql dist if we have one cached
-      shell: bash
       run: ros -e "(ql:update-all-dists :prompt nil)"
 
     - name: install code
-      shell: bash
       continue-on-error: true
       run: ros install ./common-lisp-jupyter.asd
 
     - name: load code and run tests
-      shell: bash
       run: python tests/client.py
