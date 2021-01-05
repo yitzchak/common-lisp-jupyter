@@ -46,12 +46,13 @@ jobs:
       run: |
         pip install --upgrade pip setuptools wheel jupyter jupyter_kernel_test
         curl -L https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | sh -x
-	ros install ecl
+        ros install ecl
         ros install ccl-bin
         ros install cmu-bin
         ros use sbcl-bin
 
-    - uses: actions/checkout@v2
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
     - name: Install Jupyter kernels
       continue-on-error: true
@@ -62,4 +63,5 @@ jobs:
         ros run --lisp cmu-bin --eval '(ql:quickload :common-lisp-jupyter)' --eval '(clj:roswell-install "cmu-bin")'
 
     - name: Run kernel tests
-      run: python tests/client.py
+      run: |
+        python tests/client.py
