@@ -11,7 +11,6 @@ defaults:
   run:
     shell: bash
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   test:
     name: ${{ matrix.os }}
@@ -19,45 +18,48 @@ jobs:
       matrix:
         os: [ubuntu-latest]
 
-    # run the job on every combination of "lisp" and "os" above
+    # run the job on every combination of "os" above
     runs-on: ${{ matrix.os }}
 
     steps:
     # tell git not to convert line endings
     # change roswell install dir and add it to path
-    - name: windows specific settings
+    - name: Windows specific
       if: matrix.os == 'windows-latest'
       run: |
         git config --global core.autocrlf false
         echo "::set-env name=ROSWELL_INSTALL_DIR::$HOME/ros"
         echo "::add-path::$HOME/ros/bin"
 
-    - name: ubuntu specific
+    - name: Ubuntu specific
       if: matrix.os == 'ubuntu-latest'
       run: |
         sudo apt-get install libzmq3-dev
         echo "$HOME/.roswell/bin" >> $GITHUB_PATH
-
-    - uses: actions/checkout@v2
 
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
         python-version: '3.x'
 
-    - name: install jupyter
-      run: pip install --upgrade pip setuptools wheel jupyter jupyter_kernel_test
-
-    - name: install roswell
+    - name: Install Jupyter and Roswell
       run: |
+        pip install --upgrade pip setuptools wheel jupyter jupyter_kernel_test
         curl -L https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | sh -x
+	ros install ecl
         ros install ccl-bin
+        ros install cmu-bin
+        ros use sbcl-bin
 
-    - name: install code
+    - uses: actions/checkout@v2
+
+    - name: Install Jupyter kernels
       continue-on-error: true
       run: |
         ros install ./common-lisp-jupyter.asd
+        ros run --lisp ecl --eval '(ql:quickload :common-lisp-jupyter)' --eval '(clj:roswell-install "ecl")'
         ros run --lisp ccl-bin --eval '(ql:quickload :common-lisp-jupyter)' --eval '(clj:roswell-install "ccl-bin")'
+        ros run --lisp cmu-bin --eval '(ql:quickload :common-lisp-jupyter)' --eval '(clj:roswell-install "cmu-bin")'
 
-    - name: load code and run tests
+    - name: Run kernel tests
       run: python tests/client.py
