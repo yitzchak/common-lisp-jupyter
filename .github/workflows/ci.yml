@@ -31,7 +31,6 @@ jobs:
 
     - name: ubuntu specific
       if: matrix.os == 'ubuntu-latest'
-      shell: bash
       run: |
       	echo "$HOME/.local/bin" >> $GITHUB_PATH
       	sudo apt-get install libzmq3-dev
