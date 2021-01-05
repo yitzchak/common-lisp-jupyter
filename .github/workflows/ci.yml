@@ -36,7 +36,6 @@ jobs:
     - name: ubuntu specific
       if: matrix.os == 'ubuntu-latest'
       run: |
-        echo "$HOME/.local/bin" >> $GITHUB_PATH
         sudo apt-get install libzmq3-dev
 
     # Check out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -54,7 +53,9 @@ jobs:
       # always run install, since it does some global installs and setup that isn't cached
       env:
        LISP: ${{ matrix.lisp }}
-      run: curl -L https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | sh -x
+      run: |
+        curl -L https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | sh -x
+        echo "$HOME/.roswell/bin" >> $GITHUB_PATH
 
     - name: run lisp
       continue-on-error: true
@@ -62,7 +63,6 @@ jobs:
         ros -e '(format t "~a:~a on ~a~%...~%~%" (lisp-implementation-type) (lisp-implementation-version) (machine-type))'
         ros -e '(format t " fixnum bits:~a~%" (integer-length most-positive-fixnum))'
         ros -e "(ql:quickload 'trivial-features)" -e '(format t "features = ~s~%" *features*)'
-        ls "$HOME/.local/bin"
 
     - name: update ql dist if we have one cached
       run: ros -e "(ql:update-all-dists :prompt nil)"
