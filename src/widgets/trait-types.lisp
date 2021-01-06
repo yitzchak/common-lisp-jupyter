@@ -6,9 +6,7 @@
 
 (defmethod serialize-trait (object type name (value vector))
   (declare (ignore object type name))
-  (if (position (array-element-type value)
-                '((unsigned-byte 8))
-                :test #'equal)
+  (if (binary-value-p value)
     (values :null (list nil) (list value))
     (values value nil nil)))
 

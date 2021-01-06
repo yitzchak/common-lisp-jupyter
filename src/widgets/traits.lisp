@@ -170,7 +170,8 @@
 (defun binary-value-p (value)
   (and (vectorp value)
        (position (array-element-type value)
-                 '((unsigned-byte 8))
-                   ;single-float)
-                 :test #'equal)))
+                 '((unsigned-byte 8)
+                   #+clasp ext:byte8)
+                 :test #'equal)
+       t))
 

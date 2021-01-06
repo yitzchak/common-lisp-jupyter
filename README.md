@@ -1,7 +1,6 @@
 # common-lisp-jupyter
 
 [![Binder][mybinder-badge]][mybinder]
-[![Quicklisp][quicklisp-badge]][quicklisp-clj]
 [![Build Status][ci-badge]][ci]
 
 A Common Lisp kernel for Jupyter along with a library for building Jupyter
@@ -252,8 +251,6 @@ during the installation phase of Roswell.
 [mybinder]: https://mybinder.org/v2/gh/yitzchak/common-lisp-jupyter/master?urlpath=lab
 [nbviewer]: http://nbviewer.jupyter.org
 [nglview-cl]: https://github.com/cando-developers/nglview-cl
-[quicklisp-badge]: http://quickdocs.org/badge/common-lisp-jupyter.svg
-[quicklisp-clj]: http://quickdocs.org/common-lisp-jupyter
 [Quicklisp]: https://www.quicklisp.org/
 [repo2docker]: https://repo2docker.readthedocs.io/en/latest/
 [Roswell]: https://github.com/roswell/roswell
