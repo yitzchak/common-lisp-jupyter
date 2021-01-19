@@ -1,13 +1,14 @@
 (load "quicklisp.lisp")
 
-(quicklisp-quickstart:install)
+(handler-bind
+    ((simple-error (lambda (err)
+                     (declare (ignore err))
+                     (invoke-restart 'quicklisp-quickstart::load-setup))))
+  (quicklisp-quickstart:install))
+
 (ql-util:without-prompting
   (ql:add-to-init-file))
 
-(ql:quickload :ziz)
+(ql:quickload :common-lisp-jupyter)
 
-(ziz:with-distribution (dist :releases '("."))
-  (ql-dist:install-dist (ziz:distribution-info-url dist) :prompt nil)
-  (ql:quickload :common-lisp-jupyter))
-
-(cl-jupyter:install)
+(clj:install :use-implementation t :bin-path (first (uiop:command-line-arguments)))

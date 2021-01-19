@@ -25,52 +25,53 @@ jobs:
 
     steps:
     # tell git not to convert line endings
-    # change roswell install dir and add it to path
-    - name: Windows specific
+    - name: Install Windows dependencies
       if: matrix.os == 'windows-latest'
       run: |
         git config --global core.autocrlf false
-        echo "::set-env name=ROSWELL_INSTALL_DIR::$HOME/ros"
-        echo "::add-path::$HOME/ros/bin"
 
-    - name: Ubuntu specific
+    - name: Install Ubuntu dependencies
       if: matrix.os == 'ubuntu-latest'
       run: |
-        sudo apt-get install libzmq3-dev
-        echo "$HOME/.roswell/bin" >> $GITHUB_PATH
+        sudo apt-get install libzmq3-dev sbcl
 
-    - name: MacOs specific
+    - name: Install MacOS dependencies
       if: matrix.os == 'macos-latest'
       run: |
-        brew install czmq
-        echo "$HOME/.roswell/bin" >> $GITHUB_PATH
+        brew install clozure-cl czmq sbcl
 
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
         python-version: '3.x'
 
-    - name: Install Jupyter and Roswell
+    - name: Install Jupyter
       run: |
         pip install --upgrade pip setuptools wheel jupyter jupyter_kernel_test
-        curl -L https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | sh -x
-        ros install ccl-bin
-        ros use sbcl-bin
-
-    - name: System information
-      run: |
         jupyter --version
-        ros version
-        ros list installed
 
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Install Jupyter kernels
-      continue-on-error: true
+    - name: Download Quicklisp and setup source registry
       run: |
-        ros install ./common-lisp-jupyter.asd
-        ros run --lisp ccl-bin --eval '(ql:quickload :common-lisp-jupyter)' --eval '(clj:roswell-install "ccl-bin")'
+        curl -kLO https://beta.quicklisp.org/quicklisp.lisp
+        mkdir -p $HOME/.config/common-lisp
+        echo "(:source-registry (:tree (\"$PWD\")) :inherit-configuration)" >$HOME/.config/common-lisp/source-registry.conf
+
+    - name: Install SBCL kernel
+      run: |
+        sbcl --non-interactive --load scripts/usr-install.lisp sbcl
+
+    - name: Install CCL kernel
+      if: matrix.os == 'macos-latest'
+      run: |
+        ccl64 --batch --load scripts/usr-install.lisp
+
+    # - name: Install ECL Jupyter kernel
+    #   if: matrix.os == 'ubuntu-latest'
+    #   run: |
+    #     ecl -shell scripts/usr-install.lisp
 
     - name: Run kernel tests
       run: |
