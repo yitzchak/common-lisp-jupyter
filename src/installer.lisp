@@ -53,6 +53,10 @@
   ()
   (:documentation "System installer class."))
 
+(defclass system-bundle-installer (installer)
+  ()
+  (:documentation "System bundle installer class."))
+
 (defclass user-installer (installer)
   ()
   (:documentation "User installer class."))
@@ -261,5 +265,9 @@
 
 (defmethod install ((instance system-installer))
   "Install system kernel."
-  (install-bundle instance)
   (install-local-systems instance))
+
+(defmethod install ((instance system-bundle-installer))
+  "Install system bundle kernel."
+  (install-bundle instance)
+  (install-local-systems instance))  

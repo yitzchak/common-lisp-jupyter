@@ -16,6 +16,10 @@
   ()
   (:documentation "common-lisp-jupyter system installer."))
 
+(defclass system-bundle-installer (jupyter:system-bundle-installer cl-installer)
+  ()
+  (:documentation "common-lisp-jupyter system bundle installer."))
+
 (defclass user-installer (jupyter:user-installer cl-installer)
   ()
   (:documentation "common-lisp-jupyter user installer."))
@@ -39,7 +43,17 @@
       +eval-flag+ "(jupyter:run-kernel 'common-lisp-jupyter:kernel #\"{connection_file}\")")))
 
 (defmethod jupyter:command-line ((instance system-installer))
-  "Get the command line for a system installation."
+  "Get the command line for a user installation."
+  (let ((implementation (jupyter:installer-implementation instance)))
+    (list
+      (or implementation
+          (first (uiop:raw-command-line-arguments))
+          (format nil "~(~A~)" (uiop:implementation-type)))
+      +eval-flag+ "(ql:quickload :common-lisp-jupyter)"
+      +eval-flag+ "(jupyter:run-kernel 'common-lisp-jupyter:kernel #\"{connection_file}\")")))
+
+(defmethod jupyter:command-line ((instance system-bundle-installer))
+  "Get the command line for a system bundle installation."
   (let ((implementation (jupyter:installer-implementation instance)))
     (list
       (or implementation
@@ -68,19 +82,24 @@
                     (truename (user-homedir-pathname)))))))
           '("{connection_file}"))))
 
-(defun install (&key bin-path use-implementation system local prefix)
+(defun install (&key bin-path use-implementation system bundle local prefix)
   "Install Common Lisp kernel based on the current implementation.
 - `bin-path` specifies path to LISP binary.
 - `use-implementation` toggles including implementation details in kernel name.
 - `system` toggles system versus user installation.
+- `bundle` creates a quicklisp bundle for system installations.
 - `local` toggles `/usr/local/share versus` `/usr/share` for system installations.
 - `prefix` key specifies directory prefix for packaging.
 "
   (jupyter:install
     (make-instance
-      (if system
-        'system-installer
-        'user-installer)
+      (cond
+        ((and system bundle)
+          'system-bundle-installer)
+        (system
+          'system-installer)
+        (t
+          'user-installer))
       :display-name
         (if use-implementation
           (format nil "~A (~A)" +display-name+ (lisp-implementation-type))
