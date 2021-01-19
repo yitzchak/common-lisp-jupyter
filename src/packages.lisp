@@ -41,7 +41,6 @@
     #:match-set-add
     #:make-offset-match-set
     ; kernel
-    #:*page-output*
     #:clear
     #:code-is-complete
     #:comm
@@ -52,6 +51,7 @@
     #:debugging-errors
     #:enqueue-input
     #:evaluate-code
+    #:get-comm
     #:handling-errors
     #:inform
     #:inspect-code
@@ -62,9 +62,10 @@
     #:on-comm-close
     #:on-comm-message
     #:on-comm-open
+    #:*page-output*
+    #:quit
     #:quit-condition
     #:run-kernel
-    #:get-comm
     #:send-comm-close
     #:send-comm-message
     #:send-comm-open

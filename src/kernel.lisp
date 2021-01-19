@@ -317,33 +317,41 @@
     (stop mac)
     (stop history)
     (stop sink)
-    (pzmq:ctx-destroy ctx)))
+    (pzmq:ctx-destroy ctx)
+    (uiop:quit)))
 
 
 (defun run-shell (kernel)
   (catch 'kernel-shutdown
-    (prog (msg)
-     read-next
+    (tagbody
+     poll
       (catch 'kernel-interrupt
-        (progn
-          (setq msg (message-recv (kernel-shell kernel)))
-          (unless (handle-shell-message kernel msg)
+        (cond
+          ((not (message-available-p (kernel-shell kernel)))
+            (sleep 0.1))
+          ((not (handle-shell-message kernel (message-recv (kernel-shell kernel))))
             (bordeaux-threads:interrupt-thread
               (kernel-control-thread kernel)
               (lambda ()
                 (throw 'kernel-shutdown nil)))
-            (return))))
-      (go read-next))))
+            (go leave))))
+      (go poll)
+     leave))
+  (inform :info kernel "Shell thread exiting normally."))
 
 
 (defun run-control (kernel)
   (catch 'kernel-shutdown
-    (prog (msg)
-     read-next
-      (inform :info kernel "Waiting for control message")
-      (setq msg (message-recv (kernel-control kernel)))
-      (when (handle-control-message kernel msg)
-        (go read-next)))))
+    (tagbody
+     poll
+      (cond
+        ((not (message-available-p (kernel-control kernel)))
+          (sleep 0.1))
+        ((not (handle-control-message kernel (message-recv (kernel-control kernel))))
+          (go leave)))
+      (go poll)
+     leave))
+  (inform :info kernel "Control thread exiting normally."))
 
 
 (defun run-kernel (kernel-class connection-file)
@@ -835,14 +843,23 @@
   (vector-push-extend (json-new-obj
                         ("source" "set_next_input")
                         ("text" text))
-                      *payload*))
+                      *payload*)
+  (values))
 
 (defun page (result &optional (start 0))
   (vector-push-extend (json-new-obj
                         ("source" "page")
                         ("data" (render result))
                         ("start" start))
-                      *payload*))
+                      *payload*)
+  (values))
+
+(defun quit (&optional keep-kernel)
+  (vector-push-extend (json-new-obj
+                        ("source" "ask_exit")
+                        ("keepkernel" (if keep-kernel :true :false)))
+                      *payload*)
+  (values))
 
 (defun enqueue-input (kernel code)
   "Add code to input queue."
