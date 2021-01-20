@@ -63,6 +63,12 @@
   (pzmq:close (channel-socket ch)))
 
 
+(defun message-available-p (ch)
+  (let ((status (pzmq:getsockopt (channel-socket ch) :events)))
+    (values (and (position :pollin status) t)
+            (and (position :pollout status) t))))
+
+
 (defclass request-channel (channel)
   ((request-queue
      :initarg :request-queue

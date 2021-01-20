@@ -40,6 +40,7 @@
                 (make-message (channel-session shell) "execute_reply"
                               (json-new-obj
                                 ("status" "error")
+                                ("execution_count" execution-count)
                                 ("ename" ename)
                                 ("evalue" evalue)
                                 ("traceback" nil))
