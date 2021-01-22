@@ -16,7 +16,9 @@ jobs:
     name: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os:
+        - macos-latest
+        - ubuntu-latest
 
     # run the job on every combination of "os" above
     runs-on: ${{ matrix.os }}
@@ -36,6 +38,11 @@ jobs:
       run: |
         sudo apt-get install libzmq3-dev
         echo "$HOME/.roswell/bin" >> $GITHUB_PATH
+
+    - name: MacOs specific
+      if: matrix.os == 'macos-latest'
+      run: |
+        brew install czmq
 
     - name: Set up Python
       uses: actions/setup-python@v2
