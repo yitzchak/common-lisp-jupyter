@@ -43,6 +43,7 @@ jobs:
       if: matrix.os == 'macos-latest'
       run: |
         brew install czmq
+        echo "$HOME/.roswell/bin" >> $GITHUB_PATH
 
     - name: Set up Python
       uses: actions/setup-python@v2
