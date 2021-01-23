@@ -58,7 +58,7 @@ features.
 
 - Lisp interface to core IPython widgets is included in the `jupyter-widgets`
   package. Additional widgets are available in [cytoscape-clj][], [kekule-clj][],
-  [nglview-cl][], and [sheet-clj][]
+  [ngl-clj][], and [sheet-clj][]
 
 ## Installation
 
@@ -250,7 +250,7 @@ during the installation phase of Roswell.
 [mybinder-badge]: https://mybinder.org/badge_logo.svg
 [mybinder]: https://mybinder.org/v2/gh/yitzchak/common-lisp-jupyter/master?urlpath=lab
 [nbviewer]: http://nbviewer.jupyter.org
-[nglview-cl]: https://github.com/cando-developers/nglview-cl
+[ngl-clj]: https://github.com/yitzchak/ngl-clj
 [Quicklisp]: https://www.quicklisp.org/
 [repo2docker]: https://repo2docker.readthedocs.io/en/latest/
 [Roswell]: https://github.com/roswell/roswell
