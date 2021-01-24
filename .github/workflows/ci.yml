@@ -36,7 +36,7 @@ jobs:
     - name: Ubuntu specific
       if: matrix.os == 'ubuntu-latest'
       run: |
-        sudo apt-get install libzmq3-dev
+        sudo apt-get install ecl libzmq3-dev
         echo "$HOME/.roswell/bin" >> $GITHUB_PATH
 
     - name: MacOs specific
@@ -66,11 +66,17 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Install Jupyter kernels
+    - name: Install Jupyter kernels (CCL, SBCL)
       continue-on-error: true
       run: |
         ros install ./common-lisp-jupyter.asd
         ros run --lisp ccl-bin --eval '(ql:quickload :common-lisp-jupyter)' --eval '(clj:roswell-install "ccl-bin")'
+
+    # - name: Install Jupyter kernels (ECL)
+    #   if: matrix.os == 'ubuntu-latest'
+    #   run: |
+    #     curl -kLO https://beta.quicklisp.org/quicklisp.lisp
+    #     ecl -shell scripts/usr-install.lisp
 
     - name: Run kernel tests
       run: |

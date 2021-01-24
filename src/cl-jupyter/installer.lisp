@@ -39,7 +39,9 @@
       (or implementation
           (first (uiop:raw-command-line-arguments))
           (format nil "~(~A~)" (uiop:implementation-type)))
-      +eval-flag+ "(ql:quickload :common-lisp-jupyter)"
+      +eval-flag+ (if (find-package :quicklisp)
+                    "(ql:quickload :common-lisp-jupyter)"
+                    "(asdf:load-system :common-lisp-jupyter)")
       +eval-flag+ "(jupyter:run-kernel 'common-lisp-jupyter:kernel #\"{connection_file}\")")))
 
 (defmethod jupyter:command-line ((instance system-installer))
@@ -49,7 +51,9 @@
       (or implementation
           (first (uiop:raw-command-line-arguments))
           (format nil "~(~A~)" (uiop:implementation-type)))
-      +eval-flag+ "(ql:quickload :common-lisp-jupyter)"
+      +eval-flag+ (if (find-package :quicklisp)
+                    "(ql:quickload :common-lisp-jupyter)"
+                    "(asdf:load-system :common-lisp-jupyter)")
       +eval-flag+ "(jupyter:run-kernel 'common-lisp-jupyter:kernel #\"{connection_file}\")")))
 
 (defmethod jupyter:command-line ((instance system-bundle-installer))

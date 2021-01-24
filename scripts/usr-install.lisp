@@ -10,4 +10,4 @@
   (ql-dist:install-dist (ziz:distribution-info-url dist) :prompt nil)
   (ql:quickload :common-lisp-jupyter))
 
-(cl-jupyter:install)
+(cl-jupyter:install :use-implementation t)
