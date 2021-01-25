@@ -86,7 +86,7 @@
                     (truename (user-homedir-pathname)))))))
           '("{connection_file}"))))
 
-(defun install (&key bin-path use-implementation system bundle local prefix)
+(defun install (&key bin-path use-implementation system bundle local prefix root)
   "Install Common Lisp kernel based on the current implementation.
 - `bin-path` specifies path to LISP binary.
 - `use-implementation` toggles including implementation details in kernel name.
@@ -94,7 +94,7 @@
 - `bundle` creates a quicklisp bundle for system installations.
 - `local` toggles `/usr/local/share versus` `/usr/share` for system installations.
 - `prefix` key specifies directory prefix for packaging.
-"
+- `root` key specifies the root under which the Jupyter folder is found. Is automatically determined if not provided."
   (jupyter:install
     (make-instance
       (cond
@@ -114,12 +114,14 @@
         (if use-implementation
           (format nil "~A_~(~A~)" +language+ (uiop:implementation-type))
           +language+)
-      :prefix prefix)))
+      :prefix prefix
+      :root root)))
 
-(defun install-image (&key use-implementation prefix)
+(defun install-image (&key use-implementation prefix root)
   "Install Common Lisp kernel based on image of current implementation.
 - `use-implementation` toggles including implementation details in kernel name.
-- `prefix` key specifies directory prefix for packaging."
+- `prefix` key specifies directory prefix for packaging.
+- `root` key specifies the root under which the Jupyter folder is found. Is automatically determined if not provided."
   (jupyter:install
     (make-instance 'user-image-installer
       :display-name
@@ -130,7 +132,8 @@
         (if use-implementation
           (format nil "~A_~(~A~)" +language+ (uiop:implementation-type))
           +language+)
-      :prefix prefix)))
+      :prefix prefix
+      :root root)))
 
 (defun install-roswell (&key implementation)
   "Install Common Lisp kernel using Roswell. `implementation` key toggles
