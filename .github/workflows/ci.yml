@@ -41,7 +41,7 @@ jobs:
     - name: MacOs specific
       if: matrix.os == 'macos-latest'
       run: |
-        brew install czmq scbl
+        brew install czmq sbcl
 
     - name: Set up Python
       uses: actions/setup-python@v2
