@@ -36,32 +36,29 @@ jobs:
     - name: Ubuntu specific
       if: matrix.os == 'ubuntu-latest'
       run: |
-        sudo apt-get install libzmq3-dev libcurl3 curl
-        echo "$HOME/.roswell/bin" >> $GITHUB_PATH
+        sudo apt-get install libzmq3-dev sbcl
 
     - name: MacOs specific
       if: matrix.os == 'macos-latest'
       run: |
-        brew install czmq
-        echo "$HOME/.roswell/bin" >> $GITHUB_PATH
+        brew install czmq scbl
 
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
         python-version: '3.x'
 
-    - name: Install Jupyter and Roswell
+    - name: Install Jupyter and Quicklisp
       run: |
         pip install --upgrade pip setuptools wheel jupyter jupyter_kernel_test
-        curl -L https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | sh -x
-        ros install ccl-bin
-        ros use sbcl-bin
+        curl -kLO https://beta.quicklisp.org/quicklisp.lisp
+        sbcl --non-interactive --load quicklisp.lisp \
+             --eval '(quicklisp-quickstart:install)' \
+             --eval '(ql-util:without-prompting (ql:add-to-init-file))'
 
     - name: System information
       run: |
         jupyter --version
-        ros version
-        ros list installed
 
     - name: Checkout repository
       uses: actions/checkout@v2
@@ -69,8 +66,10 @@ jobs:
     - name: Install Jupyter kernels (CCL, SBCL)
       continue-on-error: true
       run: |
-        ros install ./common-lisp-jupyter.asd
-        ros run --lisp ccl-bin --eval '(ql:quickload :common-lisp-jupyter)' --eval '(clj:roswell-install "ccl-bin")'
+        sbcl --non-interactive --eval '(ql:quickload :ziz)' \
+             --eval '(ziz:with-distribution (dist :releases '(".")) (ql-dist:install-dist (ziz:distribution-info-url dist) :prompt nil) (ql:quickload :common-lisp-jupyter))'
+	sbcl --non-interactive --eval '(ql:quickload :common-lisp-jupyter)' --eval '(clj:install :use-implementation t)'
+#        ros run --lisp ccl-bin --eval '(ql:quickload :common-lisp-jupyter)' --eval '(clj:roswell-install "ccl-bin")'
 
     # - name: Install Jupyter kernels (ECL)
     #   if: matrix.os == 'ubuntu-latest'
