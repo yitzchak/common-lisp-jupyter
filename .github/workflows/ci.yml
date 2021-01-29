@@ -36,7 +36,7 @@ jobs:
     - name: Ubuntu specific
       if: matrix.os == 'ubuntu-latest'
       run: |
-        sudo apt-get install libzmq3-dev libcurl3
+        sudo apt-get install libzmq3-dev libcurl3 curl
         echo "$HOME/.roswell/bin" >> $GITHUB_PATH
 
     - name: MacOs specific
