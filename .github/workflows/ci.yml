@@ -53,18 +53,24 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Install Jupyter kernels (CCL, SBCL)
+    - name: Download Quicklisp and setup source registry
       run: |
+        curl -kLO https://beta.quicklisp.org/quicklisp.lisp
         mkdir -p $HOME/.config/common-lisp
         echo "(:source-registry (:tree (\"$PWD\")) :inherit-configuration)" >$HOME/.config/common-lisp/source-registry.conf
-        curl -kLO https://beta.quicklisp.org/quicklisp.lisp
-        sbcl --non-interactive --load scripts/usr-install.lisp sbcl
-#        ros run --lisp ccl-bin --eval '(ql:quickload :common-lisp-jupyter)' --eval '(clj:roswell-install "ccl-bin")'
 
-    # - name: Install Jupyter kernels (ECL)
+    - name: Install SBCL kernel
+      run: |
+        sbcl --non-interactive --load scripts/usr-install.lisp sbcl
+
+    - name: Install CCL kernel
+      if: matrix.os == 'macos-latest'
+      run: |
+        ccl --batch --load scripts/usr-install.lisp
+
+    # - name: Install ECL Jupyter kernel
     #   if: matrix.os == 'ubuntu-latest'
     #   run: |
-    #     curl -kLO https://beta.quicklisp.org/quicklisp.lisp
     #     ecl -shell scripts/usr-install.lisp
 
     - name: Run kernel tests
