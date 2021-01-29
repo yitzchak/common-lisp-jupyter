@@ -63,7 +63,7 @@ jobs:
       continue-on-error: true
       run: |
         curl -kLO https://beta.quicklisp.org/quicklisp.lisp
-        sbcl --non-interactive --load ql-install.lisp
+        sbcl --non-interactive --load scripts/ql-install.lisp
 #        ros run --lisp ccl-bin --eval '(ql:quickload :common-lisp-jupyter)' --eval '(clj:roswell-install "ccl-bin")'
 
     # - name: Install Jupyter kernels (ECL)
