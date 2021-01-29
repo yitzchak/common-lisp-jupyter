@@ -51,10 +51,6 @@ jobs:
     - name: Install Jupyter and Quicklisp
       run: |
         pip install --upgrade pip setuptools wheel jupyter jupyter_kernel_test
-        curl -kLO https://beta.quicklisp.org/quicklisp.lisp
-        sbcl --non-interactive --load quicklisp.lisp \
-             --eval '(quicklisp-quickstart:install)' \
-             --eval '(ql-util:without-prompting (ql:add-to-init-file))'
 
     - name: System information
       run: |
@@ -66,9 +62,8 @@ jobs:
     - name: Install Jupyter kernels (CCL, SBCL)
       continue-on-error: true
       run: |
-        sbcl --non-interactive --eval '(ql:quickload :ziz)' \
-             --eval '(ziz:with-distribution (dist :releases '(".")) (ql-dist:install-dist (ziz:distribution-info-url dist) :prompt nil) (ql:quickload :common-lisp-jupyter))'
-        sbcl --non-interactive --eval '(ql:quickload :common-lisp-jupyter)' --eval '(clj:install :use-implementation t)'
+        curl -kLO https://beta.quicklisp.org/quicklisp.lisp
+        sbcl --non-interactive --load ql-install.lisp
 #        ros run --lisp ccl-bin --eval '(ql:quickload :common-lisp-jupyter)' --eval '(clj:roswell-install "ccl-bin")'
 
     # - name: Install Jupyter kernels (ECL)
