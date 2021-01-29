@@ -1,7 +1,9 @@
 (load "quicklisp.lisp")
 
-(unless (probe-file (merge-pathnames (make-pathname :directory '(:relative "quicklisp"))
-                                     (user-homedir-pathname)))
+(handler-bind
+    ((simple-error (lambda (err)
+                     (declare (ignore err))
+                     (invoke-restart 'quicklisp-quickstart::load-setup))))
   (quicklisp-quickstart:install))
 
 (ql-util:without-prompting
