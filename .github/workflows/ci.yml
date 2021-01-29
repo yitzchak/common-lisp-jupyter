@@ -25,35 +25,29 @@ jobs:
 
     steps:
     # tell git not to convert line endings
-    # change roswell install dir and add it to path
-    - name: Windows specific
+    - name: Install Windows dependencies
       if: matrix.os == 'windows-latest'
       run: |
         git config --global core.autocrlf false
-        echo "::set-env name=ROSWELL_INSTALL_DIR::$HOME/ros"
-        echo "::add-path::$HOME/ros/bin"
 
-    - name: Ubuntu specific
+    - name: Install Ubuntu dependencies
       if: matrix.os == 'ubuntu-latest'
       run: |
         sudo apt-get install libzmq3-dev sbcl
 
-    - name: MacOs specific
+    - name: Install MacOS dependencies
       if: matrix.os == 'macos-latest'
       run: |
-        brew install czmq sbcl
+        brew install clozure-cl czmq sbcl
 
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
         python-version: '3.x'
 
-    - name: Install Jupyter and Quicklisp
+    - name: Install Jupyter
       run: |
         pip install --upgrade pip setuptools wheel jupyter jupyter_kernel_test
-
-    - name: System information
-      run: |
         jupyter --version
 
     - name: Checkout repository
@@ -62,6 +56,7 @@ jobs:
     - name: Install Jupyter kernels (CCL, SBCL)
       continue-on-error: true
       run: |
+        echo "(:source-registry (:tree (\"$(PWD)\")) :inherit-configuration)" >$HOME/.config/common-lisp/source-registry.conf
         curl -kLO https://beta.quicklisp.org/quicklisp.lisp
         sbcl --non-interactive --load scripts/ql-install.lisp
 #        ros run --lisp ccl-bin --eval '(ql:quickload :common-lisp-jupyter)' --eval '(clj:roswell-install "ccl-bin")'
