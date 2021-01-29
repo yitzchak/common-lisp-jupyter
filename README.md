@@ -109,10 +109,15 @@ Quicklisp installed you may need to update your distribution with
 
 - To install an image based user kernel evaluate `(cl-jupyter:install-image)`
 - To install a non-image based user kernel evaluate `(cl-jupyter:install)`
+- To install a Quicklisp/ASDF based system which uses system or user packages
+  available via `ql:quickload` or `asdf:load-system` evaluate
+  `(cl-jupyter:install :system t :local t :bundle t :prefix "pkg/")`. Afterward 
+  copy the contents of the `pkg` directory to the system root. For instance in 
+  bash `sudo cp -r pkg/* /`
 - To install a Quicklisp bundle based system evaluate
-  `(cl-jupyter:install :system t :local t :prefix "pkg/")`. Afterward copy the
-  contents of the `pkg` directory to the system root. For instance in bash
-  `sudo cp -r pkg/* /`
+  `(cl-jupyter:install :system t :local t :bundle t :prefix "pkg/")`. Afterward 
+  copy the contents of the `pkg` directory to the system root. For instance in 
+  bash `sudo cp -r pkg/* /`
 
 ### Installing via Quicklisp [version 20190521 and earlier]
 

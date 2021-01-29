@@ -42,6 +42,11 @@
      :initform nil
      :accessor installer-resources
      :documentation "List of paths of resource files such as icons.")
+   (root
+     :initarg :root
+     :initform nil
+     :accessor installer-root
+     :documentation "The root directory under which the Jupyter folder is found. If nil then it will be determined automatically.")
    (systems
      :initarg :systems
      :initform nil
@@ -52,6 +57,10 @@
 (defclass system-installer (installer)
   ()
   (:documentation "System installer class."))
+
+(defclass system-bundle-installer (installer)
+  ()
+  (:documentation "System bundle installer class."))
 
 (defclass user-installer (installer)
   ()
@@ -75,27 +84,27 @@
 
 (defmethod installer-path-part ((instance system-installer) (type (eql :root)))
   "Get the root directory for a system installation."
-  (if (uiop:os-windows-p)
-    ; Use %PROGRAMDATA% on Windows
-    (uiop:getenv-absolute-directory "PROGRAMDATA"))
-    ; Otherwise use either /usr/local/share/ or /usr/share/
-    (make-pathname :directory
-      (if (installer-local instance)
-        '(:absolute "usr" "local" "share")
-        '(:absolute "usr" "share"))))
+  (cond
+    ((installer-root instance)
+      (installer-root instance))
+    ((uiop:os-windows-p) ; Use %PROGRAMDATA% on Windows
+      (uiop:getenv-absolute-directory "PROGRAMDATA"))
+    ((installer-local instance) ; /usr/local/share/
+      (make-pathname :directory '(:absolute "usr" "local" "share")))
+    (t ; /usr/share/
+      (make-pathname :directory '(:absolute "usr" "share")))))
 
 (defmethod installer-path-part ((instance user-installer) (type (eql :root)))
   "Get the root directory for a user installation"
   (cond
-    ; use $HOME/Library/ on Mac
-    ((uiop:os-macosx-p)
+    ((installer-root instance)
+      (installer-root instance))
+    ((uiop:os-macosx-p) ; use $HOME/Library/ on Mac
       (merge-pathnames (make-pathname :directory '(:relative "Library"))
                        (uiop:getenv-pathname "HOME" :ensure-directory t)))
-    ; Use %APPDATA% on Windows
-    ((uiop:os-windows-p)
+    ((uiop:os-windows-p) ; Use %APPDATA% on Windows
       (uiop:get-folder-path :appdata))
-    ; Use XDG_DATA_HOME on all other platforms
-    (t
+    (t ; Use XDG_DATA_HOME on all other platforms
       (uiop:xdg-data-home))))
 
 (defmethod installer-path-part (instance (part (eql :kernel)))
@@ -261,5 +270,9 @@
 
 (defmethod install ((instance system-installer))
   "Install system kernel."
-  (install-bundle instance)
   (install-local-systems instance))
+
+(defmethod install ((instance system-bundle-installer))
+  "Install system bundle kernel."
+  (install-bundle instance)
+  (install-local-systems instance))  

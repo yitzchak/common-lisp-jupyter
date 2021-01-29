@@ -88,6 +88,7 @@
     #:installer-resources
     #:installer-systems
     #:system-installer
+    #:system-bundle-installer
     #:user-image-installer
     #:user-installer))
 
