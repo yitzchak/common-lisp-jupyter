@@ -1,6 +1,8 @@
 (load "quicklisp.lisp")
 
-(quicklisp-quickstart:install)
+(unless (probe-file (merge-pathnames (make-pathname :directory '(:relative "quicklisp"))
+                                     (uiop:getenv-pathname "HOME" :ensure-directory t)))
+  (quicklisp-quickstart:install))
 
 (ql-util:without-prompting
   (ql:add-to-init-file))
