@@ -58,7 +58,7 @@
   ()
   (:documentation "System installer class."))
 
-(defclass system-bundle-installer (installer)
+(defclass system-bundle-installer (system-installer)
   ()
   (:documentation "System bundle installer class."))
 
