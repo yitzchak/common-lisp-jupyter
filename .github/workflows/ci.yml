@@ -9,7 +9,7 @@ on:
 
 defaults:
   run:
-    shell: bash
+    shell: bash -l {0}
 
 jobs:
   test:
@@ -35,6 +35,8 @@ jobs:
       run: |
         git config --global core.autocrlf false
         conda install -c conda-forge m2w64-gcc m2w64-zeromq
+        wget http://downloads.sourceforge.net/project/sbcl/sbcl/2.0.0/sbcl-2.0.0-x86-64-windows-binary.msi
+        msiexec /i sbcl-2.0.0-x86-64-windows-binary.msi /quiet /qn
 
     - name: Install Ubuntu dependencies
       if: matrix.os == 'ubuntu-latest'
