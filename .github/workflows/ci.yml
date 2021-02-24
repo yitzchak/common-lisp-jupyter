@@ -7,13 +7,14 @@ on:
     branches: [ master ]
   pull_request:
 
-defaults:
-  run:
-    shell: bash -l {0}
-
 jobs:
   test:
     name: ${{ matrix.os }}
+
+    defaults:
+      run:
+        shell: bash -l {0}
+
     strategy:
       matrix:
         os:
