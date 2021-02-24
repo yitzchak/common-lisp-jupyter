@@ -19,16 +19,22 @@ jobs:
         os:
         - macos-latest
         - ubuntu-latest
+        - windows-latest
 
     # run the job on every combination of "os" above
     runs-on: ${{ matrix.os }}
 
     steps:
-    # tell git not to convert line endings
+    - uses: conda-incubator/setup-miniconda@v2
+      if: matrix.os == 'windows-latest'
+      with:
+        auto-update-conda: true
+
     - name: Install Windows dependencies
       if: matrix.os == 'windows-latest'
       run: |
         git config --global core.autocrlf false
+        conda install -c conda-forge m2w64-gcc m2w64-zeromq
 
     - name: Install Ubuntu dependencies
       if: matrix.os == 'ubuntu-latest'
@@ -45,9 +51,16 @@ jobs:
       with:
         python-version: '3.x'
 
-    - name: Install Jupyter
+    - name: Install Jupyter via pip
+      if: matrix.os != 'windows-latest'
       run: |
         pip install --upgrade pip setuptools wheel jupyter jupyter_kernel_test
+        jupyter --version
+
+    - name: Install Jupyter via conda
+      if: matrix.os == 'windows-latest'
+      run: |
+        conda install -c conda-forge jupyterlab
         jupyter --version
 
     - name: Checkout repository
