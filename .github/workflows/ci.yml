@@ -38,9 +38,9 @@ jobs:
       run: |
         git config --global core.autocrlf false
         conda install -c conda-forge m2w64-gcc m2w64-zeromq
-        echo "::set-env name=ROSWELL_INSTALL_DIR::$HOME/ros"
-        echo "::add-path::$HOME/ros/bin"
-        curl -L https://raw.githubusercontent.com/roswell/roswell/a8fd8a3c33078d6f06e6cda9d099dcba6fbefcb7/scripts/install-for-ci.sh | sh -x
+        curl -L http://downloads.sourceforge.net/project/sbcl/sbcl/2.0.0/sbcl-2.0.0-x86-64-windows-binary.msi --output sbcl.msi
+        msiexec /a sbcl.msi /qn targetdir=$HOME
+        echo "$HOME/PFiles/Steel Bank Common Lisp/2.0.0" >> $GITHUB_PATH
 
     - name: Install Ubuntu dependencies
       if: matrix.os == 'ubuntu-latest'
@@ -73,13 +73,9 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Download Quicklisp
-      if: matrix.os != 'windows-latest'
+    - name: Download Quicklisp and setup source registry
       run: |
         curl -kLO https://beta.quicklisp.org/quicklisp.lisp
-
-    - name: Setup source registry
-      run: |
         mkdir -p $HOME/.config/common-lisp
         echo "(:source-registry (:tree (\"$PWD\")) :inherit-configuration)" >$HOME/.config/common-lisp/source-registry.conf
 
@@ -91,11 +87,6 @@ jobs:
       if: matrix.os != 'windows-latest'
       run: |
         sbcl --non-interactive --load scripts/usr-install.lisp sbcl
-
-    - name: Install SBCL kernel via roswell
-      if: matrix.os == 'windows-latest'
-      run: |
-        ros install ./common-lisp-jupyter.asd
 
     - name: Install CCL kernel
       if: matrix.os == 'macos-latest'
