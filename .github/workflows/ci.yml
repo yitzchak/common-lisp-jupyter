@@ -39,8 +39,7 @@ jobs:
         git config --global core.autocrlf false
         conda install -c conda-forge m2w64-gcc m2w64-zeromq
         curl -L http://downloads.sourceforge.net/project/sbcl/sbcl/2.0.0/sbcl-2.0.0-x86-64-windows-binary.msi --output sbcl.msi
-        msiexec /a sbcl.msi /qn targetdir=$HOME
-        echo "$HOME/PFiles/Steel Bank Common Lisp/2.0.0" >> $GITHUB_PATH
+        winget install SBCL
 
     - name: Install Ubuntu dependencies
       if: matrix.os == 'ubuntu-latest'
