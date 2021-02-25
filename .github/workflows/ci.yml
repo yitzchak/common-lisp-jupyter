@@ -40,7 +40,7 @@ jobs:
         conda install -c conda-forge m2w64-gcc m2w64-zeromq
         echo "::set-env name=ROSWELL_INSTALL_DIR::$HOME/ros"
         echo "::add-path::$HOME/ros/bin"
-        curl -L https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | sh -x
+        curl -L https://raw.githubusercontent.com/roswell/roswell/a8fd8a3c33078d6f06e6cda9d099dcba6fbefcb7/scripts/install-for-ci.sh | sh -x
 
     - name: Install Ubuntu dependencies
       if: matrix.os == 'ubuntu-latest'
