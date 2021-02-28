@@ -20,7 +20,7 @@
     :mime-type "text/x-common-lisp"
     :file-extension ".lisp"
     :pygments-lexer "common-lisp"
-    :codemirror-mode "text/x-common-lisp"
+    :codemirror-mode "Common Lisp"
     :help-links '(("Common Lisp Documentation" . "https://common-lisp.net/documentation")
                   ("Common Lisp HyperSpec" . "http://www.lispworks.com/documentation/HyperSpec/Front/index.htm")
                   ("Practical Common Lisp" . "http://www.gigamonkeys.com/book/")
