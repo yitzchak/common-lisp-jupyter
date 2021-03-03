@@ -113,6 +113,7 @@
 (defun send-parts (ch identities body buffers)
   (with-slots (send-lock socket) ch
     (bordeaux-threads:with-lock-held (send-lock)
+      (inform :info ch "send-parts ~A" body)
       (dolist (part identities)
         (send-binary-part ch part))
       (send-binary-part ch +IDS-MSG-DELIMITER+)
@@ -193,7 +194,8 @@
             (collect (read-buffer-part ch msg))))))))
 
 (defun message-recv (ch)
- (multiple-value-bind (identities body buffers) (recv-parts ch)
+  (multiple-value-bind (identities body buffers) (recv-parts ch)
+    (inform :info ch "~A" body)
     (unless (equal (car body) (compute-signature (channel-mac ch) (cdr body)))
       (inform :warn ch "Signature mismatch on received message."))
     (destructuring-bind (header parent-header metadata content)

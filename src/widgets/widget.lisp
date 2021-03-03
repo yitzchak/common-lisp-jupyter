@@ -137,7 +137,7 @@
                        (to-json-state w name)
     (jupyter:send-comm-message w
       `(:object ("method" . "update")
-                ("state" . ,new-state)
+                ("state" . ,state)
                 ("buffer_paths" . ,(or buffer-paths :empty-array)))
       `(:object ("version" . ,+protocol-version+))
       buffers)))
@@ -190,7 +190,7 @@
         (multiple-value-bind (state buffer-paths buffers)
                              (to-json-state instance)
           (jupyter:send-comm-open instance
-            `(:object ("state" . ,new-state)
+            `(:object ("state" . ,state)
                       ("buffer_paths" . ,(or buffer-paths :empty-array)))
             `(:object ("version" . ,+protocol-version+))
             buffers))))))
