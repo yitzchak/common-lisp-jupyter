@@ -25,7 +25,7 @@
      :initform nil
      :accessor widget-metadata
      :documentation "List of file metadata"
-     :trait :alist-list)
+     :trait :json)
    (multiple
      :initarg :multiple
      :initform nil
@@ -41,7 +41,8 @@
 
 
 (defmethod widget-value ((instance file-upload))
-  (map 'vector (lambda (content metadata)
+  (map 'vector
+       (lambda (content metadata)
          (let ((table (alexandria:copy-hash-table metadata)))
            (setf (gethash "content" table) content)
            table))

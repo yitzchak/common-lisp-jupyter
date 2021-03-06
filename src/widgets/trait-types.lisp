@@ -36,7 +36,7 @@
 
 (defmethod serialize-trait (object (type (eql :buffer-list)) name (value (eql nil)))
   (declare (ignore object type name value))
-  (values :empty-list nil nil))
+  (values :empty-array nil nil))
 
 (defmethod serialize-trait (object (type (eql :buffer-list)) name value)
   (declare (ignore type name))
@@ -161,9 +161,9 @@
 
 (defmethod serialize-trait (object (type (eql :alist-list)) name (value (eql nil)))
   (declare (ignore object type name value))
-  (values :empty-list nil nil))
+  (values :empty-array nil nil))
 
-(defmethod deserialize-trait (object (type (eql :alist-list)) name (value (eql :empty-list)))
+(defmethod deserialize-trait (object (type (eql :alist-list)) name (value (eql :empty-array)))
   (declare (ignore object type name value))
   nil)
 
@@ -231,7 +231,7 @@
 
 (defmethod serialize-trait (object (type (eql :single-float-buffer-list)) name (value (eql nil)))
   (declare (ignore object type name value))
-  (values :empty-list nil nil))
+  (values :empty-array nil nil))
 
 (defmethod serialize-trait (object (type (eql :single-float-buffer-list)) name value)
   (declare (ignore type name))
@@ -262,8 +262,9 @@
 
 ; list
 
-(defmethod deserialize-trait (object (type (eql :list)) name (value (eql nil)))
-  :empty-array)
+(defmethod serialize-trait (object (type (eql :list)) name (value (eql nil)))
+  (declare (ignore object type name value))
+  (values :empty-array nil nil))
 
 ; plist snake case
 
@@ -311,9 +312,9 @@
 
 (defmethod serialize-trait (object (type (eql :plist-list-snake-case)) name (value (eql nil)))
   (declare (ignore object type name value))
-  (values :empty-list nil nil))
+  (values :empty-array nil nil))
 
-(defmethod deserialize-trait (object (type (eql :plist-list-snake-case)) name (value (eql :empty-list)))
+(defmethod deserialize-trait (object (type (eql :plist-list-snake-case)) name (value (eql :empty-array)))
   (declare (ignore object type name value))
   nil)
 
@@ -338,9 +339,9 @@
 
 (defmethod serialize-trait (object (type (eql :plist-list-camel-case)) name (value (eql nil)))
   (declare (ignore object type name value))
-  (values :empty-list nil nil))
+  (values :empty-array nil nil))
 
-(defmethod deserialize-trait (object (type (eql :plist-list-camel-case)) name (value (eql :empty-list)))
+(defmethod deserialize-trait (object (type (eql :plist-list-camel-case)) name (value (eql :empty-array)))
   (declare (ignore object type name value))
   nil)
 
