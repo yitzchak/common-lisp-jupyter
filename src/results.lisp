@@ -44,7 +44,7 @@ Standard MIME types
           :reader sexpr-result-value)))
 
 (defmethod render ((res sexpr-result))
-  (list :object
+  (list :object-alist
         (cons *plain-text-mime-type* (sexpr-to-text (sexpr-result-value res)))))
 
 (defclass inline-result (result)
@@ -70,14 +70,14 @@ Standard MIME types
         (mime-type (inline-result-mime-type res)))
     (cond
       ((equal mime-type *plain-text-mime-type*)
-        (list :object
+        (list :object-alist
               (cons mime-type value)))
       ((equal mime-type *markdown-mime-type*)
-        (list :object
+        (list :object-alist
               (cons *plain-text-mime-type* value)
               (cons mime-type value)))
       (t
-        (list :object
+        (list :object-alist
               (cons *plain-text-mime-type* "inline-value")
               (cons mime-type (if (or (stringp value) (ends-with-subseq "json" mime-type))
                                 value
@@ -106,9 +106,9 @@ Standard MIME types
   (let* ((path (file-result-path res))
          (mime-type (or (file-result-mime-type res) (trivial-mimes:mime path))))
     (if (equal mime-type *plain-text-mime-type*)
-      (list :object
+      (list :object-alist
             (cons mime-type (read-file-into-string path)))
-      (list :object
+      (list :object-alist
             (cons *plain-text-mime-type* path)
             (cons mime-type
                   (if (or (equal mime-type *svg-mime-type*)

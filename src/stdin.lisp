@@ -21,7 +21,7 @@ See: http://jupyter-client.readthedocs.org/en/latest/messaging.html#messages-on-
 (defun send-input-request (stdin parent-msg prompt)
   (message-send stdin
                 (make-message (channel-session stdin) "input_request"
-                              `(:object
+                              `(:object-alist
                                  ("prompt" . ,prompt))
                               :parent parent-msg)))
 

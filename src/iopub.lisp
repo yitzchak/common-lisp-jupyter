@@ -19,27 +19,27 @@
 (defun send-status (iopub status)
   (message-send iopub
                 (make-message (channel-session iopub) "status"
-                              `(:object
+                              `(:object-alist
                                  ("execution_state" . ,status)))))
 
 (defun send-clear-output (iopub parent-msg wait)
   (message-send iopub
                 (make-message (channel-session iopub) "clear_output"
-                              `(:object
+                              `(:object-alist
                                  ("wait" . ,(if wait :true :false)))
                               :parent parent-msg)))
 
 (defun send-status-update (iopub parent-msg status)
   (message-send iopub
                 (make-message (channel-session iopub) "status"
-                              `(:object
+                              `(:object-alist
                                  ("execution_state" . ,status))
                               :parent parent-msg)))
 
 (defun send-display-data (iopub parent-msg data)
   (message-send iopub
                 (make-message (channel-session iopub) "display_data"
-                              `(:object
+                              `(:object-alist
                                  ("data" . ,data)
                                  ("metadata" . :empty-object))
                               :parent parent-msg)))
@@ -47,7 +47,7 @@
 (defun send-execute-code (iopub parent-msg execution-count code)
   (message-send iopub
                 (make-message (channel-session iopub) "execute_input"
-                              `(:object
+                              `(:object-alist
                                  ("code" . ,code)
                                  ("execution_count" . ,execution-count))
                               :parent parent-msg)))
@@ -55,7 +55,7 @@
 (defun send-execute-result (iopub parent-msg execution-count data)
   (message-send iopub
                 (make-message (channel-session iopub) "execute_result"
-                              `(:object
+                              `(:object-alist
                                  ("execution_count" . ,execution-count)
                                  ("data" . ,data)
                                  ("metadata" . :empty-object))
@@ -64,7 +64,7 @@
 (defun send-execute-error (iopub parent-msg ename evalue)
   (message-send iopub
                 (make-message (channel-session iopub) "error"
-                              `(:object
+                              `(:object-alist
                                  ("ename" . ,ename)
                                  ("evalue" . ,evalue)
                                  ("traceback" . :empty-array))
@@ -73,7 +73,7 @@
 (defun send-stream (iopub parent-msg stream-name data)
   (message-send iopub
                 (make-message (channel-session iopub) "stream"
-                              `(:object
+                              `(:object-alist
                                  ("name" . ,stream-name)
                                  ("text" . ,data))
                               :parent parent-msg)))
@@ -81,7 +81,7 @@
 (defun send-comm-close-orphan (iopub comm-id &optional data)
   (message-send iopub
                 (make-message (channel-session iopub) "comm_close"
-                              `(:object
+                              `(:object-alist
                                  ("comm_id" . comm-id)
                                  ("data" . ,(or data :empty-object))))))
 

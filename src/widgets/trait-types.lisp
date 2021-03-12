@@ -119,7 +119,7 @@
 (defmethod serialize-trait (object (type (eql :date)) name value)
   (declare (ignore object type name))
   (values (if value
-            `(:object
+            `(:object-alist
                ("year" . ,(parse-integer value :start 0 :end 4))
                ("month" . ,(1- (parse-integer value :start 5 :end 7)))
                ("date" . ,(parse-integer value :start 8 :end 10)))
@@ -146,7 +146,7 @@
 (defmethod serialize-trait (object (type (eql :alist)) name (value list))
   (declare (ignore name type))
   (let (obj buffer-paths buffers)
-    (trivial-do:doalist (k v value (values (cons :object obj) buffer-paths buffers))
+    (trivial-do:doalist (k v value (values (cons :object-alist obj) buffer-paths buffers))
       (multiple-value-bind (sv sub-buffer-paths sub-buffers)
                            (serialize-trait object :json nil v)
         (setf buffer-paths (nconc buffer-paths
@@ -271,7 +271,7 @@
 (defmethod serialize-trait (object (type (eql :plist-snake-case)) name value)
   (declare (ignore name type))
   (let (obj buffer-paths buffers)
-    (trivial-do:doplist (k v value (values (cons :object obj) buffer-paths buffers))
+    (trivial-do:doplist (k v value (values (cons :object-alist obj) buffer-paths buffers))
       (let ((path (symbol-to-snake-case k)))
         (multiple-value-bind (sv sub-buffer-paths sub-buffers)
                              (serialize-trait object :json nil v)
@@ -292,7 +292,7 @@
 (defmethod serialize-trait (object (type (eql :plist-camel-case)) name value)
   (declare (ignore name type))
   (let (obj buffer-paths buffers)
-    (trivial-do:doplist (k v value (values (cons :object obj) buffer-paths buffers))
+    (trivial-do:doplist (k v value (values (cons :object-alist obj) buffer-paths buffers))
       (let ((path (symbol-to-camel-case k)))
         (multiple-value-bind (sv sub-buffer-paths sub-buffers)
                              (serialize-trait object :json nil v)

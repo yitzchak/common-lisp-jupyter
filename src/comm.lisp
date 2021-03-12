@@ -43,7 +43,7 @@
         (setf (gethash id comms) comm)
         (message-send iopub
           (make-message session "comm_open"
-                        `(:object
+                        `(:object-alist
                            ("comm_id" . ,id)
                            ("target_name" . ,target-name)
                            ("data" . ,(or data :empty-object)))
@@ -56,7 +56,7 @@
       (with-slots (iopub session) kernel
         (message-send iopub
           (make-message session "comm_msg"
-                        `(:object
+                        `(:object-alist
                            ("comm_id" . ,id)
                            ("data" . ,(or data :empty-object)))
                         :metadata (or metadata :empty-object)
@@ -69,7 +69,7 @@
         (remhash id comms)
         (message-send iopub
           (make-message session "comm_close"
-                        `(:object
+                        `(:object-alist
                            ("comm_id" . ,id)
                            ("data" . ,(or data :empty-object)))
                         :metadata (or metadata :empty-object)

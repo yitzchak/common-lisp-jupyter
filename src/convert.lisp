@@ -33,18 +33,18 @@
   "Convert Lisp source to Jupyter notebook"
   (with-open-file (dest-stream dest :direction :output :if-exists :supersede)
     (shasht:write-json
-      (list :object
+      (list :object-alist
         (cons "nbformat" 4)
         (cons "nbformat_minor" 2)
         (cons "metadata"
-          (list :object
+          (list :object-alist
             (cons "kernelspec"
-              (list :object
+              (list :object-alist
                 (cons "display_name" "Common Lisp")
                 (cons "language" "common-lisp")
                 (cons "name" "common-lisp")))
             (cons "language_info"
-              (list :object
+              (list :object-alist
                 (cons "codemirror_mode" "text/x-common-lisp")
                 (cons "file_extension" ".lisp")
                 (cons "mimetype" "text/x-common-lisp")

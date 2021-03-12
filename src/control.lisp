@@ -19,7 +19,7 @@
 (defun send-shutdown-reply (ch parent-msg restart)
   (message-send ch
                 (make-message (channel-session ch) "shutdown_reply"
-                              `(:object
+                              `(:object-alist
                                  ("restart" ,restart))
                               :parent parent-msg)))
 

@@ -84,10 +84,10 @@
   (:documentation "Base class for all Jupyter widgets."))
 
 (defmethod jupyter:render ((w widget))
-  `(:object
+  `(:object-alist
      ("text/plain" . "A Jupyter Widget")
      ("application/vnd.jupyter.widget-view+json" .
-      (:object
+      (:object-alist
         ("version_major" . 2)
         ("version_minor" . 0)
         ("model_id" . ,(jupyter:comm-id w))))))
@@ -96,7 +96,7 @@
   (let (state
         buffer-paths
         buffers)
-    (dolist (def (closer-mop:class-slots (class-of w)) (values (cons :object state) buffer-paths buffers))
+    (dolist (def (closer-mop:class-slots (class-of w)) (values (cons :object-alist state) buffer-paths buffers))
       (let* ((name (closer-mop:slot-definition-name def))
              (trait-name (trait-name name))
              (type (trait-type def))
@@ -136,10 +136,10 @@
   (multiple-value-bind (state buffer-paths buffers)
                        (to-json-state w name)
     (jupyter:send-comm-message w
-      `(:object ("method" . "update")
+      `(:object-alist ("method" . "update")
                 ("state" . ,state)
                 ("buffer_paths" . ,(or buffer-paths :empty-array)))
-      `(:object ("version" . ,+protocol-version+))
+      `(:object-alist ("version" . ,+protocol-version+))
       buffers)))
 
 (defun update-state (w data buffers)
@@ -157,9 +157,9 @@
 
 (defun send-custom (widget content &optional buffers)
   (jupyter:send-comm-message widget
-    `(:object ("method" . "custom")
+    `(:object-alist ("method" . "custom")
               ("content" . ,content))
-    `(:object ("version" . ,+protocol-version+))
+    `(:object-alist ("version" . ,+protocol-version+))
     buffers))
 
 (defgeneric on-custom-message (widget content buffers))
@@ -190,9 +190,9 @@
         (multiple-value-bind (state buffer-paths buffers)
                              (to-json-state instance)
           (jupyter:send-comm-open instance
-            `(:object ("state" . ,state)
+            `(:object-alist ("state" . ,state)
                       ("buffer_paths" . ,(or buffer-paths :empty-array)))
-            `(:object ("version" . ,+protocol-version+))
+            `(:object-alist ("version" . ,+protocol-version+))
             buffers))))))
 
 (defmethod jupyter:create-comm ((target-name (eql :|jupyter.widget|)) id data metadata buffers)

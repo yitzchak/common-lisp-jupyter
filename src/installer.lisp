@@ -229,7 +229,7 @@
       (format t "Installing kernel spec file ~A~%" spec-path)
       (with-open-file (stream spec-path :direction :output :if-exists :supersede)
         (shasht:write-json
-          (list :object
+          (list :object-alist
             (cons "argv" (command-line instance))
             (cons "display_name" display-name)
             (cons "language" language)

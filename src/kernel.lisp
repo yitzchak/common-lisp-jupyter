@@ -538,19 +538,19 @@
               kernel
     (message-send shell
       (make-message session "kernel_info_reply"
-                    `(:object
+                    `(:object-alist
                        ("protocol_version" . ,+KERNEL-PROTOCOL-VERSION+)
                        ("implementation" . ,name)
                        ("implementation_version" . ,version)
                        ("banner" . ,banner)
                        ("help_links" . ,(or (mapcar
                                               (lambda (p)
-                                                (list :object
+                                                (list :object-alist
                                                       (cons "text" (car p))
                                                       (cons "url" (cdr p))))
                                               help-links)
                                             :empty-array))
-                       ("language_info" . (:object
+                       ("language_info" . (:object-alist
                                             ("name" . ,language-name)
                                             ("version" . ,language-version)
                                             ("mimetype" . ,mime-type)
@@ -703,10 +703,10 @@
                                 (sort (mapcar #'match-text (match-set-matches match-set)) #'string<)
                                 (match-set-start match-set)
                                 (match-set-end match-set)
-                                `(:object
+                                `(:object-alist
                                    ("_jupyter_types_experimental" . ,(or (mapcan (lambda (match)
                                                                                    (when (match-type match)
-                                                                                     (list (list :object
+                                                                                     (list (list :object-alist
                                                                                              (cons "text" (match-text match))
                                                                                              (cons "type" (match-type match))))))
                                                                                  (match-set-matches match-set))
@@ -840,14 +840,14 @@
 
 (defun set-next-input (text &optional (replace nil))
   (declare (ignore replace))
-  (vector-push-extend `(:object
+  (vector-push-extend `(:object-alist
                          ("source" . "set_next_input")
                          ("text" . ,text))
                       *payload*)
   (values))
 
 (defun page (result &optional (start 0))
-  (vector-push-extend `(:object
+  (vector-push-extend `(:object-alist
                          ("source" . "page")
                          ("data" . ,(render result))
                          ("start" . ,start))
@@ -855,7 +855,7 @@
   (values))
 
 (defun quit (&optional keep-kernel)
-  (vector-push-extend `(:object
+  (vector-push-extend `(:object-alist
                          ("source" . "ask_exit")
                          ("keepkernel" . (if keep-kernel :true :false)))
                       *payload*)

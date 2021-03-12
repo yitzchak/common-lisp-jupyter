@@ -61,7 +61,7 @@
     (let ((hdr (message-header parent))
           (identities (message-identities parent)))
       (make-instance 'message
-                     :header `(:object
+                     :header `(:object-alist
                                 ("msg_id" . ,(make-uuid))
                                 ("username" . ,(gethash "username" hdr))
                                 ("session" . ,session-id)
@@ -74,7 +74,7 @@
                      :metadata (or metadata (json-empty-obj))
                      :buffers buffers))
     (make-instance 'message
-                   :header `(:object
+                   :header `(:object-alist
                               ("msg_id" . ,(make-uuid))
                               ("username" . "")
                               ("session" . ,session-id)
