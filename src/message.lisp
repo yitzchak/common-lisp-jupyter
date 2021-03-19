@@ -71,7 +71,7 @@
                      :parent-header hdr
                      :identities identities
                      :content content
-                     :metadata (or metadata (json-empty-obj))
+                     :metadata (or metadata :empty-object)
                      :buffers buffers))
     (make-instance 'message
                    :header `(:object-alist
@@ -82,7 +82,7 @@
                               ("date" . ,(date-now))
                               ("version" . ,+KERNEL-PROTOCOL-VERSION+))
                    :content content
-                   :metadata (or metadata (json-empty-obj))
+                   :metadata (or metadata :empty-object)
                    :buffers buffers)))
 
 ;; XXX: should be a defconstant but  strings are not EQL-able...
@@ -97,7 +97,6 @@
 |#
 
 (defun send-string-part (ch part)
-  (inform :info ch "~A" part)
   (pzmq:send (channel-socket ch) part :sndmore t))
 
 (defun send-binary-part (ch part)
@@ -113,7 +112,6 @@
 (defun send-parts (ch identities body buffers)
   (with-slots (send-lock socket) ch
     (bordeaux-threads:with-lock-held (send-lock)
-      (inform :info ch "send-parts ~A" body)
       (dolist (part identities)
         (send-binary-part ch part))
       (send-binary-part ch +IDS-MSG-DELIMITER+)
@@ -126,7 +124,6 @@
 (defun message-send (ch msg)
   (with-slots (mac) ch
     (with-slots (identities header parent-header metadata content buffers) msg
-      (inform :info ch "~S" (list header parent-header metadata content))
       (let* ((*print-pretty* nil)
              (*read-default-float-format* 'double-float)
              (tail (mapcar (lambda (value)
@@ -195,7 +192,6 @@
 
 (defun message-recv (ch)
   (multiple-value-bind (identities body buffers) (recv-parts ch)
-    (inform :info ch "~A" body)
     (unless (equal (car body) (compute-signature (channel-mac ch) (cdr body)))
       (inform :warn ch "Signature mismatch on received message."))
     (destructuring-bind (header parent-header metadata content)

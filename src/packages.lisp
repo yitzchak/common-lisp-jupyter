@@ -3,14 +3,6 @@
   (:nicknames :j)
   (:documentation "Core package for Jupyter support including kernel and installer abstract classes.")
   (:export
-    ; utils
-    #:json-getf
-    #:json-empty-obj
-    #:json-new-obj
-    #:json-extend-obj
-    #:json-to-plist
-    #:json-keyp
-    #:json-to-nested-plist
     ; log
     #:inform
     ; results

@@ -25,36 +25,6 @@
       bytes
       (octets-to-hex-string bytes))))
 
-(defun json-getf (object indicator &optional default)
-  "Safe accessor for the internal JSON format that behaves like getf"
-  (if-let ((pair (assoc indicator (cdr object) :test #'string=)))
-    (cdr pair)
-    default))
-
-(defmethod (setf json-getf) (new-value object indicator &optional default)
-  (declare (ignore default))
-  (if-let ((pair (assoc indicator (cdr object) :test #'string=)))
-    (rplacd pair new-value)
-    (rplacd object (acons indicator new-value (cdr object)))))
-
-(defmacro json-extend-obj (object &body specs)
-  (with-gensyms (obj-var)
-    `(let ((,obj-var ,object))
-       ,@(mapcar (lambda (spec)
-                   `(setf (gethash ,(first spec) ,obj-var) (progn ,@(rest spec))))
-                 specs)
-       ,obj-var)))
-
-(defun json-empty-obj ()
-  (make-hash-table :test #'equal))
-
-(defmacro json-new-obj (&body specs)
-  `(json-extend-obj (json-empty-obj)
-     ,@specs))
-
-(defun json-keyp (object indicator)
-  (nth-value 1 (gethash indicator object)))
-
 (defun read-raw-string (stream c1 c2)
   (declare (ignore c1 c2))
   (iter

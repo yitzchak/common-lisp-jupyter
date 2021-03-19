@@ -38,7 +38,6 @@
 (defun send-comm-open (comm &optional data metadata buffers)
   (with-slots (id kernel target-name) comm
     (when kernel
-      (inform :info comm "~A ~A ~A" data metadata buffers)
       (with-slots (iopub session comms) kernel
         (setf (gethash id comms) comm)
         (message-send iopub

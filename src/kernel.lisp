@@ -589,7 +589,6 @@
                                (r (evaluate-code kernel code)))
                           (setf package *package*)
                           r))
-        (inform :info kernel "values ~A ~A" results (notany #'quit-eval-error-p results))
         (dolist (result results)
           (send-result result))
         ;broadcast the code to connected frontends
