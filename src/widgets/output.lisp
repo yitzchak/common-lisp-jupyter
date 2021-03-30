@@ -40,7 +40,7 @@ output area.
   (print \"prints to output area\")
 ```"))
 
-(register-widget output)
+
 
 
 ; We should clean up after ourselves, but the messages are processed outside of this lexigraphic context.

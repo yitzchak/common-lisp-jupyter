@@ -20,7 +20,7 @@
 This widget has an `on-button-click` method that allows you to listen for the
 user clicking on the button.  The click event itself is stateless."))
 
-(register-widget button)
+
 
 (defun on-button-click (widget handler)
   (push handler (widget-on-click widget)))

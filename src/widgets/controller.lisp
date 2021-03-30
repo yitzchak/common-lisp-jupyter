@@ -9,7 +9,7 @@
     :%view-name "ControllerAxisView")
   (:documentation "Represents a gamepad or joystick axis."))
 
-(register-widget controller-axis)
+
 
 
 (defclass controller-button (dom-widget float-value-slot)
@@ -25,7 +25,7 @@
     :%view-name "ControllerButtonView")
   (:documentation "Represents a gamepad or joystick button."))
 
-(register-widget controller-button)
+
 
 
 (defclass controller (dom-widget)
@@ -75,4 +75,4 @@
     :%view-name "ControllerView")
   (:documentation "Represents a game controller."))
 
-(register-widget controller)
+

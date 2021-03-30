@@ -13,4 +13,4 @@
     :%view-name "CheckboxView")
   (:documentation "Displays a boolean `value` in the form of a checkbox."))
 
-(register-widget checkbox)
+

@@ -33,7 +33,7 @@ format of the byte string using the `format` trait (which defaults to \"mp3\").
 If you pass `\"url\"` to the `\"format\"` trait, `value` will be interpreted as
 a URL as bytes encoded in UTF-8."))
 
-(register-widget audio)
+
 
 
 (defclass video (audio height-slot width-slot)
@@ -52,7 +52,7 @@ format of the byte string using the `format` trait (which defaults to \"mp4\").
 If you pass `\"url\"` to the `\"format\"` trait, `value` will be interpreted as
 a URL as bytes encoded in UTF-8."))
 
-(register-widget video)
+
 
 
 (defclass image (dom-widget format-slot height-slot width-slot byte-value-slot)
@@ -71,7 +71,7 @@ format of the byte string using the `format` trait (which defaults to \"png\").
 If you pass `\"url\"` to the `\"format\"` trait, `value` will be interpreted as
 a URL as bytes encoded in UTF-8."))
 
-(register-widget image)
+
 
 
 (defclass play (description-widget disabled-slot int-min-max-slots int-step-slot
@@ -107,4 +107,4 @@ a URL as bytes encoded in UTF-8."))
   (:documentation
 "Play/repeat buttons to step through values automatically, and optionally loop."))
 
-(register-widget play)
+

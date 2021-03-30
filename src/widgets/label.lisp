@@ -17,7 +17,7 @@
 It also renders math inside the string `value` as Latex (requires $ $ or
 $$ $$ and similar latex tags)."))
 
-(register-widget label)
+
 
 
 (defclass html (label)
@@ -28,7 +28,7 @@ $$ $$ and similar latex tags)."))
     :%view-name "HTMLView")
   (:documentation "Renders the string `value` as HTML."))
 
-(register-widget html)
+
 
 
 (defclass html-math (label)
@@ -39,4 +39,4 @@ $$ $$ and similar latex tags)."))
     :%view-name "HTMLMathView")
   (:documentation "Renders the string `value` as HTML, and render mathematics."))
 
-(register-widget html-math)
+

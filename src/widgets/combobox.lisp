@@ -20,5 +20,5 @@
     :%model-name "ComboboxModel"
     :%view-name "ComboboxView"))
 
-(register-widget combobox)
+
 

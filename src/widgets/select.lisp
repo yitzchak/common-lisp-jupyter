@@ -23,7 +23,7 @@
   (:documentation
     "Listbox that only allows one item to be selected at any given time."))
 
-(register-widget select)
+
 
 ; Simulate value property below
 
@@ -79,7 +79,7 @@
   (:documentation
     "Listbox that allows many items to be selected at any given time."))
 
-(register-widget select-multiple)
+
 
 (defmethod widget-value ((instance select-multiple))
   (select-values instance (widget-index instance)))
@@ -115,7 +115,7 @@
 "Group of radio buttons that represent an enumeration. Only one radio button can
 be toggled at any point in time."))
 
-(register-widget radio-buttons)
+
 
 
 (defclass dropdown (select)
@@ -126,5 +126,5 @@ be toggled at any point in time."))
     :%view-name "DropdownView")
   (:documentation "Allows you to select a single item from a dropdown."))
 
-(register-widget dropdown)
+
 

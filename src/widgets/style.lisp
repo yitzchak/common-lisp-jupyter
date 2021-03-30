@@ -28,7 +28,7 @@
     :%model-name "ButtonStyleModel")
   (:documentation "Button style widget"))
 
-(register-widget button-style)
+
 
 
 (defclass description-style (style)
@@ -42,7 +42,7 @@
   (:default-initargs
     :%model-name "DescriptionStyleModel"))
 
-(register-widget description-style)
+
 
 
 (defclass progress-style (description-style)
@@ -56,7 +56,7 @@
     :%model-name "ProgressStyleModel")
   (:documentation "Progress style widget."))
 
-(register-widget progress-style)
+
 
 
 (defclass slider-style (description-style)
@@ -69,7 +69,7 @@
   (:default-initargs
     :%model-name "SliderStyleModel"))
 
-(register-widget slider-style)
+
 
 
 (defclass toggle-buttons-style (style)
@@ -95,7 +95,7 @@
     :%model-name "ToggleButtonsStyleModel")
   (:documentation "Toggle Button style widget."))
 
-(register-widget toggle-buttons-style)
+
 
 
 (defclass styled-widget (dom-widget)

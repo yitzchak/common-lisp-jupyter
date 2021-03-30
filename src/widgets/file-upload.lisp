@@ -37,7 +37,7 @@
     :%model-name "FileUploadModel"
     :%view-name "FileUploadView"))
 
-(register-widget file-upload)
+
 
 
 (defmethod widget-value ((instance file-upload))

@@ -246,7 +246,7 @@ https://developer.mozilla.org/en-US/docs/Web/CSS/Reference
 When a property is also accessible via a shorthand property, we only
 expose the shorthand."))
 
-(register-widget layout)
+
 
 
 (defclass dom-widget (widget)

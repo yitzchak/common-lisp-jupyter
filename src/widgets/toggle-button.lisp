@@ -9,7 +9,7 @@
     :%view-name "ToggleButtonView")
   (:documentation "Displays a boolean `value` in the form of a toggle button."))
 
-(register-widget toggle-button)
+
 
 
 (defclass toggle-buttons (description-widget %options-labels-slot
@@ -37,7 +37,7 @@
 "Group of toggle buttons that represent an enumeration. Only one toggle button
 can be toggled at any point in time."))
 
-(register-widget toggle-buttons)
+
 
 (defmethod widget-value ((instance toggle-buttons))
   (select-value instance (widget-index instance)))

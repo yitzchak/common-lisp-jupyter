@@ -31,20 +31,36 @@
       (extract-major-version view-module-version)
       view-name)))
 
-(defmacro register-widget (name)
-  `(let ((class (find-class (quote ,name))))
-    (closer-mop:finalize-inheritance class)
-    (let ((initargs (closer-mop:compute-default-initargs class)))
-      (flet ((def-initarg (slot-name)
-                ; CMUCL appears to have the default initarg list in a different order.
-                (eval (#+cmucl third #-cmucl second (assoc slot-name initargs)))))
-        (when-let ((name (widget-registry-name (def-initarg :%model-module)
-                                               (def-initarg :%model-module-version)
-                                               (def-initarg :%model-name)
-                                               (def-initarg :%view-module)
-                                               (def-initarg :%view-module-version)
-                                               (def-initarg :%view-name))))
-          (setf (gethash name *widgets*) (quote ,name)))))))
+
+(defmacro register-widgets (&rest names)
+  (flet ((def-initarg (slot-name initargs)
+           ; CMUCL appears to have the default initarg list in a different order.
+           (eval (#+cmucl third #-cmucl second (assoc slot-name initargs)))))
+    (cons 'progn
+    (loop for name in names
+          for class = (find-class name)
+          for final = (closer-mop:finalize-inheritance class)
+          for initargs = (closer-mop:class-default-initargs class)
+          for widget-name = (widget-registry-name (def-initarg :%model-module initargs)
+                                                  (def-initarg :%model-module-version initargs)
+                                                  (def-initarg :%model-name initargs)
+                                                  (def-initarg :%view-module initargs)
+                                                  (def-initarg :%view-module-version initargs)
+                                                  (def-initarg :%view-name initargs))
+          for make-fun-sym = (alexandria:format-symbol (symbol-package name) "MAKE-~A" name)
+          when widget-name do (setf (gethash widget-name *widgets*) name)
+          collect `(defun ,make-fun-sym
+                          (&rest initargs &key
+                           ,@(mapcan (lambda (definition &aux (initarg (first (closer-mop:slot-definition-initargs definition))))
+                                       (unless (or (null initarg)
+                                                   (char= #\% (char (symbol-name initarg) 0))
+                                                   (member initarg '(:on-click :sink :id :on-trait-change :kernel :display-data :target-name)))
+                                         (list (intern (symbol-name initarg) (symbol-package name)))))
+                               (closer-mop:class-slots class))
+                           &allow-other-keys)
+                     (apply #'make-instance (quote ,name) initargs))
+          collect `(export '(,make-fun-sym) ,(symbol-package name))))))
+
 
 (defclass widget (has-traits jupyter:comm jupyter:result)
   ((%model-name

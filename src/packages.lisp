@@ -1,8 +1,10 @@
 (defpackage #:jupyter
   (:use #:common-lisp #:alexandria #:iterate)
+  (:import-from :shasht #:make-object)
   (:nicknames :j)
   (:documentation "Core package for Jupyter support including kernel and installer abstract classes.")
   (:export
+    #:make-object
     ; log
     #:inform
     ; results
@@ -150,7 +152,7 @@
     #:play
     #:progress-style
     #:radio-buttons
-    #:register-widget
+    #:register-widgets
     #:select
     #:selection-range-slider
     #:selection-slider

@@ -29,7 +29,7 @@
 (make-instance 'box :children (list title-widget slider))
 ```"))
 
-(register-widget box)
+
 
 
 (defclass accordion (box)
@@ -51,7 +51,7 @@
     :%view-name "AccordionView")
   (:documentation "Displays children each on a separate accordion page."))
 
-(register-widget accordion)
+
 
 (defmethod validate-trait ((w accordion) (type (eql :int)) name value)
   (if (and (integerp value)
@@ -72,7 +72,7 @@
     :%model-name "GridBoxModel"
     :%view-name "GridBoxView"))
 
-(register-widget grid-box)
+
 
 
 (defclass h-box (box)
@@ -93,7 +93,7 @@
 (make-instance 'h-box :children (list title-widget slider))
 ```"))
 
-(register-widget h-box)
+
 
 
 (defclass tab (accordion)
@@ -104,7 +104,7 @@
     :%view-name "TabView")
   (:documentation "Displays children each on a separate accordion tab."))
 
-(register-widget tab)
+
 
 
 (defclass v-box (box)
@@ -125,4 +125,4 @@
 (make-instance 'v-box :children (list title-widget slider))
 ```"))
 
-(register-widget v-box)
+
