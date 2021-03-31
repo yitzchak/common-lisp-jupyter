@@ -59,6 +59,10 @@ jobs:
         mkdir -p $HOME/.config/common-lisp
         echo "(:source-registry (:tree (\"$PWD\")) :inherit-configuration)" >$HOME/.config/common-lisp/source-registry.conf
 
+    - name: Clone shasht (only need when Quicklisp is out of date)
+      run: |
+        git clone https://github.com/yitzchak/shasht.git ~/quicklisp/local-projects/shasht
+
     - name: Install SBCL kernel
       run: |
         sbcl --non-interactive --load scripts/usr-install.lisp sbcl

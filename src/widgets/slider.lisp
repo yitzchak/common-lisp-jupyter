@@ -45,7 +45,7 @@
   (:documentation
     "Slider/trackbar of logarithmic floating values with the specified range."))
 
-(register-widget float-log-slider)
+
 
 
 (defclass float-range-slider (number-slider float-min-max-slots float-step-slot)
@@ -64,7 +64,7 @@
 "Slider/trackbar that represents a pair of floats bounded by minimum and maximum
 value."))
 
-(register-widget float-range-slider)
+
 
 
 (defclass float-slider (number-slider float-min-max-slots float-step-slot
@@ -77,7 +77,7 @@ value."))
     :readout-format ".2f")
   (:documentation "Slider/trackbar of floating values with the specified range."))
 
-(register-widget float-slider)
+
 
 
 (defclass int-range-slider (number-slider int-min-max-slots int-step-slot)
@@ -96,7 +96,7 @@ value."))
 "Slider/trackbar that represents a pair of ints bounded by minimum and maximum
 value."))
 
-(register-widget int-range-slider)
+
 
 
 (defclass int-slider (number-slider int-min-max-slots int-step-slot
@@ -110,7 +110,7 @@ value."))
   (:documentation
     "Slider widget that represents an integer bounded from above and below."))
 
-(register-widget int-slider)
+
 
 
 (defclass label-slider (base-slider %options-labels-slot)
@@ -134,7 +134,7 @@ value."))
     :%view-name "SelectionRangeSliderView")
   (:documentation "Slider to select multiple contiguous items from a list."))
 
-(register-widget selection-range-slider)
+
 
 (defmethod widget-value ((instance selection-range-slider))
   (select-values instance (widget-index instance)))
@@ -167,7 +167,7 @@ value."))
     :%view-name "SelectionSliderView")
   (:documentation "Slider to select a single item from a list or dictionary."))
 
-(register-widget selection-slider)
+
 
 (defmethod widget-value ((instance selection-slider))
   (select-value instance (widget-index instance)))

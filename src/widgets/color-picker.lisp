@@ -19,4 +19,4 @@
     :%view-name "ColorPickerView")
   (:documentation "Color picker widget"))
 
-(register-widget color-picker)
+

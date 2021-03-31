@@ -20,14 +20,14 @@
 This widget has an `on-button-click` method that allows you to listen for the
 user clicking on the button.  The click event itself is stateless."))
 
-(register-widget button)
+
 
 (defun on-button-click (widget handler)
   (push handler (widget-on-click widget)))
 
 (defmethod on-custom-message ((w button) content buffers)
   (declare (ignore buffers))
-  (if (equal (jupyter:json-getf content "event") "click")
+  (if (equal (gethash "event" content) "click")
     (dolist (handler (widget-on-click w))
             ()
       (funcall handler w))

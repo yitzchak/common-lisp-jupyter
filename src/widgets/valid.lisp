@@ -15,4 +15,4 @@
 "Displays a boolean `value` in the form of a green check (True / valid) or a red
 cross (False / invalid)."))
 
-(register-widget valid)
+

@@ -13,4 +13,4 @@
     :%view-name "DatePickerView")
   (:documentation "Date picker widget"))
 
-(register-widget date-picker)
+

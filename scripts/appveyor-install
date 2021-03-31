@@ -1,4 +1,4 @@
 ros install $ROS_LISP
 ros config
 ros install common-lisp-jupyter
-ros run --eval "(ql:quickload '(:common-lisp-jupyter :jsown))" --quit
+ros run --eval "(ql:quickload '(:common-lisp-jupyter))" --quit

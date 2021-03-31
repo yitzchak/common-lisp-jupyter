@@ -15,11 +15,11 @@
 (defclass message ()
   ((header
      :initarg :header
-     :initform (json-empty-obj)
+     :initform (make-hash-table :test #'equal)
      :accessor message-header)
    (parent-header
      :initarg :parent-header
-     :initform (json-empty-obj)
+     :initform (make-hash-table :test #'equal)
      :accessor message-parent-header)
    (identities
      :initarg :identities
@@ -27,11 +27,11 @@
      :accessor message-identities)
    (metadata
      :initarg :metadata
-     :initform (json-empty-obj)
+     :initform (make-hash-table :test #'equal)
      :accessor message-metadata)
    (content
      :initarg :content
-     :initform (json-empty-obj)
+     :initform (make-hash-table :test #'equal)
      :accessor message-content)
    (buffers
      :initarg :buffers
@@ -61,28 +61,28 @@
     (let ((hdr (message-header parent))
           (identities (message-identities parent)))
       (make-instance 'message
-                     :header (json-new-obj
-                               ("msg_id" (make-uuid))
-                               ("username" (json-getf hdr "username"))
-                               ("session" session-id)
-                               ("msg_type" msg-type)
-                               ("date" (date-now))
-                               ("version" +KERNEL-PROTOCOL-VERSION+))
+                     :header `(:object-alist
+                                ("msg_id" . ,(make-uuid))
+                                ("username" . ,(gethash "username" hdr))
+                                ("session" . ,session-id)
+                                ("msg_type" . ,msg-type)
+                                ("date" . ,(date-now))
+                                ("version" . ,+KERNEL-PROTOCOL-VERSION+))
                      :parent-header hdr
                      :identities identities
                      :content content
-                     :metadata (or metadata (json-empty-obj))
+                     :metadata (or metadata :empty-object)
                      :buffers buffers))
     (make-instance 'message
-                   :header (json-new-obj
-                             ("msg_id" (make-uuid))
-                             ("username" "kernel")
-                             ("session" session-id)
-                             ("msg_type" msg-type)
-                             ("date" (date-now))
-                             ("version" +KERNEL-PROTOCOL-VERSION+))
+                   :header `(:object-alist
+                              ("msg_id" . ,(make-uuid))
+                              ("username" . "")
+                              ("session" . ,session-id)
+                              ("msg_type" . ,msg-type)
+                              ("date" . ,(date-now))
+                              ("version" . ,+KERNEL-PROTOCOL-VERSION+))
                    :content content
-                   :metadata (or metadata (json-empty-obj))
+                   :metadata (or metadata :empty-object)
                    :buffers buffers)))
 
 ;; XXX: should be a defconstant but  strings are not EQL-able...
@@ -124,7 +124,11 @@
 (defun message-send (ch msg)
   (with-slots (mac) ch
     (with-slots (identities header parent-header metadata content buffers) msg
-      (let ((tail (mapcar #'jsown:to-json (list header parent-header metadata content))))
+      (let* ((*print-pretty* nil)
+             (*read-default-float-format* 'double-float)
+             (tail (mapcar (lambda (value)
+                             (shasht:write-json value nil))
+                           (list header parent-header metadata content))))
         (send-parts ch identities
                     (cons (compute-signature mac tail) tail)
                     buffers)))))
@@ -187,10 +191,12 @@
             (collect (read-buffer-part ch msg))))))))
 
 (defun message-recv (ch)
- (multiple-value-bind (identities body buffers) (recv-parts ch)
+  (multiple-value-bind (identities body buffers) (recv-parts ch)
     (unless (equal (car body) (compute-signature (channel-mac ch) (cdr body)))
       (inform :warn ch "Signature mismatch on received message."))
-    (destructuring-bind (header parent-header metadata content) (mapcar #'jsown:parse (cdr body))
+    (destructuring-bind (header parent-header metadata content)
+                        (let ((*read-default-float-format* 'double-float))
+                          (mapcar #'shasht:read-json (cdr body)))
       (make-instance 'message :identities identities
                               :header header
                               :parent-header parent-header

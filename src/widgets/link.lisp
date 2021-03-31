@@ -22,7 +22,7 @@
     :%view-module-version +controls-module-version+)
   (:documentation "Link Widget"))
 
-(register-widget link)
+
 
 
 (defclass directional-link (link)
@@ -32,7 +32,7 @@
     :%model-name "DirectionalLinkModel")
   (:documentation "A directional link"))
 
-(register-widget directional-link)
+
 
 
 (defmethod (setf trait) (new-value instance name)

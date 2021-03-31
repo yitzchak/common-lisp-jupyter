@@ -220,20 +220,19 @@
     (start sink)
     (inform :info k "Starting ~A kernel" name)
     (inform :info k "Parsing connection file ~A" connection-file)
-    (let* ((config-js (jsown:parse (read-file-into-string connection-file)))
-           (encoded-key (json-getf config-js "key")))
-           (inform :info k "~A" config-js)
-      (setf transport (json-getf config-js "transport")
-            ip (json-getf config-js "ip")
-            shell-port (json-getf config-js "shell_port")
-            stdin-port (json-getf config-js "stdin_port")
-            iopub-port (json-getf config-js "iopub_port")
-            control-port (json-getf config-js "control_port")
-            hb-port (json-getf config-js "hb_port")
+    (let* ((config-js (shasht:read-json (read-file-into-string connection-file)))
+           (encoded-key (gethash "key" config-js)))
+      (setq transport (gethash "transport" config-js)
+            ip (gethash "ip" config-js)
+            shell-port (gethash "shell_port" config-js)
+            stdin-port (gethash "stdin_port" config-js)
+            iopub-port (gethash "iopub_port" config-js)
+            control-port (gethash "control_port" config-js)
+            hb-port (gethash "hb_port" config-js)
             key (if (string= encoded-key "")
                   nil
                   (babel:string-to-octets encoded-key :encoding :ASCII))
-            signature-scheme (json-getf config-js "signature_scheme")))
+            signature-scheme (gethash "signature_scheme" config-js)))
     (setf *uuid-random-state* (make-random-state t)
           session (make-uuid)
           ctx (pzmq:ctx-new)
@@ -467,8 +466,8 @@
 |#
 
 (defun handle-control-message (kernel msg)
-  (let ((msg-type (format nil "~A~@[/~A~]" (json-getf (message-header msg) "msg_type")
-                          (json-getf (message-content msg) "command")))
+  (let ((msg-type (format nil "~A~@[/~A~]" (gethash "msg_type" (message-header msg))
+                          (gethash "command" (message-header msg))))
         (*kernel* kernel)
         (*message* msg))
     (unwind-protect
@@ -493,7 +492,7 @@
 |#
 
 (defun handle-shell-message (kernel msg)
-  (let ((msg-type (json-getf (message-header msg) "msg_type"))
+  (let ((msg-type (gethash "msg_type" (message-header msg)))
         (*kernel* kernel)
         (*message* msg))
     (unwind-protect
@@ -539,24 +538,25 @@
               kernel
     (message-send shell
       (make-message session "kernel_info_reply"
-        (json-new-obj
-          ("protocol_version" +KERNEL-PROTOCOL-VERSION+)
-          ("implementation" name)
-          ("implementation_version" version)
-          ("banner" banner)
-          ("help_links"
-            (mapcar
-              (lambda (p)
-                (list :obj (cons "text" (car p)) (cons "url" (cdr p))))
-              help-links))
-          ("language_info"
-            (json-new-obj
-              ("name" language-name)
-              ("version" language-version)
-              ("mimetype" mime-type)
-              ("file_extension" file-extension)
-              ("pygments_lexer" pygments-lexer)
-              ("codemirror_mode" codemirror-mode))))
+                    `(:object-alist
+                       ("protocol_version" . ,+KERNEL-PROTOCOL-VERSION+)
+                       ("implementation" . ,name)
+                       ("implementation_version" . ,version)
+                       ("banner" . ,banner)
+                       ("help_links" . ,(or (mapcar
+                                              (lambda (p)
+                                                (list :object-alist
+                                                      (cons "text" (car p))
+                                                      (cons "url" (cdr p))))
+                                              help-links)
+                                            :empty-array))
+                       ("language_info" . (:object-alist
+                                            ("name" . ,language-name)
+                                            ("version" . ,language-version)
+                                            ("mimetype" . ,mime-type)
+                                            ("file_extension" . ,file-extension)
+                                            ("pygments_lexer" . ,pygments-lexer)
+                                            ("codemirror_mode" . ,codemirror-mode))))
       :parent msg)))
   t)
 
@@ -570,7 +570,7 @@
   (inform :info kernel "Handling execute_request message")
   (with-slots (execution-count history iopub package prompt-prefix prompt-suffix shell stdin input-queue)
               kernel
-    (let* ((code (json-getf (message-content msg) "code"))
+    (let* ((code (gethash "code" (message-content msg)))
            (results (list (make-error-result "interrupt" "Execution interrupted")))
            (*payload* (make-array 16 :adjustable t :fill-pointer 0))
            (*page-output* (make-string-output-stream))
@@ -608,7 +608,7 @@
                 (set-next-input (dequeue input-queue)))
               (unless (zerop (length p))
                 (page (make-inline-result p)))
-              (send-execute-reply-ok shell msg execution-count (coerce *payload* 'list))))))
+              (send-execute-reply-ok shell msg execution-count *payload*)))))
       ;; return t if there is no quit errors present
       (notany #'quit-eval-error-p results))))
 
@@ -622,7 +622,7 @@
   (inform :info kernel "Handling shutdown_request message")
   (let* ((control (kernel-control kernel))
          (content (message-content msg))
-         (restart (json-getf content "restart")))
+         (restart (gethash "restart" content)))
     (send-shutdown-reply control msg restart)
     (bordeaux-threads:interrupt-thread (kernel-shell-thread kernel) (lambda () (throw 'kernel-shutdown nil)))
     nil))
@@ -651,7 +651,7 @@
   (inform :info kernel "Handling is_complete_request message")
   (let* ((shell (kernel-shell kernel))
          (content (message-content msg))
-         (code (json-getf content "code"))
+         (code (gethash "code" content))
          (status (code-is-complete kernel code)))
     (send-is-complete-reply shell msg status)
     t))
@@ -666,12 +666,12 @@
   (inform :info kernel "Handling inspect_request message")
   (with-slots (shell package) kernel
     (let* ((content (message-content msg))
-           (code (json-getf content "code"))
+           (code (gethash "code" content))
            (result (let ((*package* package))
                      (inspect-code kernel
                               code
-                              (min (1- (length code)) (json-getf content "cursor_pos"))
-                              (json-getf content "detail_level")))))
+                              (min (1- (length code)) (gethash "cursor_pos" content))
+                              (gethash "detail_level" content)))))
       (if (eval-error-p result)
         (with-slots (ename evalue) result
           (send-inspect-reply-error shell msg ename evalue))
@@ -690,8 +690,8 @@
   (inform :info kernel "Handling complete_request message")
   (with-slots (shell package) kernel
     (let* ((content (message-content msg))
-           (code (json-getf content "code"))
-           (cursor-pos (json-getf content "cursor_pos"))
+           (code (gethash "code" content))
+           (cursor-pos (gethash "cursor_pos" content))
            (match-set (make-match-set :start cursor-pos :end cursor-pos :code code))
            (result (let ((*package* package))
                      (complete-code kernel match-set code cursor-pos))))
@@ -702,21 +702,20 @@
                                 (sort (mapcar #'match-text (match-set-matches match-set)) #'string<)
                                 (match-set-start match-set)
                                 (match-set-end match-set)
-                                (json-new-obj
-                                  ("_jupyter_types_experimental" (mapcan (lambda (match)
-                                                                           (when (match-type match)
-                                                                             (list (json-new-obj
-                                                                                     ("text" (match-text match))
-                                                                                     ("type" (match-type match))))))
-                                                                         (match-set-matches match-set))))))))
-  t)
-
+                                `(:object-alist
+                                   ("_jupyter_types_experimental" . ,(or (mapcan (lambda (match)
+                                                                                   (when (match-type match)
+                                                                                     (list (list :object-alist
+                                                                                             (cons "text" (match-text match))
+                                                                                             (cons "type" (match-type match))))))
+                                                                                 (match-set-matches match-set))
+                                                                         :empty-object))))))))
 
 (defun handle-comm-info-request (kernel msg)
   (inform :info kernel "Handling comm_info_request message")
   (with-slots (shell comms) kernel
     (let* ((content (message-content msg))
-           (target-name (json-getf content "target_name"))
+           (target-name (gethash "target_name" content))
            (comms-alist (hash-table-alist comms)))
       (send-comm-info-reply shell msg
                             (if target-name
@@ -739,9 +738,9 @@
                                                  prompt-prefix prompt-suffix))
            (*debug-io* *standard-output*)
            (*trace-output* *standard-output*)
-           (id (json-getf content "comm_id"))
-           (target-name (json-getf content "target_name"))
-           (data (json-getf content "data"))
+           (id (gethash "comm_id" content))
+           (target-name (gethash "target_name" content))
+           (data (gethash "data" content (make-hash-table :test #'equal)))
            (inst (create-comm (intern target-name 'keyword) id data metadata buffers)))
       (if inst
         (progn
@@ -765,8 +764,8 @@
                                                  prompt-prefix prompt-suffix))
            (*debug-io* *standard-output*)
            (*trace-output* *standard-output*)
-           (id (json-getf content "comm_id"))
-           (data (json-getf content "data"))
+           (id (gethash "comm_id" content))
+           (data (gethash "data" content))
            (inst (gethash id comms)))
       (when inst
         (handling-comm-errors
@@ -787,8 +786,8 @@
                                                  prompt-prefix prompt-suffix))
            (*debug-io* *standard-output*)
            (*trace-output* *standard-output*)
-           (id (json-getf content "comm_id"))
-           (data (json-getf content "data"))
+           (id (gethash "comm_id" content))
+           (data (gethash "data" content))
            (inst (gethash id comms)))
       (when inst
         (handling-comm-errors
@@ -800,19 +799,19 @@
   (inform :info kernel "Handling history_request message")
   (with-slots (shell history) kernel
     (let* ((content (message-content msg))
-           (output (json-getf content "output"))
-           (history-type (json-getf content "hist_access_type"))
+           (output (gethash "output" content))
+           (history-type (gethash "hist_access_type" content))
            (results (switch (history-type :test #'equal)
                       ("range" (history-range history
-                                              (json-getf content "session")
-                                              (json-getf content "start")
-                                              (json-getf content "stop")))
+                                              (gethash "session" content)
+                                              (gethash "start" content)
+                                              (gethash "stop" content)))
                       ("search" (history-search history
-                                                (json-getf content "n")
-                                                (json-getf content "pattern")
-                                                (json-getf content "unique")))
+                                                (gethash "n" content)
+                                                (gethash "pattern" content)
+                                                (gethash "unique" content)))
                       ("tail" (history-tail history
-                                            (json-getf content "n"))))))
+                                            (gethash "n" content))))))
       (send-history-reply shell msg
         (if output
           (mapcar
@@ -840,24 +839,24 @@
 
 (defun set-next-input (text &optional (replace nil))
   (declare (ignore replace))
-  (vector-push-extend (json-new-obj
-                        ("source" "set_next_input")
-                        ("text" text))
+  (vector-push-extend `(:object-alist
+                         ("source" . "set_next_input")
+                         ("text" . ,text))
                       *payload*)
   (values))
 
 (defun page (result &optional (start 0))
-  (vector-push-extend (json-new-obj
-                        ("source" "page")
-                        ("data" (render result))
-                        ("start" start))
+  (vector-push-extend `(:object-alist
+                         ("source" . "page")
+                         ("data" . ,(render result))
+                         ("start" . ,start))
                       *payload*)
   (values))
 
 (defun quit (&optional keep-kernel)
-  (vector-push-extend (json-new-obj
-                        ("source" "ask_exit")
-                        ("keepkernel" (if keep-kernel :true :false)))
+  (vector-push-extend `(:object-alist
+                         ("source" . "ask_exit")
+                         ("keepkernel" . (if keep-kernel :true :false)))
                       *payload*)
   (values))
 

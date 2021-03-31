@@ -15,7 +15,6 @@
      #-clasp :eclector
      #-clasp :ironclad
      :iterate
-     :jsown
      :multilang-documentation
      :pzmq
      :puri
@@ -23,7 +22,8 @@
      :trivial-do
      :trivial-garbage
      :trivial-gray-streams
-     :trivial-mimes)
+     :trivial-mimes
+     :shasht)
   :components
     ((:module res
       :components
@@ -91,7 +91,8 @@
              (:file "text")
              (:file "toggle-button")
              (:file "valid")
-             (:file "interactive")))
+             (:file "interactive")
+             (:file "register-widgets")))
          (:file "history")
          (:file "matches")
          (:file "kernel")

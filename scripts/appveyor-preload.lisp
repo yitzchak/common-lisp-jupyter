@@ -1,1 +1,1 @@
-(ql:quickload '(:common-lisp-jupyter :jsown))
+(ql:quickload '(:common-lisp-jupyter))
