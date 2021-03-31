@@ -40,6 +40,14 @@
     (loop for name in names
           for class = (find-class name)
           for final = (closer-mop:finalize-inheritance class)
+          for slots = (remove-if (lambda (definition &aux (initarg (first (closer-mop:slot-definition-initargs definition))))
+                                   (or (null initarg)
+                                       (char= #\% (char (symbol-name initarg) 0))
+                                       (member initarg '(:on-click :sink :id :on-trait-change :kernel :display-data :target-name))))
+                                 (closer-mop:class-slots class))
+          for keys = (mapcar (lambda (definition &aux (initarg (first (closer-mop:slot-definition-initargs definition))))
+                                       (intern (symbol-name initarg) (symbol-package name)))
+                             slots)
           for initargs = (closer-mop:class-default-initargs class)
           for widget-name = (widget-registry-name (def-initarg :%model-module initargs)
                                                   (def-initarg :%model-module-version initargs)
@@ -50,14 +58,8 @@
           for make-fun-sym = (alexandria:format-symbol (symbol-package name) "MAKE-~A" name)
           when widget-name do (setf (gethash widget-name *widgets*) name)
           collect `(defun ,make-fun-sym
-                          (&rest initargs &key
-                           ,@(mapcan (lambda (definition &aux (initarg (first (closer-mop:slot-definition-initargs definition))))
-                                       (unless (or (null initarg)
-                                                   (char= #\% (char (symbol-name initarg) 0))
-                                                   (member initarg '(:on-click :sink :id :on-trait-change :kernel :display-data :target-name)))
-                                         (list (intern (symbol-name initarg) (symbol-package name)))))
-                               (closer-mop:class-slots class))
-                           &allow-other-keys)
+                          (&rest initargs &key ,@keys &allow-other-keys)
+                     (declare (ignore ,@keys))
                      (apply #'make-instance (quote ,name) initargs))
           collect `(export '(,make-fun-sym) ,(symbol-package name))))))
 
