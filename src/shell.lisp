@@ -40,7 +40,7 @@
                 (make-message (channel-session shell) "execute_reply"
                               `(:object-alist
                                  ("status" . "error")
-                                 ("execution_count" . execution-count)
+                                 ("execution_count" . ,execution-count)
                                  ("ename" . ,ename)
                                  ("evalue" . ,evalue)
                                  ("traceback" . nil))
@@ -61,7 +61,7 @@
                 (make-message (channel-session shell) "inspect_reply"
                               `(:object-alist
                                  ("status" . "ok")
-                                 ("found" . ,(and data t))
+                                 ("found" . ,(if data :true :false))
                                  ("data" . ,(or data :empty-object))
                                  ("metadata" . :empty-object))
                               :parent parent-msg)))
@@ -81,7 +81,7 @@
                 (make-message (channel-session shell) "complete_reply"
                               `(:object-alist
                                  ("status" . "ok")
-                                 ("matches" . ,matches)
+                                 ("matches" . ,(or matches :empty-list))
                                  ("cursor_start" . ,start)
                                  ("cursor_end" . ,end)
                                  ("metadata" . ,(or metadata :empty-object)))

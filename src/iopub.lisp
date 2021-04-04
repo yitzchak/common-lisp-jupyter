@@ -82,7 +82,7 @@
   (message-send iopub
                 (make-message (channel-session iopub) "comm_close"
                               `(:object-alist
-                                 ("comm_id" . comm-id)
+                                 ("comm_id" . ,comm-id)
                                  ("data" . ,(or data :empty-object))))))
 
 (defvar *iopub-stream-size* 1024)
