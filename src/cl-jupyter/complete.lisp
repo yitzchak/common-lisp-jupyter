@@ -194,11 +194,14 @@
 
 (defmethod jupyter:code-is-complete ((k kernel) code)
   (handler-case
-      (iter
-        (for sexpr in-stream (make-string-input-stream code)))
-    (end-of-file () "incomplete")
-    (serious-condition () "invalid")
-    (condition () "invalid")
+      (do ((stream (make-string-input-stream code)))
+          ((eq :eof (read stream nil :eof))))
+    (end-of-file ()
+      "incomplete")
+    (serious-condition ()
+      "invalid")
+    (condition ()
+      "invalid")
     (:no-error (val)
       (declare (ignore val))
       "complete")))

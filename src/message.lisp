@@ -165,30 +165,42 @@
       (inform :warn ch "Unable to decode message part.")
       "")))
 
+
 (defun recv-parts (ch)
   (with-slots (recv-lock) ch
     (bordeaux-threads:with-lock-held (recv-lock)
       (pzmq:with-message msg
         (values
           ; Read the identities first
-          (iter
-            (for part next (read-binary-part ch msg))
-            (until (equalp part +IDS-MSG-DELIMITER+))
-            (collect part)
+          (prog (part parts)
+           next
+            (when (equalp +IDS-MSG-DELIMITER+ (setf part (read-binary-part ch msg)))
+              (return (nreverse parts)))
+            (push part parts)
+            ; This test should probably be at the beginning but the flag isn't set until you read
+            ; the first part.
             (unless (more-parts ch msg)
               (inform :warn ch "No identities/message delimiter found in message parts")
-              (finish)))
+              (return (nreverse parts)))
+            (go next))
           ; Read the message body
-          (iter
-            (for i from 1 to +BODY-LENGTH+)
+          (prog (parts (i 0))
+           next
             (unless (more-parts ch msg)
               (inform :warn ch "Incomplete message body.")
-              (finish))
-            (collect (read-string-part ch msg)))
+              (return (nreverse parts)))
+            (push (read-string-part ch msg) parts)
+            (when (= +BODY-LENGTH+ (incf i))
+              (return (nreverse parts)))
+            (go next))
           ; The remaining parts should be binary buffers
-          (iter
-            (while (more-parts ch msg))
-            (collect (read-buffer-part ch msg))))))))
+          (prog (parts)
+           next
+            (unless (more-parts ch msg)
+              (return (nreverse parts)))
+            (push (read-buffer-part ch msg) parts)
+            (go next)))))))
+
 
 (defun message-recv (ch)
   (multiple-value-bind (identities body buffers) (recv-parts ch)

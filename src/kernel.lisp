@@ -353,7 +353,7 @@
   (inform :info kernel "Control thread exiting normally."))
 
 
-(defun run-kernel (kernel-class connection-file)
+(defun run-kernel (kernel-class &optional (connection-file (first (uiop:command-line-arguments))))
   "Run a kernel based on a kernel class and a connection file."
   (unless (stringp connection-file)
     (error "Wrong connection file argument (expecting a string)"))
