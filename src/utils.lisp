@@ -7,6 +7,7 @@
 |#
 
 ; (defvar maxima::$kernel_info nil)
+;; asdasd
 
 (defparameter +uuid-size+ 16)
 (defparameter *uuid-random-state* (make-random-state t))
@@ -24,15 +25,6 @@
     (if as-bytes
       bytes
       (octets-to-hex-string bytes))))
-
-(defun read-raw-string (stream c1 c2)
-  (declare (ignore c1 c2))
-  (iter
-    (for ch next (read-char stream))
-    (until (char= ch #\"))
-    (collect ch result-type 'string)))
-
-(set-dispatch-macro-character #\# #\" #'read-raw-string)
 
 (defun symbol-to-camel-case (s)
   (do ((name (symbol-name s))

@@ -34,21 +34,21 @@
   (with-slots (path date session cells) history
     (when (and (probe-file path) (or (not date) (or (< date (file-write-date path)))))
       (lock-file path
-        (let ((session-cells (remove-if-not (lambda (cell) (equal (car cell) session)) cells)))
-          (setf cells
-            (ignore-errors ; If the history file has become mangled then just give up.
-              (with-open-file (stream path :direction :input :if-does-not-exist nil)
-                (when stream
-                  (iter
-                    (for cell in-stream stream)
-                    (collect cell))))))
-          (iter
-            (with new-session = (1+ (reduce (lambda (x y) (max x (car y))) cells :initial-value 0)))
-            (for cell in session-cells)
-            (setf cells (nconc cells (list (cons new-session (cdr cell)))))
-            (finally
-              (setf session new-session)
-              (setf date (file-write-date path)))))))))
+        (let* ((session-cells (remove-if-not (lambda (cell) (equal (car cell) session)) cells))
+               (old-cells (ignore-errors ; If the history file has become mangled then just give up.
+                            (with-open-file (stream path :direction :input :if-does-not-exist nil)
+                              (when stream
+                                (do ((cell (read stream nil :eof) (read stream nil :eof))
+                                     cells)
+                                    ((eq :eof cell) (nreverse cells))
+                                  (push cell cells))))))
+               (new-session (1+ (reduce (lambda (x y) (max x (car y))) old-cells :initial-value 0))))
+            (setf cells (nconc old-cells (mapcar (lambda (cell)
+                                                   (cons new-session (cdr cell)))
+                                                 session-cells))
+                  session new-session
+                  date (file-write-date path)))))))
+
 
 (defun write-history (history)
   (read-history history)
@@ -56,10 +56,10 @@
     (uiop:ensure-all-directories-exist (list path))
     (lock-file path
       (with-open-file (stream path :direction :output :if-exists :supersede)
-        (iter
-          (for cell in (subseq cells (max 0 (- (length cells) +history-size+))))
-          (pprint cell stream)))
+        (dotimes (pos (min (length cells) +history-size+))
+          (pprint (elt cells pos) stream)))
       (setf date (file-write-date path)))))
+
 
 (defmethod start ((h history))
   (inform :info h "Starting history"))
@@ -82,40 +82,37 @@
                           (< (second cell) stop)))
       cells)))
 
-(defun string-match-p (value pattern)
-  (iter
-    (for v in-string value with-index v-i)
-    (generate p in-string pattern with-index p-i)
-    (unless p (next p))
-    (case p
+(defun string-match-p (value pattern &optional (value-start 0) (pattern-start 0))
+  (do ((value-pos value-start (1+ value-pos))
+       (pattern-pos pattern-start))
+      ((or (= value-pos (length value))
+           (= pattern-pos (length pattern)))
+       (and (= value-pos (length value))
+            (or (= pattern-pos (length pattern))
+                (and (= (1+ pattern-pos) (length pattern))
+                     (char= #\* (char pattern pattern-pos))))))
+    (case (char pattern pattern-pos)
       (#\*
-        (when (string-match-p (subseq value v-i) (subseq pattern (1+ p-i)))
-          (leave t)))
+        (when (string-match-p value pattern value-pos (1+ pattern-pos))
+          (return t)))
       (#\?
-        (next p))
+        (incf pattern-pos))
       (otherwise
-        (if (eql v p)
-          (next p)
-          (leave nil))))
-    (finally
-      (return
-        (and (or (= v-i (1- (length value))))
-             (or (< p-i 0)
-                 (= p-i (length pattern))
-                 (equal "*" (subseq pattern p-i))))))))
+        (unless (char= (char value value-pos) (char pattern pattern-pos))
+          (return nil))
+        (incf pattern-pos)))))
+
 
 (defun history-search (history n pattern unique)
-  (with-slots (cells) history
-    (iter
-      (for cell in cells)
-      (when (and (string-match-p (third cell) pattern)
-                 (or (not unique)
-                     (not (position-if (lambda (rc) (equal (third rc) (third cell))) results))))
-        (collect cell into results))
-      (finally
-        (return (if n
-          (subseq results (max 0 (- (length results) n)))
-          results))))))
+  (let ((results (remove-if (lambda (cell)
+                              (not (string-match-p (third cell) pattern)))
+                            (history-cells history))))
+    (when unique
+      (setf results (delete-duplicates results :key #'third :test #'equal)))
+    (if n
+      (subseq results (max 0 (- (length results) n)))
+      results)))
+
 
 (defun history-tail (history n)
   (read-history history)
