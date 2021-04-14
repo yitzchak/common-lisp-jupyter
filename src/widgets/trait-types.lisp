@@ -21,7 +21,7 @@
   (values :null (list nil) (list value)))
 
 (defmethod deserialize-trait (object (type (eql :buffer)) name (value vector))
-  (declare (ignore object type name))
+  (declare (ignore type name))
   (if (binary-value-p value)
     (let ((result (static-vectors:make-static-vector (length value)
                                                      :element-type '(unsigned-byte 8))))
@@ -216,7 +216,7 @@
   (values :null (list nil) (list value)))
 
 (defmethod deserialize-trait (object (type (eql :single-float-buffer)) name (value vector))
-  (declare (ignore object type name))
+  (declare (ignore type name))
   (if (binary-value-p value)
     (let ((result (static-vectors:make-static-vector (/ (length value) 4)
                                                      :element-type 'single-float)))
@@ -234,7 +234,6 @@
   (values :empty-array nil nil))
 
 (defmethod serialize-trait (object (type (eql :single-float-buffer-list)) name value)
-  (declare (ignore type name))
   (declare (ignore type name))
   (let (arr buffer-paths buffers)
     (trivial-do:dolist* (index v value (values (nreverse arr) buffer-paths buffers))

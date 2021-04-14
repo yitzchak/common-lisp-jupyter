@@ -24,10 +24,8 @@
     `(let ((,lock-path (merge-pathnames (make-pathname :type "lock") ,path)))
        (unwind-protect
            (dotimes (,i 20)
-             (declare (ignore ,i))
              (unless (probe-file ,lock-path)
                (with-open-file (,lock-stream ,lock-path :direction :probe :if-does-not-exist :create)
-                 (declare (ignore ,lock-stream))
                  ,@body)
                (return))
              (sleep 0.1))

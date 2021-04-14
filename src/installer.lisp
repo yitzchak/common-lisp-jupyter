@@ -175,7 +175,7 @@
 
 (defmethod copy-component ((component asdf:file-component) dest)
   "Copy a file component."
-  (copy-file
+  (alexandria:copy-file
     (asdf:component-pathname component)
     (merge-pathnames (asdf:component-relative-pathname component) dest)))
 
@@ -191,7 +191,7 @@
 (defmethod copy-component :after ((component asdf:system) dest)
   "After the contents of a system are copied (via asdf:module) then copy the asd file."
   (let ((source-file (asdf:system-source-file component)))
-    (copy-file source-file
+    (alexandria:copy-file source-file
       (merge-pathnames
         (file-namestring source-file)
         (merge-pathnames
@@ -204,7 +204,7 @@
   (let ((dest (installer-path instance :prefix :program :local-projects)))
     (format t "Installing local systems to ~A~%" dest)
     (dolist (system-sym (installer-local-systems instance))
-      (when-let ((system (asdf:find-system system-sym)))
+      (alexandria:when-let ((system (asdf:find-system system-sym)))
         (copy-component system dest)))))
 
 (defun install-bundle (instance)
@@ -217,7 +217,7 @@
 (defun install-directories (instance)
   "Create all needed directories."
   (format t "Creating directories.~%")
-  (when-let ((prefix (installer-prefix instance)))
+  (alexandria:when-let ((prefix (installer-prefix instance)))
     (ensure-directories-exist prefix))
   (ensure-directories-exist (installer-path instance :prefix :kernel))
   (ensure-directories-exist (installer-path instance :prefix :program)))
@@ -240,7 +240,7 @@
   "Install all kernel resources."
   (format t "Installing kernel resources to ~A.~%" (installer-path instance :prefix :kernel))
   (dolist (src (installer-resources instance))
-    (copy-file src (installer-path instance :prefix :kernel (file-namestring src)))))
+    (alexandria:copy-file src (installer-path instance :prefix :kernel (file-namestring src)))))
 
 (defgeneric install (instance)
   (:documentation "Install a kernel based on an installer instance."))

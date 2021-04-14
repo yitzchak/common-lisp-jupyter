@@ -41,6 +41,7 @@
 
 
 (defmethod initialize-instance :after ((instance message) &rest initargs &key &allow-other-keys)
+  (declare (ignore initargs))
   (let ((buffers (message-buffers instance)))
     (when buffers
       (trivial-garbage:finalize

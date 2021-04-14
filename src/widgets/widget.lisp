@@ -187,7 +187,7 @@
 
 (defmethod jupyter:on-comm-message ((w widget) data metadata buffers)
   (declare (ignore metadata))
-  (switch ((gethash "method" data) :test #'equal)
+  (alexandria:switch ((gethash "method" data) :test #'equal)
     ("update"
       (update-state w data buffers))
     ("request_state"
