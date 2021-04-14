@@ -16,19 +16,24 @@
      :initform nil
      :accessor history-cells)))
 
+
 (defmacro lock-file (path &body body)
-  `(iter
-    (with lock-path = (merge-pathnames (make-pathname :type "lock") ,path))
-    (for i from 1 to 20)
-    (unless (probe-file lock-path)
-      (finish))
-    (sleep 0.1)
-    (finally
-      (open lock-path :direction :probe :if-does-not-exist :create)
-      ,@body)
-    (finally-protected
-      (when (probe-file lock-path)
-        (delete-file lock-path)))))
+  (let ((lock-path (gensym))
+        (lock-stream (gensym))
+        (i (gensym)))
+    `(let ((,lock-path (merge-pathnames (make-pathname :type "lock") ,path)))
+       (unwind-protect
+           (dotimes (,i 20)
+             (declare (ignore ,i))
+             (unless (probe-file ,lock-path)
+               (with-open-file (,lock-stream ,lock-path :direction :probe :if-does-not-exist :create)
+                 (declare (ignore ,lock-stream))
+                 ,@body)
+               (return))
+             (sleep 0.1))
+          (when (probe-file ,lock-path)
+            (delete-file ,lock-path))))))
+
 
 (defun read-history (history)
   (with-slots (path date session cells) history
