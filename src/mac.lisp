@@ -18,7 +18,7 @@
   (inform :info m "Starting message authentification")
   (with-slots (key signature-scheme args) m
     (when key
-      (if #-clasp (starts-with-subseq "hmac-" signature-scheme)
+      (if #-clasp (alexandria:starts-with-subseq "hmac-" signature-scheme)
           #+clasp (string= "hmac-sha256" signature-scheme)
         #-clasp
         (let* ((digest-name (subseq signature-scheme 5))

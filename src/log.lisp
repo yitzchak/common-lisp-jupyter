@@ -37,7 +37,7 @@
       (setf stream nil))))
 
 (defun inform (level src format-control &rest format-arguments)
-  (when-let ((s (or src *kernel*)))
+  (alexandria:when-let ((s (or src *kernel*)))
     (with-slots (lock stream) (source-sink s)
       (bordeaux-threads:with-lock-held (lock)
         (ignore-errors

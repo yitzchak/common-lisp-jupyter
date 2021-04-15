@@ -6,6 +6,8 @@
   #+clisp "-x" #+(or mkcl cmucl) "-eval" #-(or clisp cmucl mkcl) "--eval")
 (defvar +load-flag+
   #+clisp "-i" #+(or mkcl cmucl) "-load" #-(or clisp cmucl mkcl) "--load")
+(defvar +user-options+
+  #+sbcl nil #-sbcl "--")
 
 (defclass kernel (jupyter:kernel)
   ()
@@ -60,15 +62,17 @@
           common-lisp-user::+ expr)
     (remove nil (mapcar #'jupyter:make-lisp-result evaluated-expr)))))
 
-(defmethod jupyter:evaluate-code ((k kernel) code)
-  (iter
-    (for sexpr in-stream (make-string-input-stream code) using #'my-read)
-    (when (typep sexpr 'jupyter:result)
-      (collect sexpr)
-      (finish))
-    (for result next (my-eval sexpr))
-    (if (listp result)
-      (appending result)
-      (collect result))
-    (until (jupyter:quit-eval-error-p result))))
 
+(defmethod jupyter:evaluate-code ((k kernel) code)
+  (do* ((stream (make-string-input-stream code))
+        (sexpr (my-read stream nil :eof) (my-read stream nil :eof))
+        results result)
+      ((eq :eof sexpr) (nreverse results))
+    (cond
+      ((typep sexpr 'jupyter:result)
+        (push sexpr results))
+      (t
+        (setf result (my-eval sexpr))
+        (if (listp result)
+          (setf results (nconc (nreverse result) results))
+          (push result results))))))

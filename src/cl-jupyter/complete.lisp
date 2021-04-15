@@ -3,7 +3,7 @@
 
 (defun remove-if-not-match (partial-name matches)
   (remove-if-not (lambda (match)
-                   (starts-with-subseq partial-name match))
+                   (alexandria:starts-with-subseq partial-name match))
                  matches))
 
 
@@ -25,7 +25,7 @@
           (dolist (method (find-methods cls))
             (let* ((name (closer-mop:generic-function-name (closer-mop:method-generic-function method)))
                    (specializers (closer-mop:method-specializers method))
-                   (lambda-list (parse-ordinary-lambda-list (closer-mop:method-lambda-list method)))
+                   (lambda-list (alexandria:parse-ordinary-lambda-list (closer-mop:method-lambda-list method)))
                    (pos (position-if (lambda (spec)
                                        (member spec supers))
                                      specializers)))
@@ -54,7 +54,7 @@
                              (find-symbol sym-name package)
           (declare (ignore s))
           (when (and (member status statuses :test #'eql)
-                     (starts-with-subseq partial-name sym-name)
+                     (alexandria:starts-with-subseq partial-name sym-name)
                      (or (and func (fboundp sym))
                          (and (not func)
                               (or (not (fboundp sym))
@@ -94,7 +94,7 @@
                          #+ccl (mapcar #'car (ccl:package-local-nicknames *package*))
                          #+lispworks (mapcar #'car (hcl:package-local-nicknames *package*))
                          #+sbcl (mapcar #'car (sb-ext:package-local-nicknames *package*))))
-    (when (starts-with-subseq partial-name name)
+    (when (alexandria:starts-with-subseq partial-name name)
       (jupyter:match-set-add match-set (format nil "~(~A~)~:[~;:~]" name include-marker) start end :type "package"))))
 
 
@@ -118,7 +118,7 @@
                                                              :device (pathname-device path)
                                                              :directory  (pathname-directory path)))))
         (when (or (not file)
-                  (starts-with-subseq file (namestring part)))
+                  (alexandria:starts-with-subseq file (namestring part)))
           (jupyter:match-set-add match-set
                                  (string-right-trim "\"" (write-to-string (if include-sharpsign-p completed (namestring completed))))
                                  start (if (> (- end start) (1+ (length partial-name)))
@@ -194,11 +194,14 @@
 
 (defmethod jupyter:code-is-complete ((k kernel) code)
   (handler-case
-      (iter
-        (for sexpr in-stream (make-string-input-stream code)))
-    (end-of-file () "incomplete")
-    (serious-condition () "invalid")
-    (condition () "invalid")
+      (do ((stream (make-string-input-stream code)))
+          ((eq :eof (read stream nil :eof))))
+    (end-of-file ()
+      "incomplete")
+    (serious-condition ()
+      "invalid")
+    (condition ()
+      "invalid")
     (:no-error (val)
       (declare (ignore val))
       "complete")))

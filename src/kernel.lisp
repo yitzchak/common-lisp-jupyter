@@ -220,7 +220,7 @@
     (start sink)
     (inform :info k "Starting ~A kernel" name)
     (inform :info k "Parsing connection file ~A" connection-file)
-    (let* ((config-js (shasht:read-json (read-file-into-string connection-file)))
+    (let* ((config-js (shasht:read-json (alexandria:read-file-into-string connection-file)))
            (encoded-key (gethash "key" config-js)))
       (setq transport (gethash "transport" config-js)
             ip (gethash "ip" config-js)
@@ -353,7 +353,7 @@
   (inform :info kernel "Control thread exiting normally."))
 
 
-(defun run-kernel (kernel-class connection-file)
+(defun run-kernel (kernel-class &optional (connection-file (first (uiop:command-line-arguments))))
   "Run a kernel based on a kernel class and a connection file."
   (unless (stringp connection-file)
     (error "Wrong connection file argument (expecting a string)"))
@@ -473,7 +473,7 @@
     (unwind-protect
         (progn
           (send-status-update (kernel-iopub kernel) msg "busy")
-          (switch (msg-type :test #'equal)
+          (alexandria:switch (msg-type :test #'equal)
             ("interrupt_request"
               (handle-interrupt-request kernel msg)
               t)
@@ -498,7 +498,7 @@
     (unwind-protect
         (progn
           (send-status-update (kernel-iopub kernel) msg "busy")
-          (switch (msg-type :test #'equal)
+          (alexandria:switch (msg-type :test #'equal)
             ("comm_close"
               (handle-comm-close kernel msg))
             ("comm_info_request"
@@ -716,7 +716,7 @@
   (with-slots (shell comms) kernel
     (let* ((content (message-content msg))
            (target-name (gethash "target_name" content))
-           (comms-alist (hash-table-alist comms)))
+           (comms-alist (alexandria:hash-table-alist comms)))
       (send-comm-info-reply shell msg
                             (if target-name
                               (remove-if-not (lambda (p) (equal target-name (cdr p)))
@@ -801,7 +801,7 @@
     (let* ((content (message-content msg))
            (output (gethash "output" content))
            (history-type (gethash "hist_access_type" content))
-           (results (switch (history-type :test #'equal)
+           (results (alexandria:switch (history-type :test #'equal)
                       ("range" (history-range history
                                               (gethash "session" content)
                                               (gethash "start" content)
@@ -856,7 +856,7 @@
 (defun quit (&optional keep-kernel)
   (vector-push-extend `(:object-alist
                          ("source" . "ask_exit")
-                         ("keepkernel" . (if keep-kernel :true :false)))
+                         ("keepkernel" . ,(if keep-kernel :true :false)))
                       *payload*)
   (values))
 

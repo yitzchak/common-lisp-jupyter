@@ -1,5 +1,5 @@
 (defpackage #:jupyter
-  (:use #:common-lisp #:alexandria #:iterate)
+  (:use #:common-lisp)
   (:import-from :shasht #:make-object)
   (:nicknames :j)
   (:documentation "Core package for Jupyter support including kernel and installer abstract classes.")
@@ -99,7 +99,7 @@
 
 
 (defpackage #:jupyter-widgets
-  (:use #:common-lisp #:alexandria #:iterate)
+  (:use #:common-lisp)
   (:nicknames :jw)
   (:documentation "Package for core Jupyter Widget support.")
   (:export
@@ -289,7 +289,7 @@
 
 (defpackage #:common-lisp-jupyter
   (:nicknames :cl-jupyter :clj)
-  (:use #:common-lisp #:alexandria #:iterate)
+  (:use #:common-lisp)
   (:documentation "Provides Common Lisp kernel support.")
   (:export
     #:install
@@ -298,7 +298,7 @@
     #:kernel))
 
 (defpackage #:jupyter-convert
-  (:use #:common-lisp #:alexandria #:iterate)
+  (:use #:common-lisp)
   (:documentation "Provides LISP source code conversion to notebooks.")
   (:export
     #:to-notebook))

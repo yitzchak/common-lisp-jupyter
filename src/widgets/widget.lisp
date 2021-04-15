@@ -145,10 +145,11 @@
         (setf (elt state node) buffer)))))
 
 (defun inject-buffers (state buffer-paths buffers)
-  (iter
-    (for buffer-path in-sequence buffer-paths)
-    (for buffer in-sequence buffers)
-    (inject-buffer state (coerce buffer-path 'list) buffer)))
+  (map nil
+       (lambda (buffer-path buffer)
+         (inject-buffer state (coerce buffer-path 'list) buffer))
+       buffer-paths
+       buffers))
 
 (defun send-state (w &optional name)
   (multiple-value-bind (state buffer-paths buffers)
@@ -186,7 +187,7 @@
 
 (defmethod jupyter:on-comm-message ((w widget) data metadata buffers)
   (declare (ignore metadata))
-  (switch ((gethash "method" data) :test #'equal)
+  (alexandria:switch ((gethash "method" data) :test #'equal)
     ("update"
       (update-state w data buffers))
     ("request_state"

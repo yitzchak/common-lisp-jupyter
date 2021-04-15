@@ -14,7 +14,6 @@
      ; ASDF 3
      #-clasp :eclector
      #-clasp :ironclad
-     :iterate
      :multilang-documentation
      :pzmq
      :puri

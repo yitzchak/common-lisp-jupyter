@@ -545,7 +545,7 @@
 
 
 (defun inspect-package (stream name detail-level)
-  (when-let ((pkg (find-package name)))
+  (alexandria:when-let ((pkg (find-package name)))
     (format stream "# ~:/mdf:text/ [package]~@[~%~%~:/mdf:pre/~]~@[~%~%## Nicknames~%~%~(~{~@/mdf:text/~^, ~}~)~]"
                     (package-name pkg)
                     (documentation pkg t)
@@ -566,14 +566,14 @@
 (defun inspect-symbol-system (stream sym detail-level)
   (declare (ignore detail-level))
   #+asdf3.1
-  (when-let* ((system-name (asdf/package-inferred-system::package-name-system (package-name (symbol-package sym))))
+  (alexandria:when-let* ((system-name (asdf/package-inferred-system::package-name-system (package-name (symbol-package sym))))
               (system (asdf:find-system system-name nil)))
     (if (asdf:system-homepage system)
       (format stream "~%~%From system [~A](~A)" system-name (asdf:system-homepage system))
       (format stream "~%~%From system ~A" system-name))
-    (when-let ((license (asdf:system-license system)))
+    (alexandria:when-let ((license (asdf:system-license system)))
       (format stream " (~A)" license))
-    (when-let ((author (asdf:system-author system)))
+    (alexandria:when-let ((author (asdf:system-author system)))
       (format stream " by ~A" author))))
 
 
@@ -606,7 +606,7 @@
 
 (defun inspect-symbol-class (stream sym detail-level)
   (declare (ignore detail-level))
-  (when-let ((cls (find-class sym nil)))
+  (alexandria:when-let ((cls (find-class sym nil)))
     (format stream "~%~%## ~:[Class~;Structure~]~@[~%~%~:/mdf:pre/~]~%~%### Precedence List~%~%~{~@/mdf:text/~^, ~}"
             (subtypep cls (find-class 'structure-object))
             (documentation sym 'type)
@@ -624,7 +624,7 @@
                 (closer-mop:slot-definition-initargs slot)
                 (unless (eql :instance (closer-mop:slot-definition-allocation slot))
                   (closer-mop:slot-definition-allocation slot)))))
-    (when-let ((methods (find-methods cls)))
+    (alexandria:when-let ((methods (find-methods cls)))
       (format stream "~%~%### Methods~%")
       (dolist (method methods)
         (let ((name (closer-mop:generic-function-name (closer-mop:method-generic-function method)))
@@ -641,7 +641,7 @@
 (defun do-inspect-symbol (stream sym detail-level)
   (format stream "~%~%# ~/mdf:text/ \\[symbol\\]" sym)
   (inspect-symbol-system stream sym detail-level)
-  (when-let ((clhs-link (multilang-documentation:documentation sym :clhs)))
+  (alexandria:when-let ((clhs-link (multilang-documentation:documentation sym :clhs)))
     (format stream "~%~%See also: [CLHS](~A)" clhs-link))
   (inspect-symbol-variable stream sym detail-level)
   (inspect-symbol-function stream sym detail-level)

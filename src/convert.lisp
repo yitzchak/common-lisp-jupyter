@@ -29,6 +29,21 @@
     (read-from-string value nil :no-forms)
     (end-of-file () :end-of-file)))
 
+
+(defclass my-client (eclector.parse-result:parse-result-client)
+  ())
+
+
+(defmethod eclector.parse-result:make-expression-result ((client my-client) result children source)
+  (declare (ignore result children))
+  source)
+
+
+(defmethod eclector.parse-result:make-skipped-input-result ((client my-client) stream reason source)
+  (declare (ignore stream))
+  source)
+
+
 (defun to-notebook (src dest)
   "Convert Lisp source to Jupyter notebook"
   (with-open-file (dest-stream dest :direction :output :if-exists :supersede)
@@ -52,39 +67,28 @@
                 (cons "pygments_lexer" "common-lisp")
                 (cons "version" "1.4.8")))))
         (cons "cells"
-          (iter
-            (with cell = nil)
-            (for line in-file src using #'read-line)
-            (when (and (not cell) (zerop (length (string-trim '(#\Space #\Tab #\Newline) line))))
-              (next-iteration))
-            (if cell
-              (setf (cell-source cell)
-                (concatenate 'string
-                  (cell-source cell)
-                  (coerce '(#\Newline) 'string)
-                  line))
-              (setq cell (make-instance 'cell :source line)))
-            (case (my-read (cell-source cell))
-              (:end-of-file)
-              (:no-forms
-                (with-slots (markdown source) cell
-                  (setq markdown t)
-                  (let ((trimmed-source (string-trim '(#\Space #\Tab #\Newline) source)))
-                    (setq source
-                      (format nil "```~%~A~%```"
-                        (string-trim '(#\Space #\Tab #\Newline)
-                          (if (starts-with-subseq "#|" trimmed-source)
-                            (subseq trimmed-source 2 (- (length trimmed-source) 4))
-                            (string-left-trim '(#\;) trimmed-source)))))))
-                (collect cell into cells)
-                (setq cell nil))
-              (otherwise
-                (collect cell into cells)
-                (setq cell nil)))
-            (finally
-              (return
-                (if cell
-                  (nconc cells (list cell))
-                  cells))))))
+          (prog* (cells
+                  (client (make-instance 'my-client))
+                  (contents (alexandria:read-file-into-string src))
+                  (stream (make-string-input-stream contents)))
+           next
+            (multiple-value-bind (result skipped)
+                                 (eclector.parse-result:read client stream nil :eof)
+              (unless (and (eq :eof result)
+                           (null skipped))
+                (push `(:object-plist
+                         "cell_type" "code"
+                         "execution_count" :null
+                         "metadata" :empty-object
+                         "outputs" :empty-array
+                         "source" (,(let ((source (reduce (lambda (previous current)
+                                                            (cons (min (car previous) (car current))
+                                                                  (max (cdr previous) (cdr current))))
+                                                          (cons result skipped))))
+                                      (subseq contents (car source) (cdr source)))))
+                      cells))
+              (when (eq :eof result)
+                (return (nreverse cells)))
+              (go next)))))
       dest-stream))
-  t)
+  (values))

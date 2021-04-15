@@ -79,7 +79,7 @@ Standard MIME types
       (t
         (list :object-alist
               (cons *plain-text-mime-type* "inline-value")
-              (cons mime-type (if (or (stringp value) (ends-with-subseq "json" mime-type))
+              (cons mime-type (if (or (stringp value) (alexandria:ends-with-subseq "json" mime-type))
                                 value
                                 (cl-base64:usb8-array-to-base64-string value))))))))
 
@@ -107,15 +107,15 @@ Standard MIME types
          (mime-type (or (file-result-mime-type res) (trivial-mimes:mime path))))
     (if (equal mime-type *plain-text-mime-type*)
       (list :object-alist
-            (cons mime-type (read-file-into-string path)))
+            (cons mime-type (alexandria:read-file-into-string path)))
       (list :object-alist
             (cons *plain-text-mime-type* path)
             (cons mime-type
                   (if (or (equal mime-type *svg-mime-type*)
-                          (starts-with-subseq "text/" mime-type))
-                    (read-file-into-string path)
+                          (alexandria:starts-with-subseq "text/" mime-type))
+                    (alexandria:read-file-into-string path)
                     (cl-base64:usb8-array-to-base64-string
-                      (read-file-into-byte-vector path))))))))
+                      (alexandria:read-file-into-byte-vector path))))))))
 
 (defclass error-result (result)
   ((ename :initarg :ename
