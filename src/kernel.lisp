@@ -160,7 +160,7 @@
      :documentation "Kernel history manager.")
    (execution-count
      :initform 0
-     :accessor history-execution-count
+     :accessor kernel-execution-count
      :documentation "Kernel execution count.")
    (comms
      :initform (make-hash-table :test #'equal)
@@ -366,8 +366,8 @@
       (stop kernel))))
 
 
-(defun make-eval-error (err msg &key (quit nil))
-  (make-error-result (symbol-name (class-name (class-of err))) msg :quit quit))
+(defun make-eval-error (err msg traceback)
+  (values nil (symbol-name (class-name (class-of err))) msg traceback))
 
 (define-condition quit-condition (error)
   ()
@@ -409,28 +409,38 @@
 (defmacro handling-errors (&body body)
   "Macro for catching any conditions including quit-conditions during code
   evaluation."
-  `(handler-case
-       (handler-bind
-           ((warning
-              (lambda (wrn)
-                (format t "[~S] ~A~%" (type-of wrn) wrn)
-                (muffle-warning)))
-            (serious-condition
-              (lambda (err)
-                (dissect:present err *error-output*))))
-         (progn ,@body))
-     (quit-condition (err)
-       (make-eval-error err (format nil "~A" err) :quit t))
-     (simple-error (err)
-       (make-eval-error err
-                        (apply #'format nil (simple-condition-format-control err)
-                               (simple-condition-format-arguments err))))
-     (simple-type-error (err)
-       (make-eval-error err
-                        (apply #'format nil (simple-condition-format-control err)
-                               (simple-condition-format-arguments err))))
-     (serious-condition (err)
-       (make-eval-error err (format nil "~A" err)))))
+  (let ((traceback (gensym)))
+    `(let (,traceback)
+       (handler-case
+          (handler-bind
+              ((warning
+                 (lambda (wrn)
+                   (format t "[~S] ~A~%" (type-of wrn) wrn)
+                   (muffle-warning)))
+               (serious-condition
+                 (lambda (err)
+                   (let ((env (dissect:capture-environment err)))
+                     (setf ,traceback
+                           (mapcar (lambda (frame)
+                                     (dissect:present frame nil))
+                                   (dissect:environment-stack env)))
+                     (dissect:present env *error-output*)))))
+            (progn ,@body))
+         (quit-condition (err)
+           (make-eval-error err (format nil "~A" err) ,traceback))
+         (simple-error (err)
+           (make-eval-error err
+                            (apply #'format nil (simple-condition-format-control err)
+                                   (simple-condition-format-arguments err))
+                            ,traceback))
+         (simple-type-error (err)
+           (make-eval-error err
+                            (apply #'format nil (simple-condition-format-control err)
+                                   (simple-condition-format-arguments err))
+                            ,traceback))
+         (serious-condition (err)
+           (make-eval-error err (format nil "~A" err)
+                            ,traceback))))))
 
 
 (defmacro debugging-errors (&body body)
@@ -573,6 +583,7 @@
     (let* ((code (gethash "code" (message-content msg)))
            (ename "interrupt")
            (evalue "Execution interrupted")
+           traceback
            (*payload* (make-array 16 :adjustable t :fill-pointer 0))
            (*page-output* (make-string-output-stream))
            (*query-io* (make-stdin-stream stdin msg))
@@ -586,24 +597,23 @@
       (incf execution-count)
       (add-cell history execution-count code)
       (unwind-protect
-          (setq results (let* ((*package* package)
-                               (r (evaluate-code kernel code)))
-                          (setf package *package*)
-                          r))
-        (dolist (result results)
-          (send-result result))
-        ;broadcast the code to connected frontends
+          (let* ((*package* package))
+            (multiple-value-setq (ename evalue traceback)
+                                 (evaluate-code kernel code))
+            (setf package *package*))
+        ;; broadcast the code to connected frontends
         (send-execute-code iopub msg execution-count code)
         ;; send any remaining stdout
         (finish-output *standard-output*)
         ;; send any remaining stderr
         (finish-output *error-output*)
         ;; send reply (control)
-        (let ((errors (remove-if-not #'eval-error-p results)))
-          (if errors
-            (let ((ename (format nil "~{~A~^, ~}" (mapcar #'error-result-ename errors)))
-                  (evalue (format nil "~{~A~^, ~}" (mapcar #'error-result-evalue errors))))
-              (send-execute-reply-error shell msg execution-count ename evalue))
+        (inform :info kernel "~A ~A ~A" ename evalue traceback)
+        (cond
+          (ename
+            (send-execute-error iopub msg ename evalue traceback)
+            (send-execute-reply-error shell msg execution-count ename evalue traceback))
+          (t
             (let ((p (get-output-stream-string *page-output*)))
               (unless (queue-empty-p input-queue)
                 (set-next-input (dequeue input-queue)))
@@ -611,7 +621,7 @@
                 (page (make-inline-result p)))
               (send-execute-reply-ok shell msg execution-count *payload*)))))
       ;; return t if there is no quit errors present
-      (notany #'quit-eval-error-p results))))
+      t)))
 
 #|
 
@@ -871,5 +881,6 @@
 
 
 (defun execute-result (kernel result)
+  (inform :info kernel "~A" result)
   (send-execute-result (kernel-iopub kernel) *message* (kernel-execution-count kernel)
                        (mime-bundle-data result) (mime-bundle-metadata result)))

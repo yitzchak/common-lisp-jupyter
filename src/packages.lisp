@@ -8,6 +8,8 @@
     ; log
     #:inform
     ; results
+    #:mime-bundle-data
+    #:mime-bundle-metadata
     #:file
     #:gif-file
     #:html

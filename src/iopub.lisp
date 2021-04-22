@@ -57,6 +57,7 @@
                               :parent parent-msg)))
 
 (defun send-execute-result (iopub parent-msg execution-count data &optional metadata)
+  (inform :info iopub "~A ~A ~A ~A" parent-msg execution-count data metadata)
   (message-send iopub
                 (make-message (channel-session iopub) "execute_result"
                               `(:object-alist
@@ -65,13 +66,13 @@
                                  ("metadata" . ,(or metadata :empty-object)))
                               :parent parent-msg)))
 
-(defun send-execute-error (iopub parent-msg ename evalue)
+(defun send-execute-error (iopub parent-msg ename evalue &optional traceback)
   (message-send iopub
                 (make-message (channel-session iopub) "error"
-                              `(:object-alist
-                                 ("ename" . ,ename)
-                                 ("evalue" . ,evalue)
-                                 ("traceback" . :empty-array))
+                              (list :object-plist
+                                    "ename" ename
+                                    "evalue" evalue
+                                    "traceback" (or traceback :empty-array))
                               :parent parent-msg)))
 
 (defun send-stream (iopub parent-msg stream-name data)

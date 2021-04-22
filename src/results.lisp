@@ -23,15 +23,16 @@ Standard MIME types
 
 (defgeneric mime-bundle-data (value)
   (:method (value)
-           (list :object-alist
-                 *plain-text-mime-type*
-                 (string-trim '(#\Newline)
-                              (with-output-to-string (s)
-                                (pprint value s))))))
+    (list :object-plist
+          *plain-text-mime-type*
+          (string-trim '(#\Newline)
+                       (with-output-to-string (s)
+                         (pprint value s))))))
 
 
 (defgeneric mime-bundle-metadata (value)
   (:method (value)
+    (declare (ignore value))
     :empty-object))
 
 
@@ -40,7 +41,7 @@ Standard MIME types
      :reader mime-bundle-data
      :initarg :data
      :initform :empty-object)
-   (data
+   (metadata
      :reader mime-bundle-metadata
      :initarg :metadata
      :initform :empty-object)))

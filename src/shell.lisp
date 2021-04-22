@@ -34,7 +34,7 @@
                                  ("payload" . ,payload))
                               :parent parent-msg)))
 
-(defun send-execute-reply-error (shell parent-msg execution-count ename evalue)
+(defun send-execute-reply-error (shell parent-msg execution-count ename evalue &optional traceback)
   (message-send shell
                 (make-message (channel-session shell) "execute_reply"
                               `(:object-alist
@@ -42,17 +42,17 @@
                                  ("execution_count" . ,execution-count)
                                  ("ename" . ,ename)
                                  ("evalue" . ,evalue)
-                                 ("traceback" . nil))
+                                 ("traceback" . ,(or traceback :empty-array)))
                               :parent parent-msg)))
 
-(defun send-inspect-reply-error (shell parent-msg ename evalue)
+(defun send-inspect-reply-error (shell parent-msg ename evalue &optional traceback)
   (message-send shell
                 (make-message (channel-session shell) "inspect_reply"
                               `(:object-alist
                                  ("status" . "error")
                                  ("ename" . ,ename)
                                  ("evalue" . ,evalue)
-                                 ("traceback" . nil))
+                                 ("traceback" . ,(or traceback :empty-array)))
                               :parent parent-msg)))
 
 (defun send-inspect-reply-ok (shell parent-msg data)
@@ -65,14 +65,14 @@
                                  ("metadata" . :empty-object))
                               :parent parent-msg)))
 
-(defun send-complete-reply-error (shell parent-msg ename evalue)
+(defun send-complete-reply-error (shell parent-msg ename evalue &optional traceback)
   (message-send shell
                 (make-message (channel-session shell) "complete_reply"
-                              `(:object-alist
-                                 ("status" . "error")
-                                 ("ename" . ,ename)
-                                 ("evalue" . ,evalue)
-                                 ("traceback" . nil))
+                              (list :object-plist
+                                    "status" "error"
+                                    "ename" ename
+                                    "evalue" evalue
+                                    "traceback" (or traceback :empty-array))
                               :parent parent-msg)))
 
 (defun send-complete-reply-ok (shell parent-msg matches start end &optional metadata)
