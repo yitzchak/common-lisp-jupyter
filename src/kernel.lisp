@@ -571,7 +571,8 @@
   (with-slots (execution-count history iopub package prompt-prefix prompt-suffix shell stdin input-queue)
               kernel
     (let* ((code (gethash "code" (message-content msg)))
-           (results (list (make-error-result "interrupt" "Execution interrupted")))
+           (ename "interrupt")
+           (evalue "Execution interrupted")
            (*payload* (make-array 16 :adjustable t :fill-pointer 0))
            (*page-output* (make-string-output-stream))
            (*query-io* (make-stdin-stream stdin msg))
@@ -582,7 +583,7 @@
                                                  prompt-prefix prompt-suffix))
            (*debug-io* *standard-output*)
            (*trace-output* *standard-output*))
-      (setq execution-count (1+ execution-count))
+      (incf execution-count)
       (add-cell history execution-count code)
       (unwind-protect
           (setq results (let* ((*package* package)
@@ -867,3 +868,8 @@
 (defun clear (&optional (wait nil))
   "Send clear output message to frontend."
   (send-clear-output (kernel-iopub *kernel*) *message* wait))
+
+
+(defun execute-result (kernel result)
+  (send-execute-result (kernel-iopub kernel) *message* (kernel-execution-count kernel)
+                       (mime-bundle-data result) (mime-bundle-metadata result)))

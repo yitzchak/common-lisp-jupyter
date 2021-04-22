@@ -21,10 +21,36 @@ Standard MIME types
 (defvar *svg-mime-type* "image/svg+xml")
 
 
+(defgeneric mime-bundle-data (value)
+  (:method (value)
+           (list :object-alist
+                 *plain-text-mime-type*
+                 (string-trim '(#\Newline)
+                              (with-output-to-string (s)
+                                (pprint value s))))))
+
+
+(defgeneric mime-bundle-metadata (value)
+  (:method (value)
+    :empty-object))
+
+
+(defclass mime-bundle ()
+  ((data
+     :reader mime-bundle-data
+     :initarg :data
+     :initform :empty-object)
+   (data
+     :reader mime-bundle-metadata
+     :initarg :metadata
+     :initform :empty-object)))
+
+
 (defun sexpr-to-text (value)
   (string-trim '(#\Newline)
     (with-output-to-string (s)
       (pprint value s))))
+
 
 (defgeneric render (result)
   (:documentation "Render evaluation result as a mime bundle for execute_result

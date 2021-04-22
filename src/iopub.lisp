@@ -36,12 +36,16 @@
                                  ("execution_state" . ,status))
                               :parent parent-msg)))
 
-(defun send-display-data (iopub parent-msg data)
+(defun send-display-data (iopub parent-msg data &optional metadata transient update)
   (message-send iopub
-                (make-message (channel-session iopub) "display_data"
+                (make-message (channel-session iopub)
+                              (if update
+                                "display_data"
+                                "update_display_data")
                               `(:object-alist
                                  ("data" . ,data)
-                                 ("metadata" . :empty-object))
+                                 ("metadata" . ,(or metadata :empty-object))
+                                 ("transient" . ,(or tarnsient :empty-object)))
                               :parent parent-msg)))
 
 (defun send-execute-code (iopub parent-msg execution-count code)
@@ -52,13 +56,13 @@
                                  ("execution_count" . ,execution-count))
                               :parent parent-msg)))
 
-(defun send-execute-result (iopub parent-msg execution-count data)
+(defun send-execute-result (iopub parent-msg execution-count data &optional metadata)
   (message-send iopub
                 (make-message (channel-session iopub) "execute_result"
                               `(:object-alist
                                  ("execution_count" . ,execution-count)
                                  ("data" . ,data)
-                                 ("metadata" . :empty-object))
+                                 ("metadata" . ,(or metadata :empty-object)))
                               :parent parent-msg)))
 
 (defun send-execute-error (iopub parent-msg ename evalue)

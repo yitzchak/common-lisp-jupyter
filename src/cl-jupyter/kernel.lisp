@@ -45,7 +45,7 @@
 
 (defun my-read (&optional input-stream (eof-error-p t) eof-value recursive-p)
   (jupyter:handling-errors
-    (read input-stream eof-error-p eof-value recursive-p)))
+    (values (read input-stream eof-error-p eof-value recursive-p) t)))
 
 (defun my-eval (expr)
   (jupyter:debugging-errors
@@ -64,15 +64,19 @@
 
 
 (defmethod jupyter:evaluate-code ((k kernel) code)
-  (do* ((stream (make-string-input-stream code))
-        (sexpr (my-read stream nil :eof) (my-read stream nil :eof))
-        results result)
-      ((eq :eof sexpr) (nreverse results))
+  (prog ((stream (make-string-input-stream code))
+         sexpr eval-p result)
+   repeat
+    (multiple-value-setq (sexpr eval-p) (my-read stream nil :eof))
     (cond
-      ((typep sexpr 'jupyter:result)
-        (push sexpr results))
+      ((eq :eof sexpr)
+        (return))
+      ((null eval-p)
+        (jupyter::execute-result k sexpr))
+      ((listp (setf result (my-eval sexpr)))
+        (dolist (result results)
+          (jupyter::execute-result k result)))
       (t
-        (setf result (my-eval sexpr))
-        (if (listp result)
-          (setf results (nconc (nreverse result) results))
-          (push result results))))))
+        (jupyter::execute-result k result)))
+    (go repeat)))
+
