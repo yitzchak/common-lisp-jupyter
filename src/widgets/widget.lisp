@@ -112,13 +112,13 @@
 
 
 (defmethod jupyter:mime-bundle-data ((w widget))
-  `(:object-alist
-     ("text/plain" . "A Jupyter Widget")
-     ("application/vnd.jupyter.widget-view+json" .
-      (:object-alist
-        ("version_major" . 2)
-        ("version_minor" . 0)
-        ("model_id" . ,(jupyter:comm-id w))))))
+  (list :object-plist
+        "text/plain" "A Jupyter Widget"
+        "application/vnd.jupyter.widget-view+json"
+        (list :object-plist
+              "version_major" 2
+              "version_minor" 0
+              "model_id" (jupyter:comm-id w))))
 
 
 (defun to-json-state (w &optional nm)

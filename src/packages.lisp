@@ -8,6 +8,8 @@
     ; log
     #:inform
     ; results
+    #:display-data
+    #:execute-result
     #:mime-bundle-data
     #:mime-bundle-metadata
     #:file

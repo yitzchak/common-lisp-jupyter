@@ -879,8 +879,3 @@
   "Send clear output message to frontend."
   (send-clear-output (kernel-iopub *kernel*) *message* wait))
 
-
-(defun execute-result (kernel result)
-  (inform :info kernel "~A" result)
-  (send-execute-result (kernel-iopub kernel) *message* (kernel-execution-count kernel)
-                       (mime-bundle-data result) (mime-bundle-metadata result)))

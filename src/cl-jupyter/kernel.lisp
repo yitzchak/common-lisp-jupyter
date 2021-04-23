@@ -76,6 +76,6 @@
       (when ename
         (return (values ename evalue traceback)))
       (dolist (result expr)
-        (jupyter::execute-result k result))
+        (jupyter::execute-result result))
       (go repeat))))
 

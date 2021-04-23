@@ -47,6 +47,20 @@ Standard MIME types
      :initform :empty-object)))
 
 
+(defun execute-result (result)
+  (send-execute-result (kernel-iopub *kernel*) *message* (kernel-execution-count kernel)
+                       (mime-bundle-data result) (mime-bundle-metadata result)))
+
+
+(defun display-data (result &key id update)
+  (send-execute-result (kernel-iopub *kernel*) *message*
+                       (mime-bundle-data result) (mime-bundle-metadata result)
+                       (if id
+                         (list :object-plist "display_id" id)
+                         :empty-object)
+                       update))
+
+
 (defun sexpr-to-text (value)
   (string-trim '(#\Newline)
     (with-output-to-string (s)
@@ -143,6 +157,28 @@ Standard MIME types
                     (alexandria:read-file-into-string path)
                     (cl-base64:usb8-array-to-base64-string
                       (alexandria:read-file-into-byte-vector path))))))))
+
+
+(defun make-file-mime-bundle (path mime-type display-data update id)
+  (let* ((mime-type (or mime-type (trivial-mimes:mime path)))
+         (bundle (make-instance 'mime-bundle
+                                :data (if (equal mime-type *plain-text-mime-type*)
+                                        (list :object-plist
+                                              mime-type (alexandria:read-file-into-string path))
+                                        (list :object-plist
+                                              *plain-text-mime-type* path
+                                              mime-type (if (or (equal mime-type *svg-mime-type*)
+                                                                (alexandria:starts-with-subseq "text/" mime-type))
+                                                          (alexandria:read-file-into-string path)
+                                                          (cl-base64:usb8-array-to-base64-string
+                                                            (alexandria:read-file-into-byte-vector path))))))))
+    (cond
+      (display-data
+        (display-data bundle :update update :id id)
+        (values))
+      (t
+        bundle))))
+
 
 (defclass error-result (result)
   ((ename :initarg :ename
