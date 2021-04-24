@@ -369,10 +369,6 @@
 (defun make-eval-error (err msg traceback)
   (values nil (symbol-name (class-name (class-of err))) msg traceback))
 
-(define-condition quit-condition (error)
-  ()
-  (:documentation "A condition for identifying a request for kernel shutdown.")
-  (:report (lambda (c stream) (declare (ignore c stream)))))
 
 (defun choose ()
   (write-string "Choice: " *query-io*)
@@ -407,8 +403,7 @@
 
 
 (defmacro handling-errors (&body body)
-  "Macro for catching any conditions including quit-conditions during code
-  evaluation."
+  "Macro for catching any conditions during code evaluation."
   (let ((traceback (gensym)))
     `(let (,traceback)
        (handler-case
@@ -426,8 +421,6 @@
                                    (dissect:environment-stack env)))
                      (dissect:present env *error-output*)))))
             (progn ,@body))
-         (quit-condition (err)
-           (make-eval-error err (format nil "~A" err) ,traceback))
          (simple-error (err)
            (make-eval-error err
                             (apply #'format nil (simple-condition-format-control err)
@@ -451,8 +444,7 @@
      (handling-errors ,@body)))
 
 (defmacro handling-comm-errors (&body body)
-  "Macro for catching any conditions including quit-conditions during code
-  evaluation."
+  "Macro for catching any conditions during comm messages."
   `(handler-case
        (handler-bind
            ((serious-condition
@@ -463,8 +455,6 @@
                 (inform :warn *kernel* (dissect:present wrn nil))
                 (muffle-warning))))
          (progn ,@body))
-     ;(quit-condition (err)
-     ;  (make-eval-error err (format nil "~A" err) :quit t))
      (serious-condition (err)
        (declare (ignore err)))))
 
@@ -677,18 +667,16 @@
   (inform :info kernel "Handling inspect_request message")
   (with-slots (shell package) kernel
     (let* ((content (message-content msg))
-           (code (gethash "code" content))
-           (result (let ((*package* package))
-                     (inspect-code kernel
-                              code
-                              (min (1- (length code)) (gethash "cursor_pos" content))
-                              (gethash "detail_level" content)))))
-      (if (eval-error-p result)
-        (with-slots (ename evalue) result
-          (send-inspect-reply-error shell msg ename evalue))
-        (send-inspect-reply-ok shell msg
-          (let ((*package* package))
-            (render result))))))
+           (code (gethash "code" content)))
+      (multiple-value-bind (result ename evalue traceback)
+                           (let ((*package* package))
+                             (inspect-code kernel
+                                           code
+                                           (min (1- (length code)) (gethash "cursor_pos" content))
+                                           (gethash "detail_level" content)))
+      (if ename
+        (send-inspect-reply-error shell msg ename evalue traceback)
+        (send-inspect-reply-ok shell msg (mime-bundle-data result) (mime-bundle-metadata result))))))
   t)
 
 #|
@@ -703,24 +691,25 @@
     (let* ((content (message-content msg))
            (code (gethash "code" content))
            (cursor-pos (gethash "cursor_pos" content))
-           (match-set (make-match-set :start cursor-pos :end cursor-pos :code code))
-           (result (let ((*package* package))
-                     (complete-code kernel match-set code cursor-pos))))
-      (if (eval-error-p result)
-        (with-slots (ename evalue) result
-          (send-complete-reply-error shell msg ename evalue))
-        (send-complete-reply-ok shell msg
-                                (sort (mapcar #'match-text (match-set-matches match-set)) #'string<)
-                                (match-set-start match-set)
-                                (match-set-end match-set)
-                                `(:object-alist
-                                   ("_jupyter_types_experimental" . ,(or (mapcan (lambda (match)
-                                                                                   (when (match-type match)
-                                                                                     (list (list :object-alist
-                                                                                             (cons "text" (match-text match))
-                                                                                             (cons "type" (match-type match))))))
-                                                                                 (match-set-matches match-set))
-                                                                         :empty-object))))))))
+           (match-set (make-match-set :start cursor-pos :end cursor-pos :code code)))
+      (multiple-value-bind (result ename evalue traceback)
+                           (let ((*package* package))
+                             (complete-code kernel match-set code cursor-pos))
+        (if ename
+          (send-complete-reply-error shell msg ename evalue traceback)
+          (send-complete-reply-ok shell msg
+                                  (sort (mapcar #'match-text (match-set-matches match-set)) #'string<)
+                                  (match-set-start match-set)
+                                  (match-set-end match-set)
+                                  `(:object-alist
+                                     ("_jupyter_types_experimental" . ,(or (mapcan (lambda (match)
+                                                                                     (when (match-type match)
+                                                                                       (list (list :object-alist
+                                                                                               (cons "text" (match-text match))
+                                                                                               (cons "type" (match-type match))))))
+                                                                                   (match-set-matches match-set))
+                                                                           :empty-object)))))))))
+
 
 (defun handle-comm-info-request (kernel msg)
   (inform :info kernel "Handling comm_info_request message")
@@ -834,19 +823,6 @@
           results))))
           t)
 
-(defun send-result (result)
-  "Send a result either as display data or an execute result."
-  (with-slots (iopub package execution-count history) *kernel*
-    (if (typep result 'error-result)
-      (send-execute-error iopub *message*
-                          (error-result-ename result)
-                          (error-result-evalue result))
-      (let ((data (let ((*package* package))
-                    (render result))))
-        (when data
-          (if (result-display-data result)
-            (send-display-data iopub *message* data)
-            (send-execute-result iopub *message* execution-count data)))))))
 
 (defun set-next-input (text &optional (replace nil))
   (declare (ignore replace))
@@ -856,10 +832,11 @@
                       *payload*)
   (values))
 
+
 (defun page (result &optional (start 0))
   (vector-push-extend `(:object-alist
                          ("source" . "page")
-                         ("data" . ,(render result))
+                         ("data" . ,(mime-bundle-data result))
                          ("start" . ,start))
                       *payload*)
   (values))

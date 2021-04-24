@@ -20,17 +20,11 @@
     #:jpeg
     #:jpeg-file
     #:latex
-    #:make-error-result
-    #:make-file-result
-    #:make-inline-result
-    #:make-lisp-result
     #:markdown
     #:pdf-file
     #:png
     #:png-file
     #:ps-file
-    #:quit-eval-error-p
-    #:render
     #:result
     #:svg
     #:svg-file
@@ -62,12 +56,10 @@
     #:on-comm-open
     #:*page-output*
     #:quit
-    #:quit-condition
     #:run-kernel
     #:send-comm-close
     #:send-comm-message
     #:send-comm-open
-    #:send-result
     #:start
     #:stop
     ; installer

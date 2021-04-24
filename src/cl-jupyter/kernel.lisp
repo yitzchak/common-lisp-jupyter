@@ -69,13 +69,15 @@
     (prog (expr ename evalue traceback)
      repeat
       (multiple-value-setq (expr ename evalue traceback) (my-read stream nil :eof))
+      (j:inform :info k "~A" expr)
       (when (or (eq :eof expr)
                 ename)
         (return (values ename evalue traceback)))
       (multiple-value-setq (expr ename evalue traceback) (my-eval expr))
+      (j:inform :info k "~A" expr)
       (when ename
         (return (values ename evalue traceback)))
       (dolist (result expr)
-        (jupyter::execute-result result))
+        (jupyter:execute-result result))
       (go repeat))))
 

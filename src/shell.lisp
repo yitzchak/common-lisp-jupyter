@@ -55,14 +55,14 @@
                                  ("traceback" . ,(or traceback :empty-array)))
                               :parent parent-msg)))
 
-(defun send-inspect-reply-ok (shell parent-msg data)
+(defun send-inspect-reply-ok (shell parent-msg data &optional metadata)
   (message-send shell
                 (make-message (channel-session shell) "inspect_reply"
-                              `(:object-alist
-                                 ("status" . "ok")
-                                 ("found" . ,(if data :true :false))
-                                 ("data" . ,(or data :empty-object))
-                                 ("metadata" . :empty-object))
+                              (list :object-plist
+                                    "status" "ok"
+                                    "found" (if data :true :false)
+                                    "data" (or data :empty-object)
+                                    "metadata" (or metadata :empty-object))
                               :parent parent-msg)))
 
 (defun send-complete-reply-error (shell parent-msg ename evalue &optional traceback)

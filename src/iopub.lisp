@@ -40,12 +40,12 @@
   (message-send iopub
                 (make-message (channel-session iopub)
                               (if update
-                                "display_data"
-                                "update_display_data")
+                                "update_display_data"
+                                "display_data")
                               `(:object-alist
                                  ("data" . ,data)
                                  ("metadata" . ,(or metadata :empty-object))
-                                 ("transient" . ,(or tarnsient :empty-object)))
+                                 ("transient" . ,(or transient :empty-object)))
                               :parent parent-msg)))
 
 (defun send-execute-code (iopub parent-msg execution-count code)

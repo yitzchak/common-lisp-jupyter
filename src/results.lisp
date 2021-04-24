@@ -48,115 +48,17 @@ Standard MIME types
 
 
 (defun execute-result (result)
-  (send-execute-result (kernel-iopub *kernel*) *message* (kernel-execution-count kernel)
+  (send-execute-result (kernel-iopub *kernel*) *message* (kernel-execution-count *kernel*)
                        (mime-bundle-data result) (mime-bundle-metadata result)))
 
 
 (defun display-data (result &key id update)
-  (send-execute-result (kernel-iopub *kernel*) *message*
-                       (mime-bundle-data result) (mime-bundle-metadata result)
-                       (if id
-                         (list :object-plist "display_id" id)
-                         :empty-object)
-                       update))
-
-
-(defun sexpr-to-text (value)
-  (string-trim '(#\Newline)
-    (with-output-to-string (s)
-      (pprint value s))))
-
-
-(defgeneric render (result)
-  (:documentation "Render evaluation result as a mime bundle for execute_result
-  or display_data."))
-
-(defmethod render (res))
-
-(defclass result ()
-  ((display-data :initarg :display-data
-                 :initform nil
-                 :accessor result-display-data
-                 :documentation "Show result as display_data in client."))
-  (:documentation "Base class for encapsulation of evaluation result."))
-
-(defclass sexpr-result (result)
-  ((value :initarg :value
-          :reader sexpr-result-value)))
-
-(defmethod render ((res sexpr-result))
-  (list :object-alist
-        (cons *plain-text-mime-type* (sexpr-to-text (sexpr-result-value res)))))
-
-(defclass inline-result (result)
-  ((value :initarg :value
-          :reader inline-result-value)
-   (mime-type :initarg :mime-type
-              :reader inline-result-mime-type)))
-
-(defun make-inline-result (value &key (mime-type *plain-text-mime-type*) (display-data nil) (handle nil))
-  "Make a result based on an inline value. The handle argument is used by the
-  convenience functions to instantly process the result."
-  (let ((result (make-instance 'inline-result :value value
-                                              :mime-type mime-type
-                                              :display-data display-data)))
-    (if (and handle display-data)
-      (progn
-        (send-result result)
-        t)
-      result)))
-
-(defmethod render ((res inline-result))
-  (let ((value (inline-result-value res))
-        (mime-type (inline-result-mime-type res)))
-    (cond
-      ((equal mime-type *plain-text-mime-type*)
-        (list :object-alist
-              (cons mime-type value)))
-      ((equal mime-type *markdown-mime-type*)
-        (list :object-alist
-              (cons *plain-text-mime-type* value)
-              (cons mime-type value)))
-      (t
-        (list :object-alist
-              (cons *plain-text-mime-type* "inline-value")
-              (cons mime-type (if (or (stringp value) (alexandria:ends-with-subseq "json" mime-type))
-                                value
-                                (cl-base64:usb8-array-to-base64-string value))))))))
-
-(defclass file-result (result)
-  ((path :initarg :path
-         :reader file-result-path)
-   (mime-type :initarg :mime-type
-              :initform nil
-              :reader file-result-mime-type)))
-
-(defun make-file-result (path &key (mime-type nil) (display-data nil) (handle nil))
-  "Make a result based on a file. The handle argument is used by the convenience
-  functions to instantly process the result."
-  (let ((result (make-instance 'file-result :path path
-                                            :mime-type mime-type
-                                            :display-data display-data)))
-    (if (and handle display-data)
-      (progn
-        (send-result result)
-        t)
-      result)))
-
-(defmethod render ((res file-result))
-  (let* ((path (file-result-path res))
-         (mime-type (or (file-result-mime-type res) (trivial-mimes:mime path))))
-    (if (equal mime-type *plain-text-mime-type*)
-      (list :object-alist
-            (cons mime-type (alexandria:read-file-into-string path)))
-      (list :object-alist
-            (cons *plain-text-mime-type* path)
-            (cons mime-type
-                  (if (or (equal mime-type *svg-mime-type*)
-                          (alexandria:starts-with-subseq "text/" mime-type))
-                    (alexandria:read-file-into-string path)
-                    (cl-base64:usb8-array-to-base64-string
-                      (alexandria:read-file-into-byte-vector path))))))))
+  (send-display-data (kernel-iopub *kernel*) *message*
+                    (mime-bundle-data result) (mime-bundle-metadata result)
+                    (if id
+                      (list :object-plist "display_id" id)
+                      :empty-object)
+                    update))
 
 
 (defun make-file-mime-bundle (path mime-type display-data update id)
@@ -180,146 +82,108 @@ Standard MIME types
         bundle))))
 
 
-(defclass error-result (result)
-  ((ename :initarg :ename
-          :reader error-result-ename)
-   (evalue :initarg :evalue
-           :reader error-result-evalue)
-   (quit :initarg :quit
-         :initform nil
-         :reader error-result-quit)
-   (traceback :initarg :traceback
-              :initform nil
-              :reader error-result-traceback)))
+(defun make-inline-mime-bundle (value mime-type metadata display-data update id)
+  (let ((bundle (make-instance 'mime-bundle :data (list :object-plist
+                                                        mime-type value)
+                                            :metadata (or metadata :empty-object))))
+    (cond
+      (display-data
+        (display-data bundle :update update :id id)
+        (values))
+      (t
+        bundle))))
 
-(defun make-error-result (ename evalue &key (quit nil) (traceback nil))
-  "Make a result based on an error. The quit the parameter indicates that the
-  kernel should exit. The handle argument is used by the convenience functions
-  to instantly process the result."
-  (make-instance 'error-result :ename ename
-                               :evalue evalue
-                               :quit quit
-                               :traceback traceback))
 
-(defun make-lisp-result (value &key (display-data nil))
-  "Make a lisp result based on an inline value."
-  (cond ((typep value 'result)
-         value)
-        ((not (eq :no-output value))
-         (make-instance 'sexpr-result :value value :display-data display-data))))
-
-(defun eval-error-p (result)
-  "Predicate to determine if result is an error result."
-  (typep result 'error-result))
-
-(defun quit-eval-error-p (result)
-  "Predicate to determine if result is an quit result."
-  (and (typep result 'error-result) (error-result-quit result)))
-
-; Convienence functions
-
-(defun file (path &optional (display-data nil))
+(defun file (path &key display update id)
   "Create a result based on a file path. The mime type with automatically be
   determined from the file extension."
-  (make-file-result path :display-data display-data :handle t))
+  (make-file-mime-bundle path nil display update id))
 
-(defun gif-file (path &optional (display-data nil))
+
+(defun gif-file (path &key display update id)
   "Create a GIF image result based on a file path."
-  (make-file-result path
-                    :display-data display-data :handle t
-                    :mime-type *gif-mime-type*))
+  (make-file-mime-bundle path *gif-mime-type* display update id))
 
-(defun jpeg-file (path &optional (display-data nil))
+
+(defun jpeg-file (path &key display update id)
   "Create a JPEG image result based on a file path."
-  (make-file-result path
-                    :display-data display-data :handle t
-                    :mime-type *jpeg-mime-type*))
+  (make-file-mime-bundle path *jpeg-mime-type* display update id))
 
-(defun pdf-file (path &optional (display-data nil))
+
+(defun pdf-file (path &key display update id)
   "Create a PDF result based on a file path."
-  (make-file-result path
-                    :display-data display-data :handle t
-                    :mime-type *pdf-mime-type*))
+  (make-file-mime-bundle path *pdf-mime-type* display update id))
 
-(defun png-file (path &optional (display-data nil))
+
+(defun png-file (path &key display update id)
   "Create a PNG image result based on a file path."
-  (make-file-result path
-                    :display-data display-data :handle t
-                    :mime-type *png-mime-type*))
+  (make-file-mime-bundle path *png-mime-type* display update id))
 
-(defun ps-file (path &optional (display-data nil))
+
+(defun ps-file (path &key display update id)
   "Create a PostScript result based on a file path."
-  (make-file-result path
-                    :display-data display-data :handle t
-                    :mime-type *ps-mime-type*))
+  (make-file-mime-bundle path *ps-mime-type* display update id))
 
-(defun svg-file (path &optional (display-data nil))
+
+(defun svg-file (path &key display update id)
   "Create a SVG result based on a file path."
-  (make-file-result path
-                    :display-data display-data :handle t
-                    :mime-type *svg-mime-type*))
+  (make-file-mime-bundle path *gif-mime-type* display update id))
 
-(defun inline-result (value mime-type &optional (display-data nil))
+
+(defun inline-result (value mime-type &key display update id)
   "Create a result based on an inline value."
-  (make-inline-result value
-                      :mime-type mime-type
-                      :display-data display-data
-                      :handle t))
+  (make-inline-mime-bundle value mime-type nil display update id))
 
-(defun text (value &optional (display-data nil))
+
+(defun text (value &key display update id)
   "Create a plain text result based on an inline value."
-  (make-inline-result value
-                      :display-data display-data
-                      :handle t))
+  (make-inline-mime-bundle value *plain-text-mime-type* nil display update id))
 
-(defun html (value &optional (display-data nil))
+
+(defun html (value &key display update id)
   "Create a HTML result based on an inline value."
-  (make-inline-result value
-                      :mime-type *html-mime-type*
-                      :display-data display-data
-                      :handle t))
+  (make-inline-mime-bundle value *html-mime-type* nil display update id))
 
-(defun javascript (value &optional (display-data nil))
+
+(defun javascript (value &key display update id)
   "Create a JavaScript text result based on an inline value."
-  (make-inline-result value
-                      :mime-type *javascript-mime-type*
-                      :display-data display-data
-                      :handle t))
+  (make-inline-mime-bundle value *javascript-mime-type* nil display update id))
 
-(defun jpeg (value &optional (display-data nil))
+
+(defun jpeg (value &key display update id)
   "Create a JPEG image result based on an inline value."
-  (make-inline-result value
-                      :mime-type *jpeg-mime-type*
-                      :display-data display-data
-                      :handle t))
+  (make-inline-mime-bundle value *jpeg-mime-type* nil display update id))
 
-(defun latex (value &optional (display-data nil))
+
+(defun latex (value &key display update id)
   "Create a LaTeX result based on an inline value."
-  (make-inline-result value
-                      :mime-type *latex-mime-type*
-                      :display-data display-data
-                      :handle t))
+  (make-inline-mime-bundle value *latex-mime-type* nil display update id))
 
-(defun markdown (value &optional (display-data nil))
+
+(defun json (value &key display update id expanded)
+  "Create a plain text result based on an inline value."
+  (make-inline-mime-bundle value *json-mime-type*
+                           (list :object-plist
+                                 *json-mime-type*
+                                 (list :object-plist
+                                       "expanded" (if expanded :true :false)))
+                           display update id))
+
+
+(defun markdown (value &key display update id)
   "Create a Markdown result based on an inline value."
-  (make-inline-result value
-                      :mime-type *markdown-mime-type*
-                      :display-data display-data
-                      :handle t))
+  (make-inline-mime-bundle value *markdown-mime-type* nil display update id))
 
-(defun png (value &optional (display-data nil))
+
+(defun png (value &key display update id)
   "Create a PNG image result based on an inline value."
-  (make-inline-result value
-                      :mime-type *png-mime-type*
-                      :display-data display-data
-                      :handle t))
+  (make-inline-mime-bundle value *png-mime-type* nil display update id))
 
-(defun svg (value &optional (display-data nil))
+
+(defun svg (value &key display update id)
   "Create a SVG result based on an inline value."
-  (make-inline-result value
-                      :mime-type *svg-mime-type*
-                      :display-data display-data
-                      :handle t))
+  (make-inline-mime-bundle value *svg-mime-type* nil display update id))
+
 
 #|
 
