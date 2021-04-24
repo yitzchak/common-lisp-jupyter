@@ -7,11 +7,9 @@
     #:make-object
     ; log
     #:inform
-    ; results
+    ; mime-bundle
     #:display-data
     #:execute-result
-    #:mime-bundle-data
-    #:mime-bundle-metadata
     #:file
     #:gif-file
     #:html
@@ -19,8 +17,12 @@
     #:javascript
     #:jpeg
     #:jpeg-file
+    #:json
+    #:json-file
     #:latex
     #:markdown
+    #:mime-bundle-data
+    #:mime-bundle-metadata
     #:pdf-file
     #:png
     #:png-file
@@ -29,6 +31,8 @@
     #:svg
     #:svg-file
     #:text
+    #:vega-lite
+    #:vega-lite-file
     ; matches
     #:match-set-add
     #:make-offset-match-set

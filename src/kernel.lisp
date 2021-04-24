@@ -466,7 +466,8 @@
 |#
 
 (defun handle-control-message (kernel msg)
-  (let ((msg-type (format nil "~A~@[/~A~]" (gethash "msg_type" (message-header msg))
+  (let ((msg-type (format nil "~A~@[/~A~]"
+                          (gethash "msg_type" (message-header msg))
                           (gethash "command" (message-header msg))))
         (*kernel* kernel)
         (*message* msg))
@@ -598,7 +599,6 @@
         ;; send any remaining stderr
         (finish-output *error-output*)
         ;; send reply (control)
-        (inform :info kernel "~A ~A ~A" ename evalue traceback)
         (cond
           (ename
             (send-execute-error iopub msg ename evalue traceback)
