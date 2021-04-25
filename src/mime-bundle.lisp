@@ -19,7 +19,9 @@ Standard MIME types
 (defvar +png-mime-type+ "image/png")
 (defvar +ps-mime-type+ "application/postscript")
 (defvar +svg-mime-type+ "image/svg+xml")
-(defvar +vega-lite-mime-type+ "application/vnd.vegalite.v3+json")
+(defvar +vega-mime-type+ "application/vnd.vega.v5+json")
+(defvar +vega-lite-mime-type+ "application/vnd.vegalite.v4+json")
+
 
 (defgeneric mime-bundle-data (value)
   (:method (value)
@@ -141,6 +143,11 @@ Standard MIME types
   (make-file-mime-bundle path +gif-mime-type+ nil display update id))
 
 
+(defun vega-file (path &key display update id)
+  "Create a Vega graph based on a file path."
+  (make-file-mime-bundle path +vega-mime-type+ nil display update id))
+
+
 (defun vega-lite-file (path &key display update id)
   "Create a VegaLite graph based on a file path."
   (make-file-mime-bundle path +vega-lite-mime-type+ nil display update id))
@@ -201,9 +208,41 @@ Standard MIME types
   (make-inline-mime-bundle value +svg-mime-type+ nil display update id))
 
 
+(defun vega (value &key display update id)
+  "Create a Vega result based on an inline value."
+  (make-inline-mime-bundle value +vega-mime-type+ nil display update id))
+
+
 (defun vega-lite (value &key display update id)
   "Create a VegaLite result based on an inline value."
   (make-inline-mime-bundle value +vega-lite-mime-type+ nil display update id))
+
+
+(defclass display-stream (trivial-gray-streams:fundamental-character-output-stream)
+  ((mime-type :initarg :mime-type
+              :reader display-stream-mime-type)
+   (value :initarg :value
+          :initform (make-array *iopub-stream-size*
+                                :fill-pointer 0
+                                :adjustable t
+                                :element-type 'character)
+          :reader display-stream-value)))
+
+
+(defun make-display-stream (mime-type)
+  (make-instance 'display-stream :mime-type mime-type))
+
+
+(defmethod trivial-gray-streams:stream-write-char ((stream display-stream) char)
+  (vector-push-extend char (display-stream-value stream)))
+
+
+(defmethod trivial-gray-streams:stream-finish-output ((stream display-stream))
+  (with-slots (channel mime-type value) stream
+    (unless (zerop (length value))
+      (inline-result value mime-type :display t)
+      (adjust-array value (array-total-size value)
+                    :fill-pointer 0))))
 
 
 #|

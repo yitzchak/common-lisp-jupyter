@@ -2,6 +2,8 @@
 
 (defvar *payload* nil)
 (defvar *debugger* nil)
+(defvar *markdown-output* nil)
+(defvar *html-output* nil)
 
 (defvar *page-output* nil
   "Output stream sent to Jupyter pager. Available during calls to evaluate-code.")
@@ -173,7 +175,15 @@
    (shell-thread
      :accessor kernel-shell-thread
      :initform nil
-     :documentation "Shell thread"))
+     :documentation "Shell thread")
+   (html-output
+     :reader kernel-html-output
+     :initform (make-display-stream +html-mime-type+)
+     :documentation "HTML display output stream")
+   (markdown-output
+     :reader kernel-markdown-output
+     :initform (make-display-stream +markdown-mime-type+)
+     :documentation "Markdown display output stream"))
   (:documentation "Kernel state representation."))
 
 (defgeneric evaluate-code (kernel code)
@@ -568,7 +578,8 @@
 
 (defun handle-execute-request (kernel msg)
   (inform :info kernel "Handling execute_request message")
-  (with-slots (execution-count history iopub package prompt-prefix prompt-suffix shell stdin input-queue)
+  (with-slots (execution-count history iopub package prompt-prefix prompt-suffix shell stdin
+               input-queue html-output markdown-output)
               kernel
     (let* ((code (gethash "code" (message-content msg)))
            (ename "interrupt")
@@ -583,7 +594,9 @@
            (*standard-output* (make-iopub-stream iopub msg "stdout"
                                                  prompt-prefix prompt-suffix))
            (*debug-io* *standard-output*)
-           (*trace-output* *standard-output*))
+           (*trace-output* *standard-output*)
+           (*html-output* html-output)
+           (*markdown-output* markdown-output))
       (incf execution-count)
       (add-cell history execution-count code)
       (unwind-protect
@@ -597,6 +610,10 @@
         (finish-output *standard-output*)
         ;; send any remaining stderr
         (finish-output *error-output*)
+        ;; send any remaining HTML
+        (finish-output *html-output*)
+        ;; send any remaining markdown
+        (finish-output *markdown-output*)
         ;; send reply (control)
         (cond
           (ename

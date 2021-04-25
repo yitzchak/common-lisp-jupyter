@@ -31,6 +31,8 @@
     #:svg
     #:svg-file
     #:text
+    #:vega
+    #:vega-file
     #:vega-lite
     #:vega-lite-file
     ; matches
@@ -49,12 +51,14 @@
     #:evaluate-code
     #:get-comm
     #:handling-errors
+    #:*html-output*
     #:inform
     #:inspect-code
     #:kernel
     #:kernel-prompt-prefix
     #:kernel-prompt-suffix
     #:make-uuid
+    #:*markdown-output*
     #:on-comm-close
     #:on-comm-message
     #:on-comm-open
