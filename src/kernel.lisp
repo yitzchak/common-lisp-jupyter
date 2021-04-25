@@ -1,6 +1,5 @@
 (in-package #:jupyter)
 
-(defvar *message* nil)
 (defvar *payload* nil)
 (defvar *debugger* nil)
 
@@ -608,7 +607,7 @@
               (unless (queue-empty-p input-queue)
                 (set-next-input (dequeue input-queue)))
               (unless (zerop (length p))
-                (page (make-inline-result p)))
+                (page p))
               (send-execute-reply-ok shell msg execution-count *payload*)))))
       ;; return t if there is no quit errors present
       t)))
@@ -692,7 +691,7 @@
            (code (gethash "code" content))
            (cursor-pos (gethash "cursor_pos" content))
            (match-set (make-match-set :start cursor-pos :end cursor-pos :code code)))
-      (multiple-value-bind (result ename evalue traceback)
+      (multiple-value-bind (ename evalue traceback)
                            (let ((*package* package))
                              (complete-code kernel match-set code cursor-pos))
         (if ename

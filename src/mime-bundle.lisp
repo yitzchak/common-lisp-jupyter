@@ -61,9 +61,10 @@ Standard MIME types
                      update))
 
 
-(defun make-file-mime-bundle (path mime-type display-data update id)
+(defun make-file-mime-bundle (path mime-type metadata display-data update id)
   (let* ((mime-type (or mime-type (trivial-mimes:mime path)))
          (bundle (make-instance 'mime-bundle
+                                :metadata (or metadata :empty-object)
                                 :data (if (equal mime-type +plain-text-mime-type+)
                                         (list :object-plist
                                               mime-type (alexandria:read-file-into-string path))
@@ -97,17 +98,17 @@ Standard MIME types
 (defun file (path &key display update id)
   "Create a result based on a file path. The mime type with automatically be
   determined from the file extension."
-  (make-file-mime-bundle path nil display update id))
+  (make-file-mime-bundle path nil nil display update id))
 
 
 (defun gif-file (path &key display update id)
   "Create a GIF image result based on a file path."
-  (make-file-mime-bundle path +gif-mime-type+ display update id))
+  (make-file-mime-bundle path +gif-mime-type+ nil display update id))
 
 
 (defun jpeg-file (path &key display update id)
   "Create a JPEG image result based on a file path."
-  (make-file-mime-bundle path +jpeg-mime-type+ display update id))
+  (make-file-mime-bundle path +jpeg-mime-type+ nil display update id))
 
 
 (defun json-file (path &key display update id expanded)
@@ -122,27 +123,27 @@ Standard MIME types
 
 (defun pdf-file (path &key display update id)
   "Create a PDF result based on a file path."
-  (make-file-mime-bundle path +pdf-mime-type+ display update id))
+  (make-file-mime-bundle path +pdf-mime-type+ nil display update id))
 
 
 (defun png-file (path &key display update id)
   "Create a PNG image result based on a file path."
-  (make-file-mime-bundle path +png-mime-type+ display update id))
+  (make-file-mime-bundle path +png-mime-type+ nil display update id))
 
 
 (defun ps-file (path &key display update id)
   "Create a PostScript result based on a file path."
-  (make-file-mime-bundle path +ps-mime-type+ display update id))
+  (make-file-mime-bundle path +ps-mime-type+ nil display update id))
 
 
 (defun svg-file (path &key display update id)
   "Create a SVG result based on a file path."
-  (make-file-mime-bundle path +gif-mime-type+ display update id))
+  (make-file-mime-bundle path +gif-mime-type+ nil display update id))
 
 
 (defun vega-lite-file (path &key display update id)
   "Create a VegaLite graph based on a file path."
-  (make-file-mime-bundle path +vega-lite-mime-type+ display update id))
+  (make-file-mime-bundle path +vega-lite-mime-type+ nil display update id))
 
 
 (defun inline-result (value mime-type &key display update id)
