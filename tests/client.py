@@ -57,9 +57,9 @@ class MyKernelTests(jupyter_kernel_test.KernelTests):
         },
     ]
 
-    #code_page_something = "(format jupyter:*page-output* \"foo\")"
+    code_page_something = "(format jupyter:*page-output* \"foo\")"
 
-    # code_generate_error = '(/ 1 0)'
+    #code_generate_error = '(/ 1 0)'
 
     code_execute_result = [
         {'code': '(+ 1 2)', 'result': '3'}

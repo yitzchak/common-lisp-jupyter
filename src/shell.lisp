@@ -6,7 +6,7 @@
 
 |#
 
-(defclass shell-channel (request-channel)
+(defclass shell-channel (channel)
   ()
   (:documentation "SHELL channel class."))
 
@@ -19,9 +19,9 @@
 (defun send-is-complete-reply (shell parent-msg status)
   (message-send shell
                 (make-message (channel-session shell) "is_complete_reply"
-                              `(:object-alist
-                                 ("status" . ,status)
-                                 ("indent" . ""))
+                              (list :object-plist
+                                    "status" status
+                                    "indent" "")
                               :parent parent-msg)))
 
 (defun send-execute-reply-ok (shell parent-msg execution-count payload)

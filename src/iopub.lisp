@@ -96,8 +96,6 @@
                         trivial-gray-streams:fundamental-character-input-stream)
   ((channel :initarg :channel
             :reader iopub-stream-channel)
-   (parent-msg :initarg :parent-msg
-               :reader iopub-stream-parent-msg)
    (name :initarg :name
          :reader iopub-stream-name)
    (value :initarg :value
@@ -111,16 +109,15 @@
    (prompt-suffix :initarg :prompt-suffix
                   :reader iopub-stream-prompt-suffix)))
 
-(defun make-iopub-stream (iopub parent-msg name prompt-prefix prompt-suffix)
+(defun make-iopub-stream (iopub name prompt-prefix prompt-suffix)
   (make-instance 'iopub-stream :channel iopub
-                               :parent-msg parent-msg
                                :name name
                                :prompt-prefix prompt-prefix
                                :prompt-suffix prompt-suffix))
 
 (defmethod trivial-gray-streams:stream-write-char ((stream iopub-stream) char)
   (unless (equal char #\Sub) ; Ignore subsititute characters
-    (with-slots (channel parent-msg name value prompt-prefix prompt-suffix) stream
+    (with-slots (channel name value prompt-prefix prompt-suffix) stream
       (vector-push-extend char value)
       ;; After the character has been added look for a prompt terminator at the
       ;; end.
@@ -131,7 +128,7 @@
           (when start
             ;; If there is data before the prompt then send it now.
             (unless (zerop start)
-              (send-stream channel parent-msg name (subseq value 0 start)))
+              (send-stream channel *message* name (subseq value 0 start)))
             (write-string (subseq value
                                   (+ start (length prompt-prefix))
                                   (- (length value) (length prompt-suffix)))
@@ -141,9 +138,9 @@
                           :fill-pointer 0)))))))
 
 (defmethod trivial-gray-streams:stream-finish-output ((stream iopub-stream))
-  (with-slots (channel parent-msg name value) stream
+  (with-slots (channel name value) stream
     (unless (zerop (length value))
-      (send-stream channel parent-msg name value)
+      (send-stream channel *message* name value)
       (adjust-array value (array-total-size value)
                     :fill-pointer 0))))
 

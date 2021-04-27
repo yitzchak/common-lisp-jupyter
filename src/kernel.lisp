@@ -145,11 +145,6 @@
      :initform nil
      :accessor kernel-session
      :documentation "Session identifier.")
-   (request-queue
-     :initarg :input-queue
-     :initform (make-instance 'queue)
-     :reader kernel-request-queue
-     :documentation "Message queue for SHELL and CONTROL channel.")
    (input-queue
      :initarg :input-queue
      :initform (make-instance 'queue)
@@ -183,7 +178,16 @@
    (markdown-output
      :reader kernel-markdown-output
      :initform (make-display-stream +markdown-mime-type+)
-     :documentation "Markdown display output stream"))
+     :documentation "Markdown display output stream")
+   (error-output
+     :accessor kernel-error-output
+     :documentation "Error output stream")
+   (standard-output
+     :accessor kernel-standard-output
+     :documentation "Standard output stream")
+   (standard-input
+     :accessor kernel-standard-input
+     :documentation "Standard input stream"))
   (:documentation "Kernel state representation."))
 
 (defgeneric evaluate-code (kernel code)
@@ -216,10 +220,10 @@
 
 ;; Start all channels.
 (defmethod start ((k kernel))
-  (with-slots (connection-file control-port ctx hb hb-port history iopub request-queue
+  (with-slots (connection-file control-port ctx hb hb-port history iopub
                iopub-port ip key language-name mac name prompt-prefix prompt-suffix
                session shell shell-port signature-scheme sink stdin stdin-port control
-               transport)
+               transport error-output standard-output standard-input)
               k
     (setf sink (make-instance 'sink
                               :path (uiop:xdg-runtime-dir
@@ -269,7 +273,6 @@
                                :sink sink
                                :session session
                                :mac mac
-                               :request-queue request-queue
                                :socket (pzmq:socket ctx :router)
                                :transport transport
                                :ip ip
@@ -286,7 +289,6 @@
                                  :sink sink
                                  :session session
                                  :mac mac
-                                 :request-queue request-queue
                                  :socket (pzmq:socket ctx :router)
                                  :transport transport
                                  :ip ip
@@ -296,7 +298,10 @@
                                  :path (uiop:xdg-data-home
                                          (make-pathname :directory '(:relative "common-lisp-jupyter")
                                                         :name language-name
-                                                        :type "history"))))
+                                                        :type "history")))
+          error-output (make-iopub-stream iopub "stderr" prompt-prefix prompt-suffix)
+          standard-output (make-iopub-stream iopub "stdout" prompt-prefix prompt-suffix)
+          standard-input (make-stdin-stream stdin))
     (start mac)
     (start hb)
     (start iopub)
@@ -578,8 +583,8 @@
 
 (defun handle-execute-request (kernel msg)
   (inform :info kernel "Handling execute_request message")
-  (with-slots (execution-count history iopub package prompt-prefix prompt-suffix shell stdin
-               input-queue html-output markdown-output)
+  (with-slots (execution-count history iopub package shell stdin input-queue html-output
+               markdown-output error-output standard-output standard-input)
               kernel
     (let* ((code (gethash "code" (message-content msg)))
            (ename "interrupt")
@@ -587,14 +592,12 @@
            traceback
            (*payload* (make-array 16 :adjustable t :fill-pointer 0))
            (*page-output* (make-string-output-stream))
-           (*query-io* (make-stdin-stream stdin msg))
-           (*standard-input* *query-io*)
-           (*error-output* (make-iopub-stream iopub msg "stderr"
-                                              prompt-prefix prompt-suffix))
-           (*standard-output* (make-iopub-stream iopub msg "stdout"
-                                                 prompt-prefix prompt-suffix))
-           (*debug-io* *standard-output*)
-           (*trace-output* *standard-output*)
+           (*query-io* standard-input)
+           (*standard-input* standard-input)
+           (*error-output* error-output)
+           (*standard-output* standard-output)
+           (*debug-io* standard-output)
+           (*trace-output* standard-output)
            (*html-output* html-output)
            (*markdown-output* markdown-output))
       (incf execution-count)
@@ -742,18 +745,17 @@
 
 (defun handle-comm-open (kernel msg)
   (inform :info kernel "Handling comm_open message")
-  (with-slots (iopub comms prompt-prefix prompt-suffix stdin) kernel
+  (with-slots (iopub comms stdin error-output standard-output standard-input)
+              kernel
     (let* ((content (message-content msg))
            (metadata (message-metadata msg))
            (buffers (message-buffers msg))
-           (*query-io* (make-stdin-stream stdin msg))
-           (*standard-input* *query-io*)
-           (*error-output* (make-iopub-stream iopub msg "stderr"
-                                              prompt-prefix prompt-suffix))
-           (*standard-output* (make-iopub-stream iopub msg "stdout"
-                                                 prompt-prefix prompt-suffix))
-           (*debug-io* *standard-output*)
-           (*trace-output* *standard-output*)
+           (*query-io* standard-input)
+           (*standard-input* standard-input)
+           (*error-output* error-output)
+           (*standard-output* standard-output)
+           (*debug-io* standard-output)
+           (*trace-output* standard-output)
            (id (gethash "comm_id" content))
            (target-name (gethash "target_name" content))
            (data (gethash "data" content (make-hash-table :test #'equal)))
@@ -768,18 +770,17 @@
 
 (defun handle-comm-message (kernel msg)
   (inform :info kernel "Handling comm_msg message")
-  (with-slots (comms prompt-prefix prompt-suffix stdin iopub) kernel
+  (with-slots (comms stdin iopub error-output standard-output standard-input)
+              kernel
     (let* ((content (message-content msg))
            (metadata (message-metadata msg))
            (buffers (message-buffers msg))
-           (*query-io* (make-stdin-stream stdin msg))
-           (*standard-input* *query-io*)
-           (*error-output* (make-iopub-stream iopub msg "stderr"
-                                              prompt-prefix prompt-suffix))
-           (*standard-output* (make-iopub-stream iopub msg "stdout"
-                                                 prompt-prefix prompt-suffix))
-           (*debug-io* *standard-output*)
-           (*trace-output* *standard-output*)
+           (*query-io* standard-input)
+           (*standard-input* standard-input)
+           (*error-output* error-output)
+           (*standard-output* standard-output)
+           (*debug-io* standard-output)
+           (*trace-output* standard-output)
            (id (gethash "comm_id" content))
            (data (gethash "data" content))
            (inst (gethash id comms)))
@@ -790,18 +791,17 @@
 
 (defun handle-comm-close (kernel msg)
   (inform :info kernel "Handling comm_close")
-  (with-slots (comms prompt-prefix prompt-suffix stdin iopub) kernel
+  (with-slots (comms stdin iopub error-output standard-output standard-input)
+              kernel
     (let* ((content (message-content msg))
            (metadata (message-metadata msg))
            (buffers (message-buffers msg))
-           (*query-io* (make-stdin-stream stdin msg))
-           (*standard-input* *query-io*)
-           (*error-output* (make-iopub-stream iopub msg "stderr"
-                                              prompt-prefix prompt-suffix))
-           (*standard-output* (make-iopub-stream iopub msg "stdout"
-                                                 prompt-prefix prompt-suffix))
-           (*debug-io* *standard-output*)
-           (*trace-output* *standard-output*)
+           (*query-io* standard-input)
+           (*standard-input* standard-input)
+           (*error-output* error-output)
+           (*standard-output* standard-output)
+           (*debug-io* standard-output)
+           (*trace-output* standard-output)
            (id (gethash "comm_id" content))
            (data (gethash "data" content))
            (inst (gethash id comms)))

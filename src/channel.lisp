@@ -68,10 +68,3 @@
     (values (and (position :pollin status) t)
             (and (position :pollout status) t))))
 
-
-(defclass request-channel (channel)
-  ((request-queue
-     :initarg :request-queue
-     :accessor channel-request-queue))
-  (:documentation "ROUTER channel used for requests."))
-
