@@ -57,7 +57,6 @@
                               :parent parent-msg)))
 
 (defun send-execute-result (iopub parent-msg execution-count data &optional metadata)
-  (inform :info iopub "~A ~A ~A ~A" parent-msg execution-count data metadata)
   (message-send iopub
                 (make-message (channel-session iopub) "execute_result"
                               `(:object-alist

@@ -281,7 +281,7 @@
                                :sink sink
                                :session session
                                :mac mac
-                               :socket (pzmq:socket ctx :dealer)
+                               :socket (pzmq:socket ctx :router)
                                :transport transport
                                :ip ip
                                :port stdin-port)
