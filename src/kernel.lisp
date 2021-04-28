@@ -191,10 +191,8 @@
   (:documentation "Kernel state representation."))
 
 (defgeneric evaluate-code (kernel code)
-  (:documentation "Evaluate code along with paged output. Kernel implementations
-  must return a list of evaluated results. Each result should be wrapped with an
-  appropriate `result` class instance. Sending the results to the client will be
-  handled by the calling method."))
+  (:documentation "Evaluate code along with paged output. Evaluation results should be sent
+  with `execute-result`. Errors should be returned as `(values ename evalue traceback)`"))
 
 (defmethod evaluate-code (kernel code))
 
@@ -208,13 +206,15 @@
 
 (defgeneric inspect-code (kernel code cursor-pos detail-level)
   (:documentation "Inspect code at cursor-pos with detail-level. Successful
-  inspection should return a single wrapped result."))
+  inspection should return a single result that implements mime-bundle-data and
+  optionally mime-bundle-metadata. Errors should be returned as
+  `(values nil ename evalue traceback)`."))
 
 (defmethod inspect-code (kernel code cursor-pos detail-level))
 
 (defgeneric complete-code (kernel match-set code cursor-pos)
   (:documentation "Complete code at cursor-pos. Successful matches should be added to match-set
-  via match-set-add."))
+  via match-set-add. Errors should be returned as `(values ename evalue traceback)`."))
 
 (defmethod complete-code (kernel match-set code cursor-pos))
 

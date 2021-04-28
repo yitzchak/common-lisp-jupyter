@@ -24,6 +24,8 @@ Standard MIME types
 
 
 (defgeneric mime-bundle-data (value)
+  (:documentation "Return a JSON object with keys that mime types and the values are a rendering
+of `value` in that mime type.")
   (:method (value)
     (list :object-plist
           +plain-text-mime-type+
@@ -33,6 +35,7 @@ Standard MIME types
 
 
 (defgeneric mime-bundle-metadata (value)
+  (:documentation "Return metadata specific to `value`.")
   (:method (value)
     (declare (ignore value))
     :empty-object))
@@ -50,11 +53,16 @@ Standard MIME types
 
 
 (defun execute-result (result)
+  "Send a result as mime bundle execution result. `result` must implement the `mime-bundle-data`
+method and optionally `mime-bundle-metadata`."
   (send-execute-result (kernel-iopub *kernel*) *message* (kernel-execution-count *kernel*)
                        (mime-bundle-data result) (mime-bundle-metadata result)))
 
 
 (defun display-data (result &key id update)
+  "Send a result as mime bundle display data. `result` must implement the `mime-bundle-data`
+method and optionally `mime-bundle-metadata`. If an `id` is specified then future calls with the
+same `id` and `update` is `t`."
   (send-display-data (kernel-iopub *kernel*) *message*
                      (mime-bundle-data result) (mime-bundle-metadata result)
                      (if id

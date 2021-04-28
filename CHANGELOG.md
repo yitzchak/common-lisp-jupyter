@@ -7,6 +7,7 @@ of how the versioning scheme that this project does not use is clearly superior
 to random natural numbers and how incrementing the minor version number
 indicates backward compatible changes, unless it does not.
 
+- 2021-04-28 - Fix stdin bug on repeated messages.
 - 2021-03-30 - Switch to shasht JSON library
 - 2020-08-26 — Allow stream messeages in COMM message handlers to enable output
   widget functionality.
