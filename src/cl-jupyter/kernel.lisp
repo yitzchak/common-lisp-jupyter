@@ -154,7 +154,7 @@
             common-lisp-user::+++ common-lisp-user::++
             common-lisp-user::++ common-lisp-user::+
             common-lisp-user::+ expr)
-      (remove nil (mapcar #'jupyter:make-lisp-result evaluated-expr)))))
+      evaluated-expr)))
 
 
 (defmethod jupyter:evaluate-code ((k kernel) code)
