@@ -6,7 +6,7 @@
 
 |#
 
-(defclass control-channel (request-channel)
+(defclass control-channel (channel)
   ()
   (:documentation "Control channel class."))
 

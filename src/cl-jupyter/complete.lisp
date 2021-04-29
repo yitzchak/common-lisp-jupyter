@@ -48,7 +48,7 @@
 
 (defun complete-symbol (match-set partial-name start end package func statuses)
   (when package
-    (do-symbols (sym package)
+    (do-symbols (sym package (values))
       (let ((sym-name (symbol-name sym)))
         (multiple-value-bind (s status)
                              (find-symbol sym-name package)
@@ -189,7 +189,8 @@
 (defmethod jupyter:complete-code ((k kernel) match-set code cursor-pos)
   (if (position (char code (1- cursor-pos)) "()")
     (do-indent-code match-set code cursor-pos)
-    (do-complete-code match-set code cursor-pos)))
+    (do-complete-code match-set code cursor-pos))
+  (values))
 
 
 (defmethod jupyter:code-is-complete ((k kernel) code)

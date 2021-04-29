@@ -47,6 +47,7 @@
   (jupyter:handling-errors
     (read input-stream eof-error-p eof-value recursive-p)))
 
+
 (defun my-eval (expr)
   (jupyter:debugging-errors
   (setq common-lisp-user::- expr)
@@ -60,19 +61,21 @@
           common-lisp-user::+++ common-lisp-user::++
           common-lisp-user::++ common-lisp-user::+
           common-lisp-user::+ expr)
-    (remove nil (mapcar #'jupyter:make-lisp-result evaluated-expr)))))
+    evaluated-expr)))
 
 
 (defmethod jupyter:evaluate-code ((k kernel) code)
-  (do* ((stream (make-string-input-stream code))
-        (sexpr (my-read stream nil :eof) (my-read stream nil :eof))
-        results result)
-      ((eq :eof sexpr) (nreverse results))
-    (cond
-      ((typep sexpr 'jupyter:result)
-        (push sexpr results))
-      (t
-        (setf result (my-eval sexpr))
-        (if (listp result)
-          (setf results (nconc (nreverse result) results))
-          (push result results))))))
+  (with-input-from-string (stream code)
+    (prog (expr ename evalue traceback)
+     repeat
+      (multiple-value-setq (expr ename evalue traceback) (my-read stream nil :eof))
+      (when (or (eq :eof expr)
+                ename)
+        (return (values ename evalue traceback)))
+      (multiple-value-setq (expr ename evalue traceback) (my-eval expr))
+      (when ename
+        (return (values ename evalue traceback)))
+      (dolist (result expr)
+        (jupyter:execute-result result))
+      (go repeat))))
+

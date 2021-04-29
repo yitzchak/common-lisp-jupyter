@@ -57,7 +57,7 @@
          (:file "stdin")
          (:file "control")
          (:file "iopub")
-         (:file "results")
+         (:file "mime-bundle")
          (:file "comm")
          (:module formatters
           :serial t

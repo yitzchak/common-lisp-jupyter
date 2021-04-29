@@ -1,8 +1,9 @@
 (in-package #:jupyter)
 
-(defvar *message* nil)
 (defvar *payload* nil)
 (defvar *debugger* nil)
+(defvar *markdown-output* nil)
+(defvar *html-output* nil)
 
 (defvar *page-output* nil
   "Output stream sent to Jupyter pager. Available during calls to evaluate-code.")
@@ -144,11 +145,6 @@
      :initform nil
      :accessor kernel-session
      :documentation "Session identifier.")
-   (request-queue
-     :initarg :input-queue
-     :initform (make-instance 'queue)
-     :reader kernel-request-queue
-     :documentation "Message queue for SHELL and CONTROL channel.")
    (input-queue
      :initarg :input-queue
      :initform (make-instance 'queue)
@@ -160,7 +156,7 @@
      :documentation "Kernel history manager.")
    (execution-count
      :initform 0
-     :accessor history-execution-count
+     :accessor kernel-execution-count
      :documentation "Kernel execution count.")
    (comms
      :initform (make-hash-table :test #'equal)
@@ -174,14 +170,29 @@
    (shell-thread
      :accessor kernel-shell-thread
      :initform nil
-     :documentation "Shell thread"))
+     :documentation "Shell thread")
+   (html-output
+     :reader kernel-html-output
+     :initform (make-display-stream +html-mime-type+)
+     :documentation "HTML display output stream")
+   (markdown-output
+     :reader kernel-markdown-output
+     :initform (make-display-stream +markdown-mime-type+)
+     :documentation "Markdown display output stream")
+   (error-output
+     :accessor kernel-error-output
+     :documentation "Error output stream")
+   (standard-output
+     :accessor kernel-standard-output
+     :documentation "Standard output stream")
+   (standard-input
+     :accessor kernel-standard-input
+     :documentation "Standard input stream"))
   (:documentation "Kernel state representation."))
 
 (defgeneric evaluate-code (kernel code)
-  (:documentation "Evaluate code along with paged output. Kernel implementations
-  must return a list of evaluated results. Each result should be wrapped with an
-  appropriate `result` class instance. Sending the results to the client will be
-  handled by the calling method."))
+  (:documentation "Evaluate code along with paged output. Evaluation results should be sent
+  with `execute-result`. Errors should be returned as `(values ename evalue traceback)`"))
 
 (defmethod evaluate-code (kernel code))
 
@@ -195,22 +206,24 @@
 
 (defgeneric inspect-code (kernel code cursor-pos detail-level)
   (:documentation "Inspect code at cursor-pos with detail-level. Successful
-  inspection should return a single wrapped result."))
+  inspection should return a single result that implements mime-bundle-data and
+  optionally mime-bundle-metadata. Errors should be returned as
+  `(values nil ename evalue traceback)`."))
 
 (defmethod inspect-code (kernel code cursor-pos detail-level))
 
 (defgeneric complete-code (kernel match-set code cursor-pos)
   (:documentation "Complete code at cursor-pos. Successful matches should be added to match-set
-  via match-set-add."))
+  via match-set-add. Errors should be returned as `(values ename evalue traceback)`."))
 
 (defmethod complete-code (kernel match-set code cursor-pos))
 
 ;; Start all channels.
 (defmethod start ((k kernel))
-  (with-slots (connection-file control-port ctx hb hb-port history iopub request-queue
+  (with-slots (connection-file control-port ctx hb hb-port history iopub
                iopub-port ip key language-name mac name prompt-prefix prompt-suffix
                session shell shell-port signature-scheme sink stdin stdin-port control
-               transport)
+               transport error-output standard-output standard-input)
               k
     (setf sink (make-instance 'sink
                               :path (uiop:xdg-runtime-dir
@@ -260,7 +273,6 @@
                                :sink sink
                                :session session
                                :mac mac
-                               :request-queue request-queue
                                :socket (pzmq:socket ctx :router)
                                :transport transport
                                :ip ip
@@ -269,7 +281,7 @@
                                :sink sink
                                :session session
                                :mac mac
-                               :socket (pzmq:socket ctx :dealer)
+                               :socket (pzmq:socket ctx :router)
                                :transport transport
                                :ip ip
                                :port stdin-port)
@@ -277,7 +289,6 @@
                                  :sink sink
                                  :session session
                                  :mac mac
-                                 :request-queue request-queue
                                  :socket (pzmq:socket ctx :router)
                                  :transport transport
                                  :ip ip
@@ -287,7 +298,10 @@
                                  :path (uiop:xdg-data-home
                                          (make-pathname :directory '(:relative "common-lisp-jupyter")
                                                         :name language-name
-                                                        :type "history"))))
+                                                        :type "history")))
+          error-output (make-iopub-stream iopub "stderr" prompt-prefix prompt-suffix)
+          standard-output (make-iopub-stream iopub "stdout" prompt-prefix prompt-suffix)
+          standard-input (make-stdin-stream stdin))
     (start mac)
     (start hb)
     (start iopub)
@@ -366,13 +380,9 @@
       (stop kernel))))
 
 
-(defun make-eval-error (err msg &key (quit nil))
-  (make-error-result (symbol-name (class-name (class-of err))) msg :quit quit))
+(defun make-eval-error (err msg traceback)
+  (values nil (symbol-name (class-name (class-of err))) msg traceback))
 
-(define-condition quit-condition (error)
-  ()
-  (:documentation "A condition for identifying a request for kernel shutdown.")
-  (:report (lambda (c stream) (declare (ignore c stream)))))
 
 (defun choose ()
   (write-string "Choice: " *query-io*)
@@ -407,30 +417,37 @@
 
 
 (defmacro handling-errors (&body body)
-  "Macro for catching any conditions including quit-conditions during code
-  evaluation."
-  `(handler-case
-       (handler-bind
-           ((warning
-              (lambda (wrn)
-                (format t "[~S] ~A~%" (type-of wrn) wrn)
-                (muffle-warning)))
-            (serious-condition
-              (lambda (err)
-                (dissect:present err *error-output*))))
-         (progn ,@body))
-     (quit-condition (err)
-       (make-eval-error err (format nil "~A" err) :quit t))
-     (simple-error (err)
-       (make-eval-error err
-                        (apply #'format nil (simple-condition-format-control err)
-                               (simple-condition-format-arguments err))))
-     (simple-type-error (err)
-       (make-eval-error err
-                        (apply #'format nil (simple-condition-format-control err)
-                               (simple-condition-format-arguments err))))
-     (serious-condition (err)
-       (make-eval-error err (format nil "~A" err)))))
+  "Macro for catching any conditions during code evaluation."
+  (let ((traceback (gensym)))
+    `(let (,traceback)
+       (handler-case
+          (handler-bind
+              ((warning
+                 (lambda (wrn)
+                   (format t "[~S] ~A~%" (type-of wrn) wrn)
+                   (muffle-warning)))
+               (serious-condition
+                 (lambda (err)
+                   (let ((env (dissect:capture-environment err)))
+                     (setf ,traceback
+                           (mapcar (lambda (frame)
+                                     (dissect:present frame nil))
+                                   (dissect:environment-stack env)))
+                     (dissect:present env *error-output*)))))
+            (progn ,@body))
+         (simple-error (err)
+           (make-eval-error err
+                            (apply #'format nil (simple-condition-format-control err)
+                                   (simple-condition-format-arguments err))
+                            ,traceback))
+         (simple-type-error (err)
+           (make-eval-error err
+                            (apply #'format nil (simple-condition-format-control err)
+                                   (simple-condition-format-arguments err))
+                            ,traceback))
+         (serious-condition (err)
+           (make-eval-error err (format nil "~A" err)
+                            ,traceback))))))
 
 
 (defmacro debugging-errors (&body body)
@@ -441,8 +458,7 @@
      (handling-errors ,@body)))
 
 (defmacro handling-comm-errors (&body body)
-  "Macro for catching any conditions including quit-conditions during code
-  evaluation."
+  "Macro for catching any conditions during comm messages."
   `(handler-case
        (handler-bind
            ((serious-condition
@@ -453,8 +469,6 @@
                 (inform :warn *kernel* (dissect:present wrn nil))
                 (muffle-warning))))
          (progn ,@body))
-     ;(quit-condition (err)
-     ;  (make-eval-error err (format nil "~A" err) :quit t))
      (serious-condition (err)
        (declare (ignore err)))))
 
@@ -466,7 +480,8 @@
 |#
 
 (defun handle-control-message (kernel msg)
-  (let ((msg-type (format nil "~A~@[/~A~]" (gethash "msg_type" (message-header msg))
+  (let ((msg-type (format nil "~A~@[/~A~]"
+                          (gethash "msg_type" (message-header msg))
                           (gethash "command" (message-header msg))))
         (*kernel* kernel)
         (*message* msg))
@@ -568,49 +583,54 @@
 
 (defun handle-execute-request (kernel msg)
   (inform :info kernel "Handling execute_request message")
-  (with-slots (execution-count history iopub package prompt-prefix prompt-suffix shell stdin input-queue)
+  (with-slots (execution-count history iopub package shell stdin input-queue html-output
+               markdown-output error-output standard-output standard-input)
               kernel
     (let* ((code (gethash "code" (message-content msg)))
-           (results (list (make-error-result "interrupt" "Execution interrupted")))
+           (ename "interrupt")
+           (evalue "Execution interrupted")
+           traceback
            (*payload* (make-array 16 :adjustable t :fill-pointer 0))
            (*page-output* (make-string-output-stream))
-           (*query-io* (make-stdin-stream stdin msg))
-           (*standard-input* *query-io*)
-           (*error-output* (make-iopub-stream iopub msg "stderr"
-                                              prompt-prefix prompt-suffix))
-           (*standard-output* (make-iopub-stream iopub msg "stdout"
-                                                 prompt-prefix prompt-suffix))
-           (*debug-io* *standard-output*)
-           (*trace-output* *standard-output*))
-      (setq execution-count (1+ execution-count))
+           (*query-io* standard-input)
+           (*standard-input* standard-input)
+           (*error-output* error-output)
+           (*standard-output* standard-output)
+           (*debug-io* standard-output)
+           (*trace-output* standard-output)
+           (*html-output* html-output)
+           (*markdown-output* markdown-output))
+      (incf execution-count)
       (add-cell history execution-count code)
       (unwind-protect
-          (setq results (let* ((*package* package)
-                               (r (evaluate-code kernel code)))
-                          (setf package *package*)
-                          r))
-        (dolist (result results)
-          (send-result result))
-        ;broadcast the code to connected frontends
+          (let* ((*package* package))
+            (multiple-value-setq (ename evalue traceback)
+                                 (evaluate-code kernel code))
+            (setf package *package*))
+        ;; broadcast the code to connected frontends
         (send-execute-code iopub msg execution-count code)
         ;; send any remaining stdout
         (finish-output *standard-output*)
         ;; send any remaining stderr
         (finish-output *error-output*)
+        ;; send any remaining HTML
+        (finish-output *html-output*)
+        ;; send any remaining markdown
+        (finish-output *markdown-output*)
         ;; send reply (control)
-        (let ((errors (remove-if-not #'eval-error-p results)))
-          (if errors
-            (let ((ename (format nil "~{~A~^, ~}" (mapcar #'error-result-ename errors)))
-                  (evalue (format nil "~{~A~^, ~}" (mapcar #'error-result-evalue errors))))
-              (send-execute-reply-error shell msg execution-count ename evalue))
+        (cond
+          (ename
+            (send-execute-error iopub msg ename evalue traceback)
+            (send-execute-reply-error shell msg execution-count ename evalue traceback))
+          (t
             (let ((p (get-output-stream-string *page-output*)))
               (unless (queue-empty-p input-queue)
                 (set-next-input (dequeue input-queue)))
               (unless (zerop (length p))
-                (page (make-inline-result p)))
+                (page p))
               (send-execute-reply-ok shell msg execution-count *payload*)))))
       ;; return t if there is no quit errors present
-      (notany #'quit-eval-error-p results))))
+      t)))
 
 #|
 
@@ -666,18 +686,16 @@
   (inform :info kernel "Handling inspect_request message")
   (with-slots (shell package) kernel
     (let* ((content (message-content msg))
-           (code (gethash "code" content))
-           (result (let ((*package* package))
-                     (inspect-code kernel
-                              code
-                              (min (1- (length code)) (gethash "cursor_pos" content))
-                              (gethash "detail_level" content)))))
-      (if (eval-error-p result)
-        (with-slots (ename evalue) result
-          (send-inspect-reply-error shell msg ename evalue))
-        (send-inspect-reply-ok shell msg
-          (let ((*package* package))
-            (render result))))))
+           (code (gethash "code" content)))
+      (multiple-value-bind (result ename evalue traceback)
+                           (let ((*package* package))
+                             (inspect-code kernel
+                                           code
+                                           (min (1- (length code)) (gethash "cursor_pos" content))
+                                           (gethash "detail_level" content)))
+      (if ename
+        (send-inspect-reply-error shell msg ename evalue traceback)
+        (send-inspect-reply-ok shell msg (mime-bundle-data result) (mime-bundle-metadata result))))))
   t)
 
 #|
@@ -692,24 +710,25 @@
     (let* ((content (message-content msg))
            (code (gethash "code" content))
            (cursor-pos (gethash "cursor_pos" content))
-           (match-set (make-match-set :start cursor-pos :end cursor-pos :code code))
-           (result (let ((*package* package))
-                     (complete-code kernel match-set code cursor-pos))))
-      (if (eval-error-p result)
-        (with-slots (ename evalue) result
-          (send-complete-reply-error shell msg ename evalue))
-        (send-complete-reply-ok shell msg
-                                (sort (mapcar #'match-text (match-set-matches match-set)) #'string<)
-                                (match-set-start match-set)
-                                (match-set-end match-set)
-                                `(:object-alist
-                                   ("_jupyter_types_experimental" . ,(or (mapcan (lambda (match)
-                                                                                   (when (match-type match)
-                                                                                     (list (list :object-alist
-                                                                                             (cons "text" (match-text match))
-                                                                                             (cons "type" (match-type match))))))
-                                                                                 (match-set-matches match-set))
-                                                                         :empty-object))))))))
+           (match-set (make-match-set :start cursor-pos :end cursor-pos :code code)))
+      (multiple-value-bind (ename evalue traceback)
+                           (let ((*package* package))
+                             (complete-code kernel match-set code cursor-pos))
+        (if ename
+          (send-complete-reply-error shell msg ename evalue traceback)
+          (send-complete-reply-ok shell msg
+                                  (sort (mapcar #'match-text (match-set-matches match-set)) #'string<)
+                                  (match-set-start match-set)
+                                  (match-set-end match-set)
+                                  `(:object-alist
+                                     ("_jupyter_types_experimental" . ,(or (mapcan (lambda (match)
+                                                                                     (when (match-type match)
+                                                                                       (list (list :object-alist
+                                                                                               (cons "text" (match-text match))
+                                                                                               (cons "type" (match-type match))))))
+                                                                                   (match-set-matches match-set))
+                                                                           :empty-object)))))))))
+
 
 (defun handle-comm-info-request (kernel msg)
   (inform :info kernel "Handling comm_info_request message")
@@ -726,18 +745,17 @@
 
 (defun handle-comm-open (kernel msg)
   (inform :info kernel "Handling comm_open message")
-  (with-slots (iopub comms prompt-prefix prompt-suffix stdin) kernel
+  (with-slots (iopub comms stdin error-output standard-output standard-input)
+              kernel
     (let* ((content (message-content msg))
            (metadata (message-metadata msg))
            (buffers (message-buffers msg))
-           (*query-io* (make-stdin-stream stdin msg))
-           (*standard-input* *query-io*)
-           (*error-output* (make-iopub-stream iopub msg "stderr"
-                                              prompt-prefix prompt-suffix))
-           (*standard-output* (make-iopub-stream iopub msg "stdout"
-                                                 prompt-prefix prompt-suffix))
-           (*debug-io* *standard-output*)
-           (*trace-output* *standard-output*)
+           (*query-io* standard-input)
+           (*standard-input* standard-input)
+           (*error-output* error-output)
+           (*standard-output* standard-output)
+           (*debug-io* standard-output)
+           (*trace-output* standard-output)
            (id (gethash "comm_id" content))
            (target-name (gethash "target_name" content))
            (data (gethash "data" content (make-hash-table :test #'equal)))
@@ -752,18 +770,17 @@
 
 (defun handle-comm-message (kernel msg)
   (inform :info kernel "Handling comm_msg message")
-  (with-slots (comms prompt-prefix prompt-suffix stdin iopub) kernel
+  (with-slots (comms stdin iopub error-output standard-output standard-input)
+              kernel
     (let* ((content (message-content msg))
            (metadata (message-metadata msg))
            (buffers (message-buffers msg))
-           (*query-io* (make-stdin-stream stdin msg))
-           (*standard-input* *query-io*)
-           (*error-output* (make-iopub-stream iopub msg "stderr"
-                                              prompt-prefix prompt-suffix))
-           (*standard-output* (make-iopub-stream iopub msg "stdout"
-                                                 prompt-prefix prompt-suffix))
-           (*debug-io* *standard-output*)
-           (*trace-output* *standard-output*)
+           (*query-io* standard-input)
+           (*standard-input* standard-input)
+           (*error-output* error-output)
+           (*standard-output* standard-output)
+           (*debug-io* standard-output)
+           (*trace-output* standard-output)
            (id (gethash "comm_id" content))
            (data (gethash "data" content))
            (inst (gethash id comms)))
@@ -774,18 +791,17 @@
 
 (defun handle-comm-close (kernel msg)
   (inform :info kernel "Handling comm_close")
-  (with-slots (comms prompt-prefix prompt-suffix stdin iopub) kernel
+  (with-slots (comms stdin iopub error-output standard-output standard-input)
+              kernel
     (let* ((content (message-content msg))
            (metadata (message-metadata msg))
            (buffers (message-buffers msg))
-           (*query-io* (make-stdin-stream stdin msg))
-           (*standard-input* *query-io*)
-           (*error-output* (make-iopub-stream iopub msg "stderr"
-                                              prompt-prefix prompt-suffix))
-           (*standard-output* (make-iopub-stream iopub msg "stdout"
-                                                 prompt-prefix prompt-suffix))
-           (*debug-io* *standard-output*)
-           (*trace-output* *standard-output*)
+           (*query-io* standard-input)
+           (*standard-input* standard-input)
+           (*error-output* error-output)
+           (*standard-output* standard-output)
+           (*debug-io* standard-output)
+           (*trace-output* standard-output)
            (id (gethash "comm_id" content))
            (data (gethash "data" content))
            (inst (gethash id comms)))
@@ -823,19 +839,6 @@
           results))))
           t)
 
-(defun send-result (result)
-  "Send a result either as display data or an execute result."
-  (with-slots (iopub package execution-count history) *kernel*
-    (if (typep result 'error-result)
-      (send-execute-error iopub *message*
-                          (error-result-ename result)
-                          (error-result-evalue result))
-      (let ((data (let ((*package* package))
-                    (render result))))
-        (when data
-          (if (result-display-data result)
-            (send-display-data iopub *message* data)
-            (send-execute-result iopub *message* execution-count data)))))))
 
 (defun set-next-input (text &optional (replace nil))
   (declare (ignore replace))
@@ -845,10 +848,11 @@
                       *payload*)
   (values))
 
+
 (defun page (result &optional (start 0))
   (vector-push-extend `(:object-alist
                          ("source" . "page")
-                         ("data" . ,(render result))
+                         ("data" . ,(mime-bundle-data result))
                          ("start" . ,start))
                       *payload*)
   (values))
@@ -867,3 +871,4 @@
 (defun clear (&optional (wait nil))
   "Send clear output message to frontend."
   (send-clear-output (kernel-iopub *kernel*) *message* wait))
+

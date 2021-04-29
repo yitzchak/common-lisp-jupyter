@@ -64,7 +64,7 @@
           collect `(export '(,make-fun-sym) ,(symbol-package name))))))
 
 
-(defclass widget (has-traits jupyter:comm jupyter:result)
+(defclass widget (has-traits jupyter:comm)
   ((%model-name
      :initarg :%model-name
      :reader widget-%module-name
@@ -101,14 +101,16 @@
     :target-name +target-name+)
   (:documentation "Base class for all Jupyter widgets."))
 
-(defmethod jupyter:render ((w widget))
-  `(:object-alist
-     ("text/plain" . "A Jupyter Widget")
-     ("application/vnd.jupyter.widget-view+json" .
-      (:object-alist
-        ("version_major" . 2)
-        ("version_minor" . 0)
-        ("model_id" . ,(jupyter:comm-id w))))))
+
+(defmethod jupyter:mime-bundle-data ((w widget))
+  (list :object-plist
+        "text/plain" "A Jupyter Widget"
+        "application/vnd.jupyter.widget-view+json"
+        (list :object-plist
+              "version_major" 2
+              "version_minor" 0
+              "model_id" (jupyter:comm-id w))))
+
 
 (defun to-json-state (w &optional nm)
   (let (state
@@ -245,5 +247,5 @@
     widget))
 
 (defun display (widget &rest args &key &allow-other-keys)
-  (jupyter:send-result (apply #'%display widget args))
+  (jupyter:display-data (apply #'%display widget args))
   (values))

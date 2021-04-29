@@ -7,7 +7,9 @@
     #:make-object
     ; log
     #:inform
-    ; results
+    ; mime-bundle
+    #:display-data
+    #:execute-result
     #:file
     #:gif-file
     #:html
@@ -15,22 +17,24 @@
     #:javascript
     #:jpeg
     #:jpeg-file
+    #:json
+    #:json-file
     #:latex
-    #:make-error-result
-    #:make-file-result
-    #:make-inline-result
-    #:make-lisp-result
     #:markdown
+    #:mime-bundle-data
+    #:mime-bundle-metadata
     #:pdf-file
     #:png
     #:png-file
     #:ps-file
-    #:quit-eval-error-p
-    #:render
     #:result
     #:svg
     #:svg-file
     #:text
+    #:vega
+    #:vega-file
+    #:vega-lite
+    #:vega-lite-file
     ; matches
     #:match-set-add
     #:make-offset-match-set
@@ -47,23 +51,23 @@
     #:evaluate-code
     #:get-comm
     #:handling-errors
+    #:*html-output*
     #:inform
     #:inspect-code
     #:kernel
     #:kernel-prompt-prefix
     #:kernel-prompt-suffix
     #:make-uuid
+    #:*markdown-output*
     #:on-comm-close
     #:on-comm-message
     #:on-comm-open
     #:*page-output*
     #:quit
-    #:quit-condition
     #:run-kernel
     #:send-comm-close
     #:send-comm-message
     #:send-comm-open
-    #:send-result
     #:start
     #:stop
     ; installer

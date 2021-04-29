@@ -12,6 +12,9 @@
 
 |#
 
+(defvar *message* nil)
+
+
 (defclass message ()
   ((header
      :initarg :header

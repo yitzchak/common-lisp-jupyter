@@ -691,8 +691,8 @@
 
 
 (defmethod jupyter:inspect-code ((k kernel) code cursor-pos detail-level)
-  (jupyter:make-inline-result
-    (with-output-to-string (stream)
-      (inspect-fragment stream (locate-fragment code (1- cursor-pos)) detail-level))
-    :mime-type "text/markdown"))
+  (jupyter:markdown (with-output-to-string (stream)
+                      (inspect-fragment stream
+                                        (locate-fragment code (1- cursor-pos))
+                                        detail-level))))
 
