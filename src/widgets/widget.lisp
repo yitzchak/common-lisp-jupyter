@@ -240,12 +240,3 @@
                  (mapcar (lambda (name) (cons name handler)) name/s)
                  (list (cons name/s handler))))))
 
-(defgeneric %display (widget &rest args &key &allow-other-keys)
-  (:documentation "Prepare widget for display")
-  (:method (widget &rest args &key &allow-other-keys)
-    (declare (ignore args))
-    widget))
-
-(defun display (widget &rest args &key &allow-other-keys)
-  (jupyter:display-data (apply #'%display widget args))
-  (values))

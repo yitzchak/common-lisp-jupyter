@@ -52,6 +52,12 @@ of `value` in that mime type.")
      :initform :empty-object)))
 
 
+(defun make-mime-bundle (data &optional metadata)
+  (make-instance 'mime-bundle
+                 :data (or data :empty-object)
+                 :metadata (or metadata :empty-object)))
+
+
 (defun execute-result (result)
   "Send a result as mime bundle execution result. `result` must implement the `mime-bundle-data`
 method and optionally `mime-bundle-metadata`."
@@ -59,7 +65,7 @@ method and optionally `mime-bundle-metadata`."
                        (mime-bundle-data result) (mime-bundle-metadata result)))
 
 
-(defun display-data (result &key id update)
+(defun display (result &key id update)
   "Send a result as mime bundle display data. `result` must implement the `mime-bundle-data`
 method and optionally `mime-bundle-metadata`. If an `id` is specified then future calls with the
 same `id` and `update` is `t`."
@@ -87,7 +93,7 @@ same `id` and `update` is `t`."
                                                             (alexandria:read-file-into-byte-vector path))))))))
     (cond
       (display-data
-        (display-data bundle :update update :id id)
+        (display bundle :update update :id id)
         (values))
       (t
         bundle))))
@@ -99,7 +105,7 @@ same `id` and `update` is `t`."
                                             :metadata (or metadata :empty-object))))
     (cond
       (display-data
-        (display-data bundle :update update :id id)
+        (display bundle :update update :id id)
         (values))
       (t
         bundle))))

@@ -137,8 +137,9 @@
                           :fill-pointer 0)))))))
 
 (defmethod trivial-gray-streams:stream-finish-output ((stream iopub-stream))
-  (with-slots (channel name value) stream
-    (unless (zerop (length value))
+  (with-slots (channel name value prompt-prefix) stream
+    (unless (or (zerop (length value))
+                (search prompt-prefix value))
       (send-stream channel *message* name value)
       (adjust-array value (array-total-size value)
                     :fill-pointer 0))))

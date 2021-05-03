@@ -8,7 +8,7 @@
     ; log
     #:inform
     ; mime-bundle
-    #:display-data
+    #:display
     #:execute-result
     #:file
     #:gif-file
@@ -21,6 +21,7 @@
     #:json-file
     #:latex
     #:markdown
+    #:make-mime-bundle
     #:mime-bundle-data
     #:mime-bundle-metadata
     #:pdf-file
@@ -123,8 +124,6 @@
     #:date-picker
     #:description-style
     #:directional-link
-    #:%display
-    #:display
     #:dom-widget
     #:dropdown
     #:file-upload
