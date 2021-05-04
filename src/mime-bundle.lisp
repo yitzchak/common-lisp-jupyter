@@ -61,8 +61,10 @@ of `value` in that mime type.")
 (defun execute-result (result)
   "Send a result as mime bundle execution result. `result` must implement the `mime-bundle-data`
 method and optionally `mime-bundle-metadata`."
-  (send-execute-result (kernel-iopub *kernel*) *message* (kernel-execution-count *kernel*)
-                       (mime-bundle-data result) (mime-bundle-metadata result)))
+  (unless (eq :no-output result)
+    (send-execute-result (kernel-iopub *kernel*) *message* (kernel-execution-count *kernel*)
+                         (mime-bundle-data result) (mime-bundle-metadata result)))
+  (values))
 
 
 (defun display (result &key id update)
@@ -74,7 +76,8 @@ same `id` and `update` is `t`."
                      (if id
                        (list :object-plist "display_id" id)
                        :empty-object)
-                     update))
+                     update)
+  (values))
 
 
 (defun make-file-mime-bundle (path mime-type metadata display-data update id)
