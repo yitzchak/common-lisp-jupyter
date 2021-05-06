@@ -233,7 +233,7 @@
             (cons "argv" (command-line instance))
             (cons "display_name" display-name)
             (cons "language" language)
-            (cons "interrupt_method" "message"))
+            (cons "interrupt_mode" "message"))
           stream)))))
 
 (defun install-resources (instance)
