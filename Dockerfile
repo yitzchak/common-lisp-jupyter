@@ -1,4 +1,4 @@
-FROM archlinux/base:latest
+FROM archlinux:latest
 
 ARG NB_USER=app
 ARG NB_UID=1000
