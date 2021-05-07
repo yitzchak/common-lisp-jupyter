@@ -56,6 +56,7 @@
                                             (def-initarg :%view-module-version initargs)
                                             (def-initarg :%view-name initargs)))
          (make-fun-sym (alexandria:format-symbol (symbol-package name) "MAKE-~A" name)))
+    (declare (ignore final))
     (when widget-name
       `(progn
          (setf (gethash ,widget-name *widgets*) (quote ,name))

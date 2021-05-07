@@ -41,14 +41,55 @@
     #:make-offset-match-set
     #:make-substring-match-set
     ; kernel
+    #:add-thread
     #:clear
     #:code-is-complete
     #:comm
     #:comm-id
     #:complete-code
     #:create-comm
+    #:debug-abort
+    #:debug-activate-breakpoints
+    #:debug-breakpoint
+    #:debug-breakpoint-data
+    #:debug-breakpoint-line
+    #:debug-continue
+    #:debug-dump-cell
+    #:debug-enter-loop
+    #:*debug-environment*
+    #:debug-environment
+    #:debug-environment-condition
+    #:debug-environment-restarts
+    #:debug-evaluate
+    #:*debug-frame*
+    #:debug-frame
     #:*debugger*
-    #:debugging-errors
+    #:debug-in
+    #:debug-initialize
+    #:debug-inspect-variables
+    #:debug-new-breakpoint
+    #:debug-next
+    #:debug-object
+    #:debug-object-children
+    #:debug-object-children-resolve
+    #:debug-object-column
+    #:debug-object-data
+    #:debug-object-environment
+    #:debug-object-id
+    #:debug-object-line
+    #:debug-object-name
+    #:debug-object-parent
+    #:debug-object-source
+    #:debug-object-type
+    #:debug-object-value
+    #:debug-out
+    #:debug-remove-breakpoint
+    #:debug-scope
+    #:debug-source
+    #:debug-source-name
+    #:debug-source-path
+    #:debug-stop
+    #:debug-variable
     #:edit
     #:enqueue-input
     #:evaluate-code
@@ -58,7 +99,9 @@
     #:*html-output*
     #:inform
     #:inspect-code
+    #:*kernel*
     #:kernel
+    #:kernel-debugger-started
     #:kernel-prompt-prefix
     #:kernel-prompt-suffix
     #:make-uuid
@@ -68,12 +111,17 @@
     #:on-comm-open
     #:*page-output*
     #:quit
+    #:remove-debug-object
+    #:remove-thread
     #:run-kernel
     #:send-comm-close
     #:send-comm-message
     #:send-comm-open
+    #:send-debug-event
     #:start
     #:stop
+    #:*thread-id*
+    #:user-thread-p
     ; installer
     #:command-line
     #:install

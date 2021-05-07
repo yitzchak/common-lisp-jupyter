@@ -5,6 +5,7 @@
   (:default-initargs
     :class 'kernel
     :language +language+
+    :debugger t
     :resources
     (mapcar #'asdf:component-pathname
             (asdf:component-children

@@ -13,7 +13,7 @@
 |#
 
 (defvar *message* nil)
-
+(defvar *suspended-message* nil)
 
 (defclass message ()
   ((header
@@ -101,30 +101,30 @@
 
 |#
 
-(defun send-string-part (ch part)
-  (pzmq:send (channel-socket ch) part :sndmore t))
+(defun send-string-part (ch part more)
+  (pzmq:send (channel-socket ch) part :sndmore more))
 
-(defun send-binary-part (ch part)
+(defun send-binary-part (ch part more)
   (let ((len (length part)))
     (cond
       ((typep part '(array single-float *))
         (cffi:with-foreign-array (m part (list :array :float len))
-          (pzmq:send (channel-socket ch) m :len (* 4 len) :sndmore t)))
+          (pzmq:send (channel-socket ch) m :len (* 4 len) :sndmore more)))
       (t
         (cffi:with-foreign-array (m part (list :array :uint8 len))
-          (pzmq:send (channel-socket ch) m :len len :sndmore t))))))
+          (pzmq:send (channel-socket ch) m :len len :sndmore more))))))
 
 (defun send-parts (ch identities body buffers)
   (with-slots (send-lock socket) ch
     (bordeaux-threads:with-lock-held (send-lock)
       (dolist (part identities)
-        (send-binary-part ch part))
-      (send-binary-part ch +IDS-MSG-DELIMITER+)
-      (dolist (part body)
-        (send-string-part ch part))
-      (dolist (part buffers)
-        (send-binary-part ch part))
-      (pzmq:send socket nil))))
+        (send-binary-part ch part t))
+      (send-binary-part ch +IDS-MSG-DELIMITER+ t)
+      (trivial-do:dolist* (index part body)
+        (send-string-part ch part (or (< index (1- (length body)))
+                                      buffers)))
+      (trivial-do:dolist* (index part buffers)
+        (send-binary-part ch part (< index (1- (length body))))))))
 
 (defun message-send (ch msg)
   (with-slots (mac) ch
@@ -234,6 +234,6 @@
 
 (defun send-heartbeat (ch part)
   (with-slots (send-lock) ch
-    (send-binary-part ch part)))
+    (send-binary-part ch part nil)))
 
 

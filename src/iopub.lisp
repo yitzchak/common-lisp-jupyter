@@ -16,11 +16,30 @@
 
 |#
 
+(defun send-debug-event (event &optional body &aux (iopub (kernel-iopub *kernel*)))
+  (inform :info iopub "Sending debug_event ~S" event)
+  (message-send iopub
+                (make-message (channel-session iopub) "debug_event"
+                              `(:object-alist
+                                 ("type" . "event")
+                                 ("event" . ,event)
+                                 ("body" . ,(or body :empty-object))))))
+
+
 (defun send-status (iopub status)
   (message-send iopub
                 (make-message (channel-session iopub) "status"
                               (list :object-plist
                                     "execution_state" status))))
+
+
+(defun send-status-busy ()
+  (send-status (kernel-iopub *kernel*) "busy"))
+
+
+(defun send-status-idle ()
+  (send-status (kernel-iopub *kernel*) "idle"))
+
 
 (defun send-clear-output (iopub wait)
   (message-send iopub

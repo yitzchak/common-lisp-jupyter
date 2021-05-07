@@ -94,3 +94,71 @@
             (cdr value))
     value))
 
+(defun murmur-hash-2 (data seed)
+  (declare (type (unsigned-byte 32) seed))
+  (prog ((m #x5bd1e995)
+            (r -24)
+      (h (logxor seed (length data)))
+         (pos 0)
+         (k 0)
+         (remaining (length data)))
+    (declare (type (unsigned-byte 32) m h k))
+   next-word
+    (case remaining
+      (0)
+      (1
+        (setq h (ldb (byte 32 0)
+                     (* m (logxor h (elt data pos))))))
+      (2
+           (setq h (ldb (byte 32 0)
+                     (* m (logxor h
+                                  (logior (elt data pos)
+                                          (ash (elt data (1+ pos)) 8)))))))    (3
+           (setq h (ldb (byte 32 0)
+                     (* m (logxor h
+                                  (logior (elt data pos)
+                                          (ash (elt data (1+ pos)) 8)
+                                          (ash (elt data (+ 2 pos)) 16)))))))
+    (otherwise
+           (setq k (ldb (byte 32 0)
+                     (* m (logior (elt data pos)
+                                  (ash (elt data (1+ pos)) 8)
+                                  (ash (elt data (+ 2 pos)) 16)
+                                  (ash (elt data (+ 3 pos)) 24)))))
+        (setq h (ldb (byte 32 0) (logxor (* m h)
+                                         (* m (logxor k (ash k r))))))
+        (incf pos 4)
+        (decf remaining 4)
+        (go next-word)))
+    (setq h (ldb (byte 32 0)
+                 (* m (logxor h (ash h -13)))))
+    (return (ldb (byte 32 0)
+                 (logxor h (ash h -15))))))
+
+
+(defmacro hash-case (form &rest clauses)
+  (let ((ev-form (gensym))
+        (hash-form (gensym)))
+    (if (< (length clauses) 5)
+      `(let ((,ev-form ,form))
+         (cond
+           ,@(mapcar (lambda (clause)
+                       (cond
+                         ((equal 'otherwise (first clause))
+                           `(t ,@(cdr clause)))
+                         (t
+                           `((equal ,ev-form ,(first clause))
+                              ,@(cdr clause)))))
+                      clauses)))
+      `(let* ((,ev-form ,form)
+              (,hash-form (sxhash ,ev-form)))
+         (cond
+           ,@(mapcar (lambda (clause)
+                       (cond
+                         ((equal 'otherwise (first clause))
+                           `(t ,@(cdr clause)))
+                         (t
+                           `((and (= ,hash-form ,(sxhash (first clause)))
+                                  (equal ,ev-form ,(first clause)))
+                              ,@(cdr clause)))))
+                      clauses))))))

@@ -2,27 +2,28 @@
   :description "A Common Lisp kernel for Jupyter along with a library for building Jupyter kernels."
   :author "Tarn W. Burton"
   :license "MIT"
+  :version "1.0"
+  :homepage "https://yitzchak.github.io/common-lisp-jupyter/"
+  :bug-tracker "https://github.com/yitzchak/common-lisp-jupyter/issues"
   :depends-on
-    (:alexandria
-     :babel
-     :bordeaux-threads
-     :cl-base64
-     :cl-indentify
-     :closer-mop
-     :dissect
-     ; This should be `(:feature (:not :clasp) :ironclad)` but some distributions still don't have
-     ; ASDF 3
-     #-clasp :eclector
-     #-clasp :ironclad
-     :multilang-documentation
-     :pzmq
-     :puri
-     #+(or abcl allegro ccl clasp cmu ecl lispworks sbcl) :static-vectors
-     :trivial-do
-     :trivial-garbage
-     :trivial-gray-streams
-     :trivial-mimes
-     :shasht)
+    (#:alexandria
+     #:babel
+     #:bordeaux-threads
+     #:cl-base64
+     #:cl-indentify
+     #:closer-mop
+     #:dissect
+     (:feature (:not :clasp) #:eclector)
+     (:feature (:not :clasp) #:ironclad)
+     #:multilang-documentation
+     #:pzmq
+     #:puri
+     (:feature (:or :abcl :allegro :ccl :clasp :cmu :ecl :lispworks :sbcl) #:static-vectors)
+     #:trivial-do
+     #:trivial-garbage
+     #:trivial-gray-streams
+     #:trivial-mimes
+     #:shasht)
   :components
     ((:module res
       :components
@@ -106,15 +107,9 @@
              (:file "installer")
              (:file "overrides")
              (:file "ros-install")))
-         (:file "convert"))))
-  . #+asdf3
-      (:version "0.1"
-       :homepage "https://yitzchak.github.io/common-lisp-jupyter/"
-       :bug-tracker "https://github.com/yitzchak/common-lisp-jupyter/issues")
-    #-asdf3 ())
+         (:file "convert")))))
 
 
-#+asdf3.1
   (asdf:register-system-packages "common-lisp-jupyter"
                                  '(:jupyter :jupyter/common-lisp :jupyter/convert
                                    :jupyter/markdown-formatter :jupyter/widgets))

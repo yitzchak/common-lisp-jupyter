@@ -5,6 +5,11 @@
      :initarg :class
      :accessor installer-class
      :documentation "Class that implements the kernel. Used by image based installations.")
+   (debugger
+     :initarg :debugger
+     :initform nil
+     :accessor installer-debugger
+     :documentation "Whether or not the kernel supports debugging.")
    (display-name
      :initarg :display-name
      :accessor installer-display-name
@@ -229,11 +234,14 @@
       (format t "Installing kernel spec file ~A~%" spec-path)
       (with-open-file (stream spec-path :direction :output :if-exists :supersede)
         (shasht:write-json
-          (list :object-alist
-            (cons "argv" (command-line instance))
-            (cons "display_name" display-name)
-            (cons "language" language)
-            (cons "interrupt_mode" "message"))
+          (list :object-plist
+            "argv" (command-line instance)
+            "display_name" display-name
+            "language" language
+            "interrupt_mode" "message"
+            "metadata" (if (installer-debugger instance)
+                         '(:object-plist "debugger" :true)
+                         :empty-object))
           stream)))))
 
 (defun install-resources (instance)
