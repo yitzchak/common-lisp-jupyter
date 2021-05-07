@@ -143,7 +143,7 @@
 (defun my-eval (expr)
   (debugging-errors
     (setq common-lisp-user::- expr)
-    (let ((evaluated-expr (multiple-value-list #+sbcl (eval `(step ,expr))
+    (let ((evaluated-expr (multiple-value-list #+sbcl (eval expr)
                                                #-sbcl (eval expr))))
       (setq common-lisp-user::*** common-lisp-user::**
             common-lisp-user::** common-lisp-user::*
