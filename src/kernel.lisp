@@ -768,7 +768,7 @@
        ("hashSeed" . ,(kernel-hash-seed *kernel*))
        ("tmpFilePrefix" . ,(kernel-tmp-file-prefix *kernel*))
        ("tmpFileSuffix" . ,(kernel-tmp-file-suffix *kernel*))
-       ("breakpoints" . ,(kernel-breakpoints *kernel*)))))
+       ("breakpoints" . ,(or (kernel-breakpoints *kernel*) :empty-array)))))
 
 
 #|
