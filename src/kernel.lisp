@@ -304,7 +304,7 @@
   (let ((msg-queue (make-instance 'queue)))
     (setf (gethash thread-id (kernel-thread-control-queues kernel)) msg-queue)
     (send-execute-reply-ok (kernel-shell *kernel*) *message* (history-execution-count *kernel*) nil)
-    (send-debug-event (kernel-iopub *kernel* "stopped"
+    (send-debug-event (kernel-iopub *kernel*) "stopped"
                       `(:object-alist
                          ("reason" . ,reason)
                          ("threadId" . ,thread-id)))
