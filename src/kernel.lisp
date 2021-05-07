@@ -1,12 +1,18 @@
 (in-package #:jupyter)
 
+
 (defvar *payload* nil)
 (defvar *debugger* nil)
 (defvar *markdown-output* nil)
 (defvar *html-output* nil)
 
+
 (defvar *page-output* nil
   "Output stream sent to Jupyter pager. Available during calls to evaluate-code.")
+
+
+(defconstant +zmq-poll-timeout+ 500)
+
 
 (defclass kernel (source)
   ((name
@@ -341,7 +347,7 @@
              *message* msg-type)
        poll
         (catch 'kernel-interrupt
-          (when (zerop (pzmq:poll items 500))
+          (when (zerop (pzmq:poll items +zmq-poll-timeout+))
             (go poll))
           (setf *message* (message-recv (kernel-shell kernel))
                 msg-type (gethash "msg_type" (message-header *message*)))
@@ -381,7 +387,7 @@
            *message* msg-type)
       ;(declare (special *kernel* *message*))
      poll
-      (when (zerop (pzmq:poll items 500))
+      (when (zerop (pzmq:poll items +zmq-poll-timeout+))
         (go poll))
       (setf *message* (message-recv (kernel-control kernel))
             msg-type (format nil "~A~@[/~A~]"
@@ -540,8 +546,7 @@
                                             ("file_extension" . ,file-extension)
                                             ("pygments_lexer" . ,pygments-lexer)
                                             ("codemirror_mode" . ,codemirror-mode))))
-      :parent *message*)))
-  t)
+      :parent *message*))))
 
 #|
 
@@ -596,9 +601,7 @@
                 (set-next-input (dequeue input-queue)))
               (unless (zerop (length p))
                 (page p))
-              (send-execute-reply-ok shell *message* execution-count *payload*)))))
-      ;; return t if there is no quit errors present
-      t)))
+              (send-execute-reply-ok shell *message* execution-count *payload*))))))))
 
 #|
 
@@ -639,8 +642,7 @@
          (content (message-content *message*))
          (code (gethash "code" content))
          (status (code-is-complete *kernel* code)))
-    (send-is-complete-reply shell *message* status)
-    t))
+    (send-is-complete-reply shell *message* status)))
 
 #|
 
@@ -661,8 +663,7 @@
                                            (gethash "detail_level" content)))
       (if ename
         (send-inspect-reply-error shell *message* ename evalue traceback)
-        (send-inspect-reply-ok shell *message* (mime-bundle-data result) (mime-bundle-metadata result))))))
-  t)
+        (send-inspect-reply-ok shell *message* (mime-bundle-data result) (mime-bundle-metadata result)))))))
 
 #|
 
@@ -706,8 +707,8 @@
                             (if target-name
                               (remove-if-not (lambda (p) (equal target-name (cdr p)))
                                 comms-alist)
-                              comms-alist))))
-  t)
+                              comms-alist)))))
+
 
 (defun handle-comm-open ()
   (inform :info *kernel* "Handling comm_open message")
@@ -731,8 +732,8 @@
           (setf (gethash id comms) inst)
           (handling-comm-errors
             (on-comm-open inst data metadata buffers)))
-        (send-comm-close-orphan iopub id))))
-  t)
+        (send-comm-close-orphan iopub id)))))
+
 
 (defun handle-comm-message ()
   (inform :info *kernel* "Handling comm_msg message")
@@ -752,8 +753,7 @@
            (inst (gethash id comms)))
       (when inst
         (handling-comm-errors
-          (on-comm-message inst data metadata buffers)))))
-  t)
+          (on-comm-message inst data metadata buffers))))))
 
 
 (defun handle-comm-close ()
@@ -803,8 +803,7 @@
                        (second item)
                        (list (third item) :null)))
             results)
-          results))))
-          t)
+          results)))))
 
 
 (defun set-next-input (text &optional (replace nil))
