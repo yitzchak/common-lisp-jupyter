@@ -1,12 +1,18 @@
 (in-package #:jupyter)
 
+
 (defvar *payload* nil)
 (defvar *debugger* nil)
 (defvar *markdown-output* nil)
 (defvar *html-output* nil)
 
+
 (defvar *page-output* nil
   "Output stream sent to Jupyter pager. Available during calls to evaluate-code.")
+
+
+(defconstant +zmq-poll-timeout+ 500)
+
 
 (defclass kernel (source)
   ((name
@@ -190,33 +196,41 @@
      :documentation "Standard input stream"))
   (:documentation "Kernel state representation."))
 
+
 (defgeneric evaluate-code (kernel code)
   (:documentation "Evaluate code along with paged output. Evaluation results should be sent
-  with `execute-result`. Errors should be returned as `(values ename evalue traceback)`"))
+  with `execute-result`. Errors should be returned as `(values ename evalue traceback)`")
+  (:method (kernel code)
+    (declare (ignore kernel code))
+    (values)))
 
-(defmethod evaluate-code (kernel code))
 
 (defgeneric code-is-complete (kernel code)
   (:documentation "Check code for completeness. Kernel implementations should
   result one of the permitted values of complete, incomplete, unknown or
-  invalid."))
+  invalid.")
+  (:method (kernel code)
+    (declare (ignore kernel code))
+    "unknown"))
 
-(defmethod code-is-complete (kernel code)
-  "unknown")
 
 (defgeneric inspect-code (kernel code cursor-pos detail-level)
   (:documentation "Inspect code at cursor-pos with detail-level. Successful
   inspection should return a single result that implements mime-bundle-data and
   optionally mime-bundle-metadata. Errors should be returned as
-  `(values nil ename evalue traceback)`."))
+  `(values nil ename evalue traceback)`.")
+  (:method (kernel code cursor-pos detail-level)
+    (declare (ignore kernel code cursor-pos detail-level))
+    (text "No results found.")))
 
-(defmethod inspect-code (kernel code cursor-pos detail-level))
 
 (defgeneric complete-code (kernel match-set code cursor-pos)
   (:documentation "Complete code at cursor-pos. Successful matches should be added to match-set
-  via match-set-add. Errors should be returned as `(values ename evalue traceback)`."))
+  via match-set-add. Errors should be returned as `(values ename evalue traceback)`.")
+  (:method (kernel match-set code cursor-pos)
+    (declare (ignore kernel match-set code cursor-pos))
+    (values)))
 
-(defmethod complete-code (kernel match-set code cursor-pos))
 
 ;; Start all channels.
 (defmethod start ((k kernel))
@@ -335,35 +349,89 @@
 
 
 (defun run-shell (kernel)
-  (catch 'kernel-shutdown
-    (tagbody
-     poll
-      (catch 'kernel-interrupt
-        (cond
-          ((not (message-available-p (kernel-shell kernel)))
-            (sleep 0.1))
-          ((not (handle-shell-message kernel (message-recv (kernel-shell kernel))))
-            (bordeaux-threads:interrupt-thread
-              (kernel-control-thread kernel)
-              (lambda ()
-                (throw 'kernel-shutdown nil)))
-            (go leave))))
-      (go poll)
-     leave))
+  (pzmq:with-poll-items items (((channel-socket (kernel-shell kernel)) :pollin))
+    (catch 'kernel-shutdown
+      (prog* ((shell (kernel-shell kernel))
+              (iopub (kernel-iopub kernel))
+              (*query-io* (kernel-standard-input kernel))
+              (*standard-input* *query-io*)
+              (*error-output* (kernel-error-output kernel))
+              (*standard-output* (kernel-standard-output kernel))
+              (*debug-io* *standard-output*)
+              (*trace-output* *standard-output*)
+              (*html-output* (kernel-html-output kernel))
+              (*markdown-output* (kernel-markdown-output kernel))
+              (*kernel* kernel)
+              *message* msg-type)
+       poll
+        (catch 'kernel-interrupt
+          (when (zerop (pzmq:poll items +zmq-poll-timeout+))
+            (go poll))
+          (setf *message* (message-recv shell)
+                msg-type (gethash "msg_type" (message-header *message*)))
+          (send-status-update iopub *message* "busy")
+          (unwind-protect
+              (alexandria:switch (msg-type :test #'equal)
+                ("comm_close"
+                  (handle-comm-close))
+                ("comm_info_request"
+                  (handle-comm-info-request))
+                ("comm_msg"
+                  (handle-comm-message))
+                ("comm_open"
+                  (handle-comm-open))
+                ("complete_request"
+                  (handle-complete-request))
+                ("execute_request"
+                  (handle-execute-request))
+                ("history_request"
+                  (handle-history-request))
+                ("inspect_request"
+                  (handle-inspect-request))
+                ("is_complete_request"
+                  (handle-is-complete-request))
+                ("kernel_info_request"
+                  (handle-kernel-info-request))
+                (otherwise
+                  (inform :warn kernel "Ignoring ~A message since there is no appropriate handler." msg-type)))
+            ;; send any remaining stdout
+            (finish-output *standard-output*)
+            ;; send any remaining stderr
+            (finish-output *error-output*)
+            ;; send any remaining HTML
+            (finish-output *html-output*)
+            ;; send any remaining markdown
+            (finish-output *markdown-output*)
+            (send-status-update iopub *message* "idle")))
+        (go poll))))
   (inform :info kernel "Shell thread exiting normally."))
 
 
 (defun run-control (kernel)
-  (catch 'kernel-shutdown
-    (tagbody
+  (pzmq:with-poll-items items (((channel-socket (kernel-control kernel)) :pollin))
+    (prog ((control (kernel-control kernel))
+           (iopub (kernel-iopub kernel))
+           (*kernel* kernel)
+           *message* msg-type)
      poll
-      (cond
-        ((not (message-available-p (kernel-control kernel)))
-          (sleep 0.1))
-        ((not (handle-control-message kernel (message-recv (kernel-control kernel))))
-          (go leave)))
-      (go poll)
-     leave))
+      (when (zerop (pzmq:poll items +zmq-poll-timeout+))
+        (go poll))
+      (setf *message* (message-recv control)
+            msg-type (format nil "~A~@[/~A~]"
+                            (gethash "msg_type" (message-header *message*))
+                            (gethash "command" (message-header *message*))))
+      (send-status-update iopub *message* "busy")
+      (unwind-protect
+          (alexandria:switch (msg-type :test #'equal)
+            ("interrupt_request"
+              (handle-interrupt-request))
+            ("shutdown_request"
+              (handle-shutdown-request)
+              (return))
+            (otherwise
+              (inform :warn kernel "Ignoring ~A message since there is no appropriate handler." msg-type)))
+        (send-status-update iopub *message* "idle"))
+      (go poll)))
   (inform :info kernel "Control thread exiting normally."))
 
 
@@ -400,6 +468,7 @@
       (return)))
   instance)
 
+
 (defun my-debugger (condition me-or-my-encapsulation)
   (declare (ignore me-or-my-encapsulation))
   (let* ((restarts (compute-restarts condition))
@@ -413,7 +482,6 @@
         ((and (integerp choice)
               (< -1 choice (length applicable-restarts)))
          (invoke-restart-interactively (nth choice applicable-restarts))))))
-
 
 
 (defmacro handling-errors (&body body)
@@ -457,6 +525,7 @@
          ,@body))
      (handling-errors ,@body)))
 
+
 (defmacro handling-comm-errors (&body body)
   "Macro for catching any conditions during comm messages."
   `(handler-case
@@ -475,82 +544,16 @@
 
 #|
 
-### Message type: Handle control messages ###
-
-|#
-
-(defun handle-control-message (kernel msg)
-  (let ((msg-type (format nil "~A~@[/~A~]"
-                          (gethash "msg_type" (message-header msg))
-                          (gethash "command" (message-header msg))))
-        (*kernel* kernel)
-        (*message* msg))
-    (unwind-protect
-        (progn
-          (send-status-update (kernel-iopub kernel) msg "busy")
-          (alexandria:switch (msg-type :test #'equal)
-            ("interrupt_request"
-              (handle-interrupt-request kernel msg)
-              t)
-            ("shutdown_request"
-              (handle-shutdown-request kernel msg)
-              nil)
-            (otherwise
-              (inform :warn kernel "Ignoring ~A message since there is no appropriate handler." msg-type)
-              t)))
-      (send-status-update (kernel-iopub kernel) msg "idle"))))
-
-#|
-
-### Message type: Handle shell messages ###
-
-|#
-
-(defun handle-shell-message (kernel msg)
-  (let ((msg-type (gethash "msg_type" (message-header msg)))
-        (*kernel* kernel)
-        (*message* msg))
-    (unwind-protect
-        (progn
-          (send-status-update (kernel-iopub kernel) msg "busy")
-          (alexandria:switch (msg-type :test #'equal)
-            ("comm_close"
-              (handle-comm-close kernel msg))
-            ("comm_info_request"
-              (handle-comm-info-request kernel msg))
-            ("comm_msg"
-              (handle-comm-message kernel msg))
-            ("comm_open"
-              (handle-comm-open kernel msg))
-            ("complete_request"
-              (handle-complete-request kernel msg))
-            ("execute_request"
-              (handle-execute-request kernel msg))
-            ("history_request"
-              (handle-history-request kernel msg))
-            ("inspect_request"
-              (handle-inspect-request kernel msg))
-            ("is_complete_request"
-              (handle-is-complete-request kernel msg))
-            ("kernel_info_request"
-              (handle-kernel-info-request kernel msg))
-            (otherwise
-              (inform :warn kernel "Ignoring ~A message since there is no appropriate handler." msg-type)
-              t)))
-      (send-status-update (kernel-iopub kernel) msg "idle"))))
-
-#|
-
 ### Message type: kernel_info_request ###
 
 |#
 
-(defun handle-kernel-info-request (kernel msg)
-  (inform :info kernel "Handling kernel_info_request message")
+(defun handle-kernel-info-request ()
+  (inform :info *kernel* "Handling kernel_info_request message")
   (with-slots (name version language-name language-version mime-type session
                file-extension pygments-lexer codemirror-mode help-links banner
                shell)
-              kernel
+              *kernel*
     (message-send shell
       (make-message session "kernel_info_reply"
                     `(:object-alist
@@ -572,8 +575,7 @@
                                             ("file_extension" . ,file-extension)
                                             ("pygments_lexer" . ,pygments-lexer)
                                             ("codemirror_mode" . ,codemirror-mode))))
-      :parent msg)))
-  t)
+      :parent *message*))))
 
 #|
 
@@ -581,56 +583,36 @@
 
 |#
 
-(defun handle-execute-request (kernel msg)
-  (inform :info kernel "Handling execute_request message")
-  (with-slots (execution-count history iopub package shell stdin input-queue html-output
-               markdown-output error-output standard-output standard-input)
-              kernel
-    (let* ((code (gethash "code" (message-content msg)))
-           (ename "interrupt")
-           (evalue "Execution interrupted")
-           traceback
-           (*payload* (make-array 16 :adjustable t :fill-pointer 0))
-           (*page-output* (make-string-output-stream))
-           (*query-io* standard-input)
-           (*standard-input* standard-input)
-           (*error-output* error-output)
-           (*standard-output* standard-output)
-           (*debug-io* standard-output)
-           (*trace-output* standard-output)
-           (*html-output* html-output)
-           (*markdown-output* markdown-output))
+(defun handle-execute-request ()
+  (inform :info *kernel* "Handling execute_request message")
+  (with-slots (execution-count history iopub package shell stdin input-queue)
+              *kernel*
+    (let ((code (gethash "code" (message-content *message*)))
+          (ename "interrupt")
+          (evalue "Execution interrupted")
+          traceback
+          (*payload* (make-array 16 :adjustable t :fill-pointer 0))
+          (*page-output* (make-string-output-stream)))
       (incf execution-count)
       (add-cell history execution-count code)
       (unwind-protect
           (let* ((*package* package))
             (multiple-value-setq (ename evalue traceback)
-                                 (evaluate-code kernel code))
+                                 (evaluate-code *kernel* code))
             (setf package *package*))
         ;; broadcast the code to connected frontends
-        (send-execute-code iopub msg execution-count code)
-        ;; send any remaining stdout
-        (finish-output *standard-output*)
-        ;; send any remaining stderr
-        (finish-output *error-output*)
-        ;; send any remaining HTML
-        (finish-output *html-output*)
-        ;; send any remaining markdown
-        (finish-output *markdown-output*)
-        ;; send reply (control)
+        (send-execute-code iopub *message* execution-count code)
         (cond
           (ename
-            (send-execute-error iopub msg ename evalue traceback)
-            (send-execute-reply-error shell msg execution-count ename evalue traceback))
+            (send-execute-error iopub *message* ename evalue traceback)
+            (send-execute-reply-error shell *message* execution-count ename evalue traceback))
           (t
             (let ((p (get-output-stream-string *page-output*)))
               (unless (queue-empty-p input-queue)
                 (set-next-input (dequeue input-queue)))
               (unless (zerop (length p))
                 (page p))
-              (send-execute-reply-ok shell msg execution-count *payload*)))))
-      ;; return t if there is no quit errors present
-      t)))
+              (send-execute-reply-ok shell *message* execution-count *payload*))))))))
 
 #|
 
@@ -638,14 +620,13 @@
 
 |#
 
-(defun handle-shutdown-request (kernel msg)
-  (inform :info kernel "Handling shutdown_request message")
-  (let* ((control (kernel-control kernel))
-         (content (message-content msg))
-         (restart (gethash "restart" content)))
-    (send-shutdown-reply control msg restart)
-    (bordeaux-threads:interrupt-thread (kernel-shell-thread kernel) (lambda () (throw 'kernel-shutdown nil)))
-    nil))
+(defun handle-shutdown-request ()
+  (inform :info *kernel* "Handling shutdown_request message")
+  (send-shutdown-reply (kernel-control *kernel*) *message*
+                       (gethash "restart" (message-content *message*)))
+  (bordeaux-threads:interrupt-thread (kernel-shell-thread *kernel*)
+                                     (lambda ()
+                                       (throw 'kernel-shutdown nil))))
 
 #|
 
@@ -653,13 +634,13 @@
 
 |#
 
-(defun handle-interrupt-request (kernel msg)
-  (inform :info kernel "Handling interrupt_request message")
-  (let ((control (kernel-control kernel)))
-    (bordeaux-threads:interrupt-thread (kernel-shell-thread kernel) (lambda () (throw 'kernel-interrupt nil)))
-    (sleep 1)
-    (send-interrupt-reply control msg)
-    t))
+(defun handle-interrupt-request ()
+  (inform :info *kernel* "Handling interrupt_request message")
+  (bordeaux-threads:interrupt-thread (kernel-shell-thread *kernel*)
+                                     (lambda ()
+                                       (throw 'kernel-interrupt nil)))
+  (sleep 1)
+  (send-interrupt-reply (kernel-control *kernel*) *message*))
 
 #|
 
@@ -667,14 +648,13 @@
 
 |#
 
-(defun handle-is-complete-request (kernel msg)
-  (inform :info kernel "Handling is_complete_request message")
-  (let* ((shell (kernel-shell kernel))
-         (content (message-content msg))
+(defun handle-is-complete-request ()
+  (inform :info *kernel* "Handling is_complete_request message")
+  (let* ((shell (kernel-shell *kernel*))
+         (content (message-content *message*))
          (code (gethash "code" content))
-         (status (code-is-complete kernel code)))
-    (send-is-complete-reply shell msg status)
-    t))
+         (status (code-is-complete *kernel* code)))
+    (send-is-complete-reply shell *message* status)))
 
 #|
 
@@ -682,21 +662,20 @@
 
 |#
 
-(defun handle-inspect-request (kernel msg)
-  (inform :info kernel "Handling inspect_request message")
-  (with-slots (shell package) kernel
-    (let* ((content (message-content msg))
+(defun handle-inspect-request ()
+  (inform :info *kernel* "Handling inspect_request message")
+  (with-slots (shell package) *kernel*
+    (let* ((content (message-content *message*))
            (code (gethash "code" content)))
       (multiple-value-bind (result ename evalue traceback)
                            (let ((*package* package))
-                             (inspect-code kernel
+                             (inspect-code *kernel*
                                            code
                                            (min (1- (length code)) (gethash "cursor_pos" content))
                                            (gethash "detail_level" content)))
       (if ename
-        (send-inspect-reply-error shell msg ename evalue traceback)
-        (send-inspect-reply-ok shell msg (mime-bundle-data result) (mime-bundle-metadata result))))))
-  t)
+        (send-inspect-reply-error shell *message* ename evalue traceback)
+        (send-inspect-reply-ok shell *message* (mime-bundle-data result) (mime-bundle-metadata result)))))))
 
 #|
 
@@ -704,19 +683,19 @@
 
 |#
 
-(defun handle-complete-request (kernel msg)
-  (inform :info kernel "Handling complete_request message")
-  (with-slots (shell package) kernel
-    (let* ((content (message-content msg))
+(defun handle-complete-request ()
+  (inform :info *kernel* "Handling complete_request message")
+  (with-slots (shell package) *kernel*
+    (let* ((content (message-content *message*))
            (code (gethash "code" content))
            (cursor-pos (gethash "cursor_pos" content))
            (match-set (make-match-set :start cursor-pos :end cursor-pos :code code)))
       (multiple-value-bind (ename evalue traceback)
                            (let ((*package* package))
-                             (complete-code kernel match-set code cursor-pos))
+                             (complete-code *kernel* match-set code cursor-pos))
         (if ename
-          (send-complete-reply-error shell msg ename evalue traceback)
-          (send-complete-reply-ok shell msg
+          (send-complete-reply-error shell *message* ename evalue traceback)
+          (send-complete-reply-ok shell *message*
                                   (sort (mapcar #'match-text (match-set-matches match-set)) #'string<)
                                   (match-set-start match-set)
                                   (match-set-end match-set)
@@ -730,32 +709,26 @@
                                                                            :empty-object)))))))))
 
 
-(defun handle-comm-info-request (kernel msg)
-  (inform :info kernel "Handling comm_info_request message")
-  (with-slots (shell comms) kernel
-    (let* ((content (message-content msg))
+(defun handle-comm-info-request ()
+  (inform :info *kernel* "Handling comm_info_request message")
+  (with-slots (shell comms) *kernel*
+    (let* ((content (message-content *message*))
            (target-name (gethash "target_name" content))
            (comms-alist (alexandria:hash-table-alist comms)))
-      (send-comm-info-reply shell msg
+      (send-comm-info-reply shell *message*
                             (if target-name
                               (remove-if-not (lambda (p) (equal target-name (cdr p)))
                                 comms-alist)
-                              comms-alist))))
-  t)
+                              comms-alist)))))
 
-(defun handle-comm-open (kernel msg)
-  (inform :info kernel "Handling comm_open message")
-  (with-slots (iopub comms stdin error-output standard-output standard-input)
-              kernel
-    (let* ((content (message-content msg))
-           (metadata (message-metadata msg))
-           (buffers (message-buffers msg))
-           (*query-io* standard-input)
-           (*standard-input* standard-input)
-           (*error-output* error-output)
-           (*standard-output* standard-output)
-           (*debug-io* standard-output)
-           (*trace-output* standard-output)
+
+(defun handle-comm-open ()
+  (inform :info *kernel* "Handling comm_open message")
+  (with-slots (iopub comms stdin)
+              *kernel*
+    (let* ((content (message-content *message*))
+           (metadata (message-metadata *message*))
+           (buffers (message-buffers *message*))
            (id (gethash "comm_id" content))
            (target-name (gethash "target_name" content))
            (data (gethash "data" content (make-hash-table :test #'equal)))
@@ -765,56 +738,44 @@
           (setf (gethash id comms) inst)
           (handling-comm-errors
             (on-comm-open inst data metadata buffers)))
-        (send-comm-close-orphan iopub id))))
-  t)
+        (send-comm-close-orphan iopub id)))))
 
-(defun handle-comm-message (kernel msg)
-  (inform :info kernel "Handling comm_msg message")
-  (with-slots (comms stdin iopub error-output standard-output standard-input)
-              kernel
-    (let* ((content (message-content msg))
-           (metadata (message-metadata msg))
-           (buffers (message-buffers msg))
-           (*query-io* standard-input)
-           (*standard-input* standard-input)
-           (*error-output* error-output)
-           (*standard-output* standard-output)
-           (*debug-io* standard-output)
-           (*trace-output* standard-output)
+
+(defun handle-comm-message ()
+  (inform :info *kernel* "Handling comm_msg message")
+  (with-slots (comms stdin iopub)
+              *kernel*
+    (let* ((content (message-content *message*))
+           (metadata (message-metadata *message*))
+           (buffers (message-buffers *message*))
            (id (gethash "comm_id" content))
            (data (gethash "data" content))
            (inst (gethash id comms)))
       (when inst
         (handling-comm-errors
-          (on-comm-message inst data metadata buffers)))))
-  t)
+          (on-comm-message inst data metadata buffers))))))
 
-(defun handle-comm-close (kernel msg)
-  (inform :info kernel "Handling comm_close")
-  (with-slots (comms stdin iopub error-output standard-output standard-input)
-              kernel
-    (let* ((content (message-content msg))
-           (metadata (message-metadata msg))
-           (buffers (message-buffers msg))
-           (*query-io* standard-input)
-           (*standard-input* standard-input)
-           (*error-output* error-output)
-           (*standard-output* standard-output)
-           (*debug-io* standard-output)
-           (*trace-output* standard-output)
+
+(defun handle-comm-close ()
+  (inform :info *kernel* "Handling comm_close")
+  (with-slots (comms stdin iopub)
+              *kernel*
+    (let* ((content (message-content *message*))
+           (metadata (message-metadata *message*))
+           (buffers (message-buffers *message*))
            (id (gethash "comm_id" content))
            (data (gethash "data" content))
            (inst (gethash id comms)))
       (when inst
         (handling-comm-errors
           (on-comm-close inst data metadata buffers))
-        (remhash id comms))))
-  t)
+        (remhash id comms)))))
 
-(defun handle-history-request (kernel msg)
-  (inform :info kernel "Handling history_request message")
-  (with-slots (shell history) kernel
-    (let* ((content (message-content msg))
+
+(defun handle-history-request ()
+  (inform :info *kernel* "Handling history_request message")
+  (with-slots (shell history) *kernel*
+    (let* ((content (message-content *message*))
            (output (gethash "output" content))
            (history-type (gethash "hist_access_type" content))
            (results (alexandria:switch (history-type :test #'equal)
@@ -828,7 +789,7 @@
                                                 (gethash "unique" content)))
                       ("tail" (history-tail history
                                             (gethash "n" content))))))
-      (send-history-reply shell msg
+      (send-history-reply shell *message*
         (if output
           (mapcar
                (lambda (item)
@@ -836,37 +797,39 @@
                        (second item)
                        (list (third item) :null)))
             results)
-          results))))
-          t)
+          results)))))
 
 
 (defun set-next-input (text &optional (replace nil))
   (declare (ignore replace))
-  (vector-push-extend `(:object-alist
-                         ("source" . "set_next_input")
-                         ("text" . ,text))
+  (vector-push-extend (list :object-plist
+                            "source" "set_next_input"
+                            "text" text)
                       *payload*)
   (values))
 
 
 (defun page (result &optional (start 0))
-  (vector-push-extend `(:object-alist
-                         ("source" . "page")
-                         ("data" . ,(mime-bundle-data result))
-                         ("start" . ,start))
+  (vector-push-extend (list :object-plist
+                            "source" "page"
+                            "data" (mime-bundle-data result)
+                            "start" start)
                       *payload*)
   (values))
 
+
 (defun quit (&optional keep-kernel)
-  (vector-push-extend `(:object-alist
-                         ("source" . "ask_exit")
-                         ("keepkernel" . ,(if keep-kernel :true :false)))
+  (vector-push-extend (list :object-plist
+                            "source" "ask_exit"
+                            "keepkernel" (if keep-kernel :true :false))
                       *payload*)
   (values))
+
 
 (defun enqueue-input (kernel code)
   "Add code to input queue."
   (enqueue (kernel-input-queue kernel) code))
+
 
 (defun clear (&optional (wait nil))
   "Send clear output message to frontend."
