@@ -16,6 +16,15 @@
 
 |#
 
+(defun send-debug-event (iopub event &optional body)
+  (inform :info iopub "Sending debug_event ~S" event)
+  (message-send iopub
+                (make-message (channel-session iopub) "debug_event"
+                              `(:object-alist
+                                 ("type" . "event")
+                                 ("event" . ,event)
+                                 ("body" . ,(or body :empty-object))))))
+
 (defun send-status (iopub status)
   (message-send iopub
                 (make-message (channel-session iopub) "status"

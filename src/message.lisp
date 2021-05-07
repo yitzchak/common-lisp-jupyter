@@ -115,6 +115,7 @@
           (pzmq:send (channel-socket ch) m :len len :sndmore t))))))
 
 (defun send-parts (ch identities body buffers)
+  (inform :info ch "~A ~A ~A" identities body buffers)
   (with-slots (send-lock socket) ch
     (bordeaux-threads:with-lock-held (send-lock)
       (dolist (part identities)
