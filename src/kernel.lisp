@@ -312,7 +312,7 @@
      wait
       (setf *message* (dequeue msg-queue))
       (send-status-update (kernel-iopub *kernel*) *message* "busy")
-      (alexndria:switch ((gethash "command" (message-content *message*)) :test #'equal)
+      (alexandria:switch ((gethash "command" (message-content *message*)) :test #'equal)
         ("continue"
           (handle-debug-request/continue environment))
         ("disconnect"
