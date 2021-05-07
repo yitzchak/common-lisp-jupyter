@@ -218,15 +218,19 @@
   (:documentation "Inspect code at cursor-pos with detail-level. Successful
   inspection should return a single result that implements mime-bundle-data and
   optionally mime-bundle-metadata. Errors should be returned as
-  `(values nil ename evalue traceback)`."))
+  `(values nil ename evalue traceback)`.")
+  (:method (kernel code cursor-pos detail-level)
+    (declare (ignore kernel code cursor-pos detail-level))
+    (text "No results found.")))
 
-(defmethod inspect-code (kernel code cursor-pos detail-level))
 
 (defgeneric complete-code (kernel match-set code cursor-pos)
   (:documentation "Complete code at cursor-pos. Successful matches should be added to match-set
-  via match-set-add. Errors should be returned as `(values ename evalue traceback)`."))
+  via match-set-add. Errors should be returned as `(values ename evalue traceback)`.")
+  (:method (kernel match-set code cursor-pos)
+    (declare (ignore kernel match-set code cursor-pos))
+    (values)))
 
-(defmethod complete-code (kernel match-set code cursor-pos))
 
 ;; Start all channels.
 (defmethod start ((k kernel))
@@ -464,6 +468,7 @@
       (return)))
   instance)
 
+
 (defun my-debugger (condition me-or-my-encapsulation)
   (declare (ignore me-or-my-encapsulation))
   (let* ((restarts (compute-restarts condition))
@@ -519,6 +524,7 @@
        (with-simple-restart (exit "Exit debugger, returning to top level.")
          ,@body))
      (handling-errors ,@body)))
+
 
 (defmacro handling-comm-errors (&body body)
   "Macro for catching any conditions during comm messages."
