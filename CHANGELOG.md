@@ -7,11 +7,12 @@ of how the versioning scheme that this project does not use is clearly superior
 to random natural numbers and how incrementing the minor version number
 indicates backward compatible changes, unless it does not.
 
-- 2021-04-29 - Remove `result` based display data and execution results and
-  replace with `mime-bundle` methods and `execute-result`/`display_data`
+- 2021-05-07 — Rework message loop to make more responsive.
+- 2021-04-29 — Remove `result` based display data and execution results and
+  replace with `mime-bundle` methods and `execute-result`/`display`
   functions.
-- 2021-04-28 - Fix stdin bug on repeated messages.
-- 2021-03-30 - Switch to shasht JSON library
+- 2021-04-28 — Fix stdin bug on repeated messages.
+- 2021-03-30 — Switch to shasht JSON library
 - 2020-08-26 — Allow stream messeages in COMM message handlers to enable output
   widget functionality.
 - 2020-08-12 — Add support for interrupt_request
