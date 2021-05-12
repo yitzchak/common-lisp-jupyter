@@ -557,6 +557,7 @@
     (message-send shell
       (make-message session "kernel_info_reply"
                     `(:object-alist
+                       ("status" . "ok")
                        ("protocol_version" . ,+KERNEL-PROTOCOL-VERSION+)
                        ("implementation" . ,name)
                        ("implementation_version" . ,version)
