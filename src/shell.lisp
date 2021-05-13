@@ -19,9 +19,12 @@
 (defun send-is-complete-reply (shell parent-msg status)
   (message-send shell
                 (make-message (channel-session shell) "is_complete_reply"
-                              (list :object-plist
-                                    "status" status
-                                    "indent" "")
+                              (if (equal status "incomplete")
+		                      (list :object-plist
+		                            "status" status
+		                            "indent" "")
+		                      (list :object-plist
+		                            "status" status))
                               :parent parent-msg)))
 
 
