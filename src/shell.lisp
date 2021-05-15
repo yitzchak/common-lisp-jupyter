@@ -115,5 +115,5 @@
                 (make-message (channel-session shell) "history_reply"
                               (list :object-plist
                                     "status" "ok"
-                                    "history" history)
+                                    "history" (or history :empty-array))
                               :parent parent-msg)))
