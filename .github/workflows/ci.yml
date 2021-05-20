@@ -63,11 +63,21 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Download Quicklisp and setup source registry
+    - name: Download Quicklisp
       run: |
         curl -kLO https://beta.quicklisp.org/quicklisp.lisp
-        mkdir -p $HOME/common-lisp
-        echo "(:source-registry (:tree (\"$PWD\")) :inherit-configuration)" >$HOME/common-lisp/source-registry.conf
+
+    - name: Setup source registry on Windows
+      if: matrix.os == 'windows-latest'
+      run: |
+        mkdir -p $LOCALAPPDATA/config/common-lisp
+        echo "(:source-registry (:tree (\"$PWD\")) :inherit-configuration)" >$LOCALAPPDATA/config/common-lisp/source-registry.conf
+
+    - name: Setup source registry on Unix
+      if: matrix.os != 'windows-latest'
+      run: |
+        mkdir -p $HOME/.config/common-lisp
+        echo "(:source-registry (:tree (\"$PWD\")) :inherit-configuration)" >$HOME/.config/common-lisp/source-registry.conf
 
     - name: Clone dependencies that have not been updated in Quicklisp
       run: |
