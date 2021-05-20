@@ -66,18 +66,13 @@ jobs:
 
     - uses: 40ants/setup-lisp@v1
 
-    - name: Setup source registry
-      run: |
-        mkdir -p $HOME/.config/common-lisp
-        echo "(:source-registry (:tree (\"$PWD\")) :inherit-configuration)" >$HOME/.config/common-lisp/source-registry.conf
-
     - name: Install shasht git
       run: |
         ros install yitzchak/shasht
 
     - name: Install kernel
       run: |
-        ros --load scripts/usr-install.lisp --quit --- sbcl
+        ros install common-lisp-jupyter.asd
 
     - name: Run kernel tests
       run: |
