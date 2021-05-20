@@ -62,16 +62,8 @@ jobs:
         python-version: '3.x'
 
     - name: Install Jupyter via pip
-      if: matrix.os != 'windows-latest'
       run: |
         pip install --upgrade pip setuptools wheel jupyter jupyter_kernel_test
-        jupyter --version
-
-    - name: Install Jupyter via conda
-      if: matrix.os == 'windows-latest'
-      shell: bash -l {0}
-      run: |
-        conda install -c conda-forge jupyterlab jupyter_kernel_test
         jupyter --version
 
     - name: Checkout repository
