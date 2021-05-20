@@ -73,7 +73,6 @@ jobs:
         mkdir -p $LOCALAPPDATA/config/common-lisp
         echo "(:source-registry (:tree (\"$PWD\")) :inherit-configuration)" >$LOCALAPPDATA/config/common-lisp/source-registry.conf
         ls -la $LOCALAPPDATA
-        sbcl --non-interactive --eval "(write-line (uiop:xdg-config-pathname))" --eval "(write-line (uiop:xdg-config-pathname \"common-lisp\"))"  --eval "(write-line (uiop:xdg-config-pathname \"common-lisp/source-registry.conf\"))"
 
     - name: Setup source registry on Unix
       if: matrix.os != 'windows-latest'
@@ -89,6 +88,7 @@ jobs:
     - name: Install SBCL kernel
       run: |
         sbcl --non-interactive --load scripts/usr-install.lisp sbcl
+        sbcl --non-interactive --eval "(write-line (uiop:xdg-config-pathname))" --eval "(write-line (uiop:xdg-config-pathname \"common-lisp\"))"  --eval "(write-line (uiop:xdg-config-pathname \"common-lisp/source-registry.conf\"))"
 
     - name: Install CCL kernel
       if: matrix.os == 'macos-latest'
