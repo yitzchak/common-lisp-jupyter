@@ -80,6 +80,7 @@ jobs:
         git clone https://github.com/yitzchak/shasht.git ~/quicklisp/local-projects/shasht
 
     - name: Install SBCL kernel
+      shell: bash -l {0}
       run: |
         sbcl --non-interactive --load scripts/usr-install.lisp sbcl
 
