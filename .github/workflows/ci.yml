@@ -16,29 +16,38 @@ jobs:
     name: ${{ matrix.os }}
     strategy:
       matrix:
+        lisp:
+        - sbcl-bin
+        - ccl-bin
         os:
         - macos-latest
         - ubuntu-latest
+        - windows-latest
 
     # run the job on every combination of "os" above
     runs-on: ${{ matrix.os }}
 
     steps:
-    # tell git not to convert line endings
+    - uses: conda-incubator/setup-miniconda@v2
+      if: matrix.os == 'windows-latest'
+      with:
+        auto-update-conda: true
+
     - name: Install Windows dependencies
       if: matrix.os == 'windows-latest'
       run: |
         git config --global core.autocrlf false
+        conda install -c conda-forge m2w64-gcc m2w64-zeromq
 
     - name: Install Ubuntu dependencies
       if: matrix.os == 'ubuntu-latest'
       run: |
-        sudo apt-get install libzmq3-dev sbcl
+        sudo apt-get install libzmq3-dev
 
     - name: Install MacOS dependencies
       if: matrix.os == 'macos-latest'
       run: |
-        brew install clozure-cl czmq sbcl
+        brew install czmq
 
     - name: Set up Python
       uses: actions/setup-python@v2
@@ -53,29 +62,20 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Download Quicklisp and setup source registry
+    - uses: 40ants/setup-lisp@v1
+
+    - name: Setup source registry
       run: |
-        curl -kLO https://beta.quicklisp.org/quicklisp.lisp
         mkdir -p $HOME/.config/common-lisp
         echo "(:source-registry (:tree (\"$PWD\")) :inherit-configuration)" >$HOME/.config/common-lisp/source-registry.conf
 
-    - name: Clone shasht (only need when Quicklisp is out of date)
+    - name: Install shasht git
       run: |
-        git clone https://github.com/yitzchak/shasht.git ~/quicklisp/local-projects/shasht
+        ros install yitzchak/shasht
 
-    - name: Install SBCL kernel
+    - name: Install kernel
       run: |
-        sbcl --non-interactive --load scripts/usr-install.lisp sbcl
-
-    - name: Install CCL kernel
-      if: matrix.os == 'macos-latest'
-      run: |
-        ccl64 --batch --load scripts/usr-install.lisp
-
-    # - name: Install ECL Jupyter kernel
-    #   if: matrix.os == 'ubuntu-latest'
-    #   run: |
-    #     ecl -shell scripts/usr-install.lisp
+        ros --load scripts/usr-install.lisp --quit --- sbcl
 
     - name: Run kernel tests
       run: |
