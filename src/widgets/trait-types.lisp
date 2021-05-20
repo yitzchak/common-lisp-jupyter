@@ -384,6 +384,16 @@
   (declare (ignore object type name value))
   (values :null nil nil))
 
+; Unicode array
+
+(defmethod serialize-trait (object (type (eql :unicode-list)) name (value (eql nil)))
+  (declare (ignore object type name value))
+  (values :empty-array nil nil))
+
+(defmethod serialize-trait (object (type (eql :string-list)) name (value (eql nil)))
+  (declare (ignore object type name value))
+  (values :empty-array nil nil))
+
 ; Widget
 
 (defmethod serialize-trait (object (type (eql :widget)) name (value (eql nil)))
