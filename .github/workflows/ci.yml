@@ -28,7 +28,6 @@ jobs:
 
     steps:
     - uses: conda-incubator/setup-miniconda@v2
-      if: matrix.os == 'windows-latest'
       with:
         auto-update-conda: true
 
