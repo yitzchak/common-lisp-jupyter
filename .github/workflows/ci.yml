@@ -38,6 +38,11 @@ jobs:
       run: |
         git config --global core.autocrlf false
         conda install -c conda-forge m2w64-gcc m2w64-zeromq
+
+    - name: Install Windows dependencies (pt 2)
+      if: matrix.os == 'windows-latest'
+      shell: cmd
+      run: |
         curl -L http://downloads.sourceforge.net/project/sbcl/sbcl/2.0.0/sbcl-2.0.0-x86-64-windows-binary.msi --output sbcl.msi
         msiexec /qn /i sbcl.msi
 
