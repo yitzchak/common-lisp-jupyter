@@ -38,6 +38,8 @@ jobs:
       run: |
         git config --global core.autocrlf false
         conda install -c conda-forge m2w64-gcc m2w64-zeromq
+        echo "C:\\Program Files\\Steel Bank Common Lisp\\2.0.0\\" >> $GITHUB_PATH
+        echo "SBCL_HOME=C:\\Program Files\\Steel Bank Common Lisp\\2.0.0\\" >> $GITHUB_ENV
 
     - name: Install Windows dependencies (pt 2)
       if: matrix.os == 'windows-latest'
@@ -45,14 +47,6 @@ jobs:
       run: |
         curl -L http://downloads.sourceforge.net/project/sbcl/sbcl/2.0.0/sbcl-2.0.0-x86-64-windows-binary.msi --output sbcl.msi
         msiexec /qn /i sbcl.msi
-        dir "C:\Program Files\"
-        set
-
-    - name: "wibble"
-      if: matrix.os == 'windows-latest'
-      shell: cmd
-      run: |
-        set
 
     - name: Install Ubuntu dependencies
       if: matrix.os == 'ubuntu-latest'
@@ -69,7 +63,7 @@ jobs:
       with:
         python-version: '3.x'
 
-    - name: Install Jupyter via pip
+    - name: Install Jupyter
       run: |
         pip install --upgrade pip setuptools wheel jupyter jupyter_kernel_test
         jupyter --version
@@ -88,7 +82,6 @@ jobs:
         git clone https://github.com/yitzchak/shasht.git ~/quicklisp/local-projects/shasht
 
     - name: Install SBCL kernel
-      shell: bash -l {0}
       run: |
         sbcl --non-interactive --load scripts/usr-install.lisp sbcl
 
