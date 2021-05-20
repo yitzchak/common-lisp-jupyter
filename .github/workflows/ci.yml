@@ -45,6 +45,14 @@ jobs:
       run: |
         curl -L http://downloads.sourceforge.net/project/sbcl/sbcl/2.0.0/sbcl-2.0.0-x86-64-windows-binary.msi --output sbcl.msi
         msiexec /qn /i sbcl.msi
+        dir "C:\Program Files\"
+        set
+
+    - name: "wibble"
+      if: matrix.os == 'windows-latest'
+      shell: cmd
+      run: |
+        set
 
     - name: Install Ubuntu dependencies
       if: matrix.os == 'ubuntu-latest'
