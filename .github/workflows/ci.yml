@@ -70,6 +70,7 @@ jobs:
       run: |
         git clone https://github.com/yitzchak/shasht.git ~/quicklisp/local-projects/shasht
         git clone -b fix-utf-8 https://github.com/yitzchak/language-codes.git ~/quicklisp/local-projects/language-codes
+        git clone https://github.com/orivej/pzmq.git ~/quicklisp/local-projects/pzmq
 
     - name: Install SBCL kernel
       run: |
