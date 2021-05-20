@@ -65,7 +65,7 @@ jobs:
     - name: Download Quicklisp, setup source registry, and clone dependencies that have not been updated in Quicklisp
       run: |
         curl -kLO https://beta.quicklisp.org/quicklisp.lisp
-        echo "CL_SOURCE_REGISTRY=\"$PWD:\" >> $GITHUB_ENV
+        echo "CL_SOURCE_REGISTRY=\"$PWD:\"" >> $GITHUB_ENV
         git clone https://github.com/yitzchak/shasht.git ~/quicklisp/local-projects/shasht
         git clone -b fix-utf-8 https://github.com/yitzchak/language-codes.git ~/quicklisp/local-projects/language-codes
 
