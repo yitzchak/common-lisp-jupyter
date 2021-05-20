@@ -72,6 +72,7 @@ jobs:
       run: |
         mkdir -p $LOCALAPPDATA/config/common-lisp
         echo "(:source-registry (:tree (\"$PWD\")) :inherit-configuration)" >$LOCALAPPDATA/config/common-lisp/source-registry.conf
+        ls -la $LOCALAPPDATA
 
     - name: Setup source registry on Unix
       if: matrix.os != 'windows-latest'
