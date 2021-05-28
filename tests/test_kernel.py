@@ -1,15 +1,12 @@
-import jupyter_client
 import pytest
 
 
-def pytest_generate_tests(metafunc):
-    if "jupyter_kernel" in metafunc.fixturenames:
-        names = []
-        mgr = jupyter_client.kernelspec.KernelSpecManager()
-        for name, spec in mgr.get_all_specs().items():
-            if spec['spec']['language'] == "common-lisp":
-                names.append(name)
-        metafunc.parametrize("jupyter_kernel", names, indirect=True, scope='module')
+@pytest.fixture(params=['common-lisp', 'common-lisp_abcl', 'common-lisp_ccl',
+                        'common-lisp_clasp', 'common-lisp_cmu',
+                        'common-lisp_ecl', 'common-lisp_sbcl'],
+                scope='module')
+def jupyter_kernel(jupyter_kernel):
+    return jupyter_kernel
 
 
 def test_hello_world(jupyter_kernel):
