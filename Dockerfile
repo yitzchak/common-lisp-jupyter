@@ -11,7 +11,7 @@ ENV PATH "${HOME}/.roswell/bin:${HOME}/.local/bin:${PATH}"
 
 RUN echo -e "[multilib]\nInclude = /etc/pacman.d/mirrorlist" >> /etc/pacman.conf
 
-RUN pacman -Syu --noconfirm --needed base-devel git jre8-openjdk lib32-zeromq \
+RUN pacman -Syu --noconfirm --needed base-devel git jre8-openjdk lib32-zeromq git \
   maven npm readline python-pip; \
   useradd --create-home --shell=/bin/false --uid=${NB_UID} ${NB_USER}
 
