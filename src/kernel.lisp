@@ -707,7 +707,7 @@
                                                                                                (cons "text" (match-text match))
                                                                                                (cons "type" (match-type match))))))
                                                                                    (match-set-matches match-set))
-                                                                           :empty-object)))))))))
+                                                                           :empty-array)))))))))
 
 
 (defun handle-comm-info-request ()
