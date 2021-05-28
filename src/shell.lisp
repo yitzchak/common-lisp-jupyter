@@ -89,7 +89,7 @@
                 (make-message (channel-session shell) "complete_reply"
                               (list :object-plist
                                     "status" "ok"
-                                    "matches" (or matches :empty-list)
+                                    "matches" (or matches :empty-array)
                                     "cursor_start" start
                                     "cursor_end" end
                                     "metadata" (or metadata :empty-object))
