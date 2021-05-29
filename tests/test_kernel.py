@@ -19,30 +19,26 @@ def jupyter_kernel(jupyter_kernel):
 
 def test_hello_world(jupyter_kernel):
     reply, messages = jupyter_kernel.execute_read_reply(
-        '(write-string "hello, world")', timeout=10
+        '(write-string "hello, world")',
+        timeout=10,
+        expected_reply_status="ok",
+        expected_stdout="hello, world",
     )
-    assert any(
-        msg["msg_type"] == "stream"
-        and msg["content"]["name"] == "stdout"
-        and msg["content"]["text"] == "hello, world"
-        for msg in messages
-    ), 'Did not receive "hello, world" on stdout stream.'
 
 
 def test_goodbye_world(jupyter_kernel):
     reply, messages = jupyter_kernel.execute_read_reply(
-        '(write-string "goodbye, world" *error-output*)', timeout=10
+        '(write-string "goodbye, world" *error-output*)',
+        timeout=10,
+        expected_reply_status="ok",
+        expected_stderr="goodbye, world",
     )
-    assert any(
-        msg["msg_type"] == "stream"
-        and msg["content"]["name"] == "stderr"
-        and msg["content"]["text"] == "goodbye, world"
-        for msg in messages
-    ), 'Did not receive "goodbye, world" on stderr stream.'
 
 
 def test_execute(jupyter_kernel):
-    reply, messages = jupyter_kernel.execute_read_reply("(1+ 7)", timeout=10)
+    reply, messages = jupyter_kernel.execute_read_reply(
+        "(1+ 7)", timeout=10, expected_reply_status="ok"
+    )
     assert any(
         msg["msg_type"] == "execute_result"
         and msg["content"]["data"]["text/plain"] == "8"
@@ -84,9 +80,10 @@ def test_complete_z(jupyter_kernel):
     reply, messages = jupyter_kernel.complete_read_reply(
         "(z",
         timeout=10,
-        matches=[{"text": "zerop", "type": "function"}],
-        cursor_start=1,
-        cursor_end=2,
+        expected_reply_status="ok",
+        expected_matches=[{"text": "zerop", "type": "function"}],
+        expected_cursor_start=1,
+        expected_cursor_end=2,
     )
 
 
@@ -94,15 +91,16 @@ def test_complete_variable(jupyter_kernel):
     reply, messages = jupyter_kernel.complete_read_reply(
         "*re",
         timeout=10,
-        matches=[
+        expected_reply_status="ok",
+        expected_matches=[
             {"text": "*read-base*", "type": "variable"},
             {"text": "*read-default-float-format*", "type": "variable"},
             {"text": "*read-eval*", "type": "variable"},
             {"text": "*read-suppress*", "type": "variable"},
             {"text": "*readtable*", "type": "variable"},
         ],
-        cursor_start=0,
-        cursor_end=3,
+        expected_cursor_start=0,
+        expected_cursor_end=3,
     )
 
 
@@ -110,7 +108,8 @@ def test_complete_indent(jupyter_kernel):
     reply, messages = jupyter_kernel.complete_read_reply(
         "(unwind-protect\nfu\nbar)",
         timeout=10,
-        matches=[{"text": "(unwind-protect\n    fu\n  bar)"}],
-        cursor_start=0,
-        cursor_end=23,
+        expected_reply_status="ok",
+        expected_matches=[{"text": "(unwind-protect\n    fu\n  bar)"}],
+        expected_cursor_start=0,
+        expected_cursor_end=23,
     )
