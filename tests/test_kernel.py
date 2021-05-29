@@ -37,17 +37,90 @@ def test_goodbye_world(jupyter_kernel):
 
 def test_execute(jupyter_kernel):
     reply, messages = jupyter_kernel.execute_read_reply(
-        "(1+ 7)", timeout=10, expected_reply_status="ok"
+        "(1+ 7)",
+        timeout=10,
+        expected_reply_status="ok",
+        expected_execute_results=[{"data": {"text/plain": "8"}}],
     )
-    assert any(
-        msg["msg_type"] == "execute_result"
-        and msg["content"]["data"]["text/plain"] == "8"
-        for msg in messages
-    ), 'Did not receive an execute_result with a value of "8".'
+
+
+def test_display_data_text(jupyter_kernel):
+    reply, messages = jupyter_kernel.execute_read_reply(
+        '(jupyter:text "wibble" :display t)',
+        timeout=10,
+        expected_reply_status="ok",
+        expected_display_data=[{"data": {"text/plain": "wibble"}}],
+    )
+
+
+def test_display_data_markdown(jupyter_kernel):
+    reply, messages = jupyter_kernel.execute_read_reply(
+        '(jupyter:markdown "wibble" :display t)',
+        timeout=10,
+        expected_reply_status="ok",
+        expected_display_data=[{"data": {"text/markdown": "wibble"}}],
+    )
+
+
+def test_display_data_html(jupyter_kernel):
+    reply, messages = jupyter_kernel.execute_read_reply(
+        '(jupyter:html "<html/>" :display t)',
+        timeout=10,
+        expected_reply_status="ok",
+        expected_display_data=[{"data": {"text/html": "<html/>"}}],
+    )
+
+
+def test_display_data_svg(jupyter_kernel):
+    reply, messages = jupyter_kernel.execute_read_reply(
+        '(jupyter:svg "<svg/>" :display t)',
+        timeout=10,
+        expected_reply_status="ok",
+        expected_display_data=[{"data": {"image/svg+xml": "<svg/>"}}],
+    )
+
+
+def test_display_data_json(jupyter_kernel):
+    reply, messages = jupyter_kernel.execute_read_reply(
+        '(jupyter:json \'(:object-plist "fu" 1 "bar" #(2 3)) :display t)',
+        timeout=10,
+        expected_reply_status="ok",
+        expected_display_data=[
+            {
+                "data": {"application/json": {"fu": 1, "bar": [2, 3]}},
+                "metadata": {"application/json": {"expanded": False}},
+            }
+        ],
+    )
+
+
+def test_display_data_json_expanded(jupyter_kernel):
+    reply, messages = jupyter_kernel.execute_read_reply(
+        '(jupyter:json \'(:object-plist "fu" 1 "bar" #(2 3)) :display t :expanded t)',
+        timeout=10,
+        expected_reply_status="ok",
+        expected_display_data=[
+            {
+                "data": {"application/json": {"fu": 1, "bar": [2, 3]}},
+                "metadata": {"application/json": {"expanded": True}},
+            }
+        ],
+    )
+
+
+def test_display_data_latex(jupyter_kernel):
+    reply, messages = jupyter_kernel.execute_read_reply(
+        '(jupyter:latex "$r^2$" :display t)',
+        timeout=10,
+        expected_reply_status="ok",
+        expected_display_data=[{"data": {"text/latex": "$r^2$"}}],
+    )
 
 
 def test_kernel_info(jupyter_kernel):
-    reply, messages = jupyter_kernel.kernel_info_read_reply(timeout=10)
+    reply, messages = jupyter_kernel.kernel_info_read_reply(
+        timeout=10, expected_reply_status="ok"
+    )
     assert reply["content"]["implementation"] == "common-lisp"
 
 
@@ -56,24 +129,21 @@ def test_comm_info(jupyter_kernel):
 
 
 def test_is_complete(jupyter_kernel):
-    reply, messages = jupyter_kernel.is_complete_read_reply("(fu bar)", timeout=10)
-    assert (
-        reply["content"]["status"] == "complete"
-    ), f'Expected a status of "complete" but received "{reply["content"]["status"]}."'
+    reply, messages = jupyter_kernel.is_complete_read_reply(
+        "(fu bar)", timeout=10, expected_reply_status="complete"
+    )
 
 
 def test_is_invalid(jupyter_kernel):
-    reply, messages = jupyter_kernel.is_complete_read_reply("(fu bar))", timeout=10)
-    assert (
-        reply["content"]["status"] == "invalid"
-    ), f'Expected a status of "invalid" but received "{reply["content"]["status"]}".'
+    reply, messages = jupyter_kernel.is_complete_read_reply(
+        "(fu bar))", timeout=10, expected_reply_status="invalid"
+    )
 
 
 def test_is_incomplete(jupyter_kernel):
-    reply, messages = jupyter_kernel.is_complete_read_reply("(fu bar", timeout=10)
-    assert (
-        reply["content"]["status"] == "incomplete"
-    ), f'Expected a status of "incomplete" but received "{reply["content"]["status"]}".'
+    reply, messages = jupyter_kernel.is_complete_read_reply(
+        "(fu bar", timeout=10, expected_reply_status="incomplete"
+    )
 
 
 def test_complete_z(jupyter_kernel):
