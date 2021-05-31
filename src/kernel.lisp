@@ -612,7 +612,7 @@
               (unless (queue-empty-p input-queue)
                 (set-next-input (dequeue input-queue)))
               (unless (zerop (length p))
-                (page p))
+                (page (text p)))
               (send-execute-reply-ok shell *message* execution-count *payload*))))))))
 
 #|
