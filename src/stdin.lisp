@@ -18,12 +18,11 @@ See: http://jupyter-client.readthedocs.org/en/latest/messaging.html#messages-on-
 
 |#
 
-(defun send-input-request (stdin parent-msg prompt)
+(defun send-input-request (stdin prompt)
   (message-send stdin
                 (make-message (channel-session stdin) "input_request"
                               (list :object-plist
-                                    "prompt" prompt)
-                              :parent parent-msg)))
+                                    "prompt" prompt))))
 
 #|
 
@@ -78,7 +77,7 @@ most cases of *query-io* usage. Makes overloading y-or-no-p unnecessary.
                   (not (zerop (length (string-trim '(#\Newline) trimmed-output)))))
           (setf (fill-pointer output) 0)
           (finish-output)
-          (send-input-request channel *message* trimmed-output)
+          (send-input-request channel trimmed-output)
           (do ()
               ((message-available-p channel))
             (sleep 0.1))

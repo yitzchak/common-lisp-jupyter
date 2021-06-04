@@ -48,6 +48,7 @@
     #:create-comm
     #:*debugger*
     #:debugging-errors
+    #:edit
     #:enqueue-input
     #:evaluate-code
     #:get-comm

@@ -43,6 +43,7 @@
   (:documentation "Representation of IPython messages"))
 
 
+#+(or abcl allegro ccl clasp cmu ecl lispworks sbcl)
 (defmethod initialize-instance :after ((instance message) &rest initargs &key &allow-other-keys)
   (declare (ignore initargs))
   (let ((buffers (message-buffers instance)))
@@ -60,7 +61,7 @@
         (declare (ignore day))
     (format nil "~4,'0D-~2,'0D-~2,'0DT~2,'0D:~2,'0D:~2,'0DZ" yr mth dt h m s)))
 
-(defun make-message (session-id msg-type content &key metadata buffers parent)
+(defun make-message (session-id msg-type content &key metadata buffers (parent *message*))
   (if parent
     (let ((hdr (message-header parent))
           (identities (message-identities parent)))
@@ -148,7 +149,7 @@
                               ; explicitly defined element type is needed for CLISP
                               :element-type '(unsigned-byte 8)))
 
-
+#+(or abcl allegro ccl clasp cmu ecl lispworks sbcl)
 (defun read-buffer-part (ch msg)
   (pzmq:msg-recv msg (channel-socket ch))
   (let* ((size (pzmq:msg-size msg))
@@ -202,7 +203,10 @@
            next
             (unless (more-parts ch msg)
               (return (nreverse parts)))
-            (push (read-buffer-part ch msg) parts)
+            (push
+              #-(or abcl allegro ccl clasp cmu ecl lispworks sbcl) (read-binary-part ch msg)
+              #+(or abcl allegro ccl clasp cmu ecl lispworks sbcl) (read-buffer-part ch msg)
+              parts)
             (go next)))))))
 
 

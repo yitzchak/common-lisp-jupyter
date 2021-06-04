@@ -19,75 +19,61 @@
 (defun send-status (iopub status)
   (message-send iopub
                 (make-message (channel-session iopub) "status"
-                              `(:object-alist
-                                 ("execution_state" . ,status)))))
+                              (list :object-plist
+                                    "execution_state" status))))
 
-(defun send-clear-output (iopub parent-msg wait)
+(defun send-clear-output (iopub wait)
   (message-send iopub
                 (make-message (channel-session iopub) "clear_output"
-                              `(:object-alist
-                                 ("wait" . ,(if wait :true :false)))
-                              :parent parent-msg)))
+                              (list :object-plist
+                                    "wait" (if wait :true :false)))))
 
-(defun send-status-update (iopub parent-msg status)
-  (message-send iopub
-                (make-message (channel-session iopub) "status"
-                              `(:object-alist
-                                 ("execution_state" . ,status))
-                              :parent parent-msg)))
 
-(defun send-display-data (iopub parent-msg data &optional metadata transient update)
+(defun send-display-data (iopub data &optional metadata transient update)
   (message-send iopub
                 (make-message (channel-session iopub)
                               (if update
                                 "update_display_data"
                                 "display_data")
-                              `(:object-alist
-                                 ("data" . ,data)
-                                 ("metadata" . ,(or metadata :empty-object))
-                                 ("transient" . ,(or transient :empty-object)))
-                              :parent parent-msg)))
+                              (list :object-plist
+                                    "data" data
+                                    "metadata" (or metadata :empty-object)
+                                    "transient" (or transient :empty-object)))))
 
-(defun send-execute-code (iopub parent-msg execution-count code)
+
+(defun send-execute-code (iopub execution-count code)
   (message-send iopub
                 (make-message (channel-session iopub) "execute_input"
-                              `(:object-alist
-                                 ("code" . ,code)
-                                 ("execution_count" . ,execution-count))
-                              :parent parent-msg)))
+                              (list :object-plist
+                                    "code" code
+                                    "execution_count" execution-count))))
 
-(defun send-execute-result (iopub parent-msg execution-count data &optional metadata)
+
+(defun send-execute-result (iopub execution-count data &optional metadata)
   (message-send iopub
                 (make-message (channel-session iopub) "execute_result"
-                              `(:object-alist
-                                 ("execution_count" . ,execution-count)
-                                 ("data" . ,data)
-                                 ("metadata" . ,(or metadata :empty-object)))
-                              :parent parent-msg)))
+                              (list :object-plist
+                                    "execution_count" execution-count
+                                    "data" data
+                                    "metadata" (or metadata :empty-object)))))
 
-(defun send-execute-error (iopub parent-msg ename evalue &optional traceback)
+
+(defun send-execute-error (iopub ename evalue &optional traceback)
   (message-send iopub
                 (make-message (channel-session iopub) "error"
                               (list :object-plist
                                     "ename" ename
                                     "evalue" evalue
-                                    "traceback" (or traceback :empty-array))
-                              :parent parent-msg)))
+                                    "traceback" (or traceback :empty-array)))))
 
-(defun send-stream (iopub parent-msg stream-name data)
+
+(defun send-stream (iopub stream-name data)
   (message-send iopub
                 (make-message (channel-session iopub) "stream"
-                              `(:object-alist
-                                 ("name" . ,stream-name)
-                                 ("text" . ,data))
-                              :parent parent-msg)))
+                              (list :object-plist
+                                    "name" stream-name
+                                    "text" data))))
 
-(defun send-comm-close-orphan (iopub comm-id &optional data)
-  (message-send iopub
-                (make-message (channel-session iopub) "comm_close"
-                              `(:object-alist
-                                 ("comm_id" . ,comm-id)
-                                 ("data" . ,(or data :empty-object))))))
 
 (defvar *iopub-stream-size* 1024)
 
@@ -127,7 +113,7 @@
           (when start
             ;; If there is data before the prompt then send it now.
             (unless (zerop start)
-              (send-stream channel *message* name (subseq value 0 start)))
+              (send-stream channel name (subseq value 0 start)))
             (write-string (subseq value
                                   (+ start (length prompt-prefix))
                                   (- (length value) (length prompt-suffix)))
@@ -140,7 +126,7 @@
   (with-slots (channel name value prompt-prefix) stream
     (unless (or (zerop (length value))
                 (search prompt-prefix value))
-      (send-stream channel *message* name value)
+      (send-stream channel name value)
       (adjust-array value (array-total-size value)
                     :fill-pointer 0))))
 

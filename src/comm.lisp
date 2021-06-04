@@ -49,6 +49,7 @@
                         :metadata (or metadata :empty-object)
                         :buffers buffers))))))
 
+
 (defun send-comm-message (comm &optional data metadata buffers)
   (with-slots (id kernel) comm
     (when kernel
@@ -60,6 +61,7 @@
                            ("data" . ,(or data :empty-object)))
                         :metadata (or metadata :empty-object)
                         :buffers buffers))))))
+
 
 (defun send-comm-close (comm &optional data metadata buffers)
   (with-slots (id kernel) comm
@@ -73,3 +75,12 @@
                            ("data" . ,(or data :empty-object)))
                         :metadata (or metadata :empty-object)
                         :buffers buffers))))))
+
+
+(defun send-comm-close-orphan (comm-id &optional data &aux (iopub (kernel-iopub *kernel*)))
+  (message-send iopub
+                (make-message (channel-session iopub) "comm_close"
+                              `(:object-alist
+                                 ("comm_id" . ,comm-id)
+                                 ("data" . ,(or data :empty-object))))))
+

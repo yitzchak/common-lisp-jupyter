@@ -44,7 +44,6 @@
           (when (and (eql :error level)
                      *kernel*)
             (send-execute-error (kernel-iopub *kernel*)
-                                nil
                                 (class-name (class-of src)) (apply #'format nil format-control format-arguments))))
         (multiple-value-bind (second minute hour day month year)
                              (get-decoded-time)

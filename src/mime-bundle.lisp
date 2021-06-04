@@ -23,6 +23,18 @@ Standard MIME types
 (defvar +vega-lite-mime-type+ "application/vnd.vegalite.v4+json")
 
 
+(defun json-mime-type-p (mime-type)
+  (= (length mime-type)
+     (+ 4 (mismatch mime-type "json" :from-end t :test #'char=))))
+
+
+(defun text-mime-type-p (mime-type)
+  (or (= 5
+         (mismatch mime-type "text/" :test #'char=))
+      (= (length mime-type)
+         (+ 3 (mismatch mime-type "xml" :from-end t :test #'char=)))))
+
+
 (defgeneric mime-bundle-data (value)
   (:documentation "Return a JSON object with keys that mime types and the values are a rendering
 of `value` in that mime type.")
@@ -62,7 +74,7 @@ of `value` in that mime type.")
   "Send a result as mime bundle execution result. `result` must implement the `mime-bundle-data`
 method and optionally `mime-bundle-metadata`."
   (unless (eq :no-output result)
-    (send-execute-result (kernel-iopub *kernel*) *message* (kernel-execution-count *kernel*)
+    (send-execute-result (kernel-iopub *kernel*) (kernel-execution-count *kernel*)
                          (mime-bundle-data result) (mime-bundle-metadata result)))
   (values))
 
@@ -71,7 +83,7 @@ method and optionally `mime-bundle-metadata`."
   "Send a result as mime bundle display data. `result` must implement the `mime-bundle-data`
 method and optionally `mime-bundle-metadata`. If an `id` is specified then future calls with the
 same `id` and `update` is `t`."
-  (send-display-data (kernel-iopub *kernel*) *message*
+  (send-display-data (kernel-iopub *kernel*)
                      (mime-bundle-data result) (mime-bundle-metadata result)
                      (if id
                        (list :object-plist "display_id" id)
@@ -84,16 +96,22 @@ same `id` and `update` is `t`."
   (let* ((mime-type (or mime-type (trivial-mimes:mime path)))
          (bundle (make-instance 'mime-bundle
                                 :metadata (or metadata :empty-object)
-                                :data (if (equal mime-type +plain-text-mime-type+)
-                                        (list :object-plist
-                                              mime-type (alexandria:read-file-into-string path))
-                                        (list :object-plist
-                                              +plain-text-mime-type+ path
-                                              mime-type (if (or (equal mime-type +svg-mime-type+)
-                                                                (alexandria:starts-with-subseq "text/" mime-type))
-                                                          (alexandria:read-file-into-string path)
-                                                          (cl-base64:usb8-array-to-base64-string
-                                                            (alexandria:read-file-into-byte-vector path))))))))
+                                :data (cond
+                                        ((equal mime-type +plain-text-mime-type+)
+                                          (list :object-plist
+                                                mime-type (alexandria:read-file-into-string path)))
+                                        ((json-mime-type-p mime-type)
+                                          (list :object-plist
+                                                mime-type
+                                                (with-open-file (stream path)
+                                                  (shasht:read-json stream))))
+                                        (t
+                                          (list :object-plist
+                                                +plain-text-mime-type+ path
+                                                mime-type (if (text-mime-type-p mime-type)
+                                                            (alexandria:read-file-into-string path)
+                                                            (cl-base64:usb8-array-to-base64-string
+                                                              (alexandria:read-file-into-byte-vector path)))))))))
     (cond
       (display-data
         (display bundle :update update :id id)
@@ -115,7 +133,7 @@ same `id` and `update` is `t`."
 
 
 (defun file (path &key display update id)
-  "Create a result based on a file path. The mime type with automatically be
+  "Create a result based on a file path. The mime type will automatically be
   determined from the file extension."
   (make-file-mime-bundle path nil nil display update id))
 

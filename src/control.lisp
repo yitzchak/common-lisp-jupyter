@@ -16,17 +16,14 @@
 
 |#
 
-(defun send-shutdown-reply (ch parent-msg restart)
+(defun send-shutdown-reply (ch restart)
   (message-send ch
                 (make-message (channel-session ch) "shutdown_reply"
                               `(:object-alist
-                                 ("restart" ,restart))
-                              :parent parent-msg)))
+                                 ("restart" ,restart)))))
 
-(defun send-interrupt-reply (ch parent-msg)
+(defun send-interrupt-reply (ch)
   (message-send ch
                 (make-message (channel-session ch) "interrupt_reply"
-                              :empty-object
-                              :parent parent-msg)))
-
+                              :empty-object)))
                             

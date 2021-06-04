@@ -17,7 +17,7 @@
      :multilang-documentation
      :pzmq
      :puri
-     :static-vectors
+     #+(or abcl allegro ccl clasp cmu ecl lispworks sbcl) :static-vectors
      :trivial-do
      :trivial-garbage
      :trivial-gray-streams
