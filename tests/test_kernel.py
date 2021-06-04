@@ -27,104 +27,198 @@ def jupyter_kernel(jupyter_kernel):
 
 
 def test_hello_world(jupyter_kernel):
-    reply, messages = jupyter_kernel.execute_read_reply(
+    jupyter_kernel.execute_read_reply(
         '(write-string "hello, world")',
         timeout=10,
-        expected_reply_status="ok",
-        expected_stream=[{"name": "stdout", "text": "hello, world"}],
+        expected_reply=[{"content": {"status": "ok"}}],
+        expected_messages=[
+            [
+                {
+                    "msg_type": "stream",
+                    "content": {"name": "stdout", "text": "hello, world"},
+                }
+            ]
+        ],
     )
 
 
 def test_goodbye_world(jupyter_kernel):
-    reply, messages = jupyter_kernel.execute_read_reply(
+    jupyter_kernel.execute_read_reply(
         '(write-string "goodbye, world" *error-output*)',
         timeout=10,
-        expected_reply_status="ok",
-        expected_stream=[{"name": "stderr", "text": "goodbye, world"}],
+        expected_reply=[{"content": {"status": "ok"}}],
+        expected_messages=[
+            [
+                {
+                    "msg_type": "stream",
+                    "content": {"name": "stderr", "text": "goodbye, world"},
+                }
+            ]
+        ],
     )
 
 
 def test_execute(jupyter_kernel):
-    reply, messages = jupyter_kernel.execute_read_reply(
+    jupyter_kernel.execute_read_reply(
         "(1+ 7)",
         timeout=10,
-        expected_reply_status="ok",
-        expected_execute_result=[{"data": {"text/plain": "8"}}],
+        expected_reply=[{"content": {"status": "ok"}}],
+        expected_messages=[
+            [
+                {
+                    "msg_type": "execute_result",
+                    "content": {"data": {"text/plain": "8"}},
+                }
+            ]
+        ],
     )
 
 
 def test_execute_previous_results(jupyter_kernel):
-    reply, messages = jupyter_kernel.execute_read_reply(
+    jupyter_kernel.execute_read_reply(
         "(values 'a1 'a2) 'b (values 'c1 'c2 'c3) (list / // ///)",
         timeout=10,
-        expected_reply_status="ok",
-        expected_execute_result=[
-            {"data": {"text/plain": "A1"}},
-            {"data": {"text/plain": "A2"}},
-            {"data": {"text/plain": "B"}},
-            {"data": {"text/plain": "C1"}},
-            {"data": {"text/plain": "C2"}},
-            {"data": {"text/plain": "C3"}},
-            {"data": {"text/plain": "((C1 C2 C3) (B) (A1 A2))"}},
+        expected_reply=[{"content": {"status": "ok"}}],
+        expected_messages=[
+            [
+                {
+                    "msg_type": "execute_result",
+                    "content": {"data": {"text/plain": "A1"}},
+                },
+                {
+                    "msg_type": "execute_result",
+                    "content": {"data": {"text/plain": "A2"}},
+                },
+                {
+                    "msg_type": "execute_result",
+                    "content": {"data": {"text/plain": "B"}},
+                },
+                {
+                    "msg_type": "execute_result",
+                    "content": {"data": {"text/plain": "C1"}},
+                },
+                {
+                    "msg_type": "execute_result",
+                    "content": {"data": {"text/plain": "C2"}},
+                },
+                {
+                    "msg_type": "execute_result",
+                    "content": {"data": {"text/plain": "C3"}},
+                },
+                {
+                    "msg_type": "execute_result",
+                    "content": {"data": {"text/plain": "((C1 C2 C3) (B) (A1 A2))"}},
+                },
+            ]
         ],
     )
 
 
 def test_execute_previous_primary_results(jupyter_kernel):
-    reply, messages = jupyter_kernel.execute_read_reply(
+    jupyter_kernel.execute_read_reply(
         "(values 'a1 'a2) 'b (values 'c1 'c2 'c3) (list * ** ***)",
         timeout=10,
-        expected_reply_status="ok",
-        expected_execute_result=[
-            {"data": {"text/plain": "A1"}},
-            {"data": {"text/plain": "A2"}},
-            {"data": {"text/plain": "B"}},
-            {"data": {"text/plain": "C1"}},
-            {"data": {"text/plain": "C2"}},
-            {"data": {"text/plain": "C3"}},
-            {"data": {"text/plain": "(C1 B A1)"}},
+        expected_reply=[{"content": {"status": "ok"}}],
+        expected_messages=[
+            [
+                {
+                    "msg_type": "execute_result",
+                    "content": {"data": {"text/plain": "A1"}},
+                },
+                {
+                    "msg_type": "execute_result",
+                    "content": {"data": {"text/plain": "A2"}},
+                },
+                {
+                    "msg_type": "execute_result",
+                    "content": {"data": {"text/plain": "B"}},
+                },
+                {
+                    "msg_type": "execute_result",
+                    "content": {"data": {"text/plain": "C1"}},
+                },
+                {
+                    "msg_type": "execute_result",
+                    "content": {"data": {"text/plain": "C2"}},
+                },
+                {
+                    "msg_type": "execute_result",
+                    "content": {"data": {"text/plain": "C3"}},
+                },
+                {
+                    "msg_type": "execute_result",
+                    "content": {"data": {"text/plain": "(C1 B A1)"}},
+                },
+            ]
         ],
     )
 
 
 def test_execute_previous_eval_forms(jupyter_kernel):
-    reply, messages = jupyter_kernel.execute_read_reply(
+    jupyter_kernel.execute_read_reply(
         "(+ 0 1) (- 4 2) (/ 9 3) (list + ++ +++)",
         timeout=10,
-        expected_reply_status="ok",
-        expected_execute_result=[
-            {"data": {"text/plain": "1"}},
-            {"data": {"text/plain": "2"}},
-            {"data": {"text/plain": "3"}},
-            {"data": {"text/plain": "((/ 9 3) (- 4 2) (+ 0 1))"}},
+        expected_reply=[{"content": {"status": "ok"}}],
+        expected_messages=[
+            [
+                {
+                    "msg_type": "execute_result",
+                    "content": {"data": {"text/plain": "1"}},
+                },
+                {
+                    "msg_type": "execute_result",
+                    "content": {"data": {"text/plain": "2"}},
+                },
+                {
+                    "msg_type": "execute_result",
+                    "content": {"data": {"text/plain": "3"}},
+                },
+                {
+                    "msg_type": "execute_result",
+                    "content": {"data": {"text/plain": "((/ 9 3) (- 4 2) (+ 0 1))"}},
+                },
+            ]
         ],
     )
 
 
 def test_execute_error(jupyter_kernel):
-    reply, messages = jupyter_kernel.execute_read_reply(
+    jupyter_kernel.execute_read_reply(
         "(/ 1 0)",
         timeout=10,
-        expected_reply_status="error",
-        expected_reply_ename="DIVISION-BY-ZERO",
+        expected_reply=[{"content": {"status": "error", "ename": "DIVISION-BY-ZERO"}}],
     )
 
 
 def test_execute_clear_output(jupyter_kernel):
-    reply, messages = jupyter_kernel.execute_read_reply(
+    jupyter_kernel.execute_read_reply(
         "(j:clear)",
         timeout=10,
-        expected_reply_status="ok",
-        expected_clear_output=[{"wait": False}],
+        expected_reply=[{"content": {"status": "ok"}}],
+        expected_messages=[
+            [
+                {
+                    "msg_type": "clear_output",
+                    "content": {"wait": False},
+                },
+            ]
+        ],
     )
 
 
 def test_execute_clear_output_wait(jupyter_kernel):
-    reply, messages = jupyter_kernel.execute_read_reply(
+    jupyter_kernel.execute_read_reply(
         "(j:clear t)",
         timeout=10,
-        expected_reply_status="ok",
-        expected_clear_output=[{"wait": True}],
+        expected_reply=[{"content": {"status": "ok"}}],
+        expected_messages=[
+            [
+                {
+                    "msg_type": "clear_output",
+                    "content": {"wait": True},
+                },
+            ]
+        ],
     )
 
 
@@ -146,123 +240,203 @@ def test_execute_page(jupyter_kernel):
 
 
 def test_execute_ask_exit(jupyter_kernel):
-    reply, messages = jupyter_kernel.execute_read_reply(
+    jupyter_kernel.execute_read_reply(
         "(j:quit)",
         timeout=10,
-        expected_reply_status="ok",
-        expected_reply_payload=[{"source": "ask_exit", "keepkernel": False}],
+        expected_reply=[
+            {
+                "content": {
+                    "status": "ok",
+                    "payload": [
+                        {"source": "ask_exit", "keepkernel": False}
+                    ],
+                }
+            }
+        ],
     )
 
 
 def test_execute_ask_exit_keepkernel(jupyter_kernel):
-    reply, messages = jupyter_kernel.execute_read_reply(
+    jupyter_kernel.execute_read_reply(
         "(j:quit t)",
         timeout=10,
-        expected_reply_status="ok",
-        expected_reply_payload=[{"source": "ask_exit", "keepkernel": True}],
+        expected_reply=[
+            {
+                "content": {
+                    "status": "ok",
+                    "payload": [
+                        {"source": "ask_exit", "keepkernel": True}
+                    ],
+                }
+            }
+        ],
     )
 
 
 def test_execute_edit(jupyter_kernel):
-    reply, messages = jupyter_kernel.execute_read_reply(
+    jupyter_kernel.execute_read_reply(
         '(j:edit "wibble")',
         timeout=10,
-        expected_reply_status="ok",
-        expected_reply_payload=[
-            {"source": "edit_magic", "filename": "wibble", "line_number": 0}
+        expected_reply=[
+            {
+                "content": {
+                    "status": "ok",
+                    "payload": [
+                        {"source": "edit_magic", "filename": "wibble", "line_number": 0}
+                    ],
+                }
+            }
         ],
     )
 
 
 def test_execute_edit_line_number(jupyter_kernel):
-    reply, messages = jupyter_kernel.execute_read_reply(
+    jupyter_kernel.execute_read_reply(
         '(j:edit "wibble" 743)',
         timeout=10,
-        expected_reply_status="ok",
-        expected_reply_payload=[
-            {"source": "edit_magic", "filename": "wibble", "line_number": 743}
+        expected_reply=[
+            {
+                "content": {
+                    "status": "ok",
+                    "payload": [
+                        {"source": "edit_magic", "filename": "wibble", "line_number": 743}
+                    ],
+                }
+            }
         ],
     )
 
 
 def test_display_data_text(jupyter_kernel):
-    reply, messages = jupyter_kernel.execute_read_reply(
+    jupyter_kernel.execute_read_reply(
         '(jupyter:text "wibble" :display t)',
         timeout=10,
-        expected_reply_status="ok",
-        expected_display_data=[{"data": {"text/plain": "wibble"}}],
+        expected_reply=[{"content": {"status": "ok"}}],
+        expected_messages=[
+            [
+                {
+                    "msg_type": "display_data",
+                    "content": {"data": {"text/plain": "wibble"}},
+                },
+            ]
+        ],
     )
 
 
 def test_display_data_markdown(jupyter_kernel):
-    reply, messages = jupyter_kernel.execute_read_reply(
+    jupyter_kernel.execute_read_reply(
         '(jupyter:markdown "wibble" :display t)',
         timeout=10,
-        expected_reply_status="ok",
-        expected_display_data=[{"data": {"text/markdown": "wibble"}}],
+        expected_reply=[{"content": {"status": "ok"}}],
+        expected_messages=[
+            [
+                {
+                    "msg_type": "display_data",
+                    "content": {"data": {"text/markdown": "wibble"}},
+                },
+            ]
+        ],
     )
 
 
 def test_display_data_markdown_output(jupyter_kernel):
-    reply, messages = jupyter_kernel.execute_read_reply(
+    jupyter_kernel.execute_read_reply(
         '(write-string "wibble" j:*markdown-output*)',
         timeout=10,
-        expected_reply_status="ok",
-        expected_display_data=[{"data": {"text/markdown": "wibble"}}],
+        expected_reply=[{"content": {"status": "ok"}}],
+        expected_messages=[
+            [
+                {
+                    "msg_type": "display_data",
+                    "content": {"data": {"text/markdown": "wibble"}},
+                },
+            ]
+        ],
     )
 
 
 def test_display_data_html(jupyter_kernel):
-    reply, messages = jupyter_kernel.execute_read_reply(
+    jupyter_kernel.execute_read_reply(
         '(jupyter:html "<html/>" :display t)',
         timeout=10,
-        expected_reply_status="ok",
-        expected_display_data=[{"data": {"text/html": "<html/>"}}],
+        expected_reply=[{"content": {"status": "ok"}}],
+        expected_messages=[
+            [
+                {
+                    "msg_type": "display_data",
+                    "content": {"data": {"text/html": "<html/>"}},
+                },
+            ]
+        ],
     )
 
 
 def test_display_data_html_output(jupyter_kernel):
-    reply, messages = jupyter_kernel.execute_read_reply(
+    jupyter_kernel.execute_read_reply(
         '(write-string "<html/>" j:*html-output*)',
         timeout=10,
-        expected_reply_status="ok",
-        expected_display_data=[{"data": {"text/html": "<html/>"}}],
+        expected_reply=[{"content": {"status": "ok"}}],
+        expected_messages=[
+            [
+                {
+                    "msg_type": "display_data",
+                    "content": {"data": {"text/html": "<html/>"}},
+                },
+            ]
+        ],
     )
 
 
 def test_display_data_svg(jupyter_kernel):
-    reply, messages = jupyter_kernel.execute_read_reply(
+    jupyter_kernel.execute_read_reply(
         '(jupyter:svg "<svg/>" :display t)',
         timeout=10,
-        expected_reply_status="ok",
-        expected_display_data=[{"data": {"image/svg+xml": "<svg/>"}}],
+        expected_reply=[{"content": {"status": "ok"}}],
+        expected_messages=[
+            [
+                {
+                    "msg_type": "display_data",
+                    "content": {"data": {"image/svg+xml": "<svg/>"}},
+                },
+            ]
+        ],
     )
 
 
 def test_display_data_json(jupyter_kernel):
-    reply, messages = jupyter_kernel.execute_read_reply(
+    jupyter_kernel.execute_read_reply(
         '(jupyter:json \'(:object-plist "fu" 1 "bar" #(2 3)) :display t)',
         timeout=10,
-        expected_reply_status="ok",
-        expected_display_data=[
-            {
-                "data": {"application/json": {"fu": 1, "bar": [2, 3]}},
-                "metadata": {"application/json": {"expanded": False}},
-            }
+        expected_reply=[{"content": {"status": "ok"}}],
+        expected_messages=[
+            [
+                {
+                    "msg_type": "display_data",
+                    "content": {
+                        "data": {"application/json": {"fu": 1, "bar": [2, 3]}},
+                        "metadata": {"application/json": {"expanded": False}},
+                    },
+                },
+            ]
         ],
     )
 
 
 def test_display_data_json_expanded(jupyter_kernel):
-    reply, messages = jupyter_kernel.execute_read_reply(
+    jupyter_kernel.execute_read_reply(
         '(jupyter:json \'(:object-plist "fu" 1 "bar" #(2 3)) :display t :expanded t)',
         timeout=10,
-        expected_reply_status="ok",
-        expected_display_data=[
-            {
-                "data": {"application/json": {"fu": 1, "bar": [2, 3]}},
-                "metadata": {"application/json": {"expanded": True}},
-            }
+        expected_reply=[{"content": {"status": "ok"}}],
+        expected_messages=[
+            [
+                {
+                    "msg_type": "display_data",
+                    "content": {
+                        "data": {"application/json": {"fu": 1, "bar": [2, 3]}},
+                        "metadata": {"application/json": {"expanded": True}},
+                    },
+                },
+            ]
         ],
     )
 
@@ -270,15 +444,20 @@ def test_display_data_json_expanded(jupyter_kernel):
 def test_display_data_json_file(jupyter_kernel, tmp_path):
     p = tmp_path / "t.json"
     p.write_text(json.dumps(JSON_DATA))
-    reply, messages = jupyter_kernel.execute_read_reply(
+    jupyter_kernel.execute_read_reply(
         f'(jupyter:json-file "{p}" :display t)',
         timeout=10,
-        expected_reply_status="ok",
-        expected_display_data=[
-            {
-                "data": dict([[JSON_MIME_TYPE, JSON_DATA]]),
-                "metadata": dict([[JSON_MIME_TYPE, {"expanded": False}]]),
-            }
+        expected_reply=[{"content": {"status": "ok"}}],
+        expected_messages=[
+            [
+                {
+                    "msg_type": "display_data",
+                    "content": {
+                        "data": dict([[JSON_MIME_TYPE, JSON_DATA]]),
+                        "metadata": dict([[JSON_MIME_TYPE, {"expanded": False}]]),
+                    },
+                },
+            ]
         ],
     )
 
@@ -286,15 +465,20 @@ def test_display_data_json_file(jupyter_kernel, tmp_path):
 def test_display_data_json_file_expanded(jupyter_kernel, tmp_path):
     p = tmp_path / "t.json"
     p.write_text(json.dumps(JSON_DATA))
-    reply, messages = jupyter_kernel.execute_read_reply(
+    jupyter_kernel.execute_read_reply(
         f'(jupyter:json-file "{p}" :display t :expanded t)',
         timeout=10,
-        expected_reply_status="ok",
-        expected_display_data=[
-            {
-                "data": dict([[JSON_MIME_TYPE, JSON_DATA]]),
-                "metadata": dict([[JSON_MIME_TYPE, {"expanded": True}]]),
-            }
+        expected_reply=[{"content": {"status": "ok"}}],
+        expected_messages=[
+            [
+                {
+                    "msg_type": "display_data",
+                    "content": {
+                        "data": dict([[JSON_MIME_TYPE, JSON_DATA]]),
+                        "metadata": dict([[JSON_MIME_TYPE, {"expanded": True}]]),
+                    },
+                },
+            ]
         ],
     )
 
@@ -302,14 +486,17 @@ def test_display_data_json_file_expanded(jupyter_kernel, tmp_path):
 def test_display_data_vega_file(jupyter_kernel, tmp_path):
     p = tmp_path / "t.json"
     p.write_text(json.dumps(JSON_DATA))
-    reply, messages = jupyter_kernel.execute_read_reply(
+    jupyter_kernel.execute_read_reply(
         f'(jupyter:vega-file "{p}" :display t)',
         timeout=10,
-        expected_reply_status="ok",
-        expected_display_data=[
-            {
-                "data": dict([[VEGA_MIME_TYPE, JSON_DATA]]),
-            }
+        expected_reply=[{"content": {"status": "ok"}}],
+        expected_messages=[
+            [
+                {
+                    "msg_type": "display_data",
+                    "content": {"data": dict([[VEGA_MIME_TYPE, JSON_DATA]])},
+                },
+            ]
         ],
     )
 
@@ -320,17 +507,20 @@ def test_display_data_vega_lite_file(jupyter_kernel, tmp_path):
     jupyter_kernel.execute_read_reply(
         f'(jupyter:vega-lite-file "{p}" :display t)',
         timeout=10,
-        expected_reply_status="ok",
-        expected_display_data=[
-            {
-                "data": dict([[VEGA_LITE_MIME_TYPE, JSON_DATA]]),
-            }
+        expected_reply=[{"content": {"status": "ok"}}],
+        expected_messages=[
+            [
+                {
+                    "msg_type": "display_data",
+                    "content": {"data": dict([[VEGA_LITE_MIME_TYPE, JSON_DATA]])},
+                },
+            ]
         ],
     )
 
 
 def test_display_data_latex(jupyter_kernel):
-    reply, messages = jupyter_kernel.execute_read_reply(
+    jupyter_kernel.execute_read_reply(
         '(jupyter:latex "$r^2$" :display t)',
         timeout=10,
         expected_reply=[{"content": {"status": "ok"}}],
@@ -341,7 +531,7 @@ def test_display_data_latex(jupyter_kernel):
 
 
 def test_kernel_info(jupyter_kernel):
-    reply, messages = jupyter_kernel.kernel_info_read_reply(
+    jupyter_kernel.kernel_info_read_reply(
         timeout=10,
         expected_reply=[{"content": {"status": "ok", "implementation": "common-lisp"}}],
     )
@@ -373,10 +563,23 @@ def test_complete_z(jupyter_kernel):
     jupyter_kernel.complete_read_reply(
         "(z",
         timeout=10,
-        expected_reply_status="ok",
-        expected_matches=[{"text": "zerop", "type": "function"}],
-        expected_cursor_start=1,
-        expected_cursor_end=2,
+        expected_reply=[
+            {
+                "content": {
+                    "status": "ok",
+                    "matches": {
+                        "zerop"
+                    },
+                    "cursor_start": 1,
+                    "cursor_end": 2,
+                    "metadata": {
+                        "_jupyter_types_experimental": [
+                            {"type": "function", "text": "zerop"},
+                        ]
+                    },
+                }
+            }
+        ],
     )
 
 
@@ -413,7 +616,7 @@ def test_complete_variable(jupyter_kernel):
 
 
 def test_complete_indent(jupyter_kernel):
-    reply, messages = jupyter_kernel.complete_read_reply(
+    jupyter_kernel.complete_read_reply(
         "(unwind-protect\nfu\nbar)",
         timeout=10,
         expected_reply=[
@@ -430,7 +633,7 @@ def test_complete_indent(jupyter_kernel):
 
 
 def test_inspect(jupyter_kernel):
-    reply, messages = jupyter_kernel.inspect_read_reply(
+    jupyter_kernel.inspect_read_reply(
         "format",
         timeout=10,
         expected_reply=[
@@ -482,7 +685,7 @@ def test_history_tail(jupyter_kernel):
 
 
 def test_widget_button(jupyter_kernel):
-    reply, messages = jupyter_kernel.execute_read_reply(
+    jupyter_kernel.execute_read_reply(
         '(jw:make-button :description "fubar")',
         timeout=10,
         expected_messages=[
@@ -602,5 +805,4 @@ def test_widget_button(jupyter_kernel):
             ],
         ],
     )
-    print(reply)
-    print(messages)
+
