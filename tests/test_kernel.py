@@ -247,9 +247,7 @@ def test_execute_ask_exit(jupyter_kernel):
             {
                 "content": {
                     "status": "ok",
-                    "payload": [
-                        {"source": "ask_exit", "keepkernel": False}
-                    ],
+                    "payload": [{"source": "ask_exit", "keepkernel": False}],
                 }
             }
         ],
@@ -264,9 +262,7 @@ def test_execute_ask_exit_keepkernel(jupyter_kernel):
             {
                 "content": {
                     "status": "ok",
-                    "payload": [
-                        {"source": "ask_exit", "keepkernel": True}
-                    ],
+                    "payload": [{"source": "ask_exit", "keepkernel": True}],
                 }
             }
         ],
@@ -299,7 +295,11 @@ def test_execute_edit_line_number(jupyter_kernel):
                 "content": {
                     "status": "ok",
                     "payload": [
-                        {"source": "edit_magic", "filename": "wibble", "line_number": 743}
+                        {
+                            "source": "edit_magic",
+                            "filename": "wibble",
+                            "line_number": 743,
+                        }
                     ],
                 }
             }
@@ -567,9 +567,7 @@ def test_complete_z(jupyter_kernel):
             {
                 "content": {
                     "status": "ok",
-                    "matches": {
-                        "zerop"
-                    },
+                    "matches": {"zerop"},
                     "cursor_start": 1,
                     "cursor_end": 2,
                     "metadata": {
@@ -601,13 +599,13 @@ def test_complete_variable(jupyter_kernel):
                     "cursor_start": 0,
                     "cursor_end": 3,
                     "metadata": {
-                        "_jupyter_types_experimental": [
+                        "_jupyter_types_experimental": (
                             {"type": "variable", "text": "*read-base*"},
                             {"type": "variable", "text": "*read-default-float-format*"},
                             {"type": "variable", "text": "*read-eval*"},
                             {"type": "variable", "text": "*read-suppress*"},
                             {"type": "variable", "text": "*readtable*"},
-                        ]
+                        )
                     },
                 }
             }
@@ -805,4 +803,3 @@ def test_widget_button(jupyter_kernel):
             ],
         ],
     )
-
