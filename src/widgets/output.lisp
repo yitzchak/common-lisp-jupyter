@@ -90,4 +90,58 @@ output area.
 (with-output out
   (print \"prints to output area\")
 ```"))
+
+
+
+(defclass output-widget-stream (trivial-gray-streams:fundamental-character-output-stream)
+  ((output
+     :initarg :output
+     :reader output-widget-stream-output)
+   (name
+     :initarg :name
+     :reader output-widget-stream-name)
+   (value
+     :initform (make-array 1024
+                           :fill-pointer 0
+                           :adjustable t
+                           :element-type 'character)
+     :accessor output-widget-stream-value)
+   (column
+     :accessor output-widget-stream-column
+     :initform 0)))
+
+
+(defun make-output-widget-stream (output &optional error-output)
+  (make-instance 'output-widget-stream :output output :name (if error-output "stderr" "stdout")))
+
+
+(defmethod trivial-gray-streams:stream-write-char ((stream output-widget-stream) char)
+  (with-slots (output name value column) stream
+    (cond
+      ((graphic-char-p char)
+        (incf column))
+      ((or (char= #\newline)
+           (char= #\return))
+        (setf column 0))
+      ((char= #\tab)
+        (incf column 8)))
+    (vector-push-extend char value)))
+
+
+(defmethod trivial-gray-streams:stream-finish-output ((stream output-widget-stream))
+  (with-slots (output name value column) stream
+    (unless (zerop (length value))
+      (setf (widget-outputs output)
+            (append (coerce (widget-outputs output) 'list)
+                    (list (list :object-plist
+                                "output_type" "stream"
+                                "name" name
+                                "text" (copy-seq value)))))
+      (adjust-array value (array-total-size value)
+                    :fill-pointer 0))))
+
+
+(defmethod trivial-gray-streams:stream-line-column ((stream output-widget-stream))
+   (output-widget-stream-column stream))
+
   

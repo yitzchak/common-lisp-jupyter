@@ -71,22 +71,24 @@ most cases of *query-io* usage. Makes overloading y-or-no-p unnecessary.
 
 (defun prompt-and-read (stream need-input)
   (with-slots (channel output input lock) stream
-    (bordeaux-threads:with-lock-held (lock)
-      (let ((trimmed-output (copy-seq (string-trim '(#\Bel) output))))
-        (when (or need-input
-                  (not (zerop (length (string-trim '(#\Newline) trimmed-output)))))
-          (setf (fill-pointer output) 0)
-          (finish-output)
-          (send-input-request channel trimmed-output)
-          (do ()
-              ((message-available-p channel))
-            (sleep 0.1))
-          (let ((value (concatenate 'string
-                         (gethash "value" (message-content (message-recv channel)))
-                           '(#\Newline))))
-            (adjust-array input (length value)
-                          :fill-pointer (length value)
-                          :initial-contents (reverse value))))))))
+    (when (bordeaux-threads:acquire-lock lock nil)
+      (unwind-protect
+          (let ((trimmed-output (copy-seq (string-trim '(#\Bel) output))))
+            (when (or need-input
+                      (not (zerop (length (string-trim '(#\Newline) trimmed-output)))))
+              (setf (fill-pointer output) 0)
+              (finish-output)
+              (send-input-request channel trimmed-output)
+              (do ()
+                  ((message-available-p channel))
+                (sleep 0.1))
+              (let ((value (concatenate 'string
+                             (gethash "value" (message-content (message-recv channel)))
+                               '(#\Newline))))
+                (adjust-array input (length value)
+                              :fill-pointer (length value)
+                              :initial-contents (reverse value)))))
+        (bordeaux-threads:release-lock lock)))))
 
 (defmethod trivial-gray-streams:stream-finish-output ((stream stdin-stream))
   (prompt-and-read stream nil))

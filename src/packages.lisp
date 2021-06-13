@@ -146,6 +146,7 @@
     #:label
     #:layout
     #:link
+    #:make-output-widget-stream
     #:notify-trait-change
     #:observe
     #:on-button-click

@@ -1,8 +1,8 @@
 (in-package #:jupyter)
 
 (defclass comm (source)
-  ((id
-     :initarg :id
+  ((comm-id
+     :initarg :comm-id
      :initform (make-uuid)
      :reader comm-id)
    (target-name
@@ -36,14 +36,14 @@
 (defmethod on-comm-close (comm data metadata buffers))
 
 (defun send-comm-open (comm &optional data metadata buffers)
-  (with-slots (id kernel target-name) comm
+  (with-slots (comm-id kernel target-name) comm
     (when kernel
       (with-slots (iopub session comms) kernel
-        (setf (gethash id comms) comm)
+        (setf (gethash comm-id comms) comm)
         (message-send iopub
           (make-message session "comm_open"
                         `(:object-alist
-                           ("comm_id" . ,id)
+                           ("comm_id" . ,comm-id)
                            ("target_name" . ,target-name)
                            ("data" . ,(or data :empty-object)))
                         :metadata (or metadata :empty-object)
@@ -51,27 +51,27 @@
 
 
 (defun send-comm-message (comm &optional data metadata buffers)
-  (with-slots (id kernel) comm
+  (with-slots (comm-id kernel) comm
     (when kernel
       (with-slots (iopub session) kernel
         (message-send iopub
           (make-message session "comm_msg"
                         `(:object-alist
-                           ("comm_id" . ,id)
+                           ("comm_id" . ,comm-id)
                            ("data" . ,(or data :empty-object)))
                         :metadata (or metadata :empty-object)
                         :buffers buffers))))))
 
 
 (defun send-comm-close (comm &optional data metadata buffers)
-  (with-slots (id kernel) comm
+  (with-slots (comm-id kernel) comm
     (when kernel
       (with-slots (iopub session comms) kernel
-        (remhash id comms)
+        (remhash comm-id comms)
         (message-send iopub
           (make-message session "comm_close"
                         `(:object-alist
-                           ("comm_id" . ,id)
+                           ("comm_id" . ,comm-id)
                            ("data" . ,(or data :empty-object)))
                         :metadata (or metadata :empty-object)
                         :buffers buffers))))))

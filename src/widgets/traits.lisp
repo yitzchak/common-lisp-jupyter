@@ -36,11 +36,13 @@
           :accessor trait-type)))
 
 (defclass direct-trait
-  (trait closer-mop:standard-direct-slot-definition)
+  #+abcl (closer-mop:standard-direct-slot-definition trait)
+  #-abcl (trait closer-mop:standard-direct-slot-definition)
   ())
 
 (defclass effective-trait
-  (trait closer-mop:standard-effective-slot-definition)
+  #+abcl (closer-mop:standard-effective-slot-definition trait)
+  #-abcl (trait closer-mop:standard-effective-slot-definition)
   ())
 
 (defclass trait-metaclass (standard-class)

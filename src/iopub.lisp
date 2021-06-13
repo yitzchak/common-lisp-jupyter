@@ -92,7 +92,10 @@
    (prompt-prefix :initarg :prompt-prefix
                   :reader iopub-stream-prompt-prefix)
    (prompt-suffix :initarg :prompt-suffix
-                  :reader iopub-stream-prompt-suffix)))
+                  :reader iopub-stream-prompt-suffix)
+   (column
+     :accessor iopub-stream-column
+     :initform 0)))
 
 (defun make-iopub-stream (iopub name prompt-prefix prompt-suffix)
   (make-instance 'iopub-stream :channel iopub
@@ -102,7 +105,15 @@
 
 (defmethod trivial-gray-streams:stream-write-char ((stream iopub-stream) char)
   (unless (equal char #\Sub) ; Ignore subsititute characters
-    (with-slots (channel name value prompt-prefix prompt-suffix) stream
+    (with-slots (channel name value prompt-prefix prompt-suffix column) stream
+      (cond
+        ((graphic-char-p char)
+          (incf column))
+        ((or (char= #\newline)
+             (char= #\return))
+          (setf column 0))
+        ((char= #\tab)
+          (incf column 8)))
       (vector-push-extend char value)
       ;; After the character has been added look for a prompt terminator at the
       ;; end.
@@ -122,6 +133,7 @@
             (adjust-array value (array-total-size value)
                           :fill-pointer 0)))))))
 
+
 (defmethod trivial-gray-streams:stream-finish-output ((stream iopub-stream))
   (with-slots (channel name value prompt-prefix) stream
     (unless (or (zerop (length value))
@@ -129,6 +141,7 @@
       (send-stream channel name value)
       (adjust-array value (array-total-size value)
                     :fill-pointer 0))))
+
 
 ;; Forward all read calls to *query-io*
 (defmethod trivial-gray-streams:stream-listen ((stream iopub-stream))
@@ -144,6 +157,6 @@
   (trivial-gray-streams:stream-unread-char *query-io* char))
 
 (defmethod trivial-gray-streams:stream-line-column ((stream iopub-stream))
-   nil)
+   (iopub-stream-column stream))
 
 
