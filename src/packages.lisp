@@ -39,6 +39,7 @@
     ; matches
     #:match-set-add
     #:make-offset-match-set
+    #:make-substring-match-set
     ; kernel
     #:clear
     #:code-is-complete

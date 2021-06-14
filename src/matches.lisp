@@ -18,6 +18,12 @@
   offset)
 
 
+(defstruct substring-match-set
+  parent
+  start
+  end)
+
+
 (defgeneric match-set-add (instance text start end &key type))
 
 
@@ -49,5 +55,21 @@
 (defmethod match-set-add ((ms offset-match-set) text start end &key type)
   (match-set-add (offset-match-set-parent ms) text
                  (+ start (offset-match-set-offset ms)) (+ end (offset-match-set-offset ms))
+                 :type type))
+
+
+(defmethod match-set-add ((ms substring-match-set) text start end &key type)
+  (match-set-add (substring-match-set-parent ms)
+                 (concatenate 'string
+                              (subseq (match-set-code (substring-match-set-parent ms))
+                                      start
+                                      (max start (substring-match-set-start ms)))
+                              (subseq text
+                                      (max 0 (- (substring-match-set-start ms) start))
+                                      (- (length text) (max 0 (- end (substring-match-set-end ms)))))
+                              (subseq (match-set-code (substring-match-set-parent ms))
+                                      (min end (substring-match-set-end ms))
+                                      end))
+                 start end
                  :type type))
 

@@ -3,7 +3,7 @@ FROM archlinux:latest
 ARG NB_USER=app
 ARG NB_UID=1000
 ARG LISP_IMPL=sbcl-bin
-ARG OTHER_LISP_IMPL="abcl-bin cmu-bin"
+ARG OTHER_LISP_IMPL="abcl-bin"
 
 ENV USER ${NB_USER}
 ENV HOME /home/${NB_USER}
