@@ -131,14 +131,22 @@ output area.
 (defmethod trivial-gray-streams:stream-finish-output ((stream output-widget-stream))
   (with-slots (output name value column) stream
     (unless (zerop (length value))
-      (setf (widget-outputs output)
-            (append (coerce (widget-outputs output) 'list)
-                    (list (list :object-plist
-                                "output_type" "stream"
-                                "name" name
-                                "text" (copy-seq value)))))
-      (adjust-array value (array-total-size value)
-                    :fill-pointer 0))))
+      (let* ((outputs (coerce (widget-outputs output) 'list))
+             (last-output (car (last outputs))))
+        (cond
+          ((and last-output
+                (equal (gethash "output_type" last-output) "stream")
+                (equal (gethash "name" last-output) name))
+            (setf (gethash "text" last-output) (concatenate 'string (gethash "text" last-output) value))
+            (notify-trait-change output :list :outputs nil (widget-outputs output) t))
+          (t
+            (setf (widget-outputs output)
+                  (append outputs
+                          (list (j:make-object "output_type" "stream"
+                                               "name" name
+                                               "text" (copy-seq value)))))))
+          (adjust-array value (array-total-size value)
+                        :fill-pointer 0)))))
 
 
 (defmethod trivial-gray-streams:stream-line-column ((stream output-widget-stream))
