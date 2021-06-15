@@ -43,21 +43,6 @@ output area.
 
 
 
-; We should clean up after ourselves, but the messages are processed outside of this lexigraphic context.
-(defmacro with-output (output &body body)
-  "Evaluate body with all output sent to the output widget."
-  `(with-slots (msg-id) ,output
-     (unwind-protect 
-       (progn
-         (finish-output) 
-         (finish-output *error-output*) 
-         (setf msg-id (gethash "msg_id" (jupyter::message-header jupyter::*message*)))
-         ,@body)
-       (finish-output) 
-       (finish-output *error-output*) 
-       (setf msg-id "")))) 
-
-
 (defclass sidecar (output)
   ((title
      :accessor widget-title
@@ -131,7 +116,11 @@ output area.
 (defmethod trivial-gray-streams:stream-finish-output ((stream output-widget-stream))
   (with-slots (output name value column) stream
     (unless (zerop (length value))
-      (let* ((outputs (coerce (widget-outputs output) 'list))
+      (let* ((outputs (mapcan (lambda (output)
+                                (unless (and (equal (gethash "output_type" output) "display_data")
+                                             (gethash "application/javascript" (gethash "data" output)))
+                                  (list output)))
+                        (coerce (widget-outputs output) 'list)))
              (last-output (car (last outputs))))
         (cond
           ((and last-output
@@ -144,12 +133,32 @@ output area.
                   (append outputs
                           (list (j:make-object "output_type" "stream"
                                                "name" name
-                                               "text" (copy-seq value)))))))
+                                               "text" (copy-seq value))
+                                (j:make-object "output_type" "display_data"
+                                               "metadata" (j:make-object)
+                                               "data" (j:make-object "application/javascript" "for (let el of document.getElementsByClassName('widget-output')) el.scrollTo( { left: 0, top: el.scrollHeight - el.clientHeight, behavior: 'smooth' });")))))))
           (adjust-array value (array-total-size value)
                         :fill-pointer 0)))))
 
 
 (defmethod trivial-gray-streams:stream-line-column ((stream output-widget-stream))
    (output-widget-stream-column stream))
+
+
+; We should clean up after ourselves, but the messages are processed outside of this lexigraphic context.
+(defmacro with-output (output &body body)
+  "Evaluate body with all output sent to the output widget."
+  `(with-slots (msg-id) ,output
+     (unwind-protect
+       (progn
+         (finish-output)
+         (finish-output *error-output*)
+         (setf msg-id (when jupyter::*message*
+                        (gethash "msg_id" (jupyter::message-header jupyter::*message*))))
+         ,@body)
+       (finish-output)
+       (finish-output *error-output*)
+       (setf msg-id ""))))
+
 
   
