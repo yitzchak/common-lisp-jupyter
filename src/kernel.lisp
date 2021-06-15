@@ -449,6 +449,8 @@
 
 
 (defun make-eval-error (err msg traceback)
+  (format *error-output* "~A: ~A~%~%" (symbol-name (class-name (class-of err))) msg)
+  (finish-output *error-output*)
   (values nil (symbol-name (class-name (class-of err))) msg traceback))
 
 
@@ -492,7 +494,7 @@
           (handler-bind
               ((warning
                  (lambda (wrn)
-                   (format t "[~S] ~A~%" (type-of wrn) wrn)
+                   (format t "~S: ~A~%" (type-of wrn) wrn)
                    (muffle-warning)))
                (serious-condition
                  (lambda (err)
@@ -501,7 +503,7 @@
                            (mapcar (lambda (frame)
                                      (dissect:present frame nil))
                                    (dissect:environment-stack env)))
-                     (dissect:present env *error-output*)))))
+                     #+(or)(dissect:present err *error-output*)))))
             (progn ,@body))
          (simple-error (err)
            (make-eval-error err
@@ -528,18 +530,16 @@
 
 (defmacro handling-comm-errors (&body body)
   "Macro for catching any conditions during comm messages."
-  `(handler-case
-       (handler-bind
-           ((serious-condition
-              (lambda (err)
-                (inform :error *kernel* (dissect:present err nil))))
-            (warning
-              (lambda (wrn)
-                (inform :warn *kernel* (dissect:present wrn nil))
-                (muffle-warning))))
-         (progn ,@body))
-     (serious-condition (err)
-       (declare (ignore err)))))
+  (let ((expr-var (gensym))
+        (ename-var (gensym))
+        (evalue-var (gensym))
+        (traceback-var (gensym)))
+    `(multiple-value-bind (,expr-var ,ename-var ,evalue-var ,traceback-var)
+                          (handling-errors ,@body)
+       (declare (ignore ,expr-var ,evalue-var))
+       (when ,ename-var
+         (format *error-output* "~{~A~%~}" ,traceback-var)
+         (finish-output *error-output*)))))
 
 
 #|
