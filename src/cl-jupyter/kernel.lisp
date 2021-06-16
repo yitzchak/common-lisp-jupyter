@@ -75,7 +75,11 @@
       (multiple-value-setq (expr ename evalue traceback) (my-eval expr))
       (when ename
         (return (values ename evalue traceback)))
-      (dolist (result expr)
-        (jupyter:execute-result result))
+      (multiple-value-setq (expr ename evalue traceback)
+                           (j:handling-errors
+                             (dolist (result expr)
+                               (jupyter:execute-result result))))
+      (when ename
+        (return (values ename evalue traceback)))
       (go repeat))))
 
