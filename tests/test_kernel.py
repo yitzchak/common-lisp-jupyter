@@ -806,9 +806,10 @@ def test_widget_button(jupyter_kernel):
             ],
         ],
     )
+    print(messages[2]["content"]["comm_id"])
     jupyter_kernel.comm_msg_read_reply(
         comm_id=messages[2]["content"]["comm_id"],
-        data={"method": "custom", "data": {"event": "click"}},
+        data={"method": "custom", "content": {"event": "click"}},
         timeout=10,
         expected_messages=[
             [

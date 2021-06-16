@@ -195,7 +195,7 @@
     ("request_state"
       (send-state w))
     ("custom"
-      (on-custom-message w (gethash "content" data) buffers))
+      (on-custom-message w (gethash "content" data (jupyter:make-object)) buffers))
     (otherwise
       (call-next-method))))
 
