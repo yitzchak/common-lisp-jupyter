@@ -53,6 +53,7 @@
     #:enqueue-input
     #:evaluate-code
     #:get-comm
+    #:handling-comm-errors
     #:handling-errors
     #:*html-output*
     #:inform

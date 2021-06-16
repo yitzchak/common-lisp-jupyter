@@ -683,8 +683,11 @@ def test_history_tail(jupyter_kernel):
 
 
 def test_widget_button(jupyter_kernel):
-    jupyter_kernel.execute_read_reply(
-        '(jw:make-button :description "fubar")',
+    reply, messages = jupyter_kernel.execute_read_reply(
+        """(jw:make-button :description "fubar"
+                           :on-click (list (lambda (inst)
+                                             (declare (ignore inst))
+                                             (write-string "wibble"))))""",
         timeout=10,
         expected_messages=[
             [
@@ -801,5 +804,18 @@ def test_widget_button(jupyter_kernel):
                     },
                 }
             ],
+        ],
+    )
+    jupyter_kernel.comm_msg_read_reply(
+        comm_id=messages[2]["content"]["comm_id"],
+        data={"method": "custom", "data": {"event": "click"}},
+        timeout=10,
+        expected_messages=[
+            [
+                {
+                    "msg_type": "stream",
+                    "content": {"name": "stdout", "text": "wibble"},
+                }
+            ]
         ],
     )
