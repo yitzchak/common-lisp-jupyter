@@ -536,10 +536,14 @@
         (traceback-var (gensym)))
     `(multiple-value-bind (,expr-var ,ename-var ,evalue-var ,traceback-var)
                           (handling-errors ,@body)
-       (declare (ignore ,expr-var ,evalue-var))
-       (when ,ename-var
-         (format *error-output* "~{~A~%~}" ,traceback-var)
-         (finish-output *error-output*)))))
+       (declare (ignore ,evalue-var))
+       (cond
+         (,ename-var
+           (format *error-output* "~{~A~%~}" ,traceback-var)
+           (finish-output *error-output*)
+           nil)
+         (t
+           ,expr-var)))))
 
 
 #|
@@ -725,14 +729,16 @@
          (buffers (message-buffers *message*))
          (id (gethash "comm_id" content))
          (target-name (gethash "target_name" content))
-         (data (gethash "data" content (make-hash-table :test #'equal)))
-         (inst (create-comm (intern target-name 'keyword) id data metadata buffers)))
-    (if inst
-      (progn
+         (data (gethash "data" content (make-object)))
+         (inst (handling-comm-errors
+                 (create-comm (intern target-name 'keyword) id data metadata buffers))))
+    (cond
+      (inst
         (setf (gethash id (kernel-comms *kernel*)) inst)
         (handling-comm-errors
           (on-comm-open inst data metadata buffers)))
-      (send-comm-close-orphan id))))
+      (t
+        (send-comm-close-orphan id)))))
 
 
 (defun handle-comm-message ()

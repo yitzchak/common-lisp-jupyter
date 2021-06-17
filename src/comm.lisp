@@ -19,9 +19,10 @@
 (defun get-comm (id)
   (gethash id (kernel-comms *kernel*)))
 
-(defgeneric create-comm (target-name id data metadata buffers))
-
-(defmethod create-comm (target-name id data metadata buffers))
+(defgeneric create-comm (target-name id data metadata buffers)
+  (:method (target-name id data metadata buffers)
+    (declare (ignore target-name id data metadata buffers))
+    nil))
 
 (defgeneric on-comm-open (comm data metadata buffers))
 
@@ -77,10 +78,13 @@
                         :buffers buffers))))))
 
 
-(defun send-comm-close-orphan (comm-id &optional data &aux (iopub (kernel-iopub *kernel*)))
+(defun send-comm-close-orphan (comm-id &optional data metadata buffers
+                               &aux (iopub (kernel-iopub *kernel*)))
   (message-send iopub
                 (make-message (channel-session iopub) "comm_close"
-                              `(:object-alist
-                                 ("comm_id" . ,comm-id)
-                                 ("data" . ,(or data :empty-object))))))
+                              (list :object-plist
+                                    "comm_id" comm-id
+                                    "data" (or data :empty-object))
+                              :metadata (or metadata :empty-object)
+                              :buffers buffers)))
 

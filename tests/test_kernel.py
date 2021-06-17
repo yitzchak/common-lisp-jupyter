@@ -541,6 +541,17 @@ def test_comm_info(jupyter_kernel):
     jupyter_kernel.comm_info_read_reply(timeout=10)
 
 
+def test_comm_open_fail(jupyter_kernel):
+    jupyter_kernel.comm_open_read_reply(
+        comm_id="wibble",
+        target_name="fubar",
+        timeout=10,
+        expected_messages=[
+            [{"msg_type": "comm_close", "content": {"comm_id": "wibble", "data": {}}}]
+        ],
+    )
+
+
 def test_is_complete(jupyter_kernel):
     jupyter_kernel.is_complete_read_reply(
         "(fu bar)", timeout=10, expected_reply=[{"content": {"status": "complete"}}]
@@ -806,7 +817,6 @@ def test_widget_button(jupyter_kernel):
             ],
         ],
     )
-    print(messages[2]["content"]["comm_id"])
     jupyter_kernel.comm_msg_read_reply(
         comm_id=messages[2]["content"]["comm_id"],
         data={"method": "custom", "content": {"event": "click"}},
