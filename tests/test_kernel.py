@@ -727,10 +727,12 @@ def test_history_tail(jupyter_kernel):
 
 def test_widget_button(jupyter_kernel):
     reply, messages = jupyter_kernel.execute_read_reply(
-        """(jw:make-button :description "fubar"
+        '''(jw:make-button :description "fubar"
                            :on-click (list (lambda (inst)
                                              (declare (ignore inst))
-                                             (write-string "wibble"))))""",
+                                             (write-string "wibble")
+                                             (finish-output)
+                                             (error "gronk"))))''',
         timeout=10,
         expected_messages=[
             [
@@ -858,7 +860,18 @@ def test_widget_button(jupyter_kernel):
                 {
                     "msg_type": "stream",
                     "content": {"name": "stdout", "text": "wibble"},
+                },
+                {
+                    "msg_type": "stream",
+                    "content": {"name": "stderr", "text": "SIMPLE-ERROR: gronk\n\n"},
+                },
+                {
+                    "msg_type": "stream",
+                    "content": {"name": "stderr" },
                 }
             ]
         ],
     )
+
+
+    
