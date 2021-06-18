@@ -48,7 +48,7 @@ jobs:
     - name: Install Ubuntu dependencies
       if: matrix.os == 'ubuntu-latest'
       run: |
-        sudo apt-get install libzmq3-dev sbcl
+        sudo apt-get install ecl libzmq3-dev sbcl
 
     - name: Install MacOS dependencies
       if: matrix.os == 'macos-latest'
@@ -58,6 +58,14 @@ jobs:
     - name: Install Jupyter
       run: |
         conda install -c conda-forge jupyterlab jupyter_kernel_test
+
+    - name: Install pytest-jupyter_kernel
+      run: |
+        pip install build
+        git clone https://github.com/yitzchak/pytest-jupyter_kernel.git
+        cd pytest-jupyter_kernel
+        pyproject-build
+        pip install dist/pytest_jupyter_kernel-0.1.0-py3-none-any.whl
 
     - name: Checkout repository
       uses: actions/checkout@v2
@@ -76,14 +84,19 @@ jobs:
       run: |
         git clone https://github.com/orivej/pzmq.git ~/quicklisp/local-projects/pzmq
 
-    - name: Install SBCL kernel
-      run: |
-        sbcl --non-interactive --load scripts/usr-install.lisp sbcl
-
     - name: Install CCL kernel
       if: matrix.os == 'macos-latest'
       run: |
         ccl64 --batch --load scripts/usr-install.lisp
+
+    - name: Install ECL kernel
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        ecl --load scripts/usr-install.lisp --eval '(ext:quit)'
+
+    - name: Install SBCL kernel
+      run: |
+        sbcl --non-interactive --load scripts/usr-install.lisp sbcl
 
     # - name: Install ECL Jupyter kernel
     #   if: matrix.os == 'ubuntu-latest'
@@ -92,4 +105,4 @@ jobs:
 
     - name: Run kernel tests
       run: |
-        python tests/client.py
+        pytest --verbose
