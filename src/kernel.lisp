@@ -749,9 +749,10 @@
          (id (gethash "comm_id" content))
          (data (gethash "data" content))
          (inst (gethash id (kernel-comms *kernel*))))
-    (when inst
+    (if inst
       (handling-comm-errors
-        (on-comm-message inst data metadata buffers)))))
+        (on-comm-message inst data metadata buffers))
+      (inform :error *kernel* "Received COMM message with unknown comm_id of ~A." id))))
 
 
 (defun handle-comm-close ()

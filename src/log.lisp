@@ -43,8 +43,9 @@
         (ignore-errors
           (when (and (eql :error level)
                      *kernel*)
-            (send-execute-error (kernel-iopub *kernel*)
-                                (class-name (class-of src)) (apply #'format nil format-control format-arguments))))
+            (format *error-output* "<~A> ~?~%"
+                    (class-name (class-of src)) format-control format-arguments)
+            (finish-output *error-output*)))
         (multiple-value-bind (second minute hour day month year)
                              (get-decoded-time)
           (format stream "~4,'0d-~2,'0d-~2,'0d ~2,'0d:~2,'0d:~2,'0d [~A] <~A> ~?~%"

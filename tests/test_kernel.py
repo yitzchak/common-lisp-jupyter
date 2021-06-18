@@ -190,6 +190,20 @@ def test_execute_error(jupyter_kernel):
     )
 
 
+def test_execute_result_error(jupyter_kernel):
+    jupyter_kernel.execute_read_reply(
+        """(defclass fu () ())
+           (defmethod print-object ((object fu) stream)
+             (declare (ignore fu stream))
+             (error "qux"))
+           (print (make-instance 'fu))""",
+        timeout=10,
+        expected_reply=[
+            {"content": {"status": "error", "ename": "SIMPLE-ERROR", "evalue": "qux"}}
+        ],
+    )
+
+
 def test_execute_clear_output(jupyter_kernel):
     jupyter_kernel.execute_read_reply(
         "(j:clear)",
@@ -548,6 +562,24 @@ def test_comm_open_fail(jupyter_kernel):
         timeout=10,
         expected_messages=[
             [{"msg_type": "comm_close", "content": {"comm_id": "wibble", "data": {}}}]
+        ],
+    )
+
+
+def test_comm_msg_fail(jupyter_kernel):
+    jupyter_kernel.comm_msg_read_reply(
+        comm_id="wibble",
+        timeout=10,
+        expected_messages=[
+            [
+                {
+                    "msg_type": "stream",
+                    "content": {
+                        "name": "stderr",
+                        "text": "<KERNEL> Received COMM message with unknown comm_id of wibble.\n",
+                    },
+                }
+            ]
         ],
     )
 
