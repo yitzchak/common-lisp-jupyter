@@ -1,5 +1,6 @@
-import pytest
 import json
+import pathlib
+import pytest
 
 
 JSON_DATA = {"fu": 1, "bar": [2, 3]}
@@ -7,6 +8,10 @@ JSON_DATA = {"fu": 1, "bar": [2, 3]}
 JSON_MIME_TYPE = "application/json"
 VEGA_MIME_TYPE = "application/vnd.vega.v5+json"
 VEGA_LITE_MIME_TYPE = "application/vnd.vegalite.v4+json"
+
+
+def sanitize_path(p):
+    return p, str(pathlib.Path(p)).replace("\\", "\\\\")
 
 
 @pytest.fixture(
@@ -456,10 +461,10 @@ def test_display_data_json_expanded(jupyter_kernel):
 
 
 def test_display_data_json_file(jupyter_kernel, tmp_path):
-    p = tmp_path / "t.json"
+    p, s = sanitize_path(tmp_path / "t.json")
     p.write_text(json.dumps(JSON_DATA))
     jupyter_kernel.execute_read_reply(
-        f'(jupyter:json-file "{p}" :display t)',
+        f'(jupyter:json-file "{s}" :display t)',
         timeout=10,
         expected_reply=[{"content": {"status": "ok"}}],
         expected_messages=[
@@ -477,10 +482,10 @@ def test_display_data_json_file(jupyter_kernel, tmp_path):
 
 
 def test_display_data_json_file_expanded(jupyter_kernel, tmp_path):
-    p = tmp_path / "t.json"
+    p, s = sanitize_path(tmp_path / "t.json")
     p.write_text(json.dumps(JSON_DATA))
     jupyter_kernel.execute_read_reply(
-        f'(jupyter:json-file "{p}" :display t :expanded t)',
+        f'(jupyter:json-file "{s}" :display t :expanded t)',
         timeout=10,
         expected_reply=[{"content": {"status": "ok"}}],
         expected_messages=[
@@ -498,10 +503,10 @@ def test_display_data_json_file_expanded(jupyter_kernel, tmp_path):
 
 
 def test_display_data_vega_file(jupyter_kernel, tmp_path):
-    p = tmp_path / "t.json"
+    p, s = sanitize_path(tmp_path / "t.json")
     p.write_text(json.dumps(JSON_DATA))
     jupyter_kernel.execute_read_reply(
-        f'(jupyter:vega-file "{p}" :display t)',
+        f'(jupyter:vega-file "{s}" :display t)',
         timeout=10,
         expected_reply=[{"content": {"status": "ok"}}],
         expected_messages=[
@@ -516,10 +521,10 @@ def test_display_data_vega_file(jupyter_kernel, tmp_path):
 
 
 def test_display_data_vega_lite_file(jupyter_kernel, tmp_path):
-    p = tmp_path / "t.json"
+    p, s = sanitize_path(tmp_path / "t.json")
     p.write_text(json.dumps(JSON_DATA))
     jupyter_kernel.execute_read_reply(
-        f'(jupyter:vega-lite-file "{p}" :display t)',
+        f'(jupyter:vega-lite-file "{s}" :display t)',
         timeout=10,
         expected_reply=[{"content": {"status": "ok"}}],
         expected_messages=[
@@ -727,10 +732,12 @@ def test_history_tail(jupyter_kernel):
 
 def test_widget_button(jupyter_kernel):
     reply, messages = jupyter_kernel.execute_read_reply(
-        """(jw:make-button :description "fubar"
+        '''(jw:make-button :description "fubar"
                            :on-click (list (lambda (inst)
                                              (declare (ignore inst))
-                                             (write-string "wibble"))))""",
+                                             (write-string "wibble")
+                                             (finish-output)
+                                             (error "gronk"))))''',
         timeout=10,
         expected_messages=[
             [
@@ -854,11 +861,18 @@ def test_widget_button(jupyter_kernel):
         data={"method": "custom", "content": {"event": "click"}},
         timeout=10,
         expected_messages=[
-            [
+            (
                 {
                     "msg_type": "stream",
                     "content": {"name": "stdout", "text": "wibble"},
+                },
+                {
+                    "msg_type": "stream",
+                    "content": {"name": "stderr", "text": "SIMPLE-ERROR: gronk\n\n"},
                 }
-            ]
+            )
         ],
     )
+
+
+    
