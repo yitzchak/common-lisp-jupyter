@@ -167,8 +167,8 @@
                           '(:external)
                           '(:internal :external))))
             #+(or)(unless func
-              (complete-method match-set "" start end pkg status))
-            (complete-symbol match-set "" start end pkg func status)))
+              (complete-method match-set "" end end pkg status))
+            (complete-symbol match-set "" end end pkg func status)))
         (t
           (complete-package match-set symbol-name start end :include-marker t)
           (unless func

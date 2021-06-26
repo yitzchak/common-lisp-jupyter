@@ -24,7 +24,9 @@ WORKDIR ${HOME}
 USER ${NB_USER}
 
 RUN jupyter serverextension enable --user --py jupyterlab; \
-    jupyter labextension install @jupyter-widgets/jupyterlab-manager; \
+    jupyter labextension install @jupyter-widgets/jupyterlab-manager \
+    	jupyterlab-edit-magic cytoscape-clj kekule-clj resizable-box-clj \
+    	ngl-clj; \
     jupyter nbextension enable --user --py widgetsnbextension; \
     curl -kLO https://beta.quicklisp.org/quicklisp.lisp; \
     sbcl --non-interactive --load quicklisp.lisp \
@@ -40,9 +42,13 @@ RUN chown -R ${NB_UID} quicklisp/local-projects/common-lisp-jupyter && \
     chgrp -R ${NB_USER} quicklisp/local-projects/common-lisp-jupyter
 
 USER ${NB_USER}
-RUN sbcl --non-interactive --eval "(ql:quickload :common-lisp-jupyter)" \
+RUN git clone https://github.com/yitzchak/cytoscape-clj.git ~/quicklisp/local-projects/cytoscape-clj; \
+    git clone https://github.com/yitzchak/kekule-clj.git ~/quicklisp/local-projects/kekule-clj; \
+    git clone https://github.com/yitzchak/resizable-box-clj.git ~/quicklisp/local-projects/resizable-box-clj; \
+    git clone https://github.com/yitzchak/ngl-clj.git ~/quicklisp/local-projects/ngl-clj; \
+    sbcl --non-interactive --eval "(ql:quickload '(:common-lisp-jupyter :cytoscape-clj :kekule-clj :resizable-box-clj :ngl-clj))" \
       --eval "(clj:install :use-implementation t)"; \
-    ecl --eval "(ql:quickload :common-lisp-jupyter)" \
+    ecl --eval "(ql:quickload '(:common-lisp-jupyter :cytoscape-clj :kekule-clj :resizable-box-clj :ngl-clj))" \
       --eval "(clj:install :use-implementation t)" \
       --eval "(ext:quit)"
 
