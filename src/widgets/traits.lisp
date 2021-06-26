@@ -177,3 +177,5 @@
                  :test #'equal)
        t))
 
+(defmacro def-trait-class (&rest rest)
+  `(defclass ,@rest (:metaclass trait-metaclass)))

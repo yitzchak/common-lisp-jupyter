@@ -91,7 +91,7 @@
              (:file "toggle-button")
              (:file "valid")
              (:file "interactive")
-             (:file "register-widgets")))
+             #+(or)(:file "register-widgets")))
          (:file "history")
          (:file "matches")
          (:file "kernel")

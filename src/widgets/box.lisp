@@ -1,6 +1,6 @@
 (in-package #:jupyter-widgets)
 
-(defclass box (dom-widget)
+(defwidget box (dom-widget)
   ((box-style
      :initarg :box-style
      :initform ""
@@ -13,7 +13,6 @@
      :accessor widget-children
      :documentation "List of widget children."
      :trait :widget-list))
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "BoxModel"
     :%view-name "BoxView")
@@ -32,7 +31,7 @@
 
 
 
-(defclass accordion (box)
+(defwidget accordion (box)
   ((%titles
      :initarg :%titles
      :initform nil
@@ -45,7 +44,6 @@
      :initform nil
      :documentation "The index of the selected page. This is either an integer selecting a particular sub-widget, or nil to have no widgets selected."
      :trait :int))
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "AccordionModel"
     :%view-name "AccordionView")
@@ -65,9 +63,8 @@
     (call-next-method)))
 
 
-(defclass grid-box (box)
+(defwidget grid-box (box)
   ()
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "GridBoxModel"
     :%view-name "GridBoxView"))
@@ -75,9 +72,8 @@
 
 
 
-(defclass h-box (box)
+(defwidget h-box (box)
   ()
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "HBoxModel"
     :%view-name "HBoxView")
@@ -96,9 +92,8 @@
 
 
 
-(defclass tab (accordion)
+(defwidget tab (accordion)
   ()
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "TabModel"
     :%view-name "TabView")
@@ -107,9 +102,8 @@
 
 
 
-(defclass v-box (box)
+(defwidget v-box (box)
   ()
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "VBoxModel"
     :%view-name "VBoxView")

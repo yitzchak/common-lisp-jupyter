@@ -1,7 +1,7 @@
 (in-package #:jupyter-widgets)
 
 
-(defclass file-upload (description-widget button-style-slot disabled-slot icon-slot)
+(defwidget file-upload (description-widget button-style-slot disabled-slot icon-slot)
   ((accept
      :initarg :accept
      :initform ""
@@ -32,7 +32,6 @@
      :accessor widget-multiple
      :documentation "If True, allow for multiple files upload"
      :trait :bool))
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "FileUploadModel"
     :%view-name "FileUploadView"))

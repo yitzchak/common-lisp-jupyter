@@ -324,6 +324,7 @@
     (start control)
     (start history)
     (send-status iopub "starting")
+    (inform :info k "sdfsdf")
     (send-status iopub "idle")
     (setf (kernel-shell-thread k)
           (bordeaux-threads:make-thread (lambda ()

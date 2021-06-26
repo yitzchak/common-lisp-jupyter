@@ -7,7 +7,7 @@
   bounded-float-text
   bounded-int-text
   box
-  button
+  ;button
   button-style
   checkbox
   color-picker

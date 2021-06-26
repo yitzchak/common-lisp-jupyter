@@ -10,7 +10,7 @@
   ()
   (:documentation "Heartbeat channel class."))
 
-#-cmucl
+;#-cmucl
 (defmethod start :after ((hb hb-channel))
   (with-slots (socket thread) hb
     (setf thread

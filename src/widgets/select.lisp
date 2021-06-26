@@ -1,22 +1,20 @@
 (in-package #:jupyter-widgets)
 
 
-(defclass base-select (description-widget %options-labels-slot disabled-slot)
+(defwidget base-select (description-widget %options-labels-slot disabled-slot)
   ((rows
      :initarg :rows
      :initform 5
      :accessor widget-rows
      :documentation "The number of rows to display."
-     :trait :int))
-  (:metaclass trait-metaclass))
+     :trait :int)))
 
 
-(defclass select (base-select index-slot)
+(defwidget select (base-select index-slot)
   ((options
     :accessor widget-options
     :initarg :options
     :documentation "The option values that correspond to the labels"))
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "SelectModel"
     :%view-name "SelectView")
@@ -61,7 +59,7 @@
       (setf (widget-value instance) value))))
 
 
-(defclass select-multiple (base-select)
+(defwidget select-multiple (base-select)
   ((index
      :initarg :index
      :initform nil
@@ -72,7 +70,6 @@
     :accessor widget-options
     :initarg :options
     :documentation "The option values that correspond to the labels"))
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "SelectMultipleModel"
     :%view-name "SelectMultipleView")
@@ -105,9 +102,8 @@
       (setf (widget-value instance) value))))
 
 
-(defclass radio-buttons (select)
+(defwidget radio-buttons (select)
   ()
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "RadioButtonsModel"
     :%view-name "RadioButtonsView")
@@ -118,9 +114,8 @@ be toggled at any point in time."))
 
 
 
-(defclass dropdown (select)
+(defwidget dropdown (select)
   ()
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "DropdownModel"
     :%view-name "DropdownView")

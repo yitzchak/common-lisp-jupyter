@@ -1,6 +1,6 @@
 (in-package #:jupyter-widgets)
 
-(defclass color-picker (description-widget disabled-slot)
+(defwidget color-picker (description-widget disabled-slot)
   ((concise
      :initarg :concise
      :initform nil
@@ -13,7 +13,6 @@
      :accessor widget-value
      :documentation "The color value."
      :trait :color))
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "ColorPickerModel"
     :%view-name "ColorPickerView")

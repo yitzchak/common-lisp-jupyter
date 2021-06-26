@@ -1,13 +1,13 @@
 (in-package #:jupyter-widgets)
 
-(defclass valid (description-widget disabled-slot bool-value-slot)
+
+(defwidget valid (description-widget disabled-slot bool-value-slot)
   ((readout
      :initarg :readout
      :initform "Invalid"
      :accessor widget-readout
      :documentation "Message displayed when the value is False"
      :trait :string))
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "ValidModel"
     :%view-name "ValidView")

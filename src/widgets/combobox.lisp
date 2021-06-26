@@ -1,8 +1,8 @@
 (in-package #:jupyter-widgets)
 
 
-(defclass combobox (description-widget continuous-update-slot disabled-slot placeholder-slot
-                    string-value-slot)
+(defwidget combobox (description-widget continuous-update-slot disabled-slot placeholder-slot
+                     string-value-slot)
   ((ensure-option
      :initarg :ensure-option
      :initform t
@@ -15,7 +15,6 @@
      :accessor widget-options
      :documentation "Dropdown options for the combobox"
      :trait :string-list))
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "ComboboxModel"
     :%view-name "ComboboxView"))

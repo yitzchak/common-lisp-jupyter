@@ -1,14 +1,12 @@
 (in-package #:jupyter-widgets)
 
 
-(defclass base-text (description-widget disabled-slot continuous-update-slot)
-  ()
-  (:metaclass trait-metaclass))
+(defwidget base-text (description-widget disabled-slot continuous-update-slot)
+  ())
 
 
-(defclass label (description-widget placeholder-slot string-value-slot)
+(defwidget label (description-widget placeholder-slot string-value-slot)
   ()
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "LabelModel"
     :%view-name "LabelView")
@@ -18,22 +16,16 @@ It also renders math inside the string `value` as Latex (requires $ $ or
 $$ $$ and similar latex tags)."))
 
 
-
-
-(defclass html (label)
+(defwidget html (label)
   ()
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "HTMLModel"
     :%view-name "HTMLView")
   (:documentation "Renders the string `value` as HTML."))
 
 
-
-
-(defclass html-math (label)
+(defwidget html-math (label)
   ()
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "HTMLMathModel"
     :%view-name "HTMLMathView")

@@ -126,6 +126,7 @@
     #:controller-axis
     #:controller-button
     #:date-picker
+    #:defwidget
     #:description-style
     #:directional-link
     #:dom-widget
