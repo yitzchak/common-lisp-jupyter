@@ -6,7 +6,7 @@
      :initform "Invalid"
      :accessor widget-readout
      :documentation "Message displayed when the value is False"
-     :trait :unicode))
+     :trait :string))
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "ValidModel"

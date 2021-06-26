@@ -6,7 +6,7 @@
      :initform ""
      :accessor widget-box-style
      :documentation "Use a predefined styling for the box."
-     :trait :unicode)
+     :trait :string)
    (children
      :initarg :children
      :initform nil
@@ -38,7 +38,7 @@
      :initform nil
      :accessor widget-%titles
      :documentation "Titles of the pages."
-     :trait :unicode-list)
+     :trait :string-list)
    (selected-index
      :initarg :selected-index
      :accessor widget-selected-index

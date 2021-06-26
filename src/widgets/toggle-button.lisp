@@ -19,7 +19,7 @@
      :initform ""
      :accessor widget-icons
      :documentation "Icons names for each button (FontAwesome names without the fa- prefix)."
-     :trait :unicode-list)
+     :trait :string-list)
    (options
      :accessor widget-options
      :initarg :options
@@ -28,7 +28,7 @@
      :initarg :tooltips
      :accessor widget-tooltips
      :documentation "Tooltips for each button."
-     :trait :unicode-list))
+     :trait :string-list))
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "ToggleButtonsModel"

@@ -14,7 +14,7 @@
      :initform nil
      :accessor widget-options
      :documentation "Dropdown options for the combobox"
-     :trait :unicode-list))
+     :trait :string-list))
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "ComboboxModel"

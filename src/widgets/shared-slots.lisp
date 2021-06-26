@@ -12,7 +12,7 @@
      :initform nil
      :accessor widget-%options-labels
      :documentation "The labels for the options."
-     :trait :unicode-list))
+     :trait :string-list))
   (:metaclass trait-metaclass))
 
 (defmethod validate-trait ((w %options-labels-slot) (type (eql :int)) name value)
@@ -54,7 +54,7 @@
      :initform ""
      :accessor widget-button-style
      :documentation "Use a predefined styling for the button."
-     :trait :unicode))
+     :trait :string))
   (:metaclass trait-metaclass))
 
 
@@ -141,7 +141,7 @@
      :initarg :format
      :accessor widget-format
      :documentation "The format of the media."
-     :trait :unicode))
+     :trait :string))
   (:metaclass trait-metaclass))
 
 
@@ -151,7 +151,7 @@
      :initform ""
      :accessor widget-height
      :documentation "Height of the media in pixels."
-     :trait :unicode))
+     :trait :string))
   (:metaclass trait-metaclass))
 
 
@@ -161,7 +161,7 @@
      :initform ""
      :accessor widget-icon
      :documentation "Font-awesome icon name, without the 'fa-' prefix."
-     :trait :unicode))
+     :trait :string))
   (:metaclass trait-metaclass))
 
 
@@ -229,7 +229,7 @@
      :initform "horizontal"
      :accessor widget-orientation
      :documentation "Vertical or horizontal."
-     :trait :unicode))
+     :trait :string))
   (:metaclass trait-metaclass))
 
 
@@ -239,7 +239,7 @@
      :initform (coerce #-cmucl '(#\U200B) #+cmucl '(#\U+200B) 'string)
      :accessor widget-placeholder
      :documentation "Placeholder text to display when nothing has been typed."
-     :trait :unicode))
+     :trait :string))
   (:metaclass trait-metaclass))
 
 
@@ -249,17 +249,17 @@
      :initform ""
      :accessor widget-value
      :documentation "String value"
-     :trait :unicode))
+     :trait :string))
   (:metaclass trait-metaclass))
 
 
 (defclass tooltip-slot ()
   ((tooltip
      :initarg :tooltip
-     :initform nil
+     :initform ""
      :accessor widget-tooltip
      :documentation "Tooltip caption."
-     :trait :unicode))
+     :trait :string))
   (:metaclass trait-metaclass))
 
 
@@ -269,5 +269,5 @@
      :initform ""
      :accessor widget-width
      :documentation "Width of the media in pixels."
-     :trait :unicode))
+     :trait :string))
   (:metaclass trait-metaclass))

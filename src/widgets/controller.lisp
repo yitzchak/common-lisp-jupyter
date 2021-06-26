@@ -56,13 +56,13 @@
      :initform ""
      :accessor widget-mapping
      :documentation "The name of the control mapping."
-     :trait :unicode)
+     :trait :string)
    (name
      :initarg :name
      :initform ""
      :accessor widget-name
      :documentation "The name of the controller."
-     :trait :unicode)
+     :trait :string)
    (timestamp
      :initarg :timestamp
      :initform 0.0d0

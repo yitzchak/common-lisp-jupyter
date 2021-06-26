@@ -13,7 +13,7 @@
      :initarg :readout-format
      :accessor widget-readout-format
      :documentation "Format for the readout"
-     :trait :unicode))
+     :trait :string))
   (:metaclass trait-metaclass)
   (:default-initargs
     :style (make-instance 'slider-style)))
@@ -24,7 +24,7 @@
      :initarg :readout-format
      :accessor widget-readout-format
      :documentation "Format for the readout"
-     :trait :unicode))
+     :trait :string))
   (:metaclass trait-metaclass))
 
 

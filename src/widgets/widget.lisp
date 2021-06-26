@@ -69,32 +69,32 @@
      :initarg :%model-name
      :reader widget-%module-name
      :documentation "Name of the model."
-     :trait :unicode)
+     :trait :string)
    (%model-module
      :initarg :%model-module
      :reader widget-%module-module
      :documentation "The namespace for the model."
-     :trait :unicode)
+     :trait :string)
    (%model-module-version
      :initarg :%model-module-version
      :reader widget-%module-module-version
      :documentation "A semver requirement for namespace version containing the model."
-     :trait :unicode)
+     :trait :string)
    (%view-name
      :initarg :%view-name
      :reader widget-%view-name
      :documentation "Name of the view."
-     :trait :unicode)
+     :trait :string)
    (%view-module
      :initarg :%view-module
      :reader widget-%view-module
      :documentation "The namespace for the view."
-     :trait :unicode)
+     :trait :string)
    (%view-module-version
      :initarg :%view-module-version
      :reader widget-%view-module-version
      :documentation "A semver requirement for namespace version containing the view."
-     :trait :unicode))
+     :trait :string))
   (:metaclass trait-metaclass)
   (:default-initargs
     :display-data t

@@ -6,7 +6,7 @@
      :initarg :description
      :accessor widget-description
      :documentation "Button label."
-     :trait :unicode)
+     :trait :string)
    (on-click
      :initarg :on-click
      :initform nil

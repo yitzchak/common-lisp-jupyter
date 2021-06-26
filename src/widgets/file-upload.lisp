@@ -7,7 +7,7 @@
      :initform ""
      :accessor widget-accept
      :documentation "If set, ensure value is in options. Implies continuous_update=False.	File types to accept, empty string for all."
-     :trait :unicode)
+     :trait :string)
    (data
      :initarg :data
      :initform nil
@@ -19,7 +19,7 @@
      :initform ""
      :accessor widget-error
      :documentation "Error message"
-     :trait :unicode)
+     :trait :string)
    (metadata
      :initarg :metadata
      :initform nil

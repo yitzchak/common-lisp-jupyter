@@ -17,12 +17,12 @@
      :initform nil
      :accessor widget-button-color
      :documentation "Color of the button"
-     :trait :unicode)
+     :trait :string)
    (font-weight
      :initarg :font-weight
      :accessor widget-font-weight
      :documentation "Button text font weight."
-     :trait :unicode))
+     :trait :string))
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "ButtonStyleModel")
@@ -37,7 +37,7 @@
      :initform nil
      :accessor widget-description-width
      :documentation "Width of the description to the side of the control."
-     :trait :unicode))
+     :trait :string))
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "DescriptionStyleModel"))
@@ -78,18 +78,18 @@
      :initform nil
      :accessor widget-button-width
      :documentation "The width of each button."
-     :trait :unicode)
+     :trait :string)
    (description-width
      :initarg :description-width
      :initform nil
      :accessor widget-description-width
      :documentation "Width of the description to the side of the control."
-     :trait :unicode)
+     :trait :string)
    (font-weight
      :initarg :font-weight
      :accessor widget-font-weight
      :documentation "Text font weight of each button."
-     :trait :unicode))
+     :trait :string))
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "ToggleButtonsStyleModel")
@@ -112,12 +112,12 @@
      :initarg :description
      :accessor widget-description
      :documentation "Description of the control."
-     :trait :unicode)
+     :trait :string)
    (description-tooltip
      :initarg :description-tooltip
      :accessor widget-description-tooltip
      :documentation "Tooltip for the description (defaults to description)."
-     :trait :unicode))
+     :trait :string))
   (:metaclass trait-metaclass)
   (:default-initargs
     :style (make-instance 'description-style)))

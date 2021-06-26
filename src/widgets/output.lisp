@@ -6,7 +6,7 @@
      :initform ""
      :accessor widget-msg-id
      :documentation "Parent message id of messages to capture"
-     :trait :unicode)
+     :trait :string)
    (outputs
      :initarg :outputs
      :initform nil
@@ -48,7 +48,7 @@ output area.
      :accessor widget-title
      :initarg :title
      :initform nil
-     :trait :unicode))
+     :trait :string))
   (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "SidecarModel"
