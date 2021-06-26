@@ -47,6 +47,7 @@
 
 
 (defun complete-symbol (match-set partial-name start end package func statuses)
+  (format t "~a ~a ~a ~a ~a ~a ~a~%" match-set partial-name start end package func statuses)
   (when package
     (do-symbols (sym package (values))
       (let ((sym-name (symbol-name sym)))
@@ -143,28 +144,38 @@
 (defmethod complete-fragment (match-set (frag symbol-fragment))
   (with-slots (status position children)
               frag
+    (format t "~a ~a ~a~%" status position children)
     (let* ((func (or (equal 0 position)
                      (and (equal 1 position)
                           (equal 'function (fragment-value (first (fragment-children (fragment-parent frag))))))))
            (symbol-name-frag (car (last children)))
            (symbol-name (fragment-value symbol-name-frag))
            (start (fragment-start symbol-name-frag))
-           (end (fragment-end symbol-name-frag)))
+           (end (fragment-end symbol-name-frag))
+           (colon-pos (position #\: symbol-name)))
       (cond
-        ((eql :local status)
-          (complete-package match-set symbol-name start end :include-marker t)
-          (unless func
-            (complete-method match-set symbol-name start end *package*
-                             '(:internal :external :inherited)))
-          (complete-symbol match-set symbol-name start end *package* func
-                           '(:internal :external :inherited)))
-        (t
+        ((not (eql :local status))
           (let ((pkg (find-package (if (zerop (length (fragment-value (first children))))
                                      "KEYWORD"
                                      (fragment-value (first children))))))
             (unless func
               (complete-method match-set symbol-name start end pkg (list status)))
-            (complete-symbol match-set symbol-name start end pkg func (list status))))))))
+            (complete-symbol match-set symbol-name start end pkg func (list status))))
+        (colon-pos
+          (let ((pkg (find-package (subseq symbol-name 0 colon-pos)))
+                (status (if (= (1- (length symbol-name)) colon-pos)
+                          '(:external)
+                          '(:internal :external))))
+            #+(or)(unless func
+              (complete-method match-set "" start end pkg status))
+            (complete-symbol match-set "" start end pkg func status)))
+        (t
+          (complete-package match-set symbol-name start end :include-marker t)
+          (unless func
+            (complete-method match-set symbol-name start end *package*
+                             '(:internal :external :inherited)))
+          (complete-symbol match-set symbol-name start end *package* func
+                           '(:internal :external :inherited)))))))
 
 
 (defmethod complete-fragment (match-set (frag package-name-fragment))
