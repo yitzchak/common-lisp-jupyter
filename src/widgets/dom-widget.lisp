@@ -270,3 +270,11 @@ expose the shorthand."))
     :%view-module +controls-module+
     :%view-module-version +controls-module-version+)
 (:documentation "Base class for all Jupyter widgets which have DOM view."))
+
+
+(defun focus (widget)
+  (send-custom widget '(:object-plist "do" "focus")))
+
+
+(defun blur (widget)
+  (send-custom widget '(:object-plist "do" "blur")))

@@ -113,6 +113,7 @@
   (:export
     #:accordion
     #:audio
+    #:blur
     #:bounded-float-text
     #:bounded-int-text
     #:box
@@ -135,6 +136,7 @@
     #:float-range-slider
     #:float-slider
     #:float-text
+    #:focus
     #:grid-box
     #:has-traits
     #:h-box
