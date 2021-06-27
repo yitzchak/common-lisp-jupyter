@@ -223,3 +223,17 @@
                               :metadata metadata
                               :content content
                               :buffers buffers))))
+
+
+(defun recv-heartbeat (ch)
+  (with-slots (recv-lock) ch
+    (bordeaux-threads:with-lock-held (recv-lock)
+      (pzmq:with-message msg
+        (read-binary-part ch msg)))))
+
+
+(defun send-heartbeat (ch part)
+  (with-slots (send-lock) ch
+    (send-binary-part ch part)))
+
+
