@@ -243,6 +243,7 @@
   (when source
     (send-state w name)))
 
+
 (defmethod initialize-instance :around ((instance widget) &rest rest &key &allow-other-keys)
   (with-trait-silence instance
     (prog1
@@ -251,10 +252,13 @@
         (multiple-value-bind (state buffer-paths buffers)
                              (to-json-state instance)
           (jupyter:send-comm-open instance
-            `(:object-alist ("state" . ,state)
-                      ("buffer_paths" . ,(or buffer-paths :empty-array)))
-            `(:object-alist ("version" . ,+protocol-version+))
+            (list :object-plist
+                  "state" state
+                  "buffer_paths" (or buffer-paths :empty-array))
+            (list :object-plist
+                  "version" +protocol-version+)
             buffers))))))
+
 
 (defmethod jupyter:create-comm ((target-name (eql :|jupyter.widget|)) id data metadata buffers)
   (let* ((state (gethash "state" data))

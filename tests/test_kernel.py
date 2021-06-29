@@ -740,7 +740,7 @@ def test_widget_button(jupyter_kernel):
                                              (error "gronk"))))''',
         timeout=10,
         expected_messages=[
-            [
+            (
                 {
                     "msg_type": "comm_open",
                     "metadata": {"version": "2.0.0"},
@@ -833,14 +833,12 @@ def test_widget_button(jupyter_kernel):
                                 "button_style": "",
                                 "disabled": False,
                                 "icon": "",
-                                "tooltip": None,
+                                "tooltip": "",
                             },
                             "buffer_paths": [],
                         },
                     },
                 },
-            ],
-            [
                 {
                     "msg_type": "execute_result",
                     "content": {
@@ -853,7 +851,7 @@ def test_widget_button(jupyter_kernel):
                         "metadata": {},
                     },
                 }
-            ],
+            ),
         ],
     )
     jupyter_kernel.comm_msg_read_reply(
