@@ -94,7 +94,7 @@ jobs:
     - name: Install CMUCL kernel
       if: matrix.os == 'ubuntu-latest'
       run: |
-        cmucl --batch --load scripts/usr-install.lisp
+        cmucl -load scripts/usr-install.lisp --eval '(quit)'
 
     - name: Install ECL kernel
       if: matrix.os == 'ubuntu-latest'
