@@ -88,10 +88,15 @@ jobs:
       run: |
         git clone https://github.com/orivej/pzmq.git ~/quicklisp/local-projects/pzmq
 
-    - name: Install CCL kernel
-      if: matrix.os == 'macos-latest' || matrix.os == 'ubuntu-latest'
+    - name: Install CCL kernel on MacOS
+      if: matrix.os == 'macos-latest'
       run: |
         ccl64 --batch --load scripts/usr-install.lisp
+
+    - name: Install CCL kernel on Ubuntu
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        ccl --batch --load scripts/usr-install.lisp
 
     - name: Install CMUCL kernel
       if: matrix.os == 'ubuntu-latest'
