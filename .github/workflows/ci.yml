@@ -92,7 +92,7 @@ jobs:
         ccl64 --batch --load scripts/usr-install.lisp
 
     - name: Install CMUCL kernel
-      if: matrix.os == 'ubunt-latest'
+      if: matrix.os == 'ubuntu-latest'
       run: |
         cmucl --batch --load scripts/usr-install.lisp
 
