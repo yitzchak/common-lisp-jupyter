@@ -51,6 +51,8 @@ jobs:
         sudo apt-get install -y ecl libzmq3-dev sbcl
         curl -L https://github.com/yitzchak/dur/releases/download/cmucl_21d-1/cmucl_21d-1_amd64.deb --output cmucl_21d-1_amd64.deb
         sudo apt-get install -y ./cmucl_21d-1_amd64.deb
+        curl -L https://github.com/yitzchak/dur/releases/download/ccl_1.12.1-1/ccl_1.12.1-1_amd64.deb --output ccl_1.12.1-1_amd64.deb
+        sudo apt-get install -y ./ccl_1.12.1-1_amd64.deb
 
     - name: Install MacOS dependencies
       if: matrix.os == 'macos-latest'
@@ -87,7 +89,7 @@ jobs:
         git clone https://github.com/orivej/pzmq.git ~/quicklisp/local-projects/pzmq
 
     - name: Install CCL kernel
-      if: matrix.os == 'macos-latest'
+      if: matrix.os == 'macos-latest' || matrix.os == 'ubuntu-latest'
       run: |
         ccl64 --batch --load scripts/usr-install.lisp
 
