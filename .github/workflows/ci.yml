@@ -49,6 +49,8 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       run: |
         sudo apt-get install ecl libzmq3-dev sbcl
+        curl -L https://github.com/yitzchak/dur/releases/download/cmucl_21d-1/cmucl_21d-1_amd64.deb
+        sudo dpkg -i cmucl_21d-1_amd64.deb
 
     - name: Install MacOS dependencies
       if: matrix.os == 'macos-latest'
@@ -88,6 +90,11 @@ jobs:
       if: matrix.os == 'macos-latest'
       run: |
         ccl64 --batch --load scripts/usr-install.lisp
+
+    - name: Install CMUCL kernel
+      if: matrix.os == 'ubunt-latest'
+      run: |
+        cmucl --batch --load scripts/usr-install.lisp
 
     - name: Install ECL kernel
       if: matrix.os == 'ubuntu-latest'
