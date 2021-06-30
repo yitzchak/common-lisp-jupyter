@@ -49,7 +49,7 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       run: |
         sudo apt-get install ecl libzmq3-dev sbcl
-        curl -L https://github.com/yitzchak/dur/releases/download/cmucl_21d-1/cmucl_21d-1_amd64.deb
+        curl -L https://github.com/yitzchak/dur/releases/download/cmucl_21d-1/cmucl_21d-1_amd64.deb --output cmucl_21d-1_amd64.deb
         sudo dpkg -i cmucl_21d-1_amd64.deb
 
     - name: Install MacOS dependencies
