@@ -48,6 +48,8 @@ jobs:
     - name: Install Ubuntu dependencies
       if: matrix.os == 'ubuntu-latest'
       run: |
+        sudo dpkg --add-architecture i386
+        sudo apt-get update
         sudo apt-get install -y ecl libzmq3-dev libzmq3-dev:i386 sbcl
         curl -L https://github.com/yitzchak/dur/releases/download/cmucl_21d-1/cmucl_21d-1_amd64.deb --output cmucl_21d-1_amd64.deb
         sudo apt-get install -y ./cmucl_21d-1_amd64.deb
