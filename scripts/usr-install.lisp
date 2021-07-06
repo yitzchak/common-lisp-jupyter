@@ -22,7 +22,7 @@
 #+cmucl (handler-bind ((error (lambda (e)
                                 (declare (ignore e))
                                 (invoke-restart 'asdf:try-recompiling))))
-          (ql:quickload :ironclad))
+          (asdf:load-system :ironclad))
 
 (ql:quickload :common-lisp-jupyter)
 
