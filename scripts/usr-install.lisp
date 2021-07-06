@@ -19,6 +19,11 @@
 (ql-util:without-prompting
   (ql:add-to-init-file))
 
+#+cmucl (handler-bind ((error (lambda (e)
+                                (declare (ignore e))
+                                (invoke-restart 'asdf:try-recompiling))))
+          (ql:quickload :ironclad))
+
 (ql:quickload :common-lisp-jupyter)
 
 (clj:install :use-implementation t :bin-path (first (uiop:command-line-arguments)))
