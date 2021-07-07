@@ -21,7 +21,9 @@
 
 #+cmucl (handler-bind ((error (lambda (e)
                                 (declare (ignore e))
-                                (invoke-restart 'asdf:try-recompiling))))
+                                (dolist (restart-name '(asdf:try-recompiling asdf:retry))
+                                  (when (find-restart restart-name)
+                                    (invoke-restart restart-name))))))
           (asdf:load-system :ironclad))
 
 (ql:quickload :common-lisp-jupyter)
