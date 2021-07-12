@@ -51,8 +51,8 @@ jobs:
         sudo dpkg --add-architecture i386
         sudo apt-get update
         sudo apt-get install -y ecl libzmq3-dev libzmq3-dev:i386 sbcl
-        curl -L https://github.com/yitzchak/dur/releases/download/ccl_1.12.1-1/ccl_1.12.1-1_amd64.deb --output ccl_1.12.1-1_amd64.deb
-        sudo apt-get install -y ./ccl_1.12.1-1_amd64.deb
+        curl -L https://github.com/yitzchak/dur/releases/download/ccl_1.12.1-1/ccl_1.12.1-1_amd64_ubuntu_focal.deb --output ccl.deb
+        sudo apt-get install -y ./ccl.deb
 
     - name: Install MacOS dependencies
       if: matrix.os == 'macos-latest'
