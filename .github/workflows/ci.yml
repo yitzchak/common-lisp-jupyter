@@ -48,7 +48,11 @@ jobs:
     - name: Install Ubuntu dependencies
       if: matrix.os == 'ubuntu-latest'
       run: |
-        sudo apt-get install ecl libzmq3-dev sbcl
+        sudo dpkg --add-architecture i386
+        sudo apt-get update
+        sudo apt-get install -y ecl libzmq3-dev libzmq3-dev:i386 sbcl
+        curl -L https://github.com/yitzchak/dur/releases/download/ccl_1.12.1-1/ccl_1.12.1-1_amd64_ubuntu_focal.deb --output ccl.deb
+        sudo apt-get install -y ./ccl.deb
 
     - name: Install MacOS dependencies
       if: matrix.os == 'macos-latest'
@@ -84,10 +88,15 @@ jobs:
       run: |
         git clone https://github.com/orivej/pzmq.git ~/quicklisp/local-projects/pzmq
 
-    - name: Install CCL kernel
+    - name: Install CCL kernel on MacOS
       if: matrix.os == 'macos-latest'
       run: |
         ccl64 --batch --load scripts/usr-install.lisp
+
+    - name: Install CCL kernel on Ubuntu
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        ccl --batch --load scripts/usr-install.lisp
 
     - name: Install ECL kernel
       if: matrix.os == 'ubuntu-latest'
@@ -97,11 +106,6 @@ jobs:
     - name: Install SBCL kernel
       run: |
         sbcl --non-interactive --load scripts/usr-install.lisp sbcl
-
-    # - name: Install ECL Jupyter kernel
-    #   if: matrix.os == 'ubuntu-latest'
-    #   run: |
-    #     ecl -shell scripts/usr-install.lisp
 
     - name: Run kernel tests
       run: |

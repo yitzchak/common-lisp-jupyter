@@ -1,9 +1,8 @@
 (in-package #:jupyter-widgets)
 
 
-(defclass controller-axis (dom-widget float-value-slot)
+(defwidget controller-axis (dom-widget float-value-slot)
   ()
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "ControllerAxisModel"
     :%view-name "ControllerAxisView")
@@ -12,14 +11,13 @@
 
 
 
-(defclass controller-button (dom-widget float-value-slot)
+(defwidget controller-button (dom-widget float-value-slot)
   ((pressed
      :initarg :pressed
      :initform nil
      :accessor widget-pressed
      :documentation "Whether the button is pressed."
      :trait :bool))
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "ControllerButtonModel"
     :%view-name "ControllerButtonView")
@@ -28,7 +26,7 @@
 
 
 
-(defclass controller (dom-widget)
+(defwidget controller (dom-widget)
   ((axes
      :initarg :axes
      :accessor widget-axes
@@ -69,7 +67,6 @@
      :accessor widget-timestamp
      :documentation "The last time the data from this gamepad was updated."
      :trait :float))
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "ControllerModel"
     :%view-name "ControllerView")

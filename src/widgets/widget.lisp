@@ -32,6 +32,46 @@
       view-name)))
 
 
+(defun def-initarg (slot-name initargs)
+  ; CMUCL appears to have the default initarg list in a different order.
+  (eval (#+cmucl third #-cmucl second (assoc slot-name initargs))))
+
+
+(defmacro register-widget (name)
+  (let* ((class (find-class name))
+         (final (closer-mop:finalize-inheritance class))
+         (slots (remove-if (lambda (definition &aux (initarg (first (closer-mop:slot-definition-initargs definition))))
+                             (or (null initarg)
+                                 (char= #\% (char (symbol-name initarg) 0))
+                                 (member initarg '(:on-click :sink :id :on-trait-change :kernel :display-data :target-name))))
+                           (closer-mop:class-slots class)))
+         (keys (mapcar (lambda (definition &aux (initarg (first (closer-mop:slot-definition-initargs definition))))
+                         (intern (symbol-name initarg) (symbol-package name)))
+                       slots))
+         (initargs (closer-mop:class-default-initargs class))
+         (widget-name (widget-registry-name (def-initarg :%model-module initargs)
+                                            (def-initarg :%model-module-version initargs)
+                                            (def-initarg :%model-name initargs)
+                                            (def-initarg :%view-module initargs)
+                                            (def-initarg :%view-module-version initargs)
+                                            (def-initarg :%view-name initargs)))
+         (make-fun-sym (alexandria:format-symbol (symbol-package name) "MAKE-~A" name)))
+    (when widget-name
+      `(progn
+         (setf (gethash ,widget-name *widgets*) (quote ,name))
+         (defun ,make-fun-sym (&rest initargs &key ,@keys &allow-other-keys)
+           (declare (ignore ,@keys))
+           (apply #'make-instance (quote ,name) initargs))
+         (export '(,make-fun-sym) ,(package-name (symbol-package name)))))))
+
+
+(defmacro defwidget (name &rest rest)
+  `(progn
+     (eval-when (:compile-toplevel :load-toplevel :execute)
+       (defclass ,name ,@rest (:metaclass trait-metaclass)))
+     (register-widget ,name)))
+
+
 (defmacro register-widgets (&rest names)
   (flet ((def-initarg (slot-name initargs)
            ; CMUCL appears to have the default initarg list in a different order.
@@ -203,6 +243,7 @@
   (when source
     (send-state w name)))
 
+
 (defmethod initialize-instance :around ((instance widget) &rest rest &key &allow-other-keys)
   (with-trait-silence instance
     (prog1
@@ -211,10 +252,13 @@
         (multiple-value-bind (state buffer-paths buffers)
                              (to-json-state instance)
           (jupyter:send-comm-open instance
-            `(:object-alist ("state" . ,state)
-                      ("buffer_paths" . ,(or buffer-paths :empty-array)))
-            `(:object-alist ("version" . ,+protocol-version+))
+            (list :object-plist
+                  "state" state
+                  "buffer_paths" (or buffer-paths :empty-array))
+            (list :object-plist
+                  "version" +protocol-version+)
             buffers))))))
+
 
 (defmethod jupyter:create-comm ((target-name (eql :|jupyter.widget|)) id data metadata buffers)
   (let* ((state (gethash "state" data))

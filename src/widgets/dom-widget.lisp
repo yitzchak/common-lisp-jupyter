@@ -1,6 +1,6 @@
 (in-package #:jupyter-widgets)
 
-(defclass layout (widget)
+(defwidget layout (widget)
   ((align-content
      :initarg :align-content
      :initform nil
@@ -229,7 +229,6 @@
      :accessor widget-width
      :documentation "The width CSS attribute."
      :trait :string))
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "LayoutModel"
     :%model-module +base-module+
@@ -249,7 +248,7 @@ expose the shorthand."))
 
 
 
-(defclass dom-widget (widget)
+(defwidget dom-widget (widget)
   ((%dom-classes
      :initarg :%dom-classes
      :accessor widget-%dom-classes
@@ -261,12 +260,11 @@ expose the shorthand."))
      :accessor widget-layout
      :documentation "Reference to layout widget."
      :trait :widget))
-  (:metaclass trait-metaclass)
   (:default-initargs
-    :%model-name "DOMWidgetModel"
+    ;:%model-name "DOMWidgetModel"
     :%model-module +controls-module+
     :%model-module-version +controls-module-version+
-    :%view-name ""
+    ;:%view-name nil
     :%view-module +controls-module+
     :%view-module-version +controls-module-version+)
 (:documentation "Base class for all Jupyter widgets which have DOM view."))

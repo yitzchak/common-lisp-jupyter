@@ -366,6 +366,7 @@
        poll
         (catch 'kernel-interrupt
           (when (zerop (pzmq:poll items +zmq-poll-timeout+))
+            #+cmucl (bordeaux-threads:thread-yield)
             (go poll))
           (setf *message* (message-recv shell)
                 msg-type (gethash "msg_type" (message-header *message*)))
@@ -415,6 +416,7 @@
            *message* msg-type)
      poll
       (when (zerop (pzmq:poll items +zmq-poll-timeout+))
+        #+cmucl (bordeaux-threads:thread-yield)
         (go poll))
       (setf *message* (message-recv control)
             msg-type (format nil "~A~@[/~A~]"

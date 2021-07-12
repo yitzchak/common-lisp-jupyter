@@ -1,14 +1,12 @@
 (in-package #:jupyter-widgets)
 
 
-(defclass base-text (description-widget disabled-slot continuous-update-slot)
-  ()
-  (:metaclass trait-metaclass))
+(defwidget base-text (description-widget disabled-slot continuous-update-slot)
+  ())
 
 
-(defclass text (base-text placeholder-slot string-value-slot)
+(defwidget text (base-text placeholder-slot string-value-slot)
   ()
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "TextModel"
     :%view-name "TextView")
@@ -17,14 +15,13 @@
 
 
 
-(defclass text-area (text)
+(defwidget text-area (text)
   ((rows
      :initarg :rows
      :initform nil
      :accessor widget-rows
      :documentation "The number of rows to display."
      :trait :int))
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "TextareaModel"
     :%view-name "TextareaView")
@@ -33,9 +30,8 @@
 
 
 
-(defclass password (text)
+(defwidget password (text)
   ()
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "PasswordModel"
     :%view-name "PasswordView")
@@ -44,9 +40,8 @@
 
 
 
-(defclass float-text (base-text float-step-slot float-value-slot)
+(defwidget float-text (base-text float-step-slot float-value-slot)
   ()
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "FloatTextModel"
     :%view-name "FloatTextView")
@@ -57,9 +52,8 @@ be within a specific range, use BoundedFloatText."))
 
 
 
-(defclass bounded-float-text (float-text float-min-max-slots)
+(defwidget bounded-float-text (float-text float-min-max-slots)
   ()
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "BoundedFloatTextModel"
     :%view-name "FloatTextView")
@@ -71,9 +65,8 @@ range, use float-text."))
 
 
 
-(defclass int-text (base-text int-step-slot int-value-slot)
+(defwidget int-text (base-text int-step-slot int-value-slot)
   ()
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "IntTextModel"
     :%view-name "IntTextView")
@@ -82,9 +75,8 @@ range, use float-text."))
 
 
 
-(defclass bounded-int-text (int-text int-min-max-slots)
+(defwidget bounded-int-text (int-text int-min-max-slots)
   ()
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "BoundedIntTextModel")
   (:documentation

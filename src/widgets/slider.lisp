@@ -1,8 +1,8 @@
 (in-package #:jupyter-widgets)
 
 
-(defclass base-slider (description-widget disabled-slot orientation-slot
-                       continuous-update-slot)
+(defwidget base-slider (description-widget disabled-slot orientation-slot
+                        continuous-update-slot)
   ((readout
      :initarg :readout
      :initform t
@@ -14,29 +14,26 @@
      :accessor widget-readout-format
      :documentation "Format for the readout"
      :trait :string))
-  (:metaclass trait-metaclass)
   (:default-initargs
     :style (make-instance 'slider-style)))
 
 
-(defclass number-slider (base-slider)
+(defwidget number-slider (base-slider)
   ((readout-format
      :initarg :readout-format
      :accessor widget-readout-format
      :documentation "Format for the readout"
-     :trait :string))
-  (:metaclass trait-metaclass))
+     :trait :string)))
 
 
-(defclass float-log-slider (number-slider float-min-max-slots float-step-slot
-                            float-value-slot)
+(defwidget float-log-slider (number-slider float-min-max-slots float-step-slot
+                             float-value-slot)
   ((base
      :initarg :base
      :initform 10.0d0
      :accessor widget-base
      :documentation "Base for the logarithm"
      :trait :float))
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "FloatLogSliderModel"
     :%view-name "FloatLogSliderView"
@@ -48,14 +45,13 @@
 
 
 
-(defclass float-range-slider (number-slider float-min-max-slots float-step-slot)
+(defwidget float-range-slider (number-slider float-min-max-slots float-step-slot)
   ((value
      :initarg :value
      :initform (list 0.0d0 1.0d0)
      :accessor widget-value
      :documentation "Float range"
      :trait :float-list))
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "FloatRangeSliderModel"
     :%view-name "FloatRangeSliderView"
@@ -67,10 +63,9 @@ value."))
 
 
 
-(defclass float-slider (number-slider float-min-max-slots float-step-slot
-                        float-value-slot)
+(defwidget float-slider (number-slider float-min-max-slots float-step-slot
+                         float-value-slot)
   ()
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "FloatSliderModel"
     :%view-name "FloatSliderView"
@@ -80,14 +75,13 @@ value."))
 
 
 
-(defclass int-range-slider (number-slider int-min-max-slots int-step-slot)
+(defwidget int-range-slider (number-slider int-min-max-slots int-step-slot)
   ((value
      :initarg :value
      :initform (list 0 1)
      :accessor widget-value
      :documentation "Int range value"
      :trait :int-list))
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "IntRangeSliderModel"
     :%view-name "IntRangeSliderView"
@@ -99,10 +93,9 @@ value."))
 
 
 
-(defclass int-slider (number-slider int-min-max-slots int-step-slot
-                      int-value-slot)
+(defwidget int-slider (number-slider int-min-max-slots int-step-slot
+                       int-value-slot)
   ()
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "IntSliderModel"
     :%view-name "IntSliderView"
@@ -113,22 +106,20 @@ value."))
 
 
 
-(defclass label-slider (base-slider %options-labels-slot)
+(defwidget label-slider (base-slider %options-labels-slot)
   ((options
     :accessor widget-options
     :initarg :options
-    :documentation "The option values that correspond to the labels"))
-  (:metaclass trait-metaclass))
+    :documentation "The option values that correspond to the labels")))
 
 
-(defclass selection-range-slider (label-slider)
+(defwidget selection-range-slider (label-slider)
   ((index
      :initarg :index
      :initform '(0 0)
      :accessor widget-index
      :documentation "Min and max selected indices"
      :trait :int-list))
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "SelectionRangeSliderModel"
     :%view-name "SelectionRangeSliderView")
@@ -159,9 +150,8 @@ value."))
     (when value
       (setf (widget-value instance) value))))
 
-(defclass selection-slider (label-slider index-slot)
+(defwidget selection-slider (label-slider index-slot)
   ()
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "SelectionSliderModel"
     :%view-name "SelectionSliderView")

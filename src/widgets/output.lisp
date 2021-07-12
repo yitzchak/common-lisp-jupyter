@@ -1,6 +1,6 @@
 (in-package #:jupyter-widgets)
 
-(defclass output (dom-widget)
+(defwidget output (dom-widget)
   ((msg-id
      :initarg :msg-id
      :initform ""
@@ -13,7 +13,6 @@
      :accessor widget-outputs
      :documentation "The output messages synced from the frontend."
      :trait :list))
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "OutputModel"
     :%model-module +output-module+
@@ -43,13 +42,12 @@ output area.
 
 
 
-(defclass sidecar (output)
+(defwidget sidecar (output)
   ((title
      :accessor widget-title
      :initarg :title
      :initform nil
      :trait :string))
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "SidecarModel"
     :%model-module +sidecar-module+

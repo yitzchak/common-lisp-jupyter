@@ -1,7 +1,7 @@
 (in-package #:jupyter-widgets)
 
-(defclass button (styled-widget button-style-slot disabled-slot icon-slot
-                  tooltip-slot)
+(defwidget button (styled-widget button-style-slot disabled-slot icon-slot
+                   tooltip-slot)
   ((description
      :initarg :description
      :accessor widget-description
@@ -11,7 +11,6 @@
      :initarg :on-click
      :initform nil
      :accessor widget-on-click))
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "ButtonModel"
     :%view-name "ButtonView"

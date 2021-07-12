@@ -1,8 +1,7 @@
 (in-package #:jupyter-widgets)
 
-(defclass style (widget)
+(defwidget style (widget)
   ()
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-module +controls-module+
     :%model-module-version +controls-module-version+
@@ -11,7 +10,7 @@
     :%view-module-version +base-module-version+))
 
 
-(defclass button-style (style)
+(defwidget button-style (style)
   ((button-color
      :initarg :button-color
      :initform nil
@@ -23,7 +22,6 @@
      :accessor widget-font-weight
      :documentation "Button text font weight."
      :trait :string))
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "ButtonStyleModel")
   (:documentation "Button style widget"))
@@ -31,27 +29,25 @@
 
 
 
-(defclass description-style (style)
+(defwidget description-style (style)
   ((description-width
      :initarg :description-width
      :initform nil
      :accessor widget-description-width
      :documentation "Width of the description to the side of the control."
      :trait :string))
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "DescriptionStyleModel"))
 
 
 
 
-(defclass progress-style (description-style)
+(defwidget progress-style (description-style)
   ((bar-color
      :initarg :bar-color
      :accessor widget-bar-color
      :documentation "Color of the slider handle."
      :trait :color))
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "ProgressStyleModel")
   (:documentation "Progress style widget."))
@@ -59,20 +55,19 @@
 
 
 
-(defclass slider-style (description-style)
+(defwidget slider-style (description-style)
   ((handle-color
      :initarg :handle-color
      :accessor widget-handle-color
      :documentation "Color of the slider handle."
      :trait :color))
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "SliderStyleModel"))
 
 
 
 
-(defclass toggle-buttons-style (style)
+(defwidget toggle-buttons-style (style)
   ((button-width
      :initarg :button-width
      :initform nil
@@ -90,7 +85,6 @@
      :accessor widget-font-weight
      :documentation "Text font weight of each button."
      :trait :string))
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "ToggleButtonsStyleModel")
   (:documentation "Toggle Button style widget."))
@@ -98,16 +92,15 @@
 
 
 
-(defclass styled-widget (dom-widget)
+(defwidget styled-widget (dom-widget)
   ((style
      :initarg :style
      :accessor widget-style
      :documentation "Reference to style widget."
-     :trait :widget))
-  (:metaclass trait-metaclass))
+     :trait :widget)))
 
 
-(defclass description-widget (styled-widget)
+(defwidget description-widget (styled-widget)
   ((description
      :initarg :description
      :accessor widget-description
@@ -118,6 +111,5 @@
      :accessor widget-description-tooltip
      :documentation "Tooltip for the description (defaults to description)."
      :trait :string))
-  (:metaclass trait-metaclass)
   (:default-initargs
     :style (make-instance 'description-style)))

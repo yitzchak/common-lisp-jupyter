@@ -1,6 +1,6 @@
 (in-package #:jupyter-widgets)
 
-(defclass audio (dom-widget format-slot byte-value-slot)
+(defwidget audio (dom-widget format-slot byte-value-slot)
   ((autoplay
      :initarg :autoplay
      :initform t
@@ -19,7 +19,6 @@
      :accessor widget-loop
      :documentation "When true, the audio will start from the beginning after finishing"
      :trait :bool))
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "AudioModel"
     :%view-name "AudioView"
@@ -36,9 +35,8 @@ a URL as bytes encoded in UTF-8."))
 
 
 
-(defclass video (audio height-slot width-slot)
+(defwidget video (audio height-slot width-slot)
   ()
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "VideoModel"
     :%view-name "VideoView"
@@ -55,9 +53,8 @@ a URL as bytes encoded in UTF-8."))
 
 
 
-(defclass image (dom-widget format-slot height-slot width-slot byte-value-slot)
+(defwidget image (dom-widget format-slot height-slot width-slot byte-value-slot)
   ()
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "ImageModel"
     :%view-name "ImageView"
@@ -74,8 +71,8 @@ a URL as bytes encoded in UTF-8."))
 
 
 
-(defclass play (description-widget disabled-slot int-min-max-slots int-step-slot
-                int-value-slot)
+(defwidget play (description-widget disabled-slot int-min-max-slots int-step-slot
+                 int-value-slot)
   ((%playing
     :initarg :%playing
     :initform nil
@@ -100,7 +97,6 @@ a URL as bytes encoded in UTF-8."))
     :accessor widget-show-repeat
     :documentation "Show the repeat toggle button in the widget."
     :trait :bool))
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "PlayModel"
     :%view-name "PlayView")

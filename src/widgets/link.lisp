@@ -1,7 +1,7 @@
 (in-package #:jupyter-widgets)
 
 
-(defclass link (widget)
+(defwidget link (widget)
   ((source
      :initarg :source
      :initform nil
@@ -12,7 +12,6 @@
      :initform nil
      :accessor widget-target
      :trait :link))
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "LinkModel"
     :%model-module +controls-module+
@@ -25,9 +24,8 @@
 
 
 
-(defclass directional-link (link)
+(defwidget directional-link (link)
   ()
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "DirectionalLinkModel")
   (:documentation "A directional link"))

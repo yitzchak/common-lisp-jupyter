@@ -1,9 +1,8 @@
 (in-package #:jupyter-widgets)
 
-(defclass toggle-button (description-widget button-style-slot disabled-slot
-                         icon-slot tooltip-slot bool-value-slot)
+(defwidget toggle-button (description-widget button-style-slot disabled-slot
+                          icon-slot tooltip-slot bool-value-slot)
   ()
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "ToggleButtonModel"
     :%view-name "ToggleButtonView")
@@ -12,8 +11,8 @@
 
 
 
-(defclass toggle-buttons (description-widget %options-labels-slot
-                          button-style-slot disabled-slot index-slot)
+(defwidget toggle-buttons (description-widget %options-labels-slot
+                           button-style-slot disabled-slot index-slot)
   ((icons
      :initarg :icons
      :initform ""
@@ -29,7 +28,6 @@
      :accessor widget-tooltips
      :documentation "Tooltips for each button."
      :trait :string-list))
-  (:metaclass trait-metaclass)
   (:default-initargs
     :%model-name "ToggleButtonsModel"
     :%view-name "ToggleButtonsView")
