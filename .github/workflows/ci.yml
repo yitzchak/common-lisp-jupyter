@@ -51,8 +51,6 @@ jobs:
         sudo dpkg --add-architecture i386
         sudo apt-get update
         sudo apt-get install -y ecl libzmq3-dev libzmq3-dev:i386 sbcl
-        curl -L https://github.com/yitzchak/dur/releases/download/cmucl_21d-1/cmucl_21d-1_amd64.deb --output cmucl_21d-1_amd64.deb
-        sudo apt-get install -y ./cmucl_21d-1_amd64.deb
         curl -L https://github.com/yitzchak/dur/releases/download/ccl_1.12.1-1/ccl_1.12.1-1_amd64.deb --output ccl_1.12.1-1_amd64.deb
         sudo apt-get install -y ./ccl_1.12.1-1_amd64.deb
 
@@ -100,11 +98,6 @@ jobs:
       run: |
         ccl --batch --load scripts/usr-install.lisp
 
-    - name: Install CMUCL kernel
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        cmucl -load scripts/usr-install.lisp --eval '(quit)'
-
     - name: Install ECL kernel
       if: matrix.os == 'ubuntu-latest'
       run: |
@@ -113,11 +106,6 @@ jobs:
     - name: Install SBCL kernel
       run: |
         sbcl --non-interactive --load scripts/usr-install.lisp sbcl
-
-    # - name: Install ECL Jupyter kernel
-    #   if: matrix.os == 'ubuntu-latest'
-    #   run: |
-    #     ecl -shell scripts/usr-install.lisp
 
     - name: Run kernel tests
       run: |
