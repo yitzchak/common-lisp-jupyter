@@ -51,8 +51,10 @@ jobs:
         sudo dpkg --add-architecture i386
         sudo apt-get update
         sudo apt-get install -y ecl libzmq3-dev libzmq3-dev:i386 sbcl
-        curl -L https://github.com/yitzchak/dur/releases/download/ccl_1.12.1-1/ccl_1.12.1-1_amd64_ubuntu_focal.deb --output ccl.deb
-        sudo apt-get install -y ./ccl.deb
+        curl -L https://github.com/yitzchak/mpr/releases/download/ccl_1.12.1-1/ccl_1.12.1-1_amd64_ubuntu_focal.deb --output ccl.deb
+        curl -L https://github.com/yitzchak/mpr/releases/download/llvm13_13.r5140.g972b6a3a3471-1/llvm13_13.r5140.g972b6a3a3471-1_amd64_ubuntu_focal.deb --output llvm13.deb
+        curl -L https://github.com/yitzchak/mpr/releases/download/clasp-cl-git_0.4.2.r4473.g7ba57bd76-1/clasp-cl-git_0.4.2.r4473.g7ba57bd76-1_amd64_ubuntu_focal.deb --output clasp-cl-git.deb
+        sudo apt-get install -y ./ccl.deb ./llvm13.deb ./clasp-cl-git.deb
 
     - name: Install MacOS dependencies
       if: matrix.os == 'macos-latest'
@@ -97,6 +99,11 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       run: |
         ccl --batch --load scripts/usr-install.lisp
+
+    - name: Install CLASP kernel
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        iclasp-boehmprecise --non-interactive --load scripts/usr-install.lisp
 
     - name: Install ECL kernel
       if: matrix.os == 'ubuntu-latest'
