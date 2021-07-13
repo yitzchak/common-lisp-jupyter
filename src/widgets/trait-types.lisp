@@ -1,4 +1,4 @@
-(in-package #:jupyter-widgets)
+(in-package #:jupyter/widgets)
 
 (defparameter +widget-prefix+ "IPY_MODEL_")
 

@@ -1,4 +1,4 @@
-(in-package #:jupyter-widgets)
+(in-package #:jupyter/widgets)
 
 (defwidget date-picker (description-widget disabled-slot)
   ((value

@@ -1,4 +1,4 @@
-(in-package #:jupyter-widgets)
+(in-package #:jupyter/widgets)
 
 (defwidget audio (dom-widget format-slot byte-value-slot)
   ((autoplay

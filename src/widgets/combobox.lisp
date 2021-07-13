@@ -1,4 +1,4 @@
-(in-package #:jupyter-widgets)
+(in-package #:jupyter/widgets)
 
 
 (defwidget combobox (description-widget continuous-update-slot disabled-slot placeholder-slot

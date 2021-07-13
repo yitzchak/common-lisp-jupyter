@@ -1,4 +1,4 @@
-(in-package #:jupyter-widgets)
+(in-package #:jupyter/widgets)
 
 
 (defwidget base-slider (description-widget disabled-slot orientation-slot

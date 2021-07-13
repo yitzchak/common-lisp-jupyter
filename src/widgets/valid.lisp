@@ -1,4 +1,4 @@
-(in-package #:jupyter-widgets)
+(in-package #:jupyter/widgets)
 
 
 (defwidget valid (description-widget disabled-slot bool-value-slot)

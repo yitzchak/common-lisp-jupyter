@@ -1,4 +1,4 @@
-(in-package #:common-lisp-jupyter)
+(in-package #:jupyter/common-lisp)
 
 
 (defparameter +clhs-map-root+ "http://www.lispworks.com/documentation/HyperSpec/Body/")

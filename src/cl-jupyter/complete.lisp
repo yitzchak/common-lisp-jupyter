@@ -1,4 +1,4 @@
-(in-package #:common-lisp-jupyter)
+(in-package #:jupyter/common-lisp)
 
 
 (defun remove-if-not-match (partial-name matches)

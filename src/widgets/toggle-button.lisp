@@ -1,4 +1,4 @@
-(in-package #:jupyter-widgets)
+(in-package #:jupyter/widgets)
 
 (defwidget toggle-button (description-widget button-style-slot disabled-slot
                           icon-slot tooltip-slot bool-value-slot)

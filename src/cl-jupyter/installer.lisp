@@ -1,4 +1,4 @@
-(in-package #:common-lisp-jupyter)
+(in-package #:jupyter/common-lisp)
 
 (defclass cl-installer (jupyter:installer)
   ()
@@ -47,7 +47,7 @@
                    +eval-flag+ (if (find-package :quicklisp)
                                  "(ql:quickload :common-lisp-jupyter)"
                                  "(asdf:load-system :common-lisp-jupyter)"))
-            (list +eval-flag+ "(jupyter:run-kernel 'common-lisp-jupyter:kernel)")
+            (list +eval-flag+ "(jupyter:run-kernel 'jupyter/common-lisp:kernel)")
             (when +user-options+
               (list +user-options+))
             (list "{connection_file}"))))
@@ -62,7 +62,7 @@
                   +eval-flag+ (if (find-package :quicklisp)
                                 "(ql:quickload :common-lisp-jupyter)"
                                 "(asdf:load-system :common-lisp-jupyter)"))
-            (list +eval-flag+ "(jupyter:run-kernel 'common-lisp-jupyter:kernel)")
+            (list +eval-flag+ "(jupyter:run-kernel 'jupyter/common-lisp:kernel)")
             (when +user-options+
               (list +user-options+))
             (list "{connection_file}"))))
@@ -78,7 +78,7 @@
                   +eval-flag+ (if (find-package :quicklisp)
                                 "(ql:quickload :common-lisp-jupyter)"
                                 "(asdf:load-system :common-lisp-jupyter)"))
-            (list +eval-flag+ "(jupyter:run-kernel 'common-lisp-jupyter:kernel)")
+            (list +eval-flag+ "(jupyter:run-kernel 'jupyter/common-lisp:kernel)")
             (when +user-options+
               (list +user-options+))
             (list "{connection_file}"))))

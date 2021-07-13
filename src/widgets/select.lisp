@@ -1,4 +1,4 @@
-(in-package #:jupyter-widgets)
+(in-package #:jupyter/widgets)
 
 
 (defwidget base-select (description-widget %options-labels-slot disabled-slot)

@@ -1,4 +1,4 @@
-(in-package #:jupyter-widgets)
+(in-package #:jupyter/widgets)
 
 
 (defwidget file-upload (description-widget button-style-slot disabled-slot icon-slot)

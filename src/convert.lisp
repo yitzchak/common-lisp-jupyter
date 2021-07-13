@@ -1,4 +1,4 @@
-(in-package #:jupyter-convert)
+(in-package #:jupyter/convert)
 
 (defclass cell ()
   ((markdown

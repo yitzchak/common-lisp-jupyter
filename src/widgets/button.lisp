@@ -1,4 +1,4 @@
-(in-package #:jupyter-widgets)
+(in-package #:jupyter/widgets)
 
 (defwidget button (styled-widget button-style-slot disabled-slot icon-slot
                    tooltip-slot)

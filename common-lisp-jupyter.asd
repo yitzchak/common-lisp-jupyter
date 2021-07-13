@@ -116,7 +116,7 @@
 
 #+asdf3.1
   (asdf:register-system-packages "common-lisp-jupyter"
-                                 '(:jupyter :common-lisp-jupyter :jupyter-convert
-                                   :jupyter/markdown-formatter :jupyter-widgets))
+                                 '(:jupyter :jupyter/common-lisp :jupyter/convert
+                                   :jupyter/markdown-formatter :jupyter/widgets))
 
 

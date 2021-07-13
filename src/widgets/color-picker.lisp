@@ -1,4 +1,4 @@
-(in-package #:jupyter-widgets)
+(in-package #:jupyter/widgets)
 
 (defwidget color-picker (description-widget disabled-slot)
   ((concise

@@ -1,4 +1,4 @@
-(in-package #:jupyter-widgets)
+(in-package #:jupyter/widgets)
 
 (defun outside-closed-interval (value left right)
   (not (<= left value right)))

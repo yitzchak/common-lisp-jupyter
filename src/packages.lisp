@@ -106,9 +106,9 @@
     #:text))
 
 
-(defpackage #:jupyter-widgets
+(defpackage #:jupyter/widgets
   (:use #:common-lisp)
-  (:nicknames :jw)
+  (:nicknames :jw :jupyter-widgets)
   (:documentation "Package for core Jupyter Widget support.")
   (:export
     #:accordion
@@ -297,8 +297,8 @@
     #:make-interactive-hash-table
     #:make-interactive-plist))
 
-(defpackage #:common-lisp-jupyter
-  (:nicknames :cl-jupyter :clj)
+(defpackage #:jupyter/common-lisp
+  (:nicknames :cl-jupyter :clj :common-lisp-jupyter)
   (:use #:common-lisp)
   (:documentation "Provides Common Lisp kernel support.")
   (:export
@@ -307,8 +307,9 @@
     #:install-roswell
     #:kernel))
 
-(defpackage #:jupyter-convert
+(defpackage #:jupyter/convert
   (:use #:common-lisp)
+  (:nicknames :jupyter-convert)
   (:documentation "Provides LISP source code conversion to notebooks.")
   (:export
     #:to-notebook))

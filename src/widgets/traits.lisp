@@ -1,4 +1,4 @@
-(in-package #:jupyter-widgets)
+(in-package #:jupyter/widgets)
 
 (defvar *trait-silence* nil)
 (defvar *trait-source* t)

@@ -1,4 +1,4 @@
-(in-package #:common-lisp-jupyter)
+(in-package #:jupyter/common-lisp)
 
 
 #+sbcl (require :sb-introspect)

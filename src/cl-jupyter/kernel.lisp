@@ -1,4 +1,4 @@
-(in-package #:common-lisp-jupyter)
+(in-package #:jupyter/common-lisp)
 
 (defvar +display-name+ "Common Lisp")
 (defvar +language+ "common-lisp")
