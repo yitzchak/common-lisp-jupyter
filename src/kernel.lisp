@@ -2,7 +2,7 @@
 
 
 (defvar *payload* nil)
-(defvar *debugger* nil)
+(defvar *debugger* t)
 (defvar *markdown-output* nil)
 (defvar *html-output* nil)
 

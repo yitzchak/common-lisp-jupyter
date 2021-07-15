@@ -11,6 +11,25 @@ This file describes the installation and usage of common-lisp-jupyter on a local
 machine, but you can try out common-lisp-jupyter without installing anything by
 clicking on the Binder badge above.
 
+## Features
+### Completion of functions/macros
+
+Autocompletion of function and macro names is available via the tab key.
+
+![](assets/complete-function.gif)
+
+### Symbol completion
+
+Autocompletion of symbols is also available via the tab key. The symbol type is displayed in the dropdown list.
+
+![](assets/complete-symbol.gif)
+
+### Indentation
+
+Pressing tab while the carat is on a parenthesis while result in all forms in the cell being auto-indented.
+
+![](assets/indent.gif)
+
 ## Motivation
 
 In developing Maxima-Jupyter there were a number of enhancements and features
