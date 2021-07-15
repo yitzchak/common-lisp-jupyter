@@ -41,25 +41,38 @@
     #:make-offset-match-set
     #:make-substring-match-set
     ; kernel
+    #:add-debug-object
     #:clear
     #:code-is-complete
     #:comm
     #:comm-id
     #:complete-code
     #:create-comm
+    #:debug-continue
     #:*debugger*
     #:debugging-errors
+    #:debug-initialize
+    #:debug-in
+    #:debug-out
+    #:debug-next
+    #:debug-scopes
+    #:debug-set-breakpoint
+    #:debug-stack-trace
+    #:debug-stop
     #:edit
     #:enqueue-input
     #:evaluate-code
     #:get-comm
+    #:get-debug-object
     #:handling-comm-errors
     #:handling-errors
     #:*html-output*
     #:inform
     #:inspect-code
+    #:*kernel*
     #:kernel
     #:kernel-prompt-prefix
+    #:kernel-debugger-started
     #:kernel-prompt-suffix
     #:make-uuid
     #:*markdown-output*
@@ -68,6 +81,7 @@
     #:on-comm-open
     #:*page-output*
     #:quit
+    #:remove-debug-object
     #:run-kernel
     #:send-comm-close
     #:send-comm-message

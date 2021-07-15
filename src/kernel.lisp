@@ -2,7 +2,7 @@
 
 
 (defvar *payload* nil)
-(defvar *debugger* nil)
+(defvar *debugger* t)
 (defvar *markdown-output* nil)
 (defvar *html-output* nil)
 
@@ -193,7 +193,35 @@
      :documentation "Standard output stream")
    (standard-input
      :accessor kernel-standard-input
-     :documentation "Standard input stream"))
+     :documentation "Standard input stream")
+   (tmp-file-prefix
+     :accessor kernel-tmp-file-prefix
+     :documentation "Prefix for temporary debugger files")
+   (tmp-file-suffix
+     :accessor kernel-tmp-file-suffix
+     :documentation "Suffix for temporary debugger files")
+   (hash-seed
+     :accessor kernel-hash-seed
+     :documentation "Hash seed for temporary debugger files")
+   (breakpoints
+     :accessor kernel-breakpoints
+     :initform nil
+     :documentation "Currently set breakpoints.")
+   (debugger-started
+     :accessor kernel-debugger-started
+     :initform nil
+     :documentation "Whether the debugger has been started")
+   (thread-control-queues
+     :accessor kernel-thread-control-queues
+     :initform (make-hash-table)
+     :documentation "CONTROL message queues for threads")
+   (debug-objects
+     :reader kernel-debug-objects
+     :initform (make-hash-table)
+     :documentation "Kernel frames")
+   (debug-object-id
+     :accessor kernel-debug-object-id
+     :initform 0))
   (:documentation "Kernel state representation."))
 
 
@@ -232,12 +260,84 @@
     (values)))
 
 
+(defgeneric debug-initialize (kernel)
+  (:documentation ""))
+
+(defgeneric debug-continue (kernel environment)
+  (:documentation ""))
+
+(defgeneric debug-in (kernel environment)
+  (:documentation ""))
+
+(defgeneric debug-out (kernel environment)
+  (:documentation ""))
+
+(defgeneric debug-next (kernel environment)
+  (:documentation ""))
+
+(defgeneric debug-stack-trace (kernel environment)
+  (:documentation ""))
+
+(defgeneric debug-scopes (kernel environment frame)
+  (:documentation ""))
+
+(defgeneric debug-set-breakpoint (kernel source line column condition hit-condition log-message)
+  (:documentation ""))
+
+
+(defun add-debug-object (kernel object &key (thread-id 1))
+  (incf (kernel-debug-object-id kernel))
+  (setf (gethash (kernel-debug-object-id kernel) (kernel-debug-objects kernel))
+        (list object thread-id))
+  (kernel-debug-object-id kernel))
+
+
+(defun remove-debug-object (kernel id)
+  (remhash id (kernel-debug-objects kernel)))
+
+
+(defun get-debug-object (kernel id)
+  (values-list (gethash id (kernel-debug-objects kernel))))
+
+
+(defun debug-stop (reason environment &key (thread-id 1))
+  (let ((msg-queue (make-instance 'queue)))
+    (setf (gethash thread-id (kernel-thread-control-queues kernel)) msg-queue)
+    (send-execute-reply-ok (kernel-shell *kernel*) *message* (history-execution-count *kernel*) nil)
+    (send-debug-event (kernel-iopub *kernel*) "stopped"
+                      `(:object-alist
+                         ("reason" . ,reason)
+                         ("threadId" . ,thread-id)))
+    (prog (*message*)
+     wait
+      (setf *message* (dequeue msg-queue))
+      (send-status-update (kernel-iopub *kernel*) *message* "busy")
+      (alexandria:switch ((gethash "command" (message-content *message*)) :test #'equal)
+        ("continue"
+          (handle-debug-request/continue environment))
+        ("disconnect"
+          (return))
+        ("stepIn"
+          (handle-debug-request/step-in environment))
+        ("stepOut"
+          (handle-debug-request/step-out environment))
+        ("next"
+          (handle-debug-request/next environment))
+        ("scopes"
+          (handle-debug-request/scopes environment))
+        ("stackTrace"
+          (handle-debug-request/stack-trace environment)))
+      (send-status-update (kernel-iopub *kernel*) *message* "idle")
+      (go wait))))
+
+
 ;; Start all channels.
 (defmethod start ((k kernel))
   (with-slots (connection-file control-port ctx hb hb-port history iopub
                iopub-port ip key language-name mac name prompt-prefix prompt-suffix
                session shell shell-port signature-scheme sink stdin stdin-port control
-               transport error-output standard-output standard-input)
+               transport error-output standard-output standard-input tmp-file-prefix
+               tmp-file-suffix hash-seed file-extension)
               k
     (setf sink (make-instance 'sink
                               :path (uiop:xdg-runtime-dir
@@ -262,6 +362,9 @@
             signature-scheme (gethash "signature_scheme" config-js)))
     (setf *uuid-random-state* (make-random-state t)
           session (make-uuid)
+          hash-seed (random #xffffffff *uuid-random-state*)
+          tmp-file-prefix (namestring (merge-pathnames (uiop:default-temporary-directory) (format nil "~A-~A-" name session)))
+          tmp-file-suffix file-extension
           ctx (pzmq:ctx-new)
           mac (make-instance 'mac
                              :sink sink
@@ -329,6 +432,7 @@
           (bordeaux-threads:make-thread (lambda ()
                                           (run-shell k))
                                         :name "SHELL Thread"))))
+
 
 ;; Stop all channels and destroy the control.
 (defmethod stop ((k kernel))
@@ -421,18 +525,45 @@
       (setf *message* (message-recv control)
             msg-type (format nil "~A~@[/~A~]"
                             (gethash "msg_type" (message-header *message*))
-                            (gethash "command" (message-header *message*))))
-      (send-status iopub "busy")
-      (unwind-protect
-          (alexandria:switch (msg-type :test #'equal)
-            ("interrupt_request"
-              (handle-interrupt-request))
-            ("shutdown_request"
-              (handle-shutdown-request)
-              (return))
-            (otherwise
-              (inform :warn kernel "Ignoring ~A message since there is no appropriate handler." msg-type)))
-        (send-status iopub "idle"))
+                            (gethash "command" (message-content *message*))))
+      (cond
+        ((member msg-type '("debug_request/continue" "debug_request/next" "debug_request/stackTrace"
+                            "debug_request/stepIn" "debug_request/stepOut")
+                 :test #'equal)
+          (let ((msg-queue (gethash (gethash "threadId" (gethash "arguments" (message-content msg))) (kernel-thread-control-queues kernel))))
+            (enqueue msg-queue msg)))
+        ((member msg-type '("debug_request/scopes") :test #'equal)
+          (let* ((thread-id (nth-value 1 (get-debug-object kernel (gethash "frameId" (gethash "arguments" (message-content msg))))))
+                 (msg-queue (gethash thread-id (kernel-thread-control-queues kernel))))
+            (enqueue msg-queue msg)))
+        (t
+          (send-status-update iopub "busy")
+          (unwind-protect
+              (alexandria:switch (msg-type :test #'equal)
+                ("interrupt_request"
+                  (handle-interrupt-request))
+                ("shutdown_request"
+                  (handle-shutdown-request)
+                  (return))
+                ("debug_request/attach"
+                  (handle-debug-request/attach))
+                ("debug_request/configurationDone"
+                  (handle-debug-request/configuration-done))
+                ("debug_request/debugInfo"
+                  (handle-debug-request/debug-info))
+                ("debug_request/disconnect"
+                  (handle-debug-request/disconnect))
+                ("debug_request/dumpCell"
+                  (handle-debug-request/dump-cell))
+                ("debug_request/initialize"
+                  (handle-debug-request/initialize))
+                ("debug_request/setBreakpoints"
+                  (handle-debug-request/set-breakpoints))
+                ("debug_request/source"
+                  (handle-debug-request/source))
+                (otherwise
+                  (inform :warn kernel "Ignoring ~A message since there is no appropriate handler." msg-type)))
+            (send-status-update iopub "idle"))))
       (go poll)))
   (inform :info kernel "Control thread exiting normally."))
 
@@ -523,11 +654,14 @@
 
 
 (defmacro debugging-errors (&body body)
-  `(if *debugger*
-     (let ((*debugger-hook* #'my-debugger))
-       (with-simple-restart (exit "Exit debugger, returning to top level.")
-         ,@body))
-     (handling-errors ,@body)))
+  `(let ((#+sbcl sb-ext:*invoke-debugger-hook* #-sbcl *debugger-hook* #'my-debugger))
+       (with-simple-restart (abort "Exit debugger, returning to top level.")
+         ,@body)))
+  ; `(if *debugger*
+  ;    (let ((*debugger-hook* #'my-debugger))
+  ;      (with-simple-restart (exit "Exit debugger, returning to top level.")
+  ;        ,@body))
+  ;    (handling-errors ,@body)))
 
 
 (defmacro handling-comm-errors (&body body)
@@ -568,6 +702,7 @@
                        ("implementation" . ,name)
                        ("implementation_version" . ,version)
                        ("banner" . ,banner)
+                       ("debugger" . :true)
                        ("help_links" . ,(or (mapcar
                                               (lambda (p)
                                                 (list :object-plist
@@ -582,6 +717,219 @@
                                             ("file_extension" . ,file-extension)
                                             ("pygments_lexer" . ,pygments-lexer)
                                             ("codemirror_mode" . ,codemirror-mode))))))))
+
+#|
+
+### Message type: debug_request / attach ###
+
+|#
+
+(defun handle-debug-request/attach ()
+  (inform :info *kernel* "Handling debug_request/attach message ~S" (message-content *message*))
+  (send-debug-reply (kernel-control *kernel*) *message*))
+
+
+#|
+
+### Message type: debug_request / configurationDone ###
+
+|#
+
+(defun handle-debug-request/configuration-done ()
+  (inform :info *kernel* "Handling debug_request/configurationDone message ~S" (message-content *message*))
+  (send-debug-reply (kernel-control *kernel*) *message*))
+
+
+#|
+
+### Message type: debug_request / continue ###
+
+|#
+
+(defun handle-debug-request/continue (environment)
+  (inform :info *kernel* "Handling debug_request/continue message ~S" (message-content *message*))
+  (send-debug-reply (kernel-control *kernel*) *message*)
+  (send-debug-event (kernel-iopub *kernel*) "continued")
+  (debug-continue *kernel* environment))
+
+
+#|
+
+### Message type: debug_request / debugInfo ###
+
+|#
+
+(defun handle-debug-request/debug-info ()
+  (inform :info *kernel* "Handling debug_request/debugInfo message")
+  (send-debug-reply (kernel-control *kernel*) *message*
+    `(:object-alist
+       ("isStarted" . ,(if (kernel-debugger-started *kernel*) :true :false))
+       ("hashMethod" . "Murmur2")
+       ("hashSeed" . ,(kernel-hash-seed *kernel*))
+       ("tmpFilePrefix" . ,(kernel-tmp-file-prefix *kernel*))
+       ("tmpFileSuffix" . ,(kernel-tmp-file-suffix *kernel*))
+       ("breakpoints" . ,(or (kernel-breakpoints *kernel*) :empty-array)))))
+
+
+#|
+
+### Message type: debug_request / disconnect ###
+
+|#
+
+(defun handle-debug-request/disconnect ()
+  (inform :info *kernel* "Handling debug_request/disconnect message")
+  (when (gethash "terminateDebuggee" (gethash "arguments" (message-content *message*)))
+    (setf (kernel-debugger-started *kernel*) nil)
+    (maphash (lambda (thread-id msg-queue)
+               (enqueue msg-queue *message*))
+             (kernel-thread-control-queues *kernel*))
+    (clrhash (kernel-thread-control-queues *kernel*)))
+  (send-debug-reply (kernel-control *kernel*) *message*))
+
+
+#|
+
+### Message type: debug_request / dumpCell ###
+
+|#
+
+(defun handle-debug-request/dump-cell ()
+  (inform :info *kernel* "Handling debug_request/dumpCell message")
+  (let* ((data (babel:string-to-octets (gethash "code" (gethash "arguments" (message-content *message*)))))
+         (hash (murmur-hash-2 data (kernel-hash-seed *kernel*)))
+         (source-path (format nil "~A~A~A" (kernel-tmp-file-prefix *kernel*) hash (kernel-tmp-file-suffix *kernel*))))
+    (with-open-file (stream source-path :direction :output :if-exists :supersede :element-type '(unsigned-byte 8))
+      (write-sequence data stream))
+    (send-debug-reply (kernel-control *kernel*) *message*
+      `(:object-alist
+         ("sourcePath" . ,source-path)))))
+
+
+#|
+
+### Message type: debug_request / initialize ###
+
+|#
+
+(defun handle-debug-request/initialize ()
+  (inform :info *kernel* "Handling debug_request/initialize message ~S" (message-content *message*))
+  (send-debug-reply (kernel-control *kernel*) *message*
+    (debug-initialize *kernel*))
+  (setf (kernel-debugger-started *kernel*) t)
+  (send-debug-event (kernel-iopub *kernel*) "initialized"))
+
+
+#|
+
+### Message type: debug_request / next ###
+
+|#
+
+(defun handle-debug-request/next (environment)
+  (inform :info *kernel* "Handling debug_request/next message ~S" (message-content *message*))
+  (send-debug-reply (kernel-control *kernel*) *message*)
+  (debug-next *kernel* environment))
+
+
+#|
+
+### Message type: debug_request / scopes ###
+
+|#
+
+(defun handle-debug-request/scopes (environment)
+  (inform :info *kernel* "Handling debug_request/scopes message ~S" (message-content *message*))
+  (send-debug-reply (kernel-control *kernel*) *message*
+                    `(:object-alist
+                       ("scopes" . ,(debug-scopes *kernel* environment
+                                                  (get-debug-object *kernel* (gethash "frameId" (gethash "arguments" (message-content msg)))))))))
+
+
+#|
+
+### Message type: debug_request / setBreakpoints ###
+
+|#
+
+(defun handle-debug-request/set-breakpoints ()
+  (inform :info *kernel* "Handling debug_request/setBreakpoints message ~S" (message-content *message*))
+  (let* ((nbp (gethash "arguments" (message-content *message*)))
+         (source-path (gethash "path" (gethash "source" nbp)))
+         (breakpoints (mapcar (lambda (breakpoint)
+                                (debug-set-breakpoint *kernel* source-path
+                                                      (gethash "line" breakpoint)
+                                                      (gethash "column" breakpoint)
+                                                      (gethash "condition" breakpoint)
+                                                      (gethash "hitCondition" breakpoint)
+                                                      (gethash "logMessage" breakpoint)))
+                              (gethash "breakpoints" nbp))))
+    (setf (kernel-breakpoints *kernel*)
+          (append breakpoints
+                  (delete-if (lambda (breakpoint)
+                               (equal source-path
+                                      (gethash "path" (gethash "source" breakpoint))))
+                             (kernel-breakpoints *kernel*))))
+    (send-debug-reply (kernel-control *kernel*) *message*
+      `(:object-plist
+         "breakpoints" ,breakpoints))))
+
+
+#|
+
+### Message type: debug_request / source ###
+
+|#
+
+(defun handle-debug-request/source ()
+  (inform :info *kernel* "Handling debug_request/source message ~S" (message-content *message*))
+  (handler-case
+      (send-debug-reply (kernel-control *kernel*) *message*
+        `(:object-alist
+           ("content" . ,(alexandria:read-file-into-string (gethash "path" (gethash "source" (gethash "arguments" (message-content msg))))))
+           ("mimeType" . ,(kernel-mime-type *kernel*))))
+    (error (err)
+      (send-debug-reply-failure (kernel-control *kernel*) *message* "Unable to load source"))))
+
+
+#|
+
+### Message type: debug_request / stackTrace ###
+
+|#
+
+(defun handle-debug-request/stack-trace (environment)
+  (inform :info *kernel* "Handling debug_request/stackTrace message ~S" (message-content *message*))
+  (send-debug-reply (kernel-control *kernel*) *message*
+                    `(:object-alist
+                       ("stackFrames" . ,(debug-stack-trace *kernel* environment)))))
+
+
+#|
+
+### Message type: debug_request / stepIn ###
+
+|#
+
+(defun handle-debug-request/step-in (environment)
+  (inform :info *kernel* "Handling debug_request/stepIn message ~S" (message-content *message*))
+  (send-debug-reply (kernel-control *kernel*) *message*)
+  (send-debug-event (kernel-iopub *kernel*) "stopped")
+  (debug-in *kernel* environment))
+
+
+#|
+
+### Message type: debug_request / stepOut ###
+
+|#
+
+(defun handle-debug-request/step-out (environment)
+  (inform :info *kernel* "Handling debug_request/stepOut message ~S" (message-content *message*))
+  (send-debug-reply (kernel-control *kernel*) *message*)
+  (send-debug-event (kernel-iopub *kernel*) "stopped")
+  (debug-out *kernel* environment))
+
 
 #|
 
