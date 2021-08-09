@@ -2,9 +2,9 @@
   :description "A Common Lisp kernel for Jupyter along with a library for building Jupyter kernels."
   :author "Tarn W. Burton"
   :license "MIT"
-  :version "1.0"
-  :homepage "https://yitzchak.github.io/common-lisp-jupyter/"
-  :bug-tracker "https://github.com/yitzchak/common-lisp-jupyter/issues"
+  #+asdf3 :version #+asdf3 "1.0"
+  #+asdf3 :homepage #+asdf3 "https://yitzchak.github.io/common-lisp-jupyter/"
+  #+asdf3 :bug-tracker #+asdf3 "https://github.com/yitzchak/common-lisp-jupyter/issues"
   :depends-on
     (#:alexandria
      #:babel
@@ -13,12 +13,14 @@
      #:cl-indentify
      #:closer-mop
      #:dissect
-     (:feature (:not :clasp) #:eclector)
-     (:feature (:not :clasp) #:ironclad)
+     ; This should be `(:feature (:not :clasp) :ironclad)` but some distributions still don't have
+     ; ASDF 3
+     #-clasp :eclector
+     #-clasp :ironclad
      #:multilang-documentation
      #:pzmq
      #:puri
-     (:feature (:or :abcl :allegro :ccl :clasp :cmu :ecl :lispworks :sbcl) #:static-vectors)
+     #+(or abcl allegro ccl clasp cmu ecl lispworks sbcl) :static-vectors
      #:trivial-do
      #:trivial-garbage
      #:trivial-gray-streams
