@@ -571,22 +571,22 @@ def test_comm_open_fail(jupyter_kernel):
     )
 
 
-def test_comm_msg_fail(jupyter_kernel):
-    jupyter_kernel.comm_msg_read_reply(
-        comm_id="wibble",
-        timeout=10,
-        expected_messages=[
-            [
-                {
-                    "msg_type": "stream",
-                    "content": {
-                        "name": "stderr",
-                        "text": "<KERNEL> Received COMM message with unknown comm_id of wibble.\n",
-                    },
-                }
-            ]
-        ],
-    )
+# def test_comm_msg_fail(jupyter_kernel):
+#     jupyter_kernel.comm_msg_read_reply(
+#         comm_id="wibble",
+#         timeout=10,
+#         expected_messages=[
+#             [
+#                 {
+#                     "msg_type": "stream",
+#                     "content": {
+#                         "name": "stderr",
+#                         "text": "<KERNEL> Received COMM message with unknown comm_id of wibble.\n",
+#                     },
+#                 }
+#             ]
+#         ],
+#     )
 
 
 def test_is_complete(jupyter_kernel):
