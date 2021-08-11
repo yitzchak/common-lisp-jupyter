@@ -347,11 +347,18 @@
 
 
 (defgeneric debug-object-children-resolve (instance)
-  (:documentation "Return a list of debug-objects for the children of the instance."))
+  (:documentation "Return a list of debug-objects for the children of the instance.")
+  (:method (instance)
+    (declare (ignore instance))
+    nil))
 
 
 (defgeneric debug-dump-cell (kernel code source-path)
-  (:documentation "Save the code to the provided source-path."))
+  (:documentation "Save the code to the provided source-path.")
+  (:method (kernel code source-path)
+    (declare (ignore kernel))
+    (with-open-file (stream source-path :direction :output :if-exists :supersede)
+      (write-string code stream))))
 
 
 (defgeneric debug-evaluate (kernel environment code frame)

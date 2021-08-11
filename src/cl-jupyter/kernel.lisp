@@ -125,9 +125,16 @@
             (typecase x
               (symbol
                 x)
-              (generic-function (clos:generic-function-name x))
-              (function (si:compiled-function-name x))))
-  #+sbcl  (nth-value 0 (sb-debug::frame-call frame)))
+              (generic-function
+                (clos:generic-function-name x))
+              (function
+                (si:compiled-function-name x))))
+  #+sbcl  (let* ((name (sb-debug::frame-call frame))
+                 (pos (when (listp name)
+                        (position :in name))))
+            (if pos
+              (subseq name 0 pos)
+              name)))
 
 
 (defun trim-frame-list (frames condition)
@@ -179,26 +186,9 @@
 
 (defun frame-name (frame)
   (string-trim '(#\Newline #\Return #\Space #\Tab)
-    (with-output-to-string (*standard-output*)
-      #+ccl   (let ((lfun (ccl:frame-function (car frame) (cdr frame))))
-                (format t "(~S" (or (ccl:function-name lfun) lfun))
-                (let* ((unavailable (cons nil nil))
-                       (args (ccl:frame-supplied-arguments (car frame) (cdr frame)
-                                                           :unknown-marker unavailable)))
-                  (declare (dynamic-extent unavailable))
-                  (if (eq args unavailable)
-                      (format t " #<Unknown Arguments>")
-                      (dolist (arg args)
-                        (if (eq arg unavailable)
-                            (format t " #<Unavailable>")
-                            (format t " ~s" arg)))))
-                (format t ")"))
-      #+clasp (clasp-debug:prin1-frame-call frame *standard-output*)
-      #+cmucl (debug::print-frame-call frame :verbosity 1 :number nil)
-      #+ecl   (format t "~A" (car frame))
-      #+sbcl  (sb-debug::print-frame-call frame *standard-output*
-                                          :allow-other-keys t
-                                          :emergency-best-effort t))))
+    (let ((*print-case* :downcase))
+      (with-output-to-string (*standard-output*)
+        (print (frame-function-name frame))))))
 
 
 (defun frame-source (frame)
@@ -326,11 +316,6 @@
     (stable-sort results #'string<
                  :key (lambda (variable)
                         (write-to-string (jupyter:debug-object-name variable))))))
-
-
-(defmethod jupyter:debug-dump-cell ((kernel kernel) code source-path)
-  (with-open-file (stream source-path :direction :output :if-exists :supersede)
-    (write-string code stream)))
 
 
 (defmethod jupyter:debug-evaluate ((kernel kernel) environment code frame)
