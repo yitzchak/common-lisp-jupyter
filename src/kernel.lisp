@@ -652,6 +652,10 @@
   "Enter a stopped state on the current thread. This function will dispatch messages received from
   the CONTROL thread. Resumption of the thread is done through continue restarts so this function
   will not return."
+  (finish-output *markdown-output*)
+  (finish-output *html-output*)
+  (finish-output)
+  (finish-output *error-output*)
   (handling-comm-errors
     (with-slots (stopped queue)
                 (aref (kernel-threads *kernel*) *thread-id*)
@@ -1188,6 +1192,7 @@
 (defun handle-debug-request/next (environment)
   (inform :info *kernel* "Handling debug_request/next message")
   (send-debug-reply)
+  (send-debug-event "continued")
   (send-status-idle)
   (setf (thread-stopped (aref (kernel-threads *kernel*) *thread-id*)) nil)
   (let ((*message* *suspended-message*))
@@ -1306,6 +1311,7 @@
 (defun handle-debug-request/step-in (environment)
   (inform :info *kernel* "Handling debug_request/stepIn message")
   (send-debug-reply)
+  (send-debug-event "continued")
   (send-status-idle)
   (setf (thread-stopped (aref (kernel-threads *kernel*) *thread-id*)) nil)
   (let ((*message* *suspended-message*))
@@ -1321,6 +1327,7 @@
 (defun handle-debug-request/step-out (environment)
   (inform :info *kernel* "Handling debug_request/stepOut message")
   (send-debug-reply)
+  (send-debug-event "continued")
   (send-status-idle)
   (setf (thread-stopped (aref (kernel-threads *kernel*) *thread-id*)) nil)
   (let ((*message* *suspended-message*))
