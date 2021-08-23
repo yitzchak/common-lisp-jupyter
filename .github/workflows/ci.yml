@@ -80,15 +80,15 @@ jobs:
       run: |
         curl -kLO https://beta.quicklisp.org/quicklisp.lisp
 
-    - name: Clone dependencies that have not been updated in Quicklisp
-      run: |
-        git clone https://github.com/yitzchak/shasht.git ~/quicklisp/local-projects/shasht
-        git clone -b fix-utf-8 https://github.com/yitzchak/language-codes.git ~/quicklisp/local-projects/language-codes
+    # - name: Clone dependencies that have not been updated in Quicklisp
+    #   run: |
+    #     git clone https://github.com/yitzchak/shasht.git ~/quicklisp/local-projects/shasht
+    #     git clone -b fix-utf-8 https://github.com/yitzchak/language-codes.git ~/quicklisp/local-projects/language-codes
 
-    - name: Clone dependencies that have not been updated in Quicklisp (pt 2)
-      if: matrix.os == 'windows-latest'
-      run: |
-        git clone https://github.com/orivej/pzmq.git ~/quicklisp/local-projects/pzmq
+    # - name: Clone dependencies that have not been updated in Quicklisp (pt 2)
+    #   if: matrix.os == 'windows-latest'
+    #   run: |
+    #     git clone https://github.com/orivej/pzmq.git ~/quicklisp/local-projects/pzmq
 
     - name: Install CCL kernel on MacOS
       if: matrix.os == 'macos-latest'
