@@ -319,7 +319,7 @@
 
 
 (defmethod jupyter:debug-evaluate ((kernel kernel) environment code frame)
-  (make-debug-variable "EVAL" (eval-in-frame (read-from-string code) frame)))
+  (make-debug-variable "EVAL" (eval-in-frame (read-from-string code) frame) environment))
 
 
 (defmethod jupyter:debug-inspect-variables ((kernel kernel) environment)
@@ -575,6 +575,50 @@
     #+sbcl (update-breakpoints *load-pathname* breakpoints)))
 
 
+(defmethod jupyter:evaluate-form ((kernel kernel) stream source-path breakpoints)
+  (cond
+    #+ccl
+    (source-path
+      (multiple-value-bind (form location)
+                           (ccl::read-recording-source stream
+                                                       :eofval stream
+                                                       :file-name source-path
+                                                       :map ccl::*nx-source-note-map*
+                                                       :save-source-text t)
+        (unless (eq form stream)
+          (setf ccl::*loading-toplevel-location* location)
+          (eval-and-print form nil breakpoints)
+          t)))
+    #+clasp
+    (source-path
+      (let ((cst (eclector.concrete-syntax-tree:cst-read stream nil stream)))
+        (unless (eq cst stream)
+          (eval-and-print (concrete-syntax-tree:raw cst) cst breakpoints)
+          t)))
+    #+sbcl
+    (source-path
+      (with-accessors ((forms sb-c::file-info-forms)
+                       (subforms sb-c::file-info-subforms)
+                       (positions sb-c::file-info-positions))
+                      (sb-c::source-info-file-info sb-c::*source-info*)
+        (let ((pos (file-position stream)))
+          (when (sb-c::form-tracking-stream-p stream)
+            (setf (sb-c::form-tracking-stream-form-start-char-pos stream) nil))
+          (when subforms
+            (setf (fill-pointer subforms) 0))
+          (let ((form (read-preserving-whitespace stream nil stream)))
+            (unless (eq form stream)
+              (vector-push-extend form forms)
+              (vector-push-extend pos positions)
+              (eval-and-print form (1- (fill-pointer forms)) breakpoints)
+              t)))))
+    (t
+      (let ((form (read stream nil stream)))
+        (unless (eq form stream)
+          (eval-and-print form nil breakpoints)
+          t)))))
+
+
 (defun repl (code source-path breakpoints)
   (dolist (breakpoint breakpoints)
     (when (jupyter:debug-breakpoint-data breakpoint)
@@ -588,45 +632,37 @@
                (*load-pathname* source-path)
                (ccl::*loading-file-source-file* source-path)
                (ccl::*nx-source-note-map* (make-hash-table :test #'eq :shared nil))
-               (ccl::*loading-toplevel-location* nil)
-               form)
+               (ccl::*loading-toplevel-location* nil))
          next
-          (multiple-value-setq (form ccl::*loading-toplevel-location*)
-                               (ccl::read-recording-source stream
-                                                           :eofval :eof
-                                                           :file-name source-path
-                                                           :map ccl::*nx-source-note-map*
-                                                           :save-source-text t))
-
-          (unless (eq form :eof)
-            (eval-and-print form nil breakpoints)
+          (when (jupyter:evaluate-form jupyter:*kernel* stream source-path breakpoints)
             (go next))))
       #+clasp
       (with-open-file (stream source-path)
-        (do* ((eclector.reader:*client* clasp-cleavir::*cst-client*)
-              (eclector.readtable:*readtable* cl:*readtable*)
-              (*load-truename* (truename source-path))
-              (*load-pathname* source-path)
-              (cmp::*compile-file-pathname* source-path)
-              (cmp::*compile-file-truename* (truename source-path))
-              (cmp::*compile-file-source-debug-pathname* source-path)
-              (cmp::*compile-file-file-scope* (core:file-scope source-path))
-              (cmp::*compile-file-source-debug-lineno* 0)
-              (cmp::*compile-file-source-debug-offset* 0)
-              (core:*current-source-pos-info* (cmp:compile-file-source-pos-info stream))
-              (cst (eclector.concrete-syntax-tree:cst-read stream nil :eof)
-                   (eclector.concrete-syntax-tree:cst-read stream nil :eof)))
-            ((eq :eof cst) (values))
-          (eval-and-print (concrete-syntax-tree:raw cst) cst breakpoints)))
+        (prog* ((eclector.reader:*client* clasp-cleavir::*cst-client*)
+                (eclector.readtable:*readtable* cl:*readtable*)
+                (*load-truename* (truename source-path))
+                (*load-pathname* source-path)
+                (cmp::*compile-file-pathname* source-path)
+                (cmp::*compile-file-truename* (truename source-path))
+                (cmp::*compile-file-source-debug-pathname* source-path)
+                (cmp::*compile-file-file-scope* (core:file-scope source-path))
+                (cmp::*compile-file-source-debug-lineno* 0)
+                (cmp::*compile-file-source-debug-offset* 0)
+                (core:*current-source-pos-info* (cmp:compile-file-source-pos-info stream)))
+         repeat
+          (when (jupyter:evaluate-form jupyter:*kernel* stream source-path breakpoints)
+            (go repeat))))
       #+sbcl
       (sb-c::with-compiler-error-resignalling
-        (let ((sb-c::*last-message-count* (list* 0 nil nil))
-              (sb-c::*compile-verbose* nil)
-              (*load-truename* (truename source-path))
-              (*load-pathname* source-path))
-          (sb-c::do-forms-from-info ((form current-index)
-                                     (sb-c::make-file-source-info source-path :default t))
-            (eval-and-print form current-index breakpoints))))
+        (prog* ((sb-c::*last-message-count* (list* 0 nil nil))
+                (sb-c::*compile-verbose* nil)
+                (*load-truename* (truename source-path))
+                (*load-pathname* source-path)
+                (sb-c::*source-info* (sb-c::make-file-source-info source-path :default t))
+                (stream (sb-c::get-source-stream sb-c::*source-info*)))
+         repeat
+          (when (jupyter:evaluate-form jupyter:*kernel* stream source-path breakpoints)
+            (go repeat))))
       #-(or ccl clasp sbcl)
       (with-open-file (stream source-path)
         (do* ((*load-truename* (truename source-path))

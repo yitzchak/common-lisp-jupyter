@@ -283,6 +283,9 @@
     (values)))
 
 
+(defgeneric evaluate-form (kernel stream source-path breakpoints))
+
+
 (defgeneric code-is-complete (kernel code)
   (:documentation "Check code for completeness. Kernel implementations should
   result one of the permitted values of complete, incomplete, unknown or
