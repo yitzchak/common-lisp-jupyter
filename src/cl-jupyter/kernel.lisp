@@ -688,9 +688,10 @@
       (with-tracking-stream (stream source-path)
         (prog* ((*load-truename* (truename source-path))
                 (*load-pathname* source-path)
-                #+ecl (ext:*source-location* (cons source-path (file-position stream))
-                                             (cons source-path (file-position stream))))
+                #+ecl ext:*source-location*)
          repeat
+          #+ecl (setf ext:*source-location* (cons source-path (file-position stream))
+                                            (cons source-path (file-position stream)))
           (when (jupyter:evaluate-form jupyter:*kernel* stream source-path breakpoints
                                        (tracking-stream-line stream) (tracking-stream-column stream))
             (go repeat)))))
