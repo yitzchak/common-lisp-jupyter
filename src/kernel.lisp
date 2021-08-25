@@ -283,7 +283,7 @@
     (values)))
 
 
-(defgeneric evaluate-form (kernel stream source-path breakpoints))
+(defgeneric evaluate-form (kernel stream source-path breakpoints &optional line column))
 
 
 (defgeneric code-is-complete (kernel code)

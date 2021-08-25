@@ -91,10 +91,14 @@
      :initform 1)
    (column
      :accessor tracking-stream-column
-     :initform 1)
+     :initform 0)
    (previous-column
      :accessor tracking-stream-previous-column
      :initform 1)))
+
+
+(defmethod trivial-gray-streams:stream-file-position ((stream tracking-stream))
+  (file-position (tracking-stream-stream stream)))
 
 
 (defmethod trivial-gray-streams:stream-listen ((stream tracking-stream))
@@ -140,10 +144,15 @@
        (close (tracking-stream-stream ,stream)))))
 
 
-(defparameter *source-maps* (trivial-garbage:make-weak-hash-table :test #'equal #-clasp :weakness #-clasp :value))
+(defparameter *source-maps* (make-hash-table :test #'equal))
 
 
-(defun get-source-map (pathname &aux (truename (truename pathname)))
+(defun reset-source-map (pathname &aux (truename (namestring (truename pathname))))
+  (setf (gethash truename *source-maps*)
+        (make-array 32 :fill-pointer 0 :adjustable t)))
+
+
+(defun get-source-map (pathname &aux (truename (namestring (truename pathname))))
   #+(or ccl cmucl ecl sbcl)
   (multiple-value-bind (source-map present)
                        (gethash truename *source-maps*)
@@ -159,7 +168,7 @@
                                 ((eq :eof form-map) (setf (gethash truename *source-maps*) source-map))
                               (vector-push-extend form-map source-map))))
       #+(or ccl ecl) (with-tracking-stream (stream truename)
-                       (prog ((char (read-char stream nil))
+                       (prog (char
                               (left 0)
                               (right 0)
                               (source-map (make-array 32 :adjustable t :fill-pointer 0)))
@@ -171,13 +180,13 @@
                            (vector-push-extend (list left
                                                      right
                                                      (tracking-stream-line stream)
-                                                     (- (tracking-stream-column stream) right))
+                                                     (1+ (- (tracking-stream-column stream) right)))
                                                source-map)
                            (setf left right))
-                         (incf right)
                          (unless char
                            (return (setf (gethash truename *source-maps*) source-map)))
                          (read-char stream nil)
+                         (setf right (file-position stream))
                          (go next))))))
 
 
@@ -263,17 +272,22 @@
 
 
 #+sbcl
- (defun possible-breakpoints (function)
-   (let ((possible-breakpoints nil))
-     (sb-di:do-debug-fun-blocks (debug-block (sb-di::fun-debug-fun function))
-       (unless (sb-di:debug-block-elsewhere-p debug-block)
-         (if *only-block-start-locations*
-           (push (first-code-location debug-block) possible-breakpoints)
-           (sb-di:do-debug-block-locations (code-location debug-block)
-             (when (not (member (sb-di:code-location-kind code-location)
-                                '(:call-site :internal-error)))
-               (push code-location possible-breakpoints))))))
-     (nreverse possible-breakpoints)))
+(defun possible-breakpoints (function)
+  (let ((possible-breakpoints nil))
+    (sb-di:do-debug-fun-blocks (debug-block (sb-di::fun-debug-fun function))
+      (unless (sb-di:debug-block-elsewhere-p debug-block)
+        (if *only-block-start-locations*
+          (push (first-code-location debug-block) possible-breakpoints)
+          (sb-di:do-debug-block-locations (code-location debug-block)
+            (when (not (member (sb-di:code-location-kind code-location)
+                               '(:call-site :internal-error)))
+              (push code-location possible-breakpoints))))))
+    (sort possible-breakpoints
+          (lambda (x y)
+            (or (< (sb-di:code-location-toplevel-form-offset x)
+                   (sb-di:code-location-toplevel-form-offset y))
+                (< (sb-di:code-location-form-number x)
+                   (sb-di:code-location-form-number y)))))))
 
 
 (defun eval-with-bindings (form bindings)

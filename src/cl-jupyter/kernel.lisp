@@ -241,7 +241,7 @@
                                        (declare (ignore condition))))))))
 
 
-(defun compute-debug-frames (condition)
+(defun compute-debug-frames (condition &optional (frames (trim-frame-list (frame-list) condition)))
   (mapcar (lambda (frame &aux (instance (make-instance 'debug-frame
                                                        :name (frame-name frame)
                                                        :data frame)))
@@ -257,7 +257,7 @@
               (when column
                 (setf (jupyter:debug-object-column instance) column)))
             instance)
-          (trim-frame-list (frame-list) condition)))
+          frames))
 
 
 (defmethod jupyter:debug-object-children-resolve ((instance debug-frame))
@@ -483,13 +483,17 @@
   (update-breakpoints source breakpoints))
 
 
+#+sbcl
 (defun breakpoint-hook (frame breakpoint &rest args)
   (declare (ignore frame breakpoint args))
   (when (jupyter:user-thread-p)
     (with-simple-restart (continue "Continue execution from breakpoint.")
       (let ((environment (make-instance 'debug-environment
                                         :restarts (compute-restarts nil)
-                                        :frames (compute-debug-frames nil))))
+                                        :frames (compute-debug-frames nil (do ((f frame (sb-di:frame-down f))
+                                                                               frames)
+                                                                              ((null f) (nreverse frames))
+                                                                            (push f frames))))))
         (jupyter:debug-stop "breakpoint" environment)))))
 
 
@@ -501,15 +505,10 @@
                    pb-source
                    (sb-di:code-location-toplevel-form-offset pb)
                    (sb-di:code-location-form-number pb))))
-      (pprint pb-source)
-      (pprint line)
       (when (equal source pb-source)
         (dolist (bp breakpoints)
           (when (and (not (jupyter:debug-breakpoint-data bp))
-               (equal (jupyter:debug-breakpoint-line bp) line))
-            (pprint line)
-           (pprint (sb-di:code-location-kind pb))
-
+                     (equal (jupyter:debug-breakpoint-line bp) line))
             (sb-di:activate-breakpoint (setf (jupyter:debug-breakpoint-data bp)
                                              (sb-di::make-breakpoint #'breakpoint-hook pb)))
             (return)))))))
@@ -575,7 +574,7 @@
     #+sbcl (update-breakpoints *load-pathname* breakpoints)))
 
 
-(defmethod jupyter:evaluate-form ((kernel kernel) stream source-path breakpoints)
+(defmethod jupyter:evaluate-form ((kernel kernel) stream source-path breakpoints &optional line column)
   (cond
     #+ccl
     (source-path
@@ -610,6 +609,18 @@
             (unless (eq form stream)
               (vector-push-extend form forms)
               (vector-push-extend pos positions)
+              (vector-push-extend
+                (do ((i 0 (+ i 3))
+                     results
+                     line/col)
+                    ((>= i (length subforms)) (sort results
+                                                    (lambda (x y)
+                                                      (or (< (first x) (first y))
+                                                          (< (second x) (second y))))))
+                  (when (listp (elt subforms (+ i 2)))
+                    (setf line/col (sb-impl::line/col-from-charpos stream (elt subforms i)))
+                    (push (list (car line/col) (cdr line/col)) results)))
+                (get-source-map source-path))
               (eval-and-print form (1- (fill-pointer forms)) breakpoints)
               t)))))
     (t
@@ -626,6 +637,7 @@
       (setf (jupyter:debug-breakpoint-data breakpoint) nil)))
   (cond
     (source-path ; If source-path is supplied then try to do source tracking.
+      #+ccl (get-source-map source-path)
       #+ccl
       (with-open-file (stream source-path)
         (prog ((*load-truename* (truename source-path))
@@ -634,7 +646,9 @@
                (ccl::*nx-source-note-map* (make-hash-table :test #'eq :shared nil))
                (ccl::*loading-toplevel-location* nil))
          next
-          (when (jupyter:evaluate-form jupyter:*kernel* stream source-path breakpoints)
+          (when (multiple-value-call #'jupyter:evaluate-form
+                                     jupyter:*kernel* stream source-path breakpoints
+                                     (source-line-column source-path))
             (go next))))
       #+clasp
       (with-open-file (stream source-path)
@@ -648,9 +662,12 @@
                 (cmp::*compile-file-file-scope* (core:file-scope source-path))
                 (cmp::*compile-file-source-debug-lineno* 0)
                 (cmp::*compile-file-source-debug-offset* 0)
-                (core:*current-source-pos-info* (cmp:compile-file-source-pos-info stream)))
+                (core:*current-source-pos-info*))
          repeat
-          (when (jupyter:evaluate-form jupyter:*kernel* stream source-path breakpoints)
+          (setf core:*current-source-pos-info* (cmp:compile-file-source-pos-info stream))
+          (when (jupyter:evaluate-form jupyter:*kernel* stream source-path breakpoints
+                                       (core::source-pos-info-lineno core:*current-source-pos-info*)
+                                       (1+ (core::source-pos-info-column core:*current-source-pos-info*)))
             (go repeat))))
       #+sbcl
       (sb-c::with-compiler-error-resignalling
@@ -659,26 +676,30 @@
                 (*load-truename* (truename source-path))
                 (*load-pathname* source-path)
                 (sb-c::*source-info* (sb-c::make-file-source-info source-path :default t))
-                (stream (sb-c::get-source-stream sb-c::*source-info*)))
+                (stream (sb-c::get-source-stream sb-c::*source-info*))
+                pos)
+          (reset-source-map source-path)
          repeat
-          (when (jupyter:evaluate-form jupyter:*kernel* stream source-path breakpoints)
+          (setf pos (sb-impl::line/col-from-charpos stream))
+          (when (jupyter:evaluate-form jupyter:*kernel* stream source-path breakpoints
+                                       (car pos) (cdr pos))
             (go repeat))))
       #-(or ccl clasp sbcl)
-      (with-open-file (stream source-path)
-        (do* ((*load-truename* (truename source-path))
-              (*load-pathname* source-path)
-              #+ecl (ext:*source-location* (cons source-path (file-position stream))
-                                           (cons source-path (file-position stream)))
-              (form (read stream nil :eof)
-                    (read stream nil :eof)))
-             ((eq :eof form) (values))
-          (eval-and-print form nil breakpoints))))
+      (with-tracking-stream (stream source-path)
+        (prog* ((*load-truename* (truename source-path))
+                (*load-pathname* source-path)
+                #+ecl (ext:*source-location* (cons source-path (file-position stream))
+                                             (cons source-path (file-position stream))))
+         repeat
+          (when (jupyter:evaluate-form jupyter:*kernel* stream source-path breakpoints
+                                       (tracking-stream-line stream) (tracking-stream-column stream))
+            (go repeat)))))
     (t ; Fallback REPL
       (with-input-from-string (stream code)
-        (do ((form (read stream nil :eof)
-                   (read stream nil :eof)))
-            ((eq :eof form) (values))
-          (eval-and-print form nil breakpoints))))))
+        (tagbody
+         repeat
+          (when (jupyter:evaluate-form jupyter:*kernel* stream nil breakpoints)
+            (go repeat)))))))
 
 
 (defmethod jupyter:evaluate-code ((k kernel) code &optional source-path breakpoints)
