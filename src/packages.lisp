@@ -93,6 +93,7 @@
     #:edit
     #:enqueue-input
     #:evaluate-code
+    #:evaluate-form
     #:get-comm
     #:handling-comm-errors
     #:handling-errors
