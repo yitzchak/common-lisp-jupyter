@@ -60,7 +60,8 @@
     #:debug-environment
     #:debug-environment-condition
     #:debug-environment-restarts
-    #:debug-evaluate
+    #:debug-evaluate-code
+    #:debug-evaluate-form
     #:*debug-frame*
     #:debug-frame
     #:*debugger*

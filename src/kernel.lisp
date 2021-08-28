@@ -364,8 +364,12 @@
       (write-string code stream))))
 
 
-(defgeneric debug-evaluate (kernel environment code frame)
+(defgeneric debug-evaluate-code (kernel environment code frame context)
   (:documentation "Evaluate code in the context of a frame"))
+
+
+(defgeneric debug-evaluate-form (kernel environment stream frame context)
+  (:documentation "Evaluate a single form in the context of a frame"))
 
 
 (defgeneric debug-inspect-variables (kernel environment)
@@ -1161,10 +1165,12 @@
 (defun handle-debug-request/evaluate (environment &aux)
   (inform :info *kernel* "Handling debug_request/evaluate message")
   (let* ((arguments (gethash "arguments" (message-content *message*)))
-         (var (debug-evaluate *kernel* environment
-                (gethash "expression" arguments)
-                (debug-environment-object environment
-                                          (gethash "frameId" arguments)))))
+         (*message* *suspended-message*)
+         (var (debug-evaluate-code *kernel* environment
+                                   (gethash "expression" arguments)
+                                   (debug-environment-object environment
+                                                             (gethash "frameId" arguments))
+                                   (gethash "context" arguments))))
     (send-debug-reply
       (list :object-plist
             "result" (debug-object-value var)

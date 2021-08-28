@@ -318,8 +318,21 @@
                         (write-to-string (jupyter:debug-object-name variable))))))
 
 
-(defmethod jupyter:debug-evaluate ((kernel kernel) environment code frame)
-  (make-debug-variable "EVAL" (eval-in-frame (read-from-string code) frame) environment))
+(defmethod jupyter:debug-evaluate-form ((kernel kernel) environment stream frame context)
+  (declare (ignore environment context))
+  (let ((form (read stream nil stream)))
+    (unless (eq form stream)
+      (dolist (result (multiple-value-list (eval-in-frame form frame)) t)
+        (jupyter:display result)))))
+
+
+(defmethod jupyter:debug-evaluate-code ((kernel kernel) environment code frame context)
+  (with-input-from-string (stream code)
+    (tagbody
+     repeat
+      (when (jupyter:debug-evaluate-form kernel environment stream frame context)
+        (go repeat))))
+  (make-debug-variable "EVAL" nil))
 
 
 (defmethod jupyter:debug-inspect-variables ((kernel kernel) environment)
@@ -358,7 +371,8 @@
 
 (defun read-evaluated-form ()
   (format *query-io* "~&Type a form to be evaluated:~%")
-  (list (read *query-io*)))
+  (jupyter:handling-comm-errors
+    (multiple-value-list (eval-in-frame (read *query-io*) jupyter:*debug-frame*))))
 
 
 (defun eval-in-frame (form frame &aux (data (jupyter:debug-object-data frame)))
@@ -389,20 +403,11 @@
                                                              (debugger-hook condition nil))))
          (setf (get 'eval :debug-restart) t)
          (restart-bind
-             (#+(or clasp ecl)
-              (store-value
-                (lambda (form)
-                  (print `(set ,(cell-error-name *debug-condition*) ,form)))
-                :interactive-function #'read-evaluated-form
-                :report-function (lambda (stream)
-                                   (write-string "Set specified value and use it." stream))
-                :test-function (lambda (condition)
-                                 (typep condition 'unbound-variable)))
-              (eval
-                (lambda (form)
+             ((eval
+                (lambda (&rest results)
                   (jupyter:handling-comm-errors
-                    (dolist (result (multiple-value-list (eval-in-frame form jupyter:*debug-frame*)))
-                      (jupyter:execute-result result)))
+                    (dolist (result results)
+                      (jupyter:display result)))
                   (jupyter:debug-enter-loop))
                 :interactive-function #'read-evaluated-form
                 :report-function (lambda (stream)
