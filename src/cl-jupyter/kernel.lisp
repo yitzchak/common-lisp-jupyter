@@ -412,9 +412,6 @@
                       (jupyter:display result)))
                   (jupyter:debug-enter-loop))
                 :interactive-function #'read-evaluated-form
-                :test-function (lambda (condition)
-                                 (declare (ignore condition))
-                                 *lisp-debugger*)
                 :report-function (lambda (stream)
                                    (write-string "Evaluate form in selected frame." stream)))
               #+sbcl
