@@ -9,6 +9,7 @@
 (defvar +user-options+
   #+sbcl nil #-sbcl "--")
 (defvar *debug-condition* nil)
+(defvar *lisp-debugger* nil)
 (defvar +abort-report+ "Exit debugger and halt cell execution.")
 
 (defclass kernel (jupyter:kernel)
@@ -349,11 +350,12 @@
 
 (defun debugger-hook (condition me-or-my-encapsulation)
   (declare (ignore me-or-my-encapsulation))
-  (let ((environment (make-instance 'debug-environment
-                                    :condition condition
-                                    :restarts (compute-restarts condition)
-                                    :frames (compute-debug-frames condition)))
-        (*debug-condition* condition))
+  (let* ((*lisp-debugger* t)
+         (environment (make-instance 'debug-environment
+                                     :condition condition
+                                     :restarts (compute-restarts condition)
+                                     :frames (compute-debug-frames condition)))
+         (*debug-condition* condition))
     (format (if (typep condition 'warning)
               *standard-output*
               *error-output*)
@@ -410,6 +412,9 @@
                       (jupyter:display result)))
                   (jupyter:debug-enter-loop))
                 :interactive-function #'read-evaluated-form
+                :test-function (lambda (condition)
+                                 (declare (ignore condition))
+                                 *lisp-debugger*)
                 :report-function (lambda (stream)
                                    (write-string "Evaluate form in selected frame." stream)))
               #+sbcl
@@ -420,7 +425,8 @@
                 :report-function (lambda (stream)
                                    (write-string "Enable stepping and continue." stream))
                 :test-function (lambda (condition)
-                                 (and (not (sb-impl::stepping-enabled-p))
+                                 (and *lisp-debugger*
+                                      (not (sb-impl::stepping-enabled-p))
                                       (find-restart 'continue condition))))
               (abort (lambda ()
                        (return (values "ABORT" "Cell execution halted." nil)))
@@ -493,12 +499,13 @@
   (declare (ignore frame breakpoint args))
   (when (jupyter:user-thread-p)
     (with-simple-restart (continue "Continue execution from breakpoint.")
-      (let ((environment (make-instance 'debug-environment
-                                        :restarts (compute-restarts nil)
-                                        :frames (compute-debug-frames nil (do ((f frame (sb-di:frame-down f))
-                                                                               frames)
-                                                                              ((null f) (nreverse frames))
-                                                                            (push f frames))))))
+      (let* ((*lisp-debugger* t)
+             (environment (make-instance 'debug-environment
+                                         :restarts (compute-restarts nil)
+                                         :frames (compute-debug-frames nil (do ((f frame (sb-di:frame-down f))
+                                                                                frames)
+                                                                               ((null f) (nreverse frames))
+                                                                             (push f frames))))))
         (jupyter:debug-stop "breakpoint" environment)))))
 
 
