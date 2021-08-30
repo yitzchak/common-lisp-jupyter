@@ -352,6 +352,7 @@
   (:use #:common-lisp)
   (:documentation "Provides Common Lisp kernel support.")
   (:export
+    #:debug-environment
     #:install
     #:install-image
     #:install-roswell
