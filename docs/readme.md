@@ -32,21 +32,21 @@ Installation instructions can be found in the `docs` directory or at
 
 Autocompletion of function and macro names is available via the tab key.
 
-![](docs/img/complete-function.gif)
+![](assets/complete-function.gif)
 
 ### Symbol completion
 
 Autocompletion of symbols is also available via the tab key. The symbol type is 
 displayed in the dropdown list.
 
-![](docs/img/complete-symbol.gif)
+![](assets/complete-symbol.gif)
 
 ### Indentation
 
 Pressing tab while the carat is on a parenthesis while result in all forms in 
 the cell being auto-indented.
 
-![](docs/img/indent.gif)
+![](assets/indent.gif)
 
 ## Examples
 
