@@ -7,8 +7,8 @@ A Common Lisp kernel for Jupyter along with a library for building Jupyter
 kernels, based on [Maxima-Jupyter][] by Robert Dodier which was based on
 [cl-jupyter][] by Frederic Peschanski.
 
-Installation instructions can be found in the `docs` directory or at the 
-[common-lisp-jupytre][] site.
+Installation instructions can be found in the `docs` directory or at 
+[install][].
 
 ## Features
 
@@ -60,7 +60,7 @@ the cell being auto-indented.
 [ci-badge]: https://github.com/yitzchak/common-lisp-jupyter/workflows/ci/badge.svg
 [ci]: https://github.com/yitzchak/common-lisp-jupyter/actions/
 [cl-jupyter]: https://github.com/fredokun/cl-jupyter/
-[common-lisp-jupyter]: https://yitzchak.github.io/common-lisp-jupyter
+[install]: https://yitzchak.github.io/common-lisp-jupyter/install
 [cytoscape-clj]: https://github.com/yitzchak/cytoscape-clj
 [julia.ipynb]: http://nbviewer.jupyter.org/github/yitzchak/common-lisp-jupyter/blob/master/examples/julia.ipynb
 [Jupyter]: https://jupyter.org/
