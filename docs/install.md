@@ -1,9 +1,11 @@
+# Installation
+
 common-lisp-jupyter may be installed on a machine using a local installation, a
 [repo2docker][] installation, or via a Docker image.
 
-# Local Installation
+## Local Installation
 
-## Requirements
+### Requirements
 
 - [Roswell][] or a system-wide installed Common Lisp implementation. Currently
   [Clozure Common Lisp][CCL], [CLASP][], [Embeddable Common Lisp][ECL] and
@@ -22,7 +24,7 @@ common-lisp-jupyter may be installed on a machine using a local installation, a
 - [jupyterlab-debugger--restarts][] is needed to enable Common Lisp style 
   restarts in the JupyterLab debugger.
 
-## Installation Type
+### Installation Type
 
 Jupyter kernels may be installed as a system-wide kernel which is accessible
 to all users or as a user specific kernel which is only available to the user
@@ -63,7 +65,7 @@ Unless there is are specific requirements that dictate the type of kernel
 installation a user "non-image" kernel is recomended. If a system kernel is
 needed then a "bundled" kernel is recommended.
 
-## Installing via Quicklisp/ASDF
+### Installing via Quicklisp/ASDF
 
 Install [Quicklisp][] and use `(ql:add-to-init-file)`. If you already have
 Quicklisp installed you may need to update your distribution with 
@@ -82,7 +84,7 @@ Quicklisp installed you may need to update your distribution with
   copy the contents of the `pkg` directory to the system root. For instance in 
   bash `sudo cp -r pkg/* /`
 
-## Installing via Roswell
+### Installing via Roswell
 
 - Install Roswell using the [Roswell Installation Guide][]. If you already have
   Roswell installed you may need to update your Quicklisp distribution with
@@ -99,7 +101,7 @@ export PATH=$PATH:~/.roswell/bin
 ros install common-lisp-jupyter
 ```
 
-## Running common-lisp-jupyter
+### Running common-lisp-jupyter
 
 common-lisp-jupyter may be run from a local installation in console mode by the
 following.
@@ -111,10 +113,10 @@ jupyter console --kernel=common-lisp
 Notebook mode is initiated by the following.
 
 ```sh
-jupyter notebook
+jupyter lab
 ```
 
-# repo2docker Usage
+## repo2docker Usage
 
 common-lisp-jupyter may be run as a Docker image managed by repo2docker which
 will fetch the current code from GitHub and handle all the details of running
@@ -134,7 +136,7 @@ built.
 jupyter-repo2docker --user-id=1000 --user-name=jupyter https://github.com/yitzchak/common-lisp-jupyter
 ```
 
-# Docker Image
+## Docker Image
 
 A prebuilt docker image is available via Docker Hub. This image maybe run run
 the following command.
