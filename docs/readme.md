@@ -48,6 +48,13 @@ the cell being auto-indented.
 
 ![](assets/indent.gif)
 
+### Inspection
+
+Pressing shift-tab while the carat is on a symbol will show context sensitive
+help.
+
+![](assets/inspect.gif)
+
 ## Examples
 
 - [about.ipynb][] — Simple examples including displaying images.
