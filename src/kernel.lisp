@@ -878,9 +878,9 @@
                 ("is_complete_request"
                   (handle-is-complete-request))
                 ("kernel_info_request"
-                  (handle-kernel-info-request))
+                  (handle-kernel-info-request shell))
                 (otherwise
-                  (inform :warn kernel "Ignoring ~A message since there is no appropriate handler." msg-type)))
+                  (inform :warn kernel "Ignoring ~A shell message since there is no appropriate handler." msg-type)))
             ;; send any remaining stdout
             (finish-output *standard-output*)
             ;; send any remaining stderr
@@ -935,6 +935,8 @@
         (send-status iopub "busy")
         (unwind-protect
             (hash-case msg-type
+              ("kernel_info_request"
+                (handle-kernel-info-request control))
               ("interrupt_request"
                 (handle-interrupt-request))
               ("shutdown_request"
@@ -961,7 +963,7 @@
               ("debug_request/variables"
                 (handle-debug-request/variables environment))
               (otherwise
-                (inform :warn kernel "Ignoring ~A message since there is no appropriate handler." msg-type)))
+                (inform :warn kernel "Ignoring ~A control message since there is no appropriate handler." msg-type)))
           (send-status iopub "idle")))
       (go poll))))
 
@@ -1009,13 +1011,12 @@
 
 |#
 
-(defun handle-kernel-info-request ()
+(defun handle-kernel-info-request (channel)
   (inform :info *kernel* "Handling kernel_info_request message")
   (with-slots (name version language-name language-version mime-type session
-               file-extension pygments-lexer codemirror-mode help-links banner
-               shell)
+               file-extension pygments-lexer codemirror-mode help-links banner)
               *kernel*
-    (message-send shell
+    (message-send channel
       (make-message session "kernel_info_reply"
                     `(:object-alist
                        ("status" . "ok")

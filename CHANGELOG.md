@@ -7,6 +7,7 @@ of how the versioning scheme that this project does not use is clearly superior
 to random natural numbers and how incrementing the minor version number
 indicates backward compatible changes, unless it does not.
 
+- 2021-12-07 — Allow `kernel_info_request` on control channel.
 - 2021-08-08 — Add support for Jupyter Debugging protocol.
 - 2021-05-07 — Rework message loop to make more responsive.
 - 2021-04-29 — Remove `result` based display data and execution results and
