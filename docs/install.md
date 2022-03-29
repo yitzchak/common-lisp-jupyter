@@ -69,7 +69,8 @@ needed then a "bundled" kernel is recommended.
 
 Install [Quicklisp][] and use `(ql:add-to-init-file)`. If you already have
 Quicklisp installed you may need to update your distribution with 
-`(ql:update-dist "quicklisp")` to resolve package conflicts.
+`(ql:update-dist "quicklisp")` to resolve package conflicts. Once Quicklisp
+is installed add common-lisp-jupyter via `(ql:quickload :common-lisp-jupyter)`.
 
 - To install an image based user kernel evaluate `(cl-jupyter:install-image)`
 - To install a non-image based user kernel evaluate `(cl-jupyter:install)`
