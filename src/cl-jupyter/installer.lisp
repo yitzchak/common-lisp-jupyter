@@ -1,7 +1,9 @@
 (in-package #:jupyter/common-lisp)
 
 (defclass cl-installer (jupyter:installer)
-  ()
+  ((load-system :accessor installer-load-system
+                :initarg :load-system
+                :type (or null string)))
   (:default-initargs
     :class 'kernel
     :language +language+
@@ -44,10 +46,9 @@
   (let ((implementation (jupyter:installer-implementation instance)))
     (append (list (or implementation
                        (first (uiop:raw-command-line-arguments))
-                       (format nil "~(~A~)" (uiop:implementation-type)))
-                   +eval-flag+ (if (find-package :quicklisp)
-                                 "(ql:quickload :common-lisp-jupyter)"
-                                 "(asdf:load-system :common-lisp-jupyter)"))
+                       (format nil "~(~A~)" (uiop:implementation-type))))
+            (when (installer-load-system instance)
+              (list +eval-flag+ (installer-load-system instance)))
             (list +eval-flag+ "(jupyter:run-kernel 'jupyter/common-lisp:kernel)")
             (when +user-options+
               (list +user-options+))
@@ -59,10 +60,9 @@
   (let ((implementation (jupyter:installer-implementation instance)))
     (append (list (or implementation
                       (first (uiop:raw-command-line-arguments))
-                      (format nil "~(~A~)" (uiop:implementation-type)))
-                  +eval-flag+ (if (find-package :quicklisp)
-                                "(ql:quickload :common-lisp-jupyter)"
-                                "(asdf:load-system :common-lisp-jupyter)"))
+                      (format nil "~(~A~)" (uiop:implementation-type))))
+            (when (installer-load-system instance)
+              (list +eval-flag+ (installer-load-system instance)))
             (list +eval-flag+ "(jupyter:run-kernel 'jupyter/common-lisp:kernel)")
             (when +user-options+
               (list +user-options+))
@@ -105,10 +105,13 @@
       '("{connection_file}"))))
 
 
-(defun install (&key bin-path use-implementation system bundle local prefix root)
+(defun install (&key bin-path implementation system bundle local prefix root
+                     (load-system (if (find-package :quicklisp)
+                                      "(ql:quickload :common-lisp-jupyter)"
+                                      "(asdf:load-system :common-lisp-jupyter)")))
   "Install Common Lisp kernel based on the current implementation.
 - `bin-path` specifies path to LISP binary.
-- `use-implementation` toggles including implementation details in kernel name.
+- `implementation` toggles including implementation details in kernel name.
 - `system` toggles system versus user installation.
 - `bundle` creates a quicklisp bundle for system installations.
 - `local` toggles `/usr/local/share versus` `/usr/share` for system installations.
@@ -124,33 +127,42 @@
         (t
           'user-installer))
       :display-name
-        (if use-implementation
-          (format nil "~A (~A)" +display-name+ (lisp-implementation-type))
+        (if implementation
+          (format nil "~A (~A)" +display-name+ (if (stringp implementation)
+                                                   implementation
+                                                   (lisp-implementation-type)))
           +display-name+)
       :implementation bin-path
       :local local
+      :load-system load-system
       :kernel-name
-        (if use-implementation
-          (format nil "~A_~(~A~)" +language+ (uiop:implementation-type))
+        (if implementation
+          (format nil "~A_~(~A~)" +language+ (if (stringp implementation)
+                                                   implementation
+                                                   (lisp-implementation-type)))
           +language+)
       :prefix prefix
       :root root)))
 
 
-(defun install-image (&key use-implementation prefix root)
+(defun install-image (&key implementation prefix root)
   "Install Common Lisp kernel based on image of current implementation.
-- `use-implementation` toggles including implementation details in kernel name.
+- `implementation` toggles including implementation details in kernel name.
 - `prefix` key specifies directory prefix for packaging.
 - `root` key specifies the root under which the Jupyter folder is found. Is automatically determined if not provided."
   (jupyter:install
     (make-instance 'user-image-installer
       :display-name
-        (if use-implementation
-          (format nil "~A (~A)" +display-name+ (lisp-implementation-type))
+        (if implementation
+          (format nil "~A (~A)" +display-name+ (if (stringp implementation)
+                                                   implementation
+                                                   (lisp-implementation-type)))
           +display-name+)
       :kernel-name
-        (if use-implementation
-          (format nil "~A_~(~A~)" +language+ (uiop:implementation-type))
+        (if implementation
+          (format nil "~A_~(~A~)" +language+ (if (stringp implementation)
+                                                   implementation
+                                                   (lisp-implementation-type)))
           +language+)
       :prefix prefix
       :root root)))

@@ -12,4 +12,4 @@
 
 (ql:quickload :common-lisp-jupyter)
 
-(cl-jupyter:install :use-implementation t)
+(cl-jupyter:install :implementation t)

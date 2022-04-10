@@ -28,4 +28,4 @@
 
 (ql:quickload :common-lisp-jupyter)
 
-(clj:install :use-implementation t :bin-path (first (uiop:command-line-arguments)))
+(clj:install :implementation t :bin-path (first (uiop:command-line-arguments)))
