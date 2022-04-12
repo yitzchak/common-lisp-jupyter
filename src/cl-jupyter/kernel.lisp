@@ -493,7 +493,7 @@
 
 #+sbcl
 (defun breakpoint-hook (frame breakpoint &rest args)
-  (declare (ignore frame breakpoint args))
+  (declare (ignore breakpoint args))
   (when (jupyter:user-thread-p)
     (with-simple-restart (continue "Continue execution from breakpoint.")
       (let* ((*lisp-debugger* t)
@@ -584,6 +584,7 @@
 
 
 (defmethod jupyter:evaluate-form ((kernel kernel) stream source-path breakpoints &optional line column)
+  (declare (ignore line column))
   (cond
     #+ccl
     (source-path
