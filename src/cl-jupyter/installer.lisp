@@ -106,9 +106,7 @@
 
 
 (defun install (&key bin-path implementation system bundle local prefix root
-                     (load-system (if (find-package :quicklisp)
-                                      "(ql:quickload :common-lisp-jupyter)"
-                                      "(asdf:load-system :common-lisp-jupyter)")))
+                     (load-system t))
   "Install Common Lisp kernel based on the current implementation.
 - `bin-path` specifies path to LISP binary.
 - `implementation` toggles including implementation details in kernel name.
@@ -134,7 +132,13 @@
           +display-name+)
       :implementation bin-path
       :local local
-      :load-system load-system
+      :load-system (cond ((or (null load-system)
+                              (stringp load-system))
+                          load-system)
+                         ((find-package :quicklisp)
+                          "(ql:quickload :common-lisp-jupyter)")
+                         (t
+                          "(asdf:load-system :common-lisp-jupyter)"))
       :kernel-name
         (if implementation
           (format nil "~A_~(~A~)" +language+ (if (stringp implementation)
