@@ -75,7 +75,7 @@
     (append (list (or implementation
                       (first (uiop:raw-command-line-arguments))
                       (format nil "~(~A~)" (uiop:implementation-type)))
-                  +load-flag+ (namestring (jupyter:installer-path instance :root :program :bundle))
+                  +load-flag+ (namestring (jupyter:installer-path instance :bundle))
                   +eval-flag+ (if (find-package :quicklisp)
                                 "(ql:quickload :common-lisp-jupyter)"
                                 "(asdf:load-system :common-lisp-jupyter)"))
@@ -105,7 +105,7 @@
       '("{connection_file}"))))
 
 
-(defun install (&key bin-path implementation system bundle local prefix root
+(defun install (&key bin-path implementation system bundle local prefix jupyter program
                      (load-system t))
   "Install Common Lisp kernel based on the current implementation.
 - `bin-path` specifies path to LISP binary.
@@ -114,7 +114,7 @@
 - `bundle` creates a quicklisp bundle for system installations.
 - `local` toggles `/usr/local/share versus` `/usr/share` for system installations.
 - `prefix` key specifies directory prefix for packaging.
-- `root` key specifies the root under which the Jupyter folder is found. Is automatically determined if not provided."
+- `jupyter` key specifies the root under which the Jupyter folder is found. Is automatically determined if not provided."
   (jupyter:install
     (make-instance
       (cond
@@ -146,14 +146,15 @@
                                                    (lisp-implementation-type)))
           +language+)
       :prefix prefix
-      :root root)))
+      :jupyter-path jupyter
+      :program-path program)))
 
 
-(defun install-image (&key implementation prefix root)
+(defun install-image (&key implementation prefix jupyter program)
   "Install Common Lisp kernel based on image of current implementation.
 - `implementation` toggles including implementation details in kernel name.
 - `prefix` key specifies directory prefix for packaging.
-- `root` key specifies the root under which the Jupyter folder is found. Is automatically determined if not provided."
+- `jupyter` key specifies the root under which the Jupyter folder is found. Is automatically determined if not provided."
   (jupyter:install
     (make-instance 'user-image-installer
       :display-name
@@ -169,7 +170,8 @@
                                                    (lisp-implementation-type)))
           +language+)
       :prefix prefix
-      :root root)))
+      :jupyter-path jupyter
+      :program-path program)))
 
 
 (defun install-roswell (&key implementation)
