@@ -13,7 +13,7 @@
      #:cl-indentify
      #:closer-mop
      #:dissect
-     ; This should be `(:feature (:not :clasp) :ironclad)` but some distributions still don't have
+     ; This should be `(:feature (:not :clasp) :ironclad)` but some implementations still don't have
      ; ASDF 3
      #-clasp :eclector
      #-clasp :ironclad
@@ -25,6 +25,7 @@
      #:trivial-garbage
      #:trivial-gray-streams
      #:trivial-mimes
+     #:trivial-features
      #:shasht)
   :components
     ((:module res
