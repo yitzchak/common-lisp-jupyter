@@ -152,6 +152,7 @@
                                   debugger-hook
                                   invoke-debugger
                                   break
+                                  #+clasp core:breakstep
                                   #+sbcl sb-debug::run-hook
                                   #+sbcl sb-int::%break)
                                 :test #'equal)))
@@ -366,6 +367,7 @@
     (jupyter:debug-stop
       (typecase condition
         #+sbcl (sb-impl::step-form-condition "step")
+        #+clasp (clasp-debug:step-form "step")
         (otherwise "exception"))
       environment)
     (abort)))
@@ -414,16 +416,18 @@
                 :interactive-function #'read-evaluated-form
                 :report-function (lambda (stream)
                                    (write-string "Evaluate form in selected frame." stream)))
-              #+sbcl
+              #+(or clasp sbcl)
               (step
                 (lambda ()
-                  (sb-impl::enable-stepping)
+                  #+clasp (core:set-breakstep)
+                  #+sbcl (sb-impl::enable-stepping)
                   (continue))
                 :report-function (lambda (stream)
                                    (write-string "Enable stepping and continue." stream))
                 :test-function (lambda (condition)
                                  (and *lisp-debugger*
-                                      (not (sb-impl::stepping-enabled-p))
+                                      (not #+clasp (core:breakstepping-p)
+                                           #+sbcl (sb-impl::stepping-enabled-p))
                                       (find-restart 'continue condition))))
               (abort (lambda ()
                        (return (values "ABORT" "Cell execution halted." nil)))
@@ -431,6 +435,7 @@
                                    (write-string +abort-report+ stream))))
            ,@body
            (values)))
+     #+clasp (core:unset-breakstep)
      #+sbcl (sb-impl::disable-stepping)))
 
 
@@ -449,6 +454,7 @@
 
 (defmethod jupyter:debug-in ((k kernel) environment)
   (invoke-first-restart environment
+                        #+clasp 'clasp-debug:step-into
                         #+sbcl 'sb-impl::step-into
                         'continue))
 
@@ -461,6 +467,7 @@
 
 (defmethod jupyter:debug-next ((k kernel) environment)
   (invoke-first-restart environment
+                        #+clasp 'clasp-debug:step-over
                         #+sbcl 'sb-impl::step-next
                         'continue))
 
