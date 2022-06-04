@@ -124,7 +124,7 @@
         (send-string-part ch part (or (< index (1- (length body)))
                                       buffers)))
       (trivial-do:dolist* (index part buffers)
-        (send-binary-part ch part (< index (1- (length body))))))))
+        (send-binary-part ch part (< index (1- (length buffers))))))))
 
 (defun message-send (ch msg)
   (with-slots (mac) ch
