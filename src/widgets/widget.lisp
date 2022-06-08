@@ -1,6 +1,6 @@
 (in-package #:jupyter-widgets)
 
-(defparameter +protocol-version+ "2.0.0")
+(defparameter +protocol-version+ "2.1.0")
 (defparameter +base-module+ "@jupyter-widgets/base")
 (defparameter +base-module-version+ "1.2.0")
 (defparameter +controls-module+ "@jupyter-widgets/controls")
