@@ -20,7 +20,7 @@ jobs:
       matrix:
         os:
         - macos-latest
-        - ubuntu-latest
+        - ubuntu-22.04
         - windows-latest
 
     # run the job on every combination of "os" above
@@ -46,7 +46,7 @@ jobs:
         msiexec /qn /i sbcl.msi
 
     - name: Install Ubuntu dependencies
-      if: matrix.os == 'ubuntu-latest'
+      if: matrix.os == 'ubuntu-22.04'
       run: |
         sudo dpkg --add-architecture i386
         sudo apt-get update
@@ -95,17 +95,17 @@ jobs:
         ccl64 --batch --load scripts/usr-install.lisp
 
     - name: Install CCL kernel on Ubuntu
-      if: matrix.os == 'ubuntu-latest'
+      if: matrix.os == 'ubuntu-22.04'
       run: |
         ccl --batch --load scripts/usr-install.lisp
 
     - name: Install CLASP kernel
-      if: matrix.os == 'ubuntu-latest'
+      if: matrix.os == 'ubuntu-22.04'
       run: |
         iclasp-boehmprecise --non-interactive --load scripts/usr-install.lisp
 
     - name: Install ECL kernel
-      if: matrix.os == 'ubuntu-latest'
+      if: matrix.os == 'ubuntu-22.04'
       run: |
         ecl --load scripts/usr-install.lisp --eval '(ext:quit)'
 
