@@ -82,9 +82,10 @@ most cases of *query-io* usage. Makes overloading y-or-no-p unnecessary.
               (send-input-request channel trimmed-output)
               (loop until (message-available-p channel)
                     do (sleep 0.1))
-              (loop for ch across (gethash "value" (message-content (message-recv channel)))
+              (loop with value = (gethash "value" (message-content (message-recv channel)))
+                    for i from (1- (length value)) downto 0
                     initially (vector-push-extend #\Newline input)
-                    do (vector-push-extend ch input))))
+                    do (vector-push-extend (char value i) input))))
         (bordeaux-threads:release-lock lock)))))
 
 (defmethod trivial-gray-streams:stream-clear-input ((stream stdin-stream))
