@@ -70,6 +70,8 @@
     #:debug-inspect-variables
     #:debug-new-breakpoint
     #:debug-next
+    #:debug-module
+    #:debug-modules
     #:debug-object
     #:debug-object-children
     #:debug-object-children-resolve

@@ -201,14 +201,9 @@
               (multiple-value-call #'values pathname (source-line-column pathname (ccl:source-note-start-pos source-note)))))
   #+clasp (let ((pos (clasp-debug:frame-source-position frame)))
             (when pos
-              (let ((pathname (clasp-debug:code-source-line-pathname pos)))
-                (values (if (and (uiop:physical-pathname-p pathname)
-                                 (not (uiop:absolute-pathname-p pathname)))
-                          (merge-pathnames (make-pathname :host "CELL" :version :newest)
-                                           pathname)
-                          pathname)
-                        (clasp-debug:code-source-line-line-number pos)
-                        (clasp-debug:code-source-line-column pos)))))
+              (values (clasp-debug:code-source-line-pathname pos)
+                      (clasp-debug:code-source-line-line-number pos)
+                      (clasp-debug:code-source-line-column pos))))
   #+cmucl (let* ((code-location (di:frame-code-location frame))
                  (debug-source (di:code-location-debug-source code-location))
                  (pathname (ignore-errors (di:debug-source-name debug-source))))
@@ -261,12 +256,35 @@
             instance)
           frames))
 
+(defvar *modules* nil)
+(defvar *system-name* "")
+
+(defgeneric grovel-component (component)
+  (:method (component)
+    (declare (ignore component)))
+  (:method :around ((component asdf:component))
+    (when (or (not (asdf::component-if-feature component))
+              (uiop:featurep (asdf::component-if-feature component)))
+      (call-next-method)))
+  (:method ((component asdf:cl-source-file))
+    (push (make-instance 'jupyter:debug-module
+                         :name (format nil "~a ~a" *system-name* (asdf:component-name component))
+                         :path (asdf:component-pathname component))
+          *modules*))
+  (:method ((component asdf:parent-component))
+    (loop for child in (asdf:component-children component)
+          do (grovel-component child))))
+
+(defmethod jupyter:debug-modules ((kernel kernel))
+  (loop with *modules* = nil
+        for *system-name* in (asdf:already-loaded-systems)
+        finally (return *modules*)
+        do (grovel-component (asdf:find-system *system-name*))))
 
 (defmethod jupyter:debug-object-children-resolve ((instance debug-frame))
   (list (make-instance 'debug-local-scope
                        :environment (jupyter:debug-object-environment instance)
                        :parent instance)))
-
 
 (defmethod jupyter:debug-object-children-resolve ((instance debug-local-scope))
   (stable-sort

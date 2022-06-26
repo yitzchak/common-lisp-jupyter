@@ -375,6 +375,11 @@
 (defgeneric debug-inspect-variables (kernel environment)
   (:documentation "Return a list of debug-objects represents the variables in the global scope."))
 
+(defgeneric debug-modules (kernel)
+  (:documentation "Return a list of debug-modules representing the modules available.")
+  (:method (kernel)
+    (declare (ignore kernel))
+    nil))
 
 (defclass debug-source ()
   ((name
@@ -485,6 +490,18 @@
      :documentation "Implementation specific data associated with the object."))
   (:documentation "A debug object. Superclass of frames, scopes, variables, etc."))
 
+(defclass debug-module (debug-object)
+  ((path
+     :reader debug-object-path
+     :initarg :path
+     :type (or pathname string)
+     :documentation "The path of the source."))
+  (:documentation "A module in the debugger."))
+
+(defmethod shasht:print-json-key-value :around ((object debug-module) key value output-stream)
+  (when (member key '(id name path) :test #'equal)
+    (let ((shasht:*symbol-name-function* #'symbol-to-camel-case))
+      (call-next-method))))
 
 (defmethod debug-object-children :before ((instance debug-object))
   (unless (slot-boundp instance 'children)
@@ -956,6 +973,8 @@
                 (handle-debug-request/initialize))
               ("debug_request/inspectVariables"
                 (handle-debug-request/inspect-variables environment))
+              ("debug_request/modules"
+                (handle-debug-request/modules))
               ("debug_request/setBreakpoints"
                 (handle-debug-request/set-breakpoints))
               ("debug_request/source"
@@ -1191,6 +1210,21 @@
     (list :object-plist
           "variables" (or (debug-inspect-variables *kernel* environment)
                           :empty-array)))
+  (send-status-idle))
+
+#|
+
+### Message type: debug_request / modules ###
+
+|#
+
+(defun handle-debug-request/modules ()
+  (inform :info *kernel* "Handling debug_request/modules message")
+  (let ((modules (debug-modules *kernel*)))
+    (send-debug-reply
+      `(:object-plist
+        "modules" ,(or modules :empty-array)
+        "totalModules" ,(length modules))))
   (send-status-idle))
 
 #|
