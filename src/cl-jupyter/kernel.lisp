@@ -256,7 +256,7 @@
             instance)
           frames))
 
-(defvar *modules* nil)
+(defvar *debug-modules* nil)
 (defvar *system-name* "")
 
 (defgeneric grovel-component (component)
@@ -270,15 +270,15 @@
     (push (make-instance 'jupyter:debug-module
                          :name (format nil "~a ~a" *system-name* (asdf:component-name component))
                          :path (asdf:component-pathname component))
-          *modules*))
+          *debug-modules*))
   (:method ((component asdf:parent-component))
     (loop for child in (asdf:component-children component)
           do (grovel-component child))))
 
 (defmethod jupyter:debug-modules ((kernel kernel))
-  (loop with *modules* = nil
+  (loop with *debug-modules* = nil
         for *system-name* in (asdf:already-loaded-systems)
-        finally (return *modules*)
+        finally (return *debug-modules*)
         do (grovel-component (asdf:find-system *system-name*))))
 
 (defmethod jupyter:debug-object-children-resolve ((instance debug-frame))
