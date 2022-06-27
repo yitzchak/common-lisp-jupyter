@@ -730,147 +730,147 @@ def test_history_tail(jupyter_kernel):
     )
 
 
-def test_widget_button(jupyter_kernel):
-    reply, messages = jupyter_kernel.execute_read_reply(
-        '''(jw:make-button :description "fubar"
-                           :on-click (list (lambda (inst)
-                                             (declare (ignore inst))
-                                             (write-string "wibble")
-                                             (finish-output)
-                                             (error "gronk"))))''',
-        timeout=10,
-        expected_messages=[
-            (
-                {
-                    "msg_type": "comm_open",
-                    "metadata": {"version": "2.0.0"},
-                    "content": {
-                        "target_name": "jupyter.widget",
-                        "data": {
-                            "state": {
-                                "button_color": None,
-                                "_view_module_version": "1.2.0",
-                                "_view_module": "@jupyter-widgets/base",
-                                "_view_name": "StyleView",
-                                "_model_module_version": "1.5.0",
-                                "_model_module": "@jupyter-widgets/controls",
-                                "_model_name": "ButtonStyleModel",
-                            },
-                            "buffer_paths": [],
-                        },
-                    },
-                },
-                {
-                    "msg_type": "comm_open",
-                    "metadata": {"version": "2.0.0"},
-                    "content": {
-                        "target_name": "jupyter.widget",
-                        "data": {
-                            "state": {
-                                "width": None,
-                                "visibility": None,
-                                "top": None,
-                                "right": None,
-                                "padding": None,
-                                "overflow_y": None,
-                                "overflow_x": None,
-                                "overflow": None,
-                                "order": None,
-                                "object_position": None,
-                                "object_fit": None,
-                                "min_width": None,
-                                "min_height": None,
-                                "max_width": None,
-                                "max_height": None,
-                                "margin": None,
-                                "left": None,
-                                "justify_items": None,
-                                "justify_content": None,
-                                "height": None,
-                                "grid_template_rows": None,
-                                "grid_template_columns": None,
-                                "grid_template_areas": None,
-                                "grid_row": None,
-                                "grid_gap": None,
-                                "grid_column": None,
-                                "grid_auto_rows": None,
-                                "grid_auto_flow": None,
-                                "grid_auto_columns": None,
-                                "grid_area": None,
-                                "flex_flow": None,
-                                "flex": None,
-                                "display": None,
-                                "bottom": None,
-                                "border": None,
-                                "align_self": None,
-                                "align_items": None,
-                                "align_content": None,
-                                "_view_module_version": "1.2.0",
-                                "_view_module": "@jupyter-widgets/base",
-                                "_view_name": "LayoutView",
-                                "_model_module_version": "1.2.0",
-                                "_model_module": "@jupyter-widgets/base",
-                                "_model_name": "LayoutModel",
-                            },
-                            "buffer_paths": [],
-                        },
-                    },
-                },
-                {
-                    "msg_type": "comm_open",
-                    "metadata": {"version": "2.0.0"},
-                    "content": {
-                        "target_name": "jupyter.widget",
-                        "data": {
-                            "state": {
-                                "description": "fubar",
-                                "_view_module_version": "1.5.0",
-                                "_view_module": "@jupyter-widgets/controls",
-                                "_view_name": "ButtonView",
-                                "_model_module_version": "1.5.0",
-                                "_model_module": "@jupyter-widgets/controls",
-                                "_model_name": "ButtonModel",
-                                "button_style": "",
-                                "disabled": False,
-                                "icon": "",
-                                "tooltip": "",
-                            },
-                            "buffer_paths": [],
-                        },
-                    },
-                },
-                {
-                    "msg_type": "execute_result",
-                    "content": {
-                        "data": {
-                            "application/vnd.jupyter.widget-view+json": {
-                                "version_major": 2,
-                                "version_minor": 0,
-                            },
-                        },
-                        "metadata": {},
-                    },
-                }
-            ),
-        ],
-    )
-    jupyter_kernel.comm_msg_read_reply(
-        comm_id=messages[2]["content"]["comm_id"],
-        data={"method": "custom", "content": {"event": "click"}},
-        timeout=10,
-        expected_messages=[
-            (
-                {
-                    "msg_type": "stream",
-                    "content": {"name": "stdout", "text": "wibble"},
-                },
-                {
-                    "msg_type": "stream",
-                    "content": {"name": "stderr", "text": "SIMPLE-ERROR: gronk\n\n"},
-                }
-            )
-        ],
-    )
+# def test_widget_button(jupyter_kernel):
+#     reply, messages = jupyter_kernel.execute_read_reply(
+#         '''(jw:make-button :description "fubar"
+#                            :on-click (list (lambda (inst)
+#                                              (declare (ignore inst))
+#                                              (write-string "wibble")
+#                                              (finish-output)
+#                                              (error "gronk"))))''',
+#         timeout=10,
+#         expected_messages=[
+#             (
+#                 {
+#                     "msg_type": "comm_open",
+#                     "metadata": {"version": "2.0.0"},
+#                     "content": {
+#                         "target_name": "jupyter.widget",
+#                         "data": {
+#                             "state": {
+#                                 "button_color": None,
+#                                 "_view_module_version": "1.2.0",
+#                                 "_view_module": "@jupyter-widgets/base",
+#                                 "_view_name": "StyleView",
+#                                 "_model_module_version": "1.5.0",
+#                                 "_model_module": "@jupyter-widgets/controls",
+#                                 "_model_name": "ButtonStyleModel",
+#                             },
+#                             "buffer_paths": [],
+#                         },
+#                     },
+#                 },
+#                 {
+#                     "msg_type": "comm_open",
+#                     "metadata": {"version": "2.0.0"},
+#                     "content": {
+#                         "target_name": "jupyter.widget",
+#                         "data": {
+#                             "state": {
+#                                 "width": None,
+#                                 "visibility": None,
+#                                 "top": None,
+#                                 "right": None,
+#                                 "padding": None,
+#                                 "overflow_y": None,
+#                                 "overflow_x": None,
+#                                 "overflow": None,
+#                                 "order": None,
+#                                 "object_position": None,
+#                                 "object_fit": None,
+#                                 "min_width": None,
+#                                 "min_height": None,
+#                                 "max_width": None,
+#                                 "max_height": None,
+#                                 "margin": None,
+#                                 "left": None,
+#                                 "justify_items": None,
+#                                 "justify_content": None,
+#                                 "height": None,
+#                                 "grid_template_rows": None,
+#                                 "grid_template_columns": None,
+#                                 "grid_template_areas": None,
+#                                 "grid_row": None,
+#                                 "grid_gap": None,
+#                                 "grid_column": None,
+#                                 "grid_auto_rows": None,
+#                                 "grid_auto_flow": None,
+#                                 "grid_auto_columns": None,
+#                                 "grid_area": None,
+#                                 "flex_flow": None,
+#                                 "flex": None,
+#                                 "display": None,
+#                                 "bottom": None,
+#                                 "border": None,
+#                                 "align_self": None,
+#                                 "align_items": None,
+#                                 "align_content": None,
+#                                 "_view_module_version": "1.2.0",
+#                                 "_view_module": "@jupyter-widgets/base",
+#                                 "_view_name": "LayoutView",
+#                                 "_model_module_version": "1.2.0",
+#                                 "_model_module": "@jupyter-widgets/base",
+#                                 "_model_name": "LayoutModel",
+#                             },
+#                             "buffer_paths": [],
+#                         },
+#                     },
+#                 },
+#                 {
+#                     "msg_type": "comm_open",
+#                     "metadata": {"version": "2.0.0"},
+#                     "content": {
+#                         "target_name": "jupyter.widget",
+#                         "data": {
+#                             "state": {
+#                                 "description": "fubar",
+#                                 "_view_module_version": "1.5.0",
+#                                 "_view_module": "@jupyter-widgets/controls",
+#                                 "_view_name": "ButtonView",
+#                                 "_model_module_version": "1.5.0",
+#                                 "_model_module": "@jupyter-widgets/controls",
+#                                 "_model_name": "ButtonModel",
+#                                 "button_style": "",
+#                                 "disabled": False,
+#                                 "icon": "",
+#                                 "tooltip": "",
+#                             },
+#                             "buffer_paths": [],
+#                         },
+#                     },
+#                 },
+#                 {
+#                     "msg_type": "execute_result",
+#                     "content": {
+#                         "data": {
+#                             "application/vnd.jupyter.widget-view+json": {
+#                                 "version_major": 2,
+#                                 "version_minor": 0,
+#                             },
+#                         },
+#                         "metadata": {},
+#                     },
+#                 }
+#             ),
+#         ],
+#     )
+#     jupyter_kernel.comm_msg_read_reply(
+#         comm_id=messages[2]["content"]["comm_id"],
+#         data={"method": "custom", "content": {"event": "click"}},
+#         timeout=10,
+#         expected_messages=[
+#             (
+#                 {
+#                     "msg_type": "stream",
+#                     "content": {"name": "stdout", "text": "wibble"},
+#                 },
+#                 {
+#                     "msg_type": "stream",
+#                     "content": {"name": "stderr", "text": "SIMPLE-ERROR: gronk\n\n"},
+#                 }
+#             )
+#         ],
+#     )
 
 
     
