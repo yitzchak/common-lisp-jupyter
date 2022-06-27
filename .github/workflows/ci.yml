@@ -97,12 +97,12 @@ jobs:
     #     ccl --batch --load scripts/usr-install.lisp
 
     - name: Install CLASP kernel
-      if: {{ matrix.os == 'ubuntu-22.04' || matrix.os == 'macos-latest' }}
+      if: matrix.os != 'windows-latest'
       run: |
         iclasp-boehmprecise --non-interactive --load scripts/usr-install.lisp
 
     - name: Install ECL kernel
-      if: {{ matrix.os == 'ubuntu-22.04' || matrix.os == 'macos-latest' }}
+      if: matrix.os != 'windows-latest'
       run: |
         ecl --load scripts/usr-install.lisp --eval '(ext:quit)'
 
