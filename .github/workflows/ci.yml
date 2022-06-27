@@ -48,15 +48,14 @@ jobs:
     - name: Install Ubuntu dependencies
       if: matrix.os == 'ubuntu-22.04'
       run: |
-        sudo dpkg --add-architecture i386
         sudo apt-get update
-        sudo apt-get install -y ecl libzmq3-dev libzmq3-dev:i386 sbcl
+        sudo apt-get install -y ecl libzmq3-dev sbcl
         sudo bash -c "$(curl -fsSL https://www.thirdlaw.tech/pkg/clasp.sh)"
 
     - name: Install MacOS dependencies
       if: matrix.os == 'macos-latest'
       run: |
-        brew install clozure-cl czmq sbcl
+        brew install clozure-cl czmq sbcl ecl clasp-developers/clasp/clasp-cl
 
     - name: Install Jupyter
       run: |
@@ -98,12 +97,12 @@ jobs:
     #     ccl --batch --load scripts/usr-install.lisp
 
     - name: Install CLASP kernel
-      if: matrix.os == 'ubuntu-22.04'
+      if: {{ matrix.os == 'ubuntu-22.04' || matrix.os == 'macos-latest' }}
       run: |
         iclasp-boehmprecise --non-interactive --load scripts/usr-install.lisp
 
     - name: Install ECL kernel
-      if: matrix.os == 'ubuntu-22.04'
+      if: {{ matrix.os == 'ubuntu-22.04' || matrix.os == 'macos-latest' }}
       run: |
         ecl --load scripts/usr-install.lisp --eval '(ext:quit)'
 
