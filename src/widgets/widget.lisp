@@ -8,7 +8,7 @@
 (defparameter +output-module+ "@jupyter-widgets/output")
 (defparameter +output-module-version+ "1.0.0")
 (defparameter +sidecar-module+ "@jupyter-widgets/jupyterlab-sidecar")
-(defparameter +sidecar-module-version+ "1.0.0")
+(defparameter +sidecar-module-version+ "1.1.0")
 
 (defparameter +target-name+ "jupyter.widget")
 

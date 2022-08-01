@@ -11,7 +11,12 @@
    (kernel
      :initarg :kernel
      :initform *kernel*
-     :reader comm-kernel))
+     :reader comm-kernel)
+   (on-close
+     :initarg :on-close
+     :initform nil
+     :accessor comm-on-close
+     :documentation "Instance specific close notification"))
   (:default-initargs
     :sink (when *kernel*
             (source-sink *kernel*))))
@@ -26,15 +31,22 @@
 
 (defgeneric on-comm-open (comm data metadata buffers))
 
-(defmethod on-comm-open (comm data metadata buffers))
+(defmethod on-comm-open (comm data metadata buffers)
+  (declare (ignore comm data metadata buffers)))
 
 (defgeneric on-comm-message (comm data metadata buffers))
 
-(defmethod on-comm-message (comm data metadata buffers))
+(defmethod on-comm-message (comm data metadata buffers)
+  (declare (ignore comm data metadata buffers)))
 
 (defgeneric on-comm-close (comm data metadata buffers))
 
-(defmethod on-comm-close (comm data metadata buffers))
+(defmethod on-comm-close (comm data metadata buffers)
+  (declare (ignore comm data metadata buffers)))
+
+(defmethod on-comm-close :after ((comm comm) data metadata buffers)
+  (dolist (func (comm-on-close comm))
+    (funcall func comm data metadata buffers)))
 
 (defun send-comm-open (comm &optional data metadata buffers)
   (with-slots (comm-id kernel target-name) comm
