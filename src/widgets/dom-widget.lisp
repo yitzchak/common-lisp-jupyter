@@ -19,11 +19,29 @@
      :accessor widget-align-self
      :documentation "The align-self CSS attribute."
      :trait :string)
-   (border
-     :initarg :border
+   (border-bottom
+     :initarg :border-bottom
      :initform nil
-     :accessor widget-border
-     :documentation "The border CSS attribute."
+     :accessor widget-border-bottom
+     :documentation "The border botom CSS attribute."
+     :trait :string)
+   (border-left
+     :initarg :border-left
+     :initform nil
+     :accessor widget-border-left
+     :documentation "The border left CSS attribute."
+     :trait :string)
+   (border-right
+     :initarg :border-right
+     :initform nil
+     :accessor widget-border-right
+     :documentation "The border right CSS attribute."
+     :trait :string)
+   (border-top
+     :initarg :border-top
+     :initform nil
+     :accessor widget-border-top
+     :documentation "The border top CSS attribute."
      :trait :string)
    (bottom
      :initarg :bottom
@@ -187,18 +205,6 @@
      :accessor widget-overflow
      :documentation "The overflow CSS attribute."
      :trait :string)
-   (overflow-x
-     :initarg :overflow-x
-     :initform nil
-     :accessor widget-overflow-x
-     :documentation "The overflow-x CSS attribute."
-     :trait :string)
-   (overflow-y
-     :initarg :overflow-y
-     :initform nil
-     :accessor widget-overflow-y
-     :documentation "The overflow-y CSS attribute."
-     :trait :string)
    (padding
      :initarg :padding
      :initform nil
@@ -245,21 +251,45 @@ https://developer.mozilla.org/en-US/docs/Web/CSS/Reference
 When a property is also accessible via a shorthand property, we only
 expose the shorthand."))
 
+(defun widget-border (instance)
+  (reduce (lambda (prev current)
+	    (when (equal prev current)
+	      prev))
+	  (list (widget-border-bottom instance)
+		(widget-border-left instance)
+		(widget-border-right instance)
+		(widget-border-top instance))))
 
+(defun (setf widget-border) (new-value instance)
+  (setf (widget-border-bottom instance) new-value
+	(widget-border-left instance) new-value
+	(widget-border-right instance) new-value
+	(widget-border-top instance) new-value)
+  new-value)
 
+(defmethod initialize-instance :after ((instance layout) &rest rest &key border)
+  (setf (widget-border instance) border))
 
 (defwidget dom-widget (widget)
-  ((%dom-classes
-     :initarg :%dom-classes
-     :accessor widget-%dom-classes
-     :documentation "CSS classes applied to widget DOM element"
-     :trait :string-list)
-   (layout
-     :initarg :layout
-     :initform (make-instance 'layout)
-     :accessor widget-layout
-     :documentation "Reference to layout widget."
-     :trait :widget))
+  ((%dom-classes :initarg :%dom-classes
+		 :accessor widget-%dom-classes
+		 :documentation "CSS classes applied to widget DOM element"
+		 :trait :string-list)
+   (layout :initarg :layout
+	   :initform (make-instance 'layout)
+	   :accessor widget-layout
+	   :documentation "Reference to layout widget."
+	   :trait :widget)
+   (tabbable :initarg :tabbable
+	     :initform nil
+	     :accessor widget-tabbable
+	     :documentation "Is widget tabbable?"
+	     :trait :boolean)
+   (tooltip :initarg :tooltip
+	    :initform ""
+	    :accessor widget-tooltip
+	    :documentation "A tooltip caption."
+	    :trait :string))
   (:default-initargs
     ;:%model-name "DOMWidgetModel"
     :%model-module +controls-module+
