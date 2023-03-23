@@ -625,7 +625,7 @@
           t)))
     #+clasp
     (source-path
-      (let ((cst (eclector.concrete-syntax-tree:cst-read stream nil stream)))
+      (let ((cst (eclector.concrete-syntax-tree:read stream nil stream)))
         (unless (eq cst stream)
           (eval-and-print (concrete-syntax-tree:raw cst) cst breakpoints)
           t)))
