@@ -58,6 +58,10 @@ most cases of *query-io* usage. Makes overloading y-or-no-p unnecessary.
      :reader stdin-sream-lock
      :documentation "Lock used during prompt actions")))
 
+#+ecl
+(defmethod gray:stream-interactive-p ((stream stdin-stream))
+  (declare (ignore stream))
+  t)
 
 #+sbcl (defmethod interactive-stream-p ((stream stdin-stream))
   (declare (ignore stream))
