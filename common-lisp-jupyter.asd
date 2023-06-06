@@ -1,3 +1,10 @@
+(asdf:defsystem #:common-lisp-jupyter/lab-extension
+  :components ((:module src
+                :pathname "src/lab-extension/"
+                :serial t
+                :components ((:file "packages")
+                             (:file "asdf")))))
+
 (asdf:defsystem #:common-lisp-jupyter
   :description "A Common Lisp kernel for Jupyter along with a library for building Jupyter kernels."
   :author "Tarn W. Burton"

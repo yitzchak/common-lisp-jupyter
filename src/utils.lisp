@@ -139,7 +139,7 @@
 (defmacro hash-case (form &rest clauses)
   (let ((ev-form (gensym))
         (hash-form (gensym)))
-    (if (< (length clauses) 5)
+    (if (or (< (length clauses) 5) #+abcl t #-abcl nil)
       `(let ((,ev-form ,form))
          (cond
            ,@(mapcar (lambda (clause)
