@@ -687,7 +687,7 @@
             (go next))))
       #+clasp
       (with-open-file (stream source-path)
-        (prog* ((eclector.reader:*client* clasp-cleavir::*cst-client*)
+        (prog* ((eclector.reader:*client* cmp::*cst-client*)
                 (eclector.readtable:*readtable* cl:*readtable*)
                 (*load-truename* (truename source-path))
                 (*load-pathname* source-path)
