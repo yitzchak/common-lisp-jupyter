@@ -99,7 +99,7 @@ jobs:
     - name: Install CLASP kernel
       if: matrix.os != 'windows-latest'
       run: |
-        iclasp --non-interactive --load scripts/usr-install.lisp
+        clasp --non-interactive --load scripts/usr-install.lisp
 
     - name: Install ECL kernel
       if: matrix.os != 'windows-latest'
