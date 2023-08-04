@@ -1,10 +1,3 @@
-(asdf:defsystem #:common-lisp-jupyter/lab-extension
-  :components ((:module src
-                :pathname "src/lab-extension/"
-                :serial t
-                :components ((:file "packages")
-                             (:file "asdf")))))
-
 (asdf:defsystem #:common-lisp-jupyter
   :description "A Common Lisp kernel for Jupyter along with a library for building Jupyter kernels."
   :author "Tarn W. Burton"
@@ -12,6 +5,7 @@
   #+asdf3 :version #+asdf3 "1.0"
   #+asdf3 :homepage #+asdf3 "https://yitzchak.github.io/common-lisp-jupyter/"
   #+asdf3 :bug-tracker #+asdf3 "https://github.com/yitzchak/common-lisp-jupyter/issues"
+  :defsystem-depends-on (#:jupyter-lab-extension)
   :depends-on
     (#:alexandria
      #:babel
@@ -35,7 +29,9 @@
      #:trivial-features
      #:shasht)
   :components
-    ((:module res
+    ((:jupyter-lab-extension "debugger-restarts-clj"
+      :pathname "debugger-restarts/prebuilt/")
+     (:module res
       :components
         ((:module ccl
           :components
