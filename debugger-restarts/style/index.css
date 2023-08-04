@@ -1,0 +1,38 @@
+.jp-DebuggerRestarts {
+  display: flex;
+  flex-direction: column;
+}
+
+.jp-DebuggerRestarts-body {
+  overflow: auto;
+}
+
+.jp-DebuggerRestarts-list {
+  margin: 7px;
+  border-collapse: collapse;
+}
+
+.jp-DebuggerRestart:hover {
+  background: var(--jp-layout-color2);
+  cursor: pointer;
+}
+
+.jp-DebuggerRestart-name {
+  vertical-align: top;
+  white-space: nowrap;
+  padding: 3px;
+}
+
+.jp-DebuggerRestart-name::before {
+  content: "[";
+}
+
+.jp-DebuggerRestart-name::after {
+  content: "]";
+}
+
+.jp-DebuggerRestart-text {
+  vertical-align: top;
+  padding: 3px;
+}
+
