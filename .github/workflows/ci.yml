@@ -70,7 +70,7 @@ jobs:
         pip install dist/pytest_jupyter_kernel-0.1.0-py3-none-any.whl
 
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Download Quicklisp
       run: |

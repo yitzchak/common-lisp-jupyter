@@ -92,7 +92,7 @@ is installed add common-lisp-jupyter via `(ql:quickload :common-lisp-jupyter)`.
   `(ql:update-dist "quicklisp")` inside a `ros run` shell to resolve package
   conflicts.
 
-- Add the PATH in the initialization file (such as `~/.bashrc`)
+- Add the PATH in the initialization file (such as `~/.bashrc`- if using `jupyter-hub`, see **note** below)
 ```sh
 export PATH=$PATH:~/.roswell/bin
 ```
@@ -101,6 +101,18 @@ export PATH=$PATH:~/.roswell/bin
 ```sh
 ros install common-lisp-jupyter
 ```
+
+**note:** if using jupyter-hub's default set-up:  
+* You must run the `ros install common-lisp-jupyter` command for each user who will use lisp.
+* Edit `/home/${USER}/.local/share/jupyter/kernels/common-lisp/kernel.json`, adding:
+
+```json
+"env": {
+  "PATH": "${PATH}:${HOME}/.roswell/bin"
+}
+```
+
+so that jupyter-lab can find the lisp binaries. Note: `~/.roswell/bin` will not expand properly.
 
 ### Running common-lisp-jupyter
 
