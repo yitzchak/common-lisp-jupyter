@@ -97,7 +97,7 @@
       (when (or implementation (uiop:os-windows-p))
         (list (namestring
                 (merge-pathnames
-                  (make-pathname :directory '(:relative ".roswell" "bin")
+                  (make-pathname :directory '(:relative ".roswell" "lisp" "quicklisp" "bin")
                                  :name "cl-jupyter")
                   (if (uiop:os-windows-p) ; Get the home from %USERPROFILE% if on Windows to avoid MSYS home
                     (uiop:getenv-absolute-directory "USERPROFILE")
