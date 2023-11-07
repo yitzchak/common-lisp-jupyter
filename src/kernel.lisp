@@ -1519,23 +1519,25 @@
            (cursor-pos (gethash "cursor_pos" content))
            (match-set (make-match-set :start cursor-pos :end cursor-pos :code code)))
       (multiple-value-bind (ename evalue traceback)
-                           (let ((*package* package)
-                                 (*readtable* readtable))
-                             (complete-code *kernel* match-set code cursor-pos))
-        (if ename
-          (send-complete-reply-error ename evalue traceback)
-          (send-complete-reply-ok (sort (mapcar #'match-text (match-set-matches match-set)) #'string<)
-                                  (match-set-start match-set)
-                                  (match-set-end match-set)
-                                  (list :object-plist
-                                        "_jupyter_types_experimental" (or (mapcan (lambda (match)
-                                                                                     (when (match-type match)
-                                                                                       (list (list :object-plist
-                                                                                                   "text" (match-text match)
-                                                                                                   "type" (match-type match)))))
-                                                                                   (match-set-matches match-set))
-                                                                           :empty-array))))))))
-
+          (let ((*package* package)
+                (*readtable* readtable))
+            (complete-code *kernel* match-set code cursor-pos))
+        (cond (ename
+               (send-complete-reply-error ename evalue traceback))
+              (t
+               (setf (match-set-matches match-set)
+                     (sort (match-set-matches match-set) #'string< :key #'match-text))
+               (send-complete-reply-ok (mapcar #'match-text (match-set-matches match-set))
+                                       (match-set-start match-set)
+                                       (match-set-end match-set)
+                                       (list :object-plist
+                                             "_jupyter_types_experimental" (or (mapcan (lambda (match)
+                                                                                         (when (match-type match)
+                                                                                           (list (list :object-plist
+                                                                                                       "text" (match-text match)
+                                                                                                       "type" (match-type match)))))
+                                                                                       (match-set-matches match-set))
+                                                                               :empty-array)))))))))
 
 (defun handle-comm-info-request ()
   (inform :info *kernel* "Handling comm_info_request message")
