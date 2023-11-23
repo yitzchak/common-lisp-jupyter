@@ -43,7 +43,7 @@
   (:documentation "Representation of IPython messages"))
 
 
-#+(or abcl allegro ccl clasp cmu ecl lispworks sbcl)
+#+(or abcl allegro ccl cmu ecl lispworks sbcl)
 (defmethod initialize-instance :after ((instance message) &rest initargs &key &allow-other-keys)
   (declare (ignore initargs))
   (let ((buffers (message-buffers instance)))
@@ -149,7 +149,7 @@
                               ; explicitly defined element type is needed for CLISP
                               :element-type '(unsigned-byte 8)))
 
-#+(or abcl allegro ccl clasp cmu ecl lispworks sbcl)
+#+(or abcl allegro ccl cmu ecl lispworks sbcl)
 (defun read-buffer-part (ch msg)
   (pzmq:msg-recv msg (channel-socket ch))
   (let* ((size (pzmq:msg-size msg))
@@ -204,8 +204,8 @@
             (unless (more-parts ch msg)
               (return (nreverse parts)))
             (push
-              #-(or abcl allegro ccl clasp cmu ecl lispworks sbcl) (read-binary-part ch msg)
-              #+(or abcl allegro ccl clasp cmu ecl lispworks sbcl) (read-buffer-part ch msg)
+              #-(or abcl allegro ccl cmu ecl lispworks sbcl) (read-binary-part ch msg)
+              #+(or abcl allegro ccl cmu ecl lispworks sbcl) (read-buffer-part ch msg)
               parts)
             (go next)))))))
 

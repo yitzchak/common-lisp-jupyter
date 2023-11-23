@@ -20,7 +20,7 @@
   (declare (ignore object type name))
   (values :null (list nil) (list value)))
 
-#+(or abcl allegro ccl clasp cmu ecl lispworks sbcl)
+#+(or abcl allegro ccl cmu ecl lispworks sbcl)
 (defmethod deserialize-trait (object (type (eql :buffer)) name (value vector))
   (declare (ignore type name))
   (if (binary-value-p value)
@@ -217,7 +217,7 @@
   (declare (ignore object type name))
   (values :null (list nil) (list value)))
 
-#+(or abcl allegro ccl clasp cmu ecl lispworks sbcl)
+#+(or abcl allegro ccl cmu ecl lispworks sbcl)
 (defmethod deserialize-trait (object (type (eql :single-float-buffer)) name (value vector))
   (declare (ignore type name))
   (if (binary-value-p value)
