@@ -1,8 +1,6 @@
 (in-package #:jupyter/common-lisp)
 
-
 #+sbcl (require :sb-introspect)
-
 
 (defun lambda-list (sym)
   #+ccl
@@ -19,7 +17,6 @@
     (second (function-lambda-expression (or (macro-function sym)
                                             (fdefinition sym)))))
 
-
 (defun visible-symbol-p (sym)
   (let ((pkg (symbol-package sym)))
     (or (eq *package* pkg)
@@ -27,7 +24,6 @@
                              (find-symbol (symbol-name sym) pkg)
           (declare (ignore s))
           (eql :external status)))))
-
 
 (defun find-generics (cls)
   (remove-duplicates
@@ -43,7 +39,6 @@
                   (closer-mop:specializer-direct-generic-functions cls))))
             (closer-mop:class-precedence-list cls))))
 
-
 (defun find-methods (cls)
   (remove-duplicates
     (mapcan (lambda (cls)
@@ -57,7 +52,6 @@
                                             (every #'visible-symbol-p (cdr name))))))
                   (closer-mop:specializer-direct-methods cls))))
             (closer-mop:class-precedence-list cls))))
-
 
 (defun method-specialized-lambda-list (method)
   (do* ((lambda-list (closer-mop:method-lambda-list method) (cdr lambda-list))
@@ -81,8 +75,7 @@
         (push (car lambda-list)
               specialized-lambda-list)))))
 
-
-(defclass tracking-stream (trivial-gray-streams:fundamental-character-input-stream)
+(defclass tracking-stream (ngray:fundamental-character-input-stream)
   ((stream
      :reader tracking-stream-stream
      :initarg :stream)
@@ -96,16 +89,27 @@
      :accessor tracking-stream-previous-column
      :initform 1)))
 
+#+(or gray-streams-file-position/optional
+      gray-streams-file-position/required)
+(defmethod ngray:stream-file-position
+    ((stream tracking-stream)
+     #+gray-streams-file-position/optional &optional position)
+  (if position
+      (file-position (tracking-stream-stream stream) position)
+      (file-position (tracking-stream-stream stream))))
 
-(defmethod trivial-gray-streams:stream-file-position ((stream tracking-stream))
+#+gray-streams-file-position/get
+(defmethod ngray:stream-file-position ((stream tracking-stream))
   (file-position (tracking-stream-stream stream)))
 
+#+gray-streams-file-position/setf
+(defmethod (setf ngray:stream-file-position) (position (stream tracking-stream))
+  (file-position (tracking-stream-stream stream) position))
 
-(defmethod trivial-gray-streams:stream-listen ((stream tracking-stream))
+(defmethod ngray:stream-listen ((stream tracking-stream))
   (listen (tracking-stream-stream stream)))
 
-
-(defmethod trivial-gray-streams:stream-read-char ((stream tracking-stream))
+(defmethod ngray:stream-read-char ((stream tracking-stream))
   (let ((ch (read-char (tracking-stream-stream stream) nil :eof)))
     (cond
       ((eq :eof ch))
@@ -119,12 +123,10 @@
         (incf (tracking-stream-column stream))))
     ch))
 
-
-(defmethod trivial-gray-streams:stream-peek-char ((stream tracking-stream))
+(defmethod ngray:stream-peek-char ((stream tracking-stream))
   (peek-char nil (tracking-stream-stream stream) nil :eof))
 
-
-(defmethod trivial-gray-streams:stream-unread-char ((stream tracking-stream) char)
+(defmethod ngray:stream-unread-char ((stream tracking-stream) char)
   (cond
     ((char= char #\Newline)
       (decf (tracking-stream-line stream))
@@ -135,7 +137,6 @@
       (decf (tracking-stream-column stream))))
   (unread-char char (tracking-stream-stream stream)))
 
-
 (defmacro with-tracking-stream ((stream &rest rest) &body body)
   `(let ((,stream (make-instance 'tracking-stream :stream (open ,@rest))))
      (unwind-protect
@@ -143,14 +144,11 @@
            ,@body)
        (close (tracking-stream-stream ,stream)))))
 
-
 (defparameter *source-maps* (make-hash-table :test #'equal))
-
 
 (defun reset-source-map (pathname &aux (truename (namestring (truename pathname))))
   (setf (gethash truename *source-maps*)
         (make-array 32 :fill-pointer 0 :adjustable t)))
-
 
 (defun get-source-map (pathname &aux (truename (namestring (truename pathname))))
   #+(or ccl cmucl ecl sbcl)
@@ -189,7 +187,6 @@
                          (setf right (file-position stream))
                          (go next))))))
 
-
 (defun source-line-column (pathname position1 #+(or cmucl sbcl) position2)
   (handler-case
       #+(or cmucl sbcl) (values-list (elt (elt (get-source-map pathname) position1) position2))
@@ -201,7 +198,6 @@
                                  (+ (fourth record) position1))))
     (error (condition)
       (declare (ignore condition)))))
-
 
 (defun file-position-to-line-column (pathname position)
   (when (and pathname position)
@@ -219,29 +215,23 @@
         (incf index)
         (go next)))))
 
-
 #-clasp
 (defmethod eclector.base:source-position (client (stream tracking-stream))
   (list (tracking-stream-line stream)
         (tracking-stream-column stream)))
-
 #-clasp
 (defclass tracking-client (eclector.parse-result:parse-result-client)
   ())
-
 #-clasp
 (defmethod eclector.parse-result:make-expression-result ((client tracking-client) (result (eql nil)) children source)
   nil)
-
 #-clasp
 (defmethod eclector.parse-result:make-expression-result ((client tracking-client) result children source)
   nil)
-
 #-clasp
 (defmethod eclector.parse-result:make-expression-result ((client tracking-client) (result list) children source)
   (cons (car source)
         (remove-if #'null (apply #'append children))))
-
 #-clasp
 (defun form-offset-to-line-column (pathname form-offset form-number)
   (handler-bind
@@ -255,10 +245,8 @@
           (when (< form-number (length source-map))
             (values-list (elt source-map form-number)))))))))
 
-
 #+sbcl
 (defvar *only-block-start-locations* nil)
-
 
 #+sbcl
 (defun first-code-location (debug-block)
@@ -269,7 +257,6 @@
                                       (setf first-code-location code-location)
                                       (setf found t)))
     first-code-location))
-
 
 #+sbcl
 (defun possible-breakpoints (function)
@@ -289,11 +276,7 @@
                 (< (sb-di:code-location-form-number x)
                    (sb-di:code-location-form-number y)))))))
 
-
 (defun eval-with-bindings (form bindings)
   (eval `(let ,(loop for (var . val) in bindings collect `(,var ',val))
            (declare (ignorable ,@(mapcar #'car bindings)))
            ,form)))
-
-
-

@@ -1,33 +1,33 @@
-(asdf:defsystem #:common-lisp-jupyter
+(asdf:defsystem "common-lisp-jupyter"
   :description "A Common Lisp kernel for Jupyter along with a library for building Jupyter kernels."
   :author "Tarn W. Burton"
   :license "MIT"
   #+asdf3 :version #+asdf3 "1.0"
   #+asdf3 :homepage #+asdf3 "https://yitzchak.github.io/common-lisp-jupyter/"
   #+asdf3 :bug-tracker #+asdf3 "https://github.com/yitzchak/common-lisp-jupyter/issues"
-  :defsystem-depends-on (#:jupyter-lab-extension)
+  :defsystem-depends-on ("jupyter-lab-extension")
   :depends-on
-    (#:alexandria
-     #:babel
-     #:bordeaux-threads
-     #:cl-base64
-     #:cl-indentify
-     #:closer-mop
-     #:dissect
+    ("alexandria"
+     "babel"
+     "bordeaux-threads"
+     "cl-base64"
+     "cl-indentify"
+     "closer-mop"
+     "dissect"
      ; This should be `(:feature (:not :clasp) :ironclad)` but some implementations still don't have
      ; ASDF 3
-     #-clasp :eclector
-     #-clasp :ironclad
-     #:multilang-documentation
-     #:pzmq
-     #:puri
-     #+(or abcl allegro ccl clasp cmu ecl lispworks sbcl) :static-vectors
-     #:trivial-do
-     #:trivial-garbage
-     #:trivial-gray-streams
-     #:trivial-mimes
-     #:trivial-features
-     #:shasht)
+     #-clasp "eclector"
+     #-clasp "ironclad"
+     "multilang-documentation"
+     "nontrivial-gray-streams"
+     "pzmq"
+     "puri"
+     "shasht"
+     #+(or abcl allegro ccl clasp cmu ecl lispworks sbcl) "static-vectors"
+     "trivial-do"
+     "trivial-garbage"
+     "trivial-mimes"
+     "trivial-features")
   :components
     ((:jupyter-lab-extension "debugger-restarts-clj"
       :pathname "debugger-restarts/prebuilt/")

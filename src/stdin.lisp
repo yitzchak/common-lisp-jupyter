@@ -34,8 +34,8 @@ most cases of *query-io* usage. Makes overloading y-or-no-p unnecessary.
 
 (defvar *stdin-stream-size* 1024)
 
-(defclass stdin-stream (trivial-gray-streams:fundamental-character-output-stream
-                        trivial-gray-streams:fundamental-character-input-stream)
+(defclass stdin-stream (ngray:fundamental-character-output-stream
+                        ngray:fundamental-character-input-stream)
   ((channel
      :initarg :channel
      :reader stdin-stream-channel)
@@ -70,7 +70,7 @@ most cases of *query-io* usage. Makes overloading y-or-no-p unnecessary.
 (defun make-stdin-stream (stdin)
   (make-instance 'stdin-stream :channel stdin))
 
-(defmethod trivial-gray-streams:stream-write-char ((stream stdin-stream) char)
+(defmethod ngray:stream-write-char ((stream stdin-stream) char)
   (vector-push-extend char (stdin-stream-output stream)))
 
 (defun prompt-and-read (stream need-input)
@@ -92,27 +92,27 @@ most cases of *query-io* usage. Makes overloading y-or-no-p unnecessary.
                     do (vector-push-extend (char value i) input))))
         (bordeaux-threads:release-lock lock)))))
 
-(defmethod trivial-gray-streams:stream-clear-input ((stream stdin-stream))
+(defmethod ngray:stream-clear-input ((stream stdin-stream))
   (setf (fill-pointer (stdin-stream-input stream)) 0)
   nil)
 
-(defmethod trivial-gray-streams:stream-listen ((stream stdin-stream))
+(defmethod ngray:stream-listen ((stream stdin-stream))
   (not (zerop (length (stdin-stream-input stream)))))
 
-(defmethod trivial-gray-streams:stream-read-char ((stream stdin-stream))
+(defmethod ngray:stream-read-char ((stream stdin-stream))
   (let ((input (stdin-stream-input stream)))
     (when (zerop (length input))
       (prompt-and-read stream t))
     (vector-pop input)))
 
-(defmethod trivial-gray-streams:stream-peek-char ((stream stdin-stream))
+(defmethod ngray:stream-peek-char ((stream stdin-stream))
   (let ((input (stdin-stream-input stream)))
     (when (zerop (length input))
       (prompt-and-read stream t))
     (elt input (- (length input) 1))))
 
-(defmethod trivial-gray-streams:stream-unread-char ((stream stdin-stream) char)
+(defmethod ngray:stream-unread-char ((stream stdin-stream) char)
   (vector-push-extend char (stdin-stream-input stream)))
 
-(defmethod trivial-gray-streams:stream-line-column ((stream stdin-stream))
+(defmethod ngray:stream-line-column ((stream stdin-stream))
    nil)

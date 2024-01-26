@@ -96,8 +96,8 @@
 
 (defvar *iopub-stream-size* 1024)
 
-(defclass iopub-stream (trivial-gray-streams:fundamental-character-output-stream
-                        trivial-gray-streams:fundamental-character-input-stream)
+(defclass iopub-stream (ngray:fundamental-character-output-stream
+                        ngray:fundamental-character-input-stream)
   ((channel :initarg :channel
             :reader iopub-stream-channel)
    (name :initarg :name
@@ -122,7 +122,7 @@
                                :prompt-prefix prompt-prefix
                                :prompt-suffix prompt-suffix))
 
-(defmethod trivial-gray-streams:stream-write-char ((stream iopub-stream) char)
+(defmethod ngray:stream-write-char ((stream iopub-stream) char)
   (unless (equal char #\Sub) ; Ignore subsititute characters
     (with-slots (channel name value prompt-prefix prompt-suffix column) stream
       (cond
@@ -153,7 +153,7 @@
                           :fill-pointer 0)))))))
 
 
-(defmethod trivial-gray-streams:stream-finish-output ((stream iopub-stream))
+(defmethod ngray:stream-finish-output ((stream iopub-stream))
   (with-slots (channel name value prompt-prefix) stream
     (unless (or (zerop (length value))
                 (search prompt-prefix value))
@@ -163,19 +163,19 @@
 
 
 ;; Forward all read calls to *query-io*
-(defmethod trivial-gray-streams:stream-listen ((stream iopub-stream))
-  (trivial-gray-streams:stream-listen *query-io*))
+(defmethod ngray:stream-listen ((stream iopub-stream))
+  (ngray:stream-listen *query-io*))
 
-(defmethod trivial-gray-streams:stream-read-char ((stream iopub-stream))
-  (trivial-gray-streams:stream-read-char *query-io*))
+(defmethod ngray:stream-read-char ((stream iopub-stream))
+  (ngray:stream-read-char *query-io*))
 
-(defmethod trivial-gray-streams:stream-peek-char ((stream iopub-stream))
-  (trivial-gray-streams:stream-peek-char *query-io*))
+(defmethod ngray:stream-peek-char ((stream iopub-stream))
+  (ngray:stream-peek-char *query-io*))
 
-(defmethod trivial-gray-streams:stream-unread-char ((stream iopub-stream) char)
-  (trivial-gray-streams:stream-unread-char *query-io* char))
+(defmethod ngray:stream-unread-char ((stream iopub-stream) char)
+  (ngray:stream-unread-char *query-io* char))
 
-(defmethod trivial-gray-streams:stream-line-column ((stream iopub-stream))
+(defmethod ngray:stream-line-column ((stream iopub-stream))
    (iopub-stream-column stream))
 
 

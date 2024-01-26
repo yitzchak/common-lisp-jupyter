@@ -76,7 +76,7 @@ output area.
 
 
 
-(defclass output-widget-stream (trivial-gray-streams:fundamental-character-output-stream)
+(defclass output-widget-stream (ngray:fundamental-character-output-stream)
   ((output
      :initarg :output
      :reader output-widget-stream-output)
@@ -98,7 +98,7 @@ output area.
   (make-instance 'output-widget-stream :output output :name (if error-output "stderr" "stdout")))
 
 
-(defmethod trivial-gray-streams:stream-write-char ((stream output-widget-stream) char)
+(defmethod ngray:stream-write-char ((stream output-widget-stream) char)
   (with-slots (output name value column) stream
     (cond
       ((graphic-char-p char)
@@ -111,7 +111,7 @@ output area.
     (vector-push-extend char value)))
 
 
-(defmethod trivial-gray-streams:stream-finish-output ((stream output-widget-stream))
+(defmethod ngray:stream-finish-output ((stream output-widget-stream))
   (with-slots (output name value column) stream
     (unless (zerop (length value))
       (let* ((outputs (mapcan (lambda (output)
@@ -139,7 +139,7 @@ output area.
                         :fill-pointer 0)))))
 
 
-(defmethod trivial-gray-streams:stream-line-column ((stream output-widget-stream))
+(defmethod ngray:stream-line-column ((stream output-widget-stream))
    (output-widget-stream-column stream))
 
 

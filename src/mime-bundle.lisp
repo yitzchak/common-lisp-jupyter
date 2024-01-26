@@ -253,7 +253,7 @@ same `id` and `update` is `t`."
   (make-inline-mime-bundle value +vega-lite-mime-type+ nil display update id))
 
 
-(defclass display-stream (trivial-gray-streams:fundamental-character-output-stream)
+(defclass display-stream (ngray:fundamental-character-output-stream)
   ((mime-type :initarg :mime-type
               :reader display-stream-mime-type)
    (value :initarg :value
@@ -268,11 +268,11 @@ same `id` and `update` is `t`."
   (make-instance 'display-stream :mime-type mime-type))
 
 
-(defmethod trivial-gray-streams:stream-write-char ((stream display-stream) char)
+(defmethod ngray:stream-write-char ((stream display-stream) char)
   (vector-push-extend char (display-stream-value stream)))
 
 
-(defmethod trivial-gray-streams:stream-finish-output ((stream display-stream))
+(defmethod ngray:stream-finish-output ((stream display-stream))
   (with-slots (channel mime-type value) stream
     (unless (zerop (length value))
       (inline-result value mime-type :display t)
