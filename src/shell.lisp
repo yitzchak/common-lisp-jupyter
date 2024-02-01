@@ -8,7 +8,8 @@
 
 (defclass shell-channel (channel)
   ()
-  (:documentation "SHELL channel class."))
+  (:documentation "SHELL channel class.")
+  (:default-initargs :socket (nilmq:make-socket :router)))
 
 #|
 

@@ -29,14 +29,6 @@
      :reader channel-port
      :type fixnum
      :documentation "Channel port number")
-   (recv-lock
-     :initform (bordeaux-threads:make-lock (make-uuid))
-     :reader channel-recv-lock
-     :documentation "Lock used during recv actions")
-   (send-lock
-     :initform (bordeaux-threads:make-lock (make-uuid))
-     :reader channel-send-lock
-     :documentation "Lock used during send actions")
    (thread
      :accessor channel-thread))
   (:documentation "Common channel class."))
@@ -48,7 +40,7 @@
   (with-slots (socket transport ip port) ch
     (let ((uri (format nil "~A://~A:~A" transport ip port)))
       (inform :info ch "Starting channel on ~A" uri)
-      (pzmq:bind socket uri))))
+      (nilmq:bind socket uri))))
 
 (defgeneric stop (ch)
   (:documentation "Stop the resource."))
@@ -60,11 +52,7 @@
 
 (defmethod stop ((ch channel))
   (inform :info ch "Stopping channel")
-  (pzmq:close (channel-socket ch)))
-
+  (nilmq:shutdown (channel-socket ch)))
 
 (defun message-available-p (ch)
-  (let ((status (pzmq:getsockopt (channel-socket ch) :events)))
-    (values (and (position :pollin status) t)
-            (and (position :pollout status) t))))
-
+  (nilmq:input-available-p (channel-socket ch)))

@@ -19,13 +19,11 @@
      #-clasp "eclector"
      #-clasp "ironclad"
      "multilang-documentation"
+     "nilmq"
      "nontrivial-gray-streams"
-     "pzmq"
      "puri"
      "shasht"
-     #+(or abcl allegro ccl clasp cmu ecl lispworks sbcl) "static-vectors"
      "trivial-do"
-     "trivial-garbage"
      "trivial-mimes"
      "trivial-features")
   :components

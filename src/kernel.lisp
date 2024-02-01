@@ -1,6 +1,5 @@
 (in-package #:jupyter)
 
-
 (defvar *payload* nil)
 (defvar *debugger* t)
 (defvar *markdown-output* nil)
@@ -12,13 +11,10 @@
 (defconstant +max-thread-count+ (ash 1 +thread-bits+))
 (defconstant +thread-mask+ (1- +max-thread-count+))
 
-
 (defvar *page-output* nil
   "Output stream sent to Jupyter pager. Available during calls to evaluate-code.")
 
-
 (defconstant +zmq-poll-timeout+ 500)
-
 
 (defclass thread ()
   ((queue
@@ -27,7 +23,6 @@
    (stopped
      :accessor thread-stopped
      :initform nil)))
-
 
 (defclass kernel (source)
   ((name
@@ -139,10 +134,6 @@
      :initform (coerce '(#\Escape #\\) 'string)
      :reader kernel-prompt-suffix
      :documentation "String suffix using in *standard-output* to indicate the end of prompt.")
-   (ctx
-     :initform nil
-     :accessor kernel-ctx
-     :documentation "pzmq ctx handle.")
    (mac
      :initform nil
      :accessor kernel-mac
@@ -241,7 +232,6 @@
      :initform (make-array +max-thread-count+ :fill-pointer 0 :element-type '(or null thread))))
   (:documentation "Kernel state representation."))
 
-
 (defun add-thread (kernel-instance)
   "Create a thread queue in the kernel and assign the thread an id number."
   (with-slots (threads)
@@ -253,18 +243,15 @@
         (setf thread-id (vector-push thread threads)))
       thread-id)))
 
-
 (defun remove-thread (kernel-instance &optional (thread-id *thread-id*))
   "Remove the thread queue and reset the thread id number."
   (setf (aref (kernel-threads kernel-instance) thread-id) nil)
   (values))
 
-
 (defun user-thread-p ()
   "Return non-NIL if the current thread is not the control thread."
   (and *thread-id*
        (not (zerop *thread-id*))))
-
 
 (defun compute-source-path (code)
   "Return the source path for a fragment of code."
@@ -274,7 +261,6 @@
             (murmur-hash-2 (babel:string-to-octets code) (kernel-hash-seed *kernel*))
             (kernel-tmp-file-suffix *kernel*))))
 
-
 (defgeneric evaluate-code (kernel code &optional source-path breakpoints)
   (:documentation "Evaluate code along with paged output. Evaluation results should be sent
   with `execute-result`. Errors should be returned as `(values ename evalue traceback)`")
@@ -282,9 +268,7 @@
     (declare (ignore kernel code source-path breakpoints))
     (values)))
 
-
 (defgeneric evaluate-form (kernel stream source-path breakpoints &optional line column))
-
 
 (defgeneric code-is-complete (kernel code)
   (:documentation "Check code for completeness. Kernel implementations should
@@ -293,7 +277,6 @@
   (:method (kernel code)
     (declare (ignore kernel code))
     "unknown"))
-
 
 (defgeneric inspect-code (kernel code cursor-pos detail-level)
   (:documentation "Inspect code at cursor-pos with detail-level. Successful
@@ -304,7 +287,6 @@
     (declare (ignore kernel code cursor-pos detail-level))
     (text "No results found.")))
 
-
 (defgeneric complete-code (kernel match-set code cursor-pos)
   (:documentation "Complete code at cursor-pos. Successful matches should be added to match-set
   via match-set-add. Errors should be returned as `(values ename evalue traceback)`.")
@@ -312,49 +294,38 @@
     (declare (ignore kernel match-set code cursor-pos))
     (values)))
 
-
 (defgeneric debug-initialize (kernel)
   (:documentation "Perform any kernel specific initialization of the debugger and return capabilities."))
-
 
 (defgeneric debug-abort (kernel environment)
   (:documentation "Abort the current stopped thread."))
 
-
 (defgeneric debug-continue (kernel environment &optional restart-number)
   (:documentation "Continue execution of the stopped thread."))
-
 
 (defgeneric debug-in (kernel environment)
   (:documentation "Step into a function on the stopped thread."))
 
-
 (defgeneric debug-out (kernel environment)
   (:documentation "Step out on the stopped thread."))
-
 
 (defgeneric debug-next (kernel environment)
   (:documentation "Step to the next form on the stopped thread."))
 
-
 (defgeneric debug-new-breakpoint (kernel source line)
   (:documentation "Create a new breakpoint or return NIL if not possible"))
-
 
 (defgeneric debug-remove-breakpoint (kernel source breakpoint)
   (:documentation "Remove a specific breakpoint"))
 
-
 (defgeneric debug-activate-breakpoints (kernel source breakpoints)
   (:documentation "Activate a breakpoint."))
-
 
 (defgeneric debug-object-children-resolve (instance)
   (:documentation "Return a list of debug-objects for the children of the instance.")
   (:method (instance)
     (declare (ignore instance))
     nil))
-
 
 (defgeneric debug-dump-cell (kernel code source-path)
   (:documentation "Save the code to the provided source-path.")
@@ -363,14 +334,11 @@
     (with-open-file (stream source-path :direction :output :if-exists :supersede)
       (write-string code stream))))
 
-
 (defgeneric debug-evaluate-code (kernel environment code frame context)
   (:documentation "Evaluate code in the context of a frame"))
 
-
 (defgeneric debug-evaluate-form (kernel environment stream frame context)
   (:documentation "Evaluate a single form in the context of a frame"))
-
 
 (defgeneric debug-inspect-variables (kernel environment)
   (:documentation "Return a list of debug-objects represents the variables in the global scope."))
@@ -394,11 +362,9 @@
      :documentation "The path of the source."))
   (:documentation "A source reference in the debugger."))
 
-
 (defmethod shasht:print-json-key-value :around ((object debug-source) key value output-stream)
   (let ((shasht:*symbol-name-function* #'symbol-to-camel-case))
     (call-next-method)))
-
 
 (defclass debug-configuration ()
   ((source
@@ -414,11 +380,9 @@
      :documentation "A list of the current breakpoints"))
   (:documentation "A debug configuration for a source."))
 
-
 (defmethod shasht:print-json-key-value :around ((object debug-configuration) key value output-stream)
   (let ((shasht:*symbol-name-function* #'symbol-to-camel-case))
     (call-next-method)))
-
 
 (defclass debug-breakpoint ()
   ((line
@@ -433,12 +397,10 @@
      :documentation "Implementation specific data for the breakpoint"))
   (:documentation "A line oriented breakpoint."))
 
-
 (defmethod shasht:print-json-key-value :around ((object debug-breakpoint) key value output-stream)
   (when (equal 'line key)
     (let ((shasht:*symbol-name-function* #'symbol-to-camel-case))
       (call-next-method))))
-
 
 (defclass debug-environment ()
   ((frames
@@ -459,7 +421,6 @@
      :initform nil
      :documentation "Applicable restarts for the environment."))
   (:documentation "A debug environment for a stopped thread."))
-
 
 (defclass debug-object ()
   ((id
@@ -512,18 +473,15 @@
         (setf (debug-object-environment child) (debug-object-environment instance))
         (register-debug-object child)))))
 
-
 (defun register-debug-object (instance)
   (when (and (not (slot-boundp instance 'id))
              (slot-boundp instance 'environment))
     (let ((id (vector-push-extend instance (debug-environment-objects (debug-object-environment instance)))))
       (setf (debug-object-id instance) (logior (ash id +thread-bits+) *thread-id*)))))
 
-
 (defmethod initialize-instance :after ((instance debug-object) &rest initargs &key &allow-other-keys)
   (declare (ignore initargs))
   (register-debug-object instance))
-
 
 (defclass debug-frame (debug-object)
   ((source
@@ -544,12 +502,10 @@
      :documentation "The column number of the frame."))
   (:documentation "A debugger frame."))
 
-
 (defmethod shasht:print-json-key-value :around ((object debug-frame) key value output-stream)
   (when (member key '(id name source line column) :test #'equal)
     (let ((shasht:*symbol-name-function* #'symbol-to-camel-case))
       (call-next-method))))
-
 
 (defclass debug-scope (debug-object)
   ((presentation-hint
@@ -559,7 +515,6 @@
      :documentation "Any presentation hints associated with the scope."))
   (:documentation "A scope inside a frame."))
 
-
 (defmethod shasht:print-json-key-value :around ((object debug-scope) key value output-stream)
   (cond
     ((equal key 'id)
@@ -567,7 +522,6 @@
     ((member key '(name presentation-hint) :test #'equal)
       (let ((shasht:*symbol-name-function* #'symbol-to-camel-case))
         (call-next-method)))))
-
 
 (defclass debug-variable (debug-object)
   ((value
@@ -583,7 +537,6 @@
      :documentation "The type associated with the variable"))
   (:documentation "A debugger variable"))
 
-
 (defmethod shasht:print-json-key-value :around ((object debug-variable) key value output-stream)
   (cond
     ((equal key 'id)
@@ -592,7 +545,6 @@
       (let ((shasht:*symbol-name-function* #'symbol-to-camel-case))
         (call-next-method)))))
 
-
 (defmethod initialize-instance :after ((instance debug-environment) &rest initargs &key &allow-other-keys)
   (declare (ignore initargs))
   (when (slot-boundp instance 'frames)
@@ -600,11 +552,9 @@
       (setf (debug-object-environment frame) instance)
       (register-debug-object frame))))
 
-
 (defun debug-environment-object (environment id)
   "Get a debug-object associated with a specific id."
   (aref (debug-environment-objects environment) (ash id (- +thread-bits+))))
-
 
 (defmacro handling-errors (&body body)
   "Macro for catching any conditions during code evaluation."
@@ -639,7 +589,6 @@
            (make-eval-error err (format nil "~A" err)
                             ,traceback))))))
 
-
 (defmacro handling-comm-errors (&body body)
   "Macro for catching any conditions during comm messages."
   (let ((ename-var (gensym))
@@ -653,7 +602,6 @@
          (finish-output *error-output*))
        (values))))
 
-
 (defmacro handling-control-errors (&body body)
   "Macro for catching any conditions during CONTROL messages."
   (let ((ename-var (gensym))
@@ -666,11 +614,9 @@
          (inform :error *kernel* "~{~A~%~}" ,traceback-var))
        (values))))
 
-
 (defun debug-enter-loop ()
   "Re-enter the debug loop after a restart which implements a debugger command."
   (throw 'enter-loop t))
-
 
 (defun debug-stop (reason environment)
   "Enter a stopped state on the current thread. This function will dispatch messages received from
@@ -724,7 +670,6 @@
           (send-status-idle))
         (go wait)))))
 
-
 ;; Start all channels.
 (defmethod start ((k kernel))
   (with-slots (connection-file control-port ctx hb hb-port history iopub
@@ -743,6 +688,7 @@
     (inform :info k "Parsing connection file ~A" connection-file)
     (let* ((config-js (shasht:read-json (alexandria:read-file-into-string connection-file)))
            (encoded-key (gethash "key" config-js)))
+      (j:inform :info k "~s" (alexandria:hash-table-plist config-js))
       (setq transport (gethash "transport" config-js)
             ip (gethash "ip" config-js)
             shell-port (gethash "shell_port" config-js)
@@ -762,7 +708,6 @@
                                                                                           (concatenate 'string session "-*.*")))))
           tmp-file-prefix "CELL:"
           tmp-file-suffix (concatenate 'string (string-upcase file-extension) #+ccl ".newest" #-ccl ".NEWEST")
-          ctx (pzmq:ctx-new)
           mac (make-instance 'mac
                              :sink sink
                              :key key
@@ -771,7 +716,6 @@
                             :sink sink
                             :session session
                             :mac mac
-                            :socket (pzmq:socket ctx :rep)
                             :transport transport
                             :ip ip
                             :port hb-port)
@@ -779,7 +723,6 @@
                                :sink sink
                                :session session
                                :mac mac
-                               :socket (pzmq:socket ctx :pub)
                                :transport transport
                                :ip ip
                                :port iopub-port)
@@ -787,7 +730,6 @@
                                :sink sink
                                :session session
                                :mac mac
-                               :socket (pzmq:socket ctx :router)
                                :transport transport
                                :ip ip
                                :port shell-port)
@@ -795,7 +737,6 @@
                                :sink sink
                                :session session
                                :mac mac
-                               :socket (pzmq:socket ctx :router)
                                :transport transport
                                :ip ip
                                :port stdin-port)
@@ -803,7 +744,6 @@
                                  :sink sink
                                  :session session
                                  :mac mac
-                                 :socket (pzmq:socket ctx :router)
                                  :transport transport
                                  :ip ip
                                  :port control-port)
@@ -830,10 +770,9 @@
                                           (run-shell k))
                                         :name "SHELL Thread"))))
 
-
 ;; Stop all channels and destroy the control.
 (defmethod stop ((k kernel))
-  (with-slots (sink ctx hb iopub shell stdin control history mac name) k
+  (with-slots (sink hb iopub shell stdin control history mac name) k
     (inform :info k "Stopping ~A kernel" name)
     (when (bordeaux-threads:thread-alive-p (kernel-shell-thread k))
       (bordeaux-threads:destroy-thread (kernel-shell-thread k)))
@@ -845,147 +784,135 @@
     (stop mac)
     (stop history)
     (stop sink)
-    (pzmq:ctx-destroy ctx)
     (uiop:quit)))
 
-
 (defun run-shell (kernel)
-  (pzmq:with-poll-items items (((channel-socket (kernel-shell kernel)) :pollin))
-    (catch 'kernel-shutdown
-      (prog* ((shell (kernel-shell kernel))
-              (iopub (kernel-iopub kernel))
-              (*thread-id* (add-thread kernel))
-              (*query-io* (kernel-standard-input kernel))
-              (*standard-input* *query-io*)
-              (*error-output* (kernel-error-output kernel))
-              (*standard-output* (kernel-standard-output kernel))
-              (*debug-io* *standard-output*)
-              (*terminal-io* *standard-output*)
-              (*trace-output* *standard-output*)
-              (*html-output* (kernel-html-output kernel))
-              (*markdown-output* (kernel-markdown-output kernel))
-              (*kernel* kernel)
-              *message* msg-type)
-       poll
-        (catch 'kernel-interrupt
-          (when (zerop (pzmq:poll items +zmq-poll-timeout+))
-            #+cmucl (bordeaux-threads:thread-yield)
-            (go poll))
-          (setf *message* (message-recv shell)
-                msg-type (gethash "msg_type" (message-header *message*)))
-          (send-status iopub "busy")
-          (unwind-protect
+  (catch 'kernel-shutdown
+    (prog* ((shell (kernel-shell kernel))
+            (iopub (kernel-iopub kernel))
+            (*thread-id* (add-thread kernel))
+            (*query-io* (kernel-standard-input kernel))
+            (*standard-input* *query-io*)
+            (*error-output* (kernel-error-output kernel))
+            (*standard-output* (kernel-standard-output kernel))
+            (*debug-io* *standard-output*)
+            (*terminal-io* *standard-output*)
+            (*trace-output* *standard-output*)
+            (*html-output* (kernel-html-output kernel))
+            (*markdown-output* (kernel-markdown-output kernel))
+            (*kernel* kernel)
+            *message* msg-type)
+     poll
+       (catch 'kernel-interrupt
+         (setf *message* (message-recv shell)
+               msg-type (gethash "msg_type" (message-header *message*)))
+         (send-status iopub "busy")
+         (unwind-protect
               (hash-case msg-type
-                ("comm_close"
-                  (handle-comm-close))
-                ("comm_info_request"
-                  (handle-comm-info-request))
-                ("comm_msg"
-                  (handle-comm-message))
-                ("comm_open"
-                  (handle-comm-open))
-                ("complete_request"
-                  (handle-complete-request))
-                ("execute_request"
-                  (handle-execute-request))
-                ("history_request"
-                  (handle-history-request))
-                ("inspect_request"
-                  (handle-inspect-request))
-                ("is_complete_request"
-                  (handle-is-complete-request))
-                ("kernel_info_request"
-                  (handle-kernel-info-request shell))
-                (otherwise
-                  (inform :warn kernel "Ignoring ~A shell message since there is no appropriate handler." msg-type)))
-            ;; send any remaining stdout
-            (finish-output *standard-output*)
-            ;; send any remaining stderr
-            (finish-output *error-output*)
-            ;; send any remaining HTML
-            (finish-output *html-output*)
-            ;; send any remaining markdown
-            (finish-output *markdown-output*)
-            (send-status iopub "idle")))
-        (go poll))))
+                         ("comm_close"
+                          (handle-comm-close))
+                         ("comm_info_request"
+                          (handle-comm-info-request))
+                         ("comm_msg"
+                          (handle-comm-message))
+                         ("comm_open"
+                          (handle-comm-open))
+                         ("complete_request"
+                          (handle-complete-request))
+                         ("execute_request"
+                          (handle-execute-request))
+                         ("history_request"
+                          (handle-history-request))
+                         ("inspect_request"
+                          (handle-inspect-request))
+                         ("is_complete_request"
+                          (handle-is-complete-request))
+                         ("kernel_info_request"
+                          (handle-kernel-info-request shell))
+                         (otherwise
+                          (inform :warn kernel "Ignoring ~A shell message since there is no appropriate handler." msg-type)))
+           ;; send any remaining stdout
+           (finish-output *standard-output*)
+           ;; send any remaining stderr
+           (finish-output *error-output*)
+           ;; send any remaining HTML
+           (finish-output *html-output*)
+           ;; send any remaining markdown
+           (finish-output *markdown-output*)
+           (send-status iopub "idle")))
+       (go poll)))
   (inform :info kernel "Shell thread exiting normally."))
-
 
 (defun run-control (kernel)
   #+sbcl (sb-thread:release-foreground)
-  (pzmq:with-poll-items items (((channel-socket (kernel-control kernel)) :pollin))
-    (prog ((*thread-id* 0)
-           (environment (make-instance 'debug-environment))
-           (control (kernel-control kernel))
-           (iopub (kernel-iopub kernel))
-           (thread-message-types (alexandria:plist-hash-table
-                                   '("debug_request/continue" "threadId"
-                                     "debug_request/evaluate" "frameId"
-                                     "debug_request/next" "threadId"
-                                     "debug_request/stackTrace" "threadId"
-                                     "debug_request/stepIn" "threadId"
-                                     "debug_request/stepOut" "threadId"
-                                     "debug_request/scopes" "frameId"
-                                     "debug_request/variables" "variablesReference")
-                                   :test #'equal))
-           (*kernel* kernel)
-           *message* msg-type id-field)
-     poll
-      (when (zerop (pzmq:poll items +zmq-poll-timeout+))
-        #+cmucl (bordeaux-threads:thread-yield)
-        (go poll))
-      (handling-control-errors
-        (setf *message* (message-recv control)
-              msg-type (format nil "~A~@[/~A~]"
-                               (gethash "msg_type" (message-header *message*))
-                               (gethash "command" (message-content *message*)))
-              id-field (gethash msg-type thread-message-types))
-        (when id-field
-          (let ((thread-id (logand +thread-mask+
-                                   (gethash id-field
-                                            (gethash "arguments"
-                                                     (message-content *message*))))))
-            (unless (zerop thread-id)
-              (enqueue (thread-queue (aref (kernel-threads kernel) thread-id))
-                                           *message*)
-              (go poll))))
-        (send-status iopub "busy")
-        (unwind-protect
-            (hash-case msg-type
-              ("kernel_info_request"
-                (handle-kernel-info-request control))
-              ("interrupt_request"
-                (handle-interrupt-request))
-              ("shutdown_request"
-                (handle-shutdown-request)
-                (return))
-              ("debug_request/attach"
-                (handle-debug-request/attach))
-              ("debug_request/configurationDone"
-                (handle-debug-request/configuration-done))
-              ("debug_request/debugInfo"
-                (handle-debug-request/debug-info))
-              ("debug_request/disconnect"
-                (handle-debug-request/disconnect))
-              ("debug_request/dumpCell"
-                (handle-debug-request/dump-cell))
-              ("debug_request/initialize"
-                (handle-debug-request/initialize))
-              ("debug_request/inspectVariables"
-                (handle-debug-request/inspect-variables environment))
-              ("debug_request/modules"
-                (handle-debug-request/modules))
-              ("debug_request/setBreakpoints"
-                (handle-debug-request/set-breakpoints))
-              ("debug_request/source"
-                (handle-debug-request/source))
-              ("debug_request/variables"
-                (handle-debug-request/variables environment))
-              (otherwise
-                (inform :warn kernel "Ignoring ~A control message since there is no appropriate handler." msg-type)))
-          (send-status iopub "idle")))
-      (go poll))))
-
+  (prog ((*thread-id* 0)
+         (environment (make-instance 'debug-environment))
+         (control (kernel-control kernel))
+         (iopub (kernel-iopub kernel))
+         (thread-message-types (alexandria:plist-hash-table
+                                '("debug_request/continue" "threadId"
+                                  "debug_request/evaluate" "frameId"
+                                  "debug_request/next" "threadId"
+                                  "debug_request/stackTrace" "threadId"
+                                  "debug_request/stepIn" "threadId"
+                                  "debug_request/stepOut" "threadId"
+                                  "debug_request/scopes" "frameId"
+                                  "debug_request/variables" "variablesReference")
+                                :test #'equal))
+         (*kernel* kernel)
+         *message* msg-type id-field)
+   poll
+     (handling-control-errors
+      (setf *message* (message-recv control)
+            msg-type (format nil "~A~@[/~A~]"
+                             (gethash "msg_type" (message-header *message*))
+                             (gethash "command" (message-content *message*)))
+            id-field (gethash msg-type thread-message-types))
+      (when id-field
+        (let ((thread-id (logand +thread-mask+
+                                 (gethash id-field
+                                          (gethash "arguments"
+                                                   (message-content *message*))))))
+          (unless (zerop thread-id)
+            (enqueue (thread-queue (aref (kernel-threads kernel) thread-id))
+                     *message*)
+            (go poll))))
+      (send-status iopub "busy")
+      (unwind-protect
+           (hash-case msg-type
+                      ("kernel_info_request"
+                       (handle-kernel-info-request control))
+                      ("interrupt_request"
+                       (handle-interrupt-request))
+                      ("shutdown_request"
+                       (handle-shutdown-request)
+                       (return))
+                      ("debug_request/attach"
+                       (handle-debug-request/attach))
+                      ("debug_request/configurationDone"
+                       (handle-debug-request/configuration-done))
+                      ("debug_request/debugInfo"
+                       (handle-debug-request/debug-info))
+                      ("debug_request/disconnect"
+                       (handle-debug-request/disconnect))
+                      ("debug_request/dumpCell"
+                       (handle-debug-request/dump-cell))
+                      ("debug_request/initialize"
+                       (handle-debug-request/initialize))
+                      ("debug_request/inspectVariables"
+                       (handle-debug-request/inspect-variables environment))
+                      ("debug_request/modules"
+                       (handle-debug-request/modules))
+                      ("debug_request/setBreakpoints"
+                       (handle-debug-request/set-breakpoints))
+                      ("debug_request/source"
+                       (handle-debug-request/source))
+                      ("debug_request/variables"
+                       (handle-debug-request/variables environment))
+                      (otherwise
+                       (inform :warn kernel "Ignoring ~A control message since there is no appropriate handler." msg-type)))
+        (send-status iopub "idle")))
+     (go poll)))
 
 (defun run-kernel (kernel-class &optional (connection-file (first (uiop:command-line-arguments))))
   "Run a kernel based on a kernel class and a connection file."
@@ -1000,12 +927,10 @@
         (run-control kernel)
       (stop kernel))))
 
-
 (defun make-eval-error (err msg traceback)
   (format *error-output* "~A: ~A~%~%" (symbol-name (class-name (class-of err))) msg)
   (finish-output *error-output*)
   (values (symbol-name (class-name (class-of err))) msg traceback))
-
 
 (defun choose ()
   (write-string "Choice: " *query-io*)
@@ -1022,7 +947,6 @@
       (rplacd restarts nil)
       (return)))
   instance)
-
 
 #|
 
@@ -1069,7 +993,6 @@
   (inform :info *kernel* "Handling debug_request/attach message")
   (send-debug-reply))
 
-
 #|
 
 ### Message type: debug_request / configurationDone ###
@@ -1079,7 +1002,6 @@
 (defun handle-debug-request/configuration-done ()
   (inform :info *kernel* "Handling debug_request/configurationDone message")
   (send-debug-reply))
-
 
 #|
 
@@ -1145,7 +1067,6 @@
       (enqueue (thread-queue thread) *message*)))
   (send-debug-reply))
 
-
 #|
 
 ### Message type: debug_request / dumpCell ###
@@ -1161,7 +1082,6 @@
       `(:object-alist
          ("sourcePath" . ,source-path)))))
 
-
 #|
 
 ### Message type: debug_request / initialize ###
@@ -1174,7 +1094,6 @@
     (debug-initialize *kernel*))
   (setf (kernel-debugger-started *kernel*) t)
   (send-debug-event "initialized"))
-
 
 #|
 
@@ -1242,7 +1161,6 @@
   (let ((*message* *suspended-message*))
     (debug-next *kernel* environment)))
 
-
 #|
 
 ### Message type: debug_request / scopes ###
@@ -1259,7 +1177,6 @@
                                                             (gethash "arguments"
                                                                      (message-content *message*)))))
                        :empty-array))))
-
 
 #|
 
@@ -1332,7 +1249,6 @@
       (declare (ignore err))
       (send-debug-reply-failure "Unable to load source"))))
 
-
 #|
 
 ### Message type: debug_request / stackTrace ###
@@ -1361,7 +1277,6 @@
   (let ((*message* *suspended-message*))
     (debug-in *kernel* environment)))
 
-
 #|
 
 ### Message type: debug_request / stepOut ###
@@ -1376,7 +1291,6 @@
   (setf (thread-stopped (aref (kernel-threads *kernel*) *thread-id*)) nil)
   (let ((*message* *suspended-message*))
     (debug-out *kernel* environment)))
-
 
 #|
 
@@ -1549,7 +1463,6 @@
                               comms-alist)
                             comms-alist))))
 
-
 (defun handle-comm-open ()
   (inform :info *kernel* "Handling comm_open message")
   (handling-comm-errors
@@ -1567,7 +1480,6 @@
         (t
           (send-comm-close-orphan id))))))
 
-
 (defun handle-comm-message ()
   (inform :info *kernel* "Handling comm_msg message")
   (handling-comm-errors
@@ -1580,7 +1492,6 @@
       (if inst
         (on-comm-message inst data metadata buffers)
         (inform :error *kernel* "Received COMM message with unknown comm_id of ~A." id)))))
-
 
 (defun handle-comm-close ()
   (inform :info *kernel* "Handling comm_close")
@@ -1596,7 +1507,6 @@
         (when inst
           (on-comm-close inst data metadata buffers)
           (remhash id comms))))))
-
 
 (defun handle-history-request ()
   (inform :info *kernel* "Handling history_request message")
@@ -1625,7 +1535,6 @@
             results)
           results)))))
 
-
 (defun set-next-input (text &optional (replace nil))
   (declare (ignore replace))
   (vector-push-extend (list :object-plist
@@ -1633,7 +1542,6 @@
                             "text" text)
                       *payload*)
   (values))
-
 
 (defun page (result &optional (start 0))
   (vector-push-extend (list :object-plist
@@ -1643,14 +1551,12 @@
                       *payload*)
   (values))
 
-
 (defun quit (&optional keep-kernel)
   (vector-push-extend (list :object-plist
                             "source" "ask_exit"
                             "keepkernel" (if keep-kernel :true :false))
                       *payload*)
   (values))
-
 
 (defun edit (path &optional (line-number 0))
   (vector-push-extend (list :object-plist
@@ -1660,11 +1566,9 @@
                       *payload*)
   (values))
 
-
 (defun enqueue-input (kernel code)
   "Add code to input queue."
   (enqueue (kernel-input-queue kernel) code))
-
 
 (defun clear (&optional (wait nil))
   "Send clear output message to frontend."

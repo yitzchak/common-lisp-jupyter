@@ -40,11 +40,11 @@
     #-clasp
     (let ((mac (apply #'ironclad:make-mac (mac-args m))))
       (mapc (lambda (part)
-              (ironclad:update-mac mac (babel:string-to-octets part)))
+              (ironclad:update-mac mac part))
             parts)
       (octets-to-hex-string (ironclad:produce-mac mac)))
     #+clasp
     (core:hmac-sha256
-      (apply #'concatenate '(vector (unsigned-byte 8)) (mapcar #'babel:string-to-octets parts))
+      (apply #'concatenate '(vector (unsigned-byte 8)) parts)
       (mac-key m))
     ""))

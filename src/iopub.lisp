@@ -8,7 +8,8 @@
 
 (defclass iopub-channel (channel)
   ()
-  (:documentation "IOPUB channel class."))
+  (:documentation "IOPUB channel class.")
+  (:default-initargs :socket (nilmq:make-socket :pub)))
 
 #|
 
@@ -23,14 +24,16 @@
                               `(:object-alist
                                  ("type" . "event")
                                  ("event" . ,event)
-                                 ("body" . ,(or body :empty-object))))))
+                                 ("body" . ,(or body :empty-object)))
+                              :topic "kernel.debug_event")))
 
 
 (defun send-status (iopub status)
   (message-send iopub
                 (make-message (channel-session iopub) "status"
                               (list :object-plist
-                                    "execution_state" status))))
+                                    "execution_state" status)
+                              :topic "kernel.status")))
 
 
 (defun send-status-busy ()
@@ -45,7 +48,8 @@
   (message-send iopub
                 (make-message (channel-session iopub) "clear_output"
                               (list :object-plist
-                                    "wait" (if wait :true :false)))))
+                                    "wait" (if wait :true :false))
+                              :topic "display_data")))
 
 
 (defun send-display-data (iopub data &optional metadata transient update)
@@ -57,7 +61,8 @@
                               (list :object-plist
                                     "data" data
                                     "metadata" (or metadata :empty-object)
-                                    "transient" (or transient :empty-object)))))
+                                    "transient" (or transient :empty-object))
+                              :topic "display_data")))
 
 
 (defun send-execute-code (iopub execution-count code)
@@ -65,7 +70,8 @@
                 (make-message (channel-session iopub) "execute_input"
                               (list :object-plist
                                     "code" code
-                                    "execution_count" execution-count))))
+                                    "execution_count" execution-count)
+                              :topic "kernel.execute_input")))
 
 
 (defun send-execute-result (iopub execution-count data &optional metadata)
@@ -74,7 +80,8 @@
                               (list :object-plist
                                     "execution_count" execution-count
                                     "data" data
-                                    "metadata" (or metadata :empty-object)))))
+                                    "metadata" (or metadata :empty-object))
+                              :topic "kernel.execute_result")))
 
 
 (defun send-execute-error (iopub ename evalue &optional traceback)
@@ -83,7 +90,8 @@
                               (list :object-plist
                                     "ename" ename
                                     "evalue" evalue
-                                    "traceback" (or traceback :empty-array)))))
+                                    "traceback" (or traceback :empty-array))
+                              :topic "error")))
 
 
 (defun send-stream (iopub stream-name data)
@@ -91,7 +99,8 @@
                 (make-message (channel-session iopub) "stream"
                               (list :object-plist
                                     "name" stream-name
-                                    "text" data))))
+                                    "text" data)
+                              :topic (concatenate 'string "stream." stream-name))))
 
 
 (defvar *iopub-stream-size* 1024)

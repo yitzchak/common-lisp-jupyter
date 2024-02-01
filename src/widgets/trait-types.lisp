@@ -20,19 +20,6 @@
   (declare (ignore object type name))
   (values :null (list nil) (list value)))
 
-#+(or abcl allegro ccl clasp cmu ecl lispworks sbcl)
-(defmethod deserialize-trait (object (type (eql :buffer)) name (value vector))
-  (declare (ignore type name))
-  (if (binary-value-p value)
-    (let ((result (static-vectors:make-static-vector (length value)
-                                                     :element-type '(unsigned-byte 8))))
-      (trivial-garbage:finalize object (lambda () (static-vectors:free-static-vector result)))
-      (static-vectors:replace-foreign-memory (static-vectors:static-vector-pointer result)
-                                             (static-vectors:static-vector-pointer value)
-                                             (length value))
-      result)
-    value))
-
 ; Buffer List
 
 (defmethod serialize-trait (object (type (eql :buffer-list)) name (value (eql nil)))
@@ -216,19 +203,6 @@
 (defmethod serialize-trait (object (type (eql :single-float-buffer)) name value)
   (declare (ignore object type name))
   (values :null (list nil) (list value)))
-
-#+(or abcl allegro ccl clasp cmu ecl lispworks sbcl)
-(defmethod deserialize-trait (object (type (eql :single-float-buffer)) name (value vector))
-  (declare (ignore type name))
-  (if (binary-value-p value)
-    (let ((result (static-vectors:make-static-vector (/ (length value) 4)
-                                                     :element-type 'single-float)))
-      (trivial-garbage:finalize object (lambda () (static-vectors:free-static-vector result)))
-      (static-vectors:replace-foreign-memory (static-vectors:static-vector-pointer result)
-                                             (static-vectors:static-vector-pointer value)
-                                             (length value))
-      result)
-    value))
 
 ; Single Float Buffer List
 

@@ -8,7 +8,8 @@
 
 (defclass control-channel (channel)
   ()
-  (:documentation "Control channel class."))
+  (:documentation "Control channel class.")
+  (:default-initargs :socket (nilmq:make-socket :router)))
 
 #|
 
