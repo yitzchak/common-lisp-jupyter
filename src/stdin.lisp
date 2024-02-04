@@ -10,8 +10,7 @@ See: http://jupyter-client.readthedocs.org/en/latest/messaging.html#messages-on-
 
 (defclass stdin-channel (channel)
   ()
-  (:documentation "STDIN channel class.")
-  (:default-initargs :socket (nilmq:make-socket :router)))
+  (:documentation "STDIN channel class."))
 
 #|
 

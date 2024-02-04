@@ -8,8 +8,7 @@
 
 (defclass hb-channel (channel)
   ()
-  (:documentation "Heartbeat channel class.")
-  (:default-initargs :socket (nilmq:make-socket :rep)))
+  (:documentation "Heartbeat channel class."))
 
 (defmethod start :after ((hb hb-channel))
   (with-slots (socket thread) hb
@@ -19,7 +18,8 @@
              (inform :info hb "Starting thread")
              (prog (m)
               poll
-                (when (nilmq:input-available-p socket)
-                  (j:inform :info hb "in ~s" (setf m (nilmq:receive socket)))
+                (j:inform :info hb "in ~s" (setf m (nilmq:receive socket)))
+                (when m
+                  (j:inform :info hb "out ~s" m)
                   (nilmq:send socket m))
                 (go poll)))))))

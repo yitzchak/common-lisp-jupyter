@@ -134,6 +134,10 @@
      :initform (coerce '(#\Escape #\\) 'string)
      :reader kernel-prompt-suffix
      :documentation "String suffix using in *standard-output* to indicate the end of prompt.")
+   (ctx
+     :initform nil
+     :accessor kernel-ctx
+     :documentation "pzmq ctx handle.")
    (mac
      :initform nil
      :accessor kernel-mac
@@ -708,6 +712,7 @@
                                                                                           (concatenate 'string session "-*.*")))))
           tmp-file-prefix "CELL:"
           tmp-file-suffix (concatenate 'string (string-upcase file-extension) #+ccl ".newest" #-ccl ".NEWEST")
+          ctx (nilmq:make-context)
           mac (make-instance 'mac
                              :sink sink
                              :key key
@@ -716,6 +721,7 @@
                             :sink sink
                             :session session
                             :mac mac
+                            :socket (nilmq:make-socket :rep :context ctx)
                             :transport transport
                             :ip ip
                             :port hb-port)
@@ -723,6 +729,7 @@
                                :sink sink
                                :session session
                                :mac mac
+                               :socket (nilmq:make-socket :pub :context ctx)
                                :transport transport
                                :ip ip
                                :port iopub-port)
@@ -730,6 +737,7 @@
                                :sink sink
                                :session session
                                :mac mac
+                               :socket (nilmq:make-socket :router :context ctx)
                                :transport transport
                                :ip ip
                                :port shell-port)
@@ -737,6 +745,7 @@
                                :sink sink
                                :session session
                                :mac mac
+                               :socket (nilmq:make-socket :router :context ctx)
                                :transport transport
                                :ip ip
                                :port stdin-port)
@@ -744,6 +753,7 @@
                                  :sink sink
                                  :session session
                                  :mac mac
+                                 :socket (nilmq:make-socket :router :context ctx)
                                  :transport transport
                                  :ip ip
                                  :port control-port)

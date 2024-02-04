@@ -8,8 +8,7 @@
 
 (defclass iopub-channel (channel)
   ()
-  (:documentation "IOPUB channel class.")
-  (:default-initargs :socket (nilmq:make-socket :pub)))
+  (:documentation "IOPUB channel class."))
 
 #|
 
