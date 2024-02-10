@@ -782,7 +782,7 @@
 
 ;; Stop all channels and destroy the control.
 (defmethod stop ((k kernel))
-  (with-slots (sink hb iopub shell stdin control history mac name) k
+  (with-slots (sink hb iopub shell stdin control history mac name ctx) k
     (inform :info k "Stopping ~A kernel" name)
     (when (bordeaux-threads:thread-alive-p (kernel-shell-thread k))
       (bordeaux-threads:destroy-thread (kernel-shell-thread k)))
@@ -794,6 +794,7 @@
     (stop mac)
     (stop history)
     (stop sink)
+    (nilmq:close ctx)
     (uiop:quit)))
 
 (defun run-shell (kernel)

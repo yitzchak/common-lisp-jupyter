@@ -52,7 +52,7 @@
 
 (defmethod stop ((ch channel))
   (inform :info ch "Stopping channel")
-  (nilmq:shutdown (channel-socket ch)))
+  (nilmq:close (channel-socket ch)))
 
 (defun message-available-p (ch)
   (nilmq:input-available-p (channel-socket ch)))
