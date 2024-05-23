@@ -570,10 +570,11 @@
   (setf common-lisp-user::- form)
   (let* ((results (multiple-value-list
                     #+ccl   (ccl::cheap-eval-in-environment form (kernel-environment jupyter:*kernel*))
-                    #+clasp (funcall (clasp-cleavir::bir-compile-cst-in-env
-                                       (cst:list (cst:cst-from-expression 'lambda)
-                                                 (cst:cst-from-expression nil)
-                                                 aux-form)))
+                    #+clasp (funcall (clasp-cleavir::bir-compile-cst
+                                      (cst:list (cst:cst-from-expression 'lambda)
+                                                (cst:cst-from-expression nil)
+                                                aux-form)
+                                      clasp-cleavir::*clasp-env*))
                     #+sbcl  (handler-bind ((sb-c::compiler-note #'muffle-warning))
                               (let* ((sb-c::*source-paths* (make-hash-table :test 'eq))
                                      (lambda (sb-impl::make-eval-lambda form))
