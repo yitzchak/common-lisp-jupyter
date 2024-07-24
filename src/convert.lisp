@@ -39,8 +39,8 @@
   source)
 
 
-(defmethod eclector.parse-result:make-skipped-input-result ((client my-client) stream reason source)
-  (declare (ignore stream))
+(defmethod eclector.parse-result:make-skipped-input-result ((client my-client) stream reason children source)
+  (declare (ignore stream reason children))
   source)
 
 
