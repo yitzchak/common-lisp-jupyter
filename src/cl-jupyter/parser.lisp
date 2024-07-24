@@ -127,8 +127,8 @@
   result)
 
 
-(defmethod eclector.parse-result:make-skipped-input-result ((client my-client) stream reason source)
-  (declare (ignore stream))
+(defmethod eclector.parse-result:make-skipped-input-result ((client my-client) stream reason children source)
+  (declare (ignore stream children))
   (make-instance 'skipped-fragment :status reason :start (car source) :end (cdr source)))
 
 
