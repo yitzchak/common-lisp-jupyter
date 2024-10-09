@@ -96,8 +96,7 @@
 
 (defvar *iopub-stream-size* 1024)
 
-(defclass iopub-stream (ngray:fundamental-character-output-stream
-                        ngray:fundamental-character-input-stream)
+(defclass iopub-stream (ngray:fundamental-character-output-stream)
   ((channel :initarg :channel
             :reader iopub-stream-channel)
    (name :initarg :name
@@ -160,22 +159,3 @@
       (send-stream channel name value)
       (adjust-array value (array-total-size value)
                     :fill-pointer 0))))
-
-
-;; Forward all read calls to *query-io*
-(defmethod ngray:stream-listen ((stream iopub-stream))
-  (ngray:stream-listen *query-io*))
-
-(defmethod ngray:stream-read-char ((stream iopub-stream))
-  (ngray:stream-read-char *query-io*))
-
-(defmethod ngray:stream-peek-char ((stream iopub-stream))
-  (ngray:stream-peek-char *query-io*))
-
-(defmethod ngray:stream-unread-char ((stream iopub-stream) char)
-  (ngray:stream-unread-char *query-io* char))
-
-(defmethod ngray:stream-line-column ((stream iopub-stream))
-   (iopub-stream-column stream))
-
-
