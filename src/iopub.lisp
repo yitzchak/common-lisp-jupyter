@@ -7,7 +7,21 @@
 |#
 
 (defclass iopub-channel (channel)
-  ()
+  ((name :initarg :name
+         :initform "stdout"
+         :accessor iopub-channel-name)
+   (value :initarg :value
+          :initform (make-array *iopub-stream-size*
+                                :fill-pointer 0
+                                :adjustable t
+                                :element-type 'character)
+          :reader iopub-channel-value)
+   (prompt-prefix :initarg :prompt-prefix
+                  :reader iopub-channel-prompt-prefix)
+   (prompt-suffix :initarg :prompt-suffix
+                  :reader iopub-channel-prompt-suffix)
+   (column :accessor iopub-channel-column
+           :initform 0))
   (:documentation "IOPUB channel class."))
 
 #|
@@ -93,6 +107,52 @@
                                     "name" stream-name
                                     "text" data))))
 
+(defun iopub-write-char (iopub name char)
+  (with-accessors ((current-name iopub-channel-name)
+                   (value iopub-channel-value)
+                   (prompt-prefix iopub-channel-prompt-prefix)
+                   (prompt-suffix iopub-channel-prompt-suffix))
+      iopub
+    (unless (string= current-name name)
+      (when (plusp (length value))
+        (send-stream iopub current-name value)
+        (setf (fill-pointer value) 0))
+      (setf current-name name))
+    (cond ((graphic-char-p char)
+           (incf column))
+          ((or (char= #\newline)
+               (char= #\return))
+           (setf column 0))
+          ((char= #\tab)
+           (incf column 8)))
+    (vector-push-extend char value)
+    ;; After the character has been added look for a prompt terminator at the
+    ;; end.
+    (when (alexandria:ends-with-subseq prompt-suffix value)
+      (let ((start (search prompt-prefix value)))
+        ;; If there is a prompt start also then print the prompt and remove it
+        ;; from the buffer.
+        (when start
+          ;; If there is data before the prompt then send it now.
+          (unless (zerop start)
+            (send-stream iopub name (subseq value 0 start)))
+          (write-string (subseq value
+                                (+ start (length prompt-prefix))
+                                (- (length value) (length prompt-suffix)))
+                        *query-io*)
+          (finish-output *query-io*)
+          (adjust-array value (array-total-size value)
+                        :fill-pointer 0))))))
+
+(defun iopub-finish-output (iopub &optional name)
+  (with-accessors ((current-name iopub-channel-name)
+                   (value iopub-channel-value))
+      iopub
+    (when (and (or (null name)
+                   (string= current-name name))
+               (plusp (length value)))
+        (send-stream iopub current-name value)
+        (setf (fill-pointer value) 0))))
 
 (defvar *iopub-stream-size* 1024)
 
@@ -100,62 +160,23 @@
   ((channel :initarg :channel
             :reader iopub-stream-channel)
    (name :initarg :name
-         :reader iopub-stream-name)
-   (value :initarg :value
-          :initform (make-array *iopub-stream-size*
-                                :fill-pointer 0
-                                :adjustable t
-                                :element-type 'character)
-          :reader iopub-stream-value)
-   (prompt-prefix :initarg :prompt-prefix
-                  :reader iopub-stream-prompt-prefix)
-   (prompt-suffix :initarg :prompt-suffix
-                  :reader iopub-stream-prompt-suffix)
-   (column
-     :accessor iopub-stream-column
-     :initform 0)))
+         :reader iopub-stream-name)))
 
-(defun make-iopub-stream (iopub name prompt-prefix prompt-suffix)
+(defun make-iopub-stream (iopub name)
   (make-instance 'iopub-stream :channel iopub
-                               :name name
-                               :prompt-prefix prompt-prefix
-                               :prompt-suffix prompt-suffix))
+                               :name name))
 
 (defmethod ngray:stream-write-char ((stream iopub-stream) char)
   (unless (equal char #\Sub) ; Ignore subsititute characters
-    (with-slots (channel name value prompt-prefix prompt-suffix column) stream
-      (cond
-        ((graphic-char-p char)
-          (incf column))
-        ((or (char= #\newline)
-             (char= #\return))
-          (setf column 0))
-        ((char= #\tab)
-          (incf column 8)))
-      (vector-push-extend char value)
-      ;; After the character has been added look for a prompt terminator at the
-      ;; end.
-      (if (alexandria:ends-with-subseq prompt-suffix value)
-        (let ((start (search prompt-prefix value)))
-          ;; If there is a prompt start also then print the prompt and remove it
-          ;; from the buffer.
-          (when start
-            ;; If there is data before the prompt then send it now.
-            (unless (zerop start)
-              (send-stream channel name (subseq value 0 start)))
-            (write-string (subseq value
-                                  (+ start (length prompt-prefix))
-                                  (- (length value) (length prompt-suffix)))
-                          *query-io*)
-            (finish-output *query-io*)
-            (adjust-array value (array-total-size value)
-                          :fill-pointer 0)))))))
-
+    (iopub-write-char (iopub-stream-channel stream)
+                      (iopub-stream-name stream)
+                      char))
+  char)
 
 (defmethod ngray:stream-finish-output ((stream iopub-stream))
-  (with-slots (channel name value prompt-prefix) stream
-    (unless (or (zerop (length value))
-                (search prompt-prefix value))
-      (send-stream channel name value)
-      (adjust-array value (array-total-size value)
-                    :fill-pointer 0))))
+  (iopub-finish-output (iopub-stream-channel stream)
+                       (iopub-stream-name stream))
+  nil)
+
+(defmethod ngray:stream-line-column ((stream iopub-stream))
+  (iopub-channel-column (iopub-stream-channel stream)))

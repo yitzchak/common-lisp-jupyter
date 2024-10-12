@@ -36,9 +36,10 @@ most cases of *query-io* usage. Makes overloading y-or-no-p unnecessary.
 
 (defclass stdin-stream (ngray:fundamental-character-output-stream
                         ngray:fundamental-character-input-stream)
-  ((channel
-     :initarg :channel
-     :reader stdin-stream-channel)
+  ((channel :initarg :channel
+            :reader stdin-stream-channel)
+   (iopub :reader stdin-stream-iopub
+          :initarg :iopub)
    (output
      :initarg :output
      :initform (make-array *stdin-stream-size*
@@ -67,14 +68,15 @@ most cases of *query-io* usage. Makes overloading y-or-no-p unnecessary.
   (declare (ignore stream))
   t)
 
-(defun make-stdin-stream (stdin)
-  (make-instance 'stdin-stream :channel stdin))
+(defun make-stdin-stream (stdin iopub)
+  (make-instance 'stdin-stream :channel stdin :iopub iopub))
 
 (defmethod ngray:stream-write-char ((stream stdin-stream) char)
   (vector-push-extend char (stdin-stream-output stream)))
 
 (defun prompt-and-read (stream need-input)
-  (with-slots (channel output input lock) stream
+  (with-slots (channel iopub output input lock) stream
+    (iopub-finish-output iopub)
     (when (bordeaux-threads:acquire-lock lock nil)
       (unwind-protect
           (let ((trimmed-output (copy-seq (string-trim '(#\Bel) output))))

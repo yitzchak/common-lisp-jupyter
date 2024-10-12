@@ -782,7 +782,9 @@
                                :socket (pzmq:socket ctx :pub)
                                :transport transport
                                :ip ip
-                               :port iopub-port)
+                               :port iopub-port
+                               :prompt-prefix prompt-prefix
+                               :prompt-suffix prompt-suffix)
           shell (make-instance 'shell-channel
                                :sink sink
                                :session session
@@ -813,9 +815,9 @@
                                          (make-pathname :directory '(:relative "common-lisp-jupyter")
                                                         :name language-name
                                                         :type "history")))
-          error-output (make-iopub-stream iopub "stderr" prompt-prefix prompt-suffix)
-          standard-output (make-iopub-stream iopub "stdout" prompt-prefix prompt-suffix)
-          standard-input (make-stdin-stream stdin))
+          error-output (make-iopub-stream iopub "stderr")
+          standard-output (make-iopub-stream iopub "stdout")
+          standard-input (make-stdin-stream stdin iopub))
     (start mac)
     (start hb)
     (start iopub)

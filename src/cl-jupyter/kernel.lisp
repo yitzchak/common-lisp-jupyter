@@ -741,4 +741,6 @@
 (defmethod jupyter:evaluate-code ((k kernel) code &optional source-path breakpoints)
   (if (jupyter:kernel-debugger-started jupyter:*kernel*)
     (debugging-errors (repl code source-path breakpoints))
-    (jupyter:handling-errors (repl code source-path breakpoints))))
+    #+(or)(jupyter:handling-errors (repl code source-path breakpoints))
+    (with-simple-restart (abort "Exit debugger, returning to top level.")
+      (repl code source-path breakpoints))))
