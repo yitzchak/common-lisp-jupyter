@@ -681,35 +681,30 @@
     (abort)))
 
 (defun debugger-type ()
-  (cond #+(or clasp sbcl)
-        (#+clasp (core:debugger-disabled-p)
-         #+sbcl (eq sb-ext:*invoke-debugger-hook* 'sb-debug::debugger-disabled-hook)
+  (cond #+clasp
+        ((core:debugger-disabled-p) :none)
+        #+sbcl
+        ((eq sb-ext:*invoke-debugger-hook* 'sb-debug::debugger-disabled-hook)
          :none)
-        #+(or clasp sbcl)
-        (#+clasp ext:*invoke-debugger-hook*
-         #+sbcl sb-ext:*invoke-debugger-hook*
-         :external)
-        (t
-         :interal)))
-
-(defun builtin-debugger-p ()
-  (and *builtin-debugger*
-       #+clasp (not (core:debugger-disabled-p))
-       #+sbcl (not (eq sb-ext:*invoke-debugger-hook* 'sb-debug::debugger-disabled-hook))))
-
-(defun external-debugger-p ()
-  (and #+sbcl      sb-ext:*invoke-debugger-hook*
-       #+ccl       ccl:*break-hook*
-       #+ecl       ext:*invoke-debugger-hook*
-       #+clasp     ext:*invoke-debugger-hook*
-       #+abcl      sys::*invoke-debugger-hook*
-       #+clisp     sys::*break-driver*
-       #+allegro   excl::*break-hook*
-       #+lispworks dbg::*debugger-wrapper-list*
-       #+mezzano   mezzano.debug:*global-debugger*
-       #-(or sbcl ccl ecl clasp abcl clisp allegro lispworks mezzano)
-       nil
-       t))
+        #+abcl
+        (sys::*invoke-debugger-hook* :external)
+        #+allegro
+        (excl::*break-hook* :external)
+        #+ccl
+        (ccl:*break-hook* :external)
+        #+clisp
+        (sys::*break-driver* :external)
+        #+clasp
+        (ext:*invoke-debugger-hook* :external)
+        #+ecl
+        (ext:*invoke-debugger-hook* :external)
+        #+lispworks
+        (dbg::*debugger-wrapper-list* :external)
+        #+mezzano
+        (mezzano.debug:*global-debugger* :external)
+        #+sbcl
+        (sb-ext:*invoke-debugger-hook* :external)
+        (t :internal)))
 
 (defmacro with-debugger ((&key control internal) &body body)
   (let ((debugger-hook (if control
