@@ -25,5 +25,5 @@
                   (unless (zerop (pzmq:poll items +zmq-poll-timeout+))
                     (send-heartbeat hb (recv-heartbeat hb)))
                   (bordeaux-threads:thread-yield)
-                  (go poll))))))))
-
+                   (go poll))))
+            :name "Jupyter Heartbeat"))))

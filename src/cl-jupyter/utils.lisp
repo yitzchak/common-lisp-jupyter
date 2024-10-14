@@ -187,7 +187,8 @@
                          (setf right (file-position stream))
                          (go next))))))
 
-(defun source-line-column (pathname position1 #+(or cmucl sbcl) position2)
+(defun source-line-column (pathname position1 &optional position2)
+  (declare (ignorable position2))
   (handler-case
       #+(or cmucl sbcl) (values-list (elt (elt (get-source-map pathname) position1) position2))
       #+(or ccl ecl) (let ((record (find-if (lambda (record)

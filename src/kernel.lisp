@@ -2,7 +2,6 @@
 
 
 (defvar *payload* nil)
-(defvar *debugger* t)
 (defvar *markdown-output* nil)
 (defvar *html-output* nil)
 (defvar *thread-id* nil)
@@ -12,13 +11,10 @@
 (defconstant +max-thread-count+ (ash 1 +thread-bits+))
 (defconstant +thread-mask+ (1- +max-thread-count+))
 
-
 (defvar *page-output* nil
   "Output stream sent to Jupyter pager. Available during calls to evaluate-code.")
 
-
 (defconstant +zmq-poll-timeout+ 500)
-
 
 (defclass thread ()
   ((queue
@@ -667,6 +663,92 @@
        (values))))
 
 
+(defun control-debugger-hook (condition me-or-my-encapsulation)
+  (declare (ignore me-or-my-encapsulation))
+  (inform (if (typep condition 'warning)
+              :warning
+              :error)
+          "[~S] ~A~%" (type-of condition) condition)
+  (abort))
+
+(defun shell-debugger-hook (condition me-or-my-encapsulation)
+  (declare (ignore me-or-my-encapsulation))
+  (let ((stream (if (typep condition 'warning)
+                    *standard-output*
+                    *error-output*)))
+    (format stream "[~S] ~A~%" (type-of condition) condition)
+    (finish-output stream)
+    (abort)))
+
+(defun debugger-type ()
+  (cond #+(or clasp sbcl)
+        (#+clasp (core:debugger-disabled-p)
+         #+sbcl (eq sb-ext:*invoke-debugger-hook* 'sb-debug::debugger-disabled-hook)
+         :none)
+        #+(or clasp sbcl)
+        (#+clasp ext:*invoke-debugger-hook*
+         #+sbcl sb-ext:*invoke-debugger-hook*
+         :external)
+        (t
+         :interal)))
+
+(defun builtin-debugger-p ()
+  (and *builtin-debugger*
+       #+clasp (not (core:debugger-disabled-p))
+       #+sbcl (not (eq sb-ext:*invoke-debugger-hook* 'sb-debug::debugger-disabled-hook))))
+
+(defun external-debugger-p ()
+  (and #+sbcl      sb-ext:*invoke-debugger-hook*
+       #+ccl       ccl:*break-hook*
+       #+ecl       ext:*invoke-debugger-hook*
+       #+clasp     ext:*invoke-debugger-hook*
+       #+abcl      sys::*invoke-debugger-hook*
+       #+clisp     sys::*break-driver*
+       #+allegro   excl::*break-hook*
+       #+lispworks dbg::*debugger-wrapper-list*
+       #+mezzano   mezzano.debug:*global-debugger*
+       #-(or sbcl ccl ecl clasp abcl clisp allegro lispworks mezzano)
+       nil
+       t))
+
+(defmacro with-debugger ((&key control internal) &body body)
+  (let ((debugger-hook (if control
+                           'control-debugger-hook
+                           'shell-debugger-hook)))
+  `(flet ((body-func ()
+           (with-simple-restart
+               (abort "Exit debugger, returning to top level.")
+             ,@body)))
+     (case (debugger-type)
+       (:external
+        (body-func))
+       ,@(when internal
+           #+clasp
+           `((:internal
+              (catch sys::*quit-tag*
+                (body-func))))
+           #-clasp
+           `((:internal
+              (body-func))))
+       (otherwise
+        (let ((*debugger-hook* ',debugger-hook)
+              #+sbcl      (sb-ext:*invoke-debugger-hook* ',debugger-hook)
+              #+ccl       (ccl:*break-hook* ',debugger-hook)
+              #+ecl       (ext:*invoke-debugger-hook* ',debugger-hook)
+              #+clasp     (ext:*invoke-debugger-hook* ',debugger-hook)
+              #+abcl      (sys::*invoke-debugger-hook* ',debugger-hook)
+              #+clisp     (sys::*break-driver* (lambda (continuable &optional condition print)
+                                                 (declare (ignore continuable print))
+                                                 (,debugger-hook condition nil)))
+              #+allegro   (excl::*break-hook* (lambda (&rest args)
+                                                (,debugger-hook (fifth args))))
+              #+lispworks (dbg::*debugger-wrapper-list* (lambda (function condition)
+                                                          (declare (ignore function))
+                                                          (,debugger-hook condition nil)))
+              #+mezzano   (mezzano.debug:*global-debugger* (lambda (condition)
+                                                             (,debugger-hook condition nil))))
+          (body-func)))))))
+
 (defun debug-enter-loop ()
   "Re-enter the debug loop after a restart which implements a debugger command."
   (throw 'enter-loop t))
@@ -680,7 +762,7 @@
   (finish-output *html-output*)
   (finish-output)
   (finish-output *error-output*)
-  (handling-comm-errors
+  (with-debugger ()
     (with-slots (stopped queue)
                 (aref (kernel-threads *kernel*) *thread-id*)
       (setf stopped t)
@@ -815,8 +897,8 @@
                                          (make-pathname :directory '(:relative "common-lisp-jupyter")
                                                         :name language-name
                                                         :type "history")))
-          error-output (make-iopub-stream iopub "stderr")
-          standard-output (make-iopub-stream iopub "stdout")
+          error-output (make-iopub-stream iopub '*error-output*)
+          standard-output (make-iopub-stream iopub '*standard-output*)
           standard-input (make-stdin-stream stdin iopub))
     (start mac)
     (start hb)
@@ -830,7 +912,7 @@
     (setf (kernel-shell-thread k)
           (bordeaux-threads:make-thread (lambda ()
                                           (run-shell k))
-                                        :name "SHELL Thread"))))
+                                        :name "Jupyter Shell"))))
 
 
 ;; Stop all channels and destroy the control.
@@ -936,7 +1018,7 @@
       (when (zerop (pzmq:poll items +zmq-poll-timeout+))
         #+cmucl (bordeaux-threads:thread-yield)
         (go poll))
-      (handling-control-errors
+      (with-debugger (:control t)
         (setf *message* (message-recv control)
               msg-type (format nil "~A~@[/~A~]"
                                (gethash "msg_type" (message-header *message*))
@@ -996,6 +1078,8 @@
   (let ((kernel (make-instance kernel-class
                                :connection-file connection-file
                                :control-thread (bordeaux-threads:current-thread))))
+    #+sbcl (setf (sb-thread:thread-name (bordeaux-threads:current-thread))
+                 "Jupyter Control")
     (add-thread kernel)
     (start kernel)
     (unwind-protect
@@ -1554,7 +1638,7 @@
 
 (defun handle-comm-open ()
   (inform :info *kernel* "Handling comm_open message")
-  (handling-comm-errors
+  (with-debugger ()
     (let* ((content (message-content *message*))
            (metadata (message-metadata *message*))
            (buffers (message-buffers *message*))
@@ -1572,7 +1656,7 @@
 
 (defun handle-comm-message ()
   (inform :info *kernel* "Handling comm_msg message")
-  (handling-comm-errors
+  (with-debugger ()
     (let* ((content (message-content *message*))
            (metadata (message-metadata *message*))
            (buffers (message-buffers *message*))
@@ -1586,7 +1670,7 @@
 
 (defun handle-comm-close ()
   (inform :info *kernel* "Handling comm_close")
-  (handling-comm-errors
+  (with-debugger ()
     (with-slots (comms iopub)
                 *kernel*
       (let* ((content (message-content *message*))
@@ -1671,4 +1755,3 @@
 (defun clear (&optional (wait nil))
   "Send clear output message to frontend."
   (send-clear-output (kernel-iopub *kernel*) wait))
-

@@ -47,7 +47,8 @@
   (bordeaux-threads:make-thread
     (lambda ()
       (jupyter:inform :info k "Loading CLHS map")
-      (load-clhs-map))))
+      (load-clhs-map))
+    :name "Jupyter Kernel Startup"))
 
 
 (defclass debug-environment (jupyter:debug-environment)
@@ -393,7 +394,7 @@
 
 (defun read-evaluated-form ()
   (format *query-io* "~&Type a form to be evaluated:~%")
-  (jupyter:handling-comm-errors
+  (jupyter:with-debugger ()
     (multiple-value-list (eval-in-frame (read *query-io*) jupyter:*debug-frame*))))
 
 
@@ -403,7 +404,6 @@
   #+cmucl (di:eval-in-frame data form)
   #+ecl   (si:eval-with-env form (cdr data))
   #+sbcl  (sb-di:eval-in-frame data form))
-
 
 (defmacro debugging-errors (&body body)
   `(unwind-protect
@@ -427,7 +427,7 @@
          (restart-bind
              ((eval
                 (lambda (&rest results)
-                  (jupyter:handling-comm-errors
+                  (jupyter:with-debugger ()
                     (dolist (result results)
                       (jupyter:display result)))
                   (jupyter:debug-enter-loop))
@@ -684,7 +684,7 @@
          next
           (when (multiple-value-call #'jupyter:evaluate-form
                                      jupyter:*kernel* stream source-path breakpoints
-                                     (source-line-column source-path))
+                                     (source-line-column source-path 0))
             (go next))))
       #+clasp
       (with-open-file (stream source-path)
@@ -737,10 +737,8 @@
           (when (jupyter:evaluate-form jupyter:*kernel* stream nil breakpoints)
             (go repeat)))))))
 
-
 (defmethod jupyter:evaluate-code ((k kernel) code &optional source-path breakpoints)
   (if (jupyter:kernel-debugger-started jupyter:*kernel*)
-    (debugging-errors (repl code source-path breakpoints))
-    #+(or)(jupyter:handling-errors (repl code source-path breakpoints))
-    (with-simple-restart (abort "Exit debugger, returning to top level.")
-      (repl code source-path breakpoints))))
+      (debugging-errors (repl code source-path breakpoints))
+      (jupyter:with-debugger (:internal t)
+        (repl code source-path breakpoints))))

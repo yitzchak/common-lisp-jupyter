@@ -8,7 +8,7 @@
 
 (defclass iopub-channel (channel)
   ((name :initarg :name
-         :initform "stdout"
+         :initform '*standard-output*
          :accessor iopub-channel-name)
    (value :initarg :value
           :initform (make-array *iopub-stream-size*
@@ -104,16 +104,19 @@
   (message-send iopub
                 (make-message (channel-session iopub) "stream"
                               (list :object-plist
-                                    "name" stream-name
+                                    "name" (ecase stream-name
+                                             (*standard-output* "stdout")
+                                             (*error-output* "stderr"))
                                     "text" data))))
 
 (defun iopub-write-char (iopub name char)
   (with-accessors ((current-name iopub-channel-name)
                    (value iopub-channel-value)
+                   (column iopub-channel-column)
                    (prompt-prefix iopub-channel-prompt-prefix)
                    (prompt-suffix iopub-channel-prompt-suffix))
       iopub
-    (unless (string= current-name name)
+    (unless (eq current-name name)
       (when (plusp (length value))
         (send-stream iopub current-name value)
         (setf (fill-pointer value) 0))
@@ -149,7 +152,7 @@
                    (value iopub-channel-value))
       iopub
     (when (and (or (null name)
-                   (string= current-name name))
+                   (eq current-name name))
                (plusp (length value)))
         (send-stream iopub current-name value)
         (setf (fill-pointer value) 0))))
