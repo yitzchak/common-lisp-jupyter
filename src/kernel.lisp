@@ -1,6 +1,6 @@
 (in-package #:jupyter)
 
-
+(defvar *enable-debugger* nil)
 (defvar *payload* nil)
 (defvar *markdown-output* nil)
 (defvar *html-output* nil)
@@ -681,10 +681,9 @@
     (abort)))
 
 (defun debugger-type ()
-  (cond #+clasp
-        ((core:debugger-disabled-p) :none)
-        #+sbcl
-        ((eq sb-ext:*invoke-debugger-hook* 'sb-debug::debugger-disabled-hook)
+  (cond ((or (not *enable-debugger*)
+             #+clasp (core:debugger-disabled-p)
+             #+sbcl (eq sb-ext:*invoke-debugger-hook* 'sb-debug::debugger-disabled-hook))
          :none)
         #+abcl
         (sys::*invoke-debugger-hook* :external)
@@ -1492,7 +1491,8 @@
           (evalue "Execution interrupted")
           traceback
           (*payload* (make-array 16 :adjustable t :fill-pointer 0))
-          (*page-output* (make-string-output-stream)))
+          (*page-output* (make-string-output-stream))
+          (*enable-debugger* (gethash "stop_on_error" (message-content *message*))))
       (incf execution-count)
       (add-cell history execution-count code)
       (unwind-protect

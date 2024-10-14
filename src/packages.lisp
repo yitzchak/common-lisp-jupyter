@@ -42,6 +42,7 @@
            ;; kernel
 	         #:*debug-environment*
 	         #:*debug-frame*
+           #:*enable-debugger*
 	         #:*html-output*
 	         #:*kernel*
 	         #:*markdown-output*
