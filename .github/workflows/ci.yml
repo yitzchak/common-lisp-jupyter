@@ -14,13 +14,13 @@ jobs:
         shell: bash -l {0}
     strategy:
       fail-fast: false
-    matrix:
-      lisp:
-        - abcl
-        - ccl
-        - clasp
-        - ecl
-        - sbcl
+      matrix:
+        lisp:
+          - abcl
+          - ccl
+          - clasp
+          - ecl
+          - sbcl
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/yitzchak/archlinux-cl:latest
