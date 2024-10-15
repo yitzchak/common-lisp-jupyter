@@ -849,7 +849,9 @@
           hash-seed (random #xffffffff *uuid-random-state*)
           (logical-pathname-translations "CELL") (list (list "*.*.*"
                                                              (namestring (merge-pathnames (uiop:default-temporary-directory)
-                                                                                          (concatenate 'string session "-*.*")))))
+                                                                                          (make-pathname :directory `(:relative ,session)
+                                                                                                         :name :wild
+                                                                                                         :type :wild)))))
           tmp-file-prefix "CELL:"
           tmp-file-suffix (concatenate 'string (string-upcase file-extension) #+ccl ".newest" #-ccl ".NEWEST")
           ctx (pzmq:ctx-new)
