@@ -738,7 +738,8 @@
             (go repeat)))))))
 
 (defmethod jupyter:evaluate-code ((k kernel) code &optional source-path breakpoints)
-  (if (jupyter:kernel-debugger-started jupyter:*kernel*)
+  (if (and jupyter:*enable-debugger*
+           (jupyter:kernel-debugger-started jupyter:*kernel*))
       (debugging-errors (repl code source-path breakpoints))
       (jupyter:with-debugger (:internal t)
         (repl code source-path breakpoints))))

@@ -665,20 +665,28 @@
 
 (defun control-debugger-hook (condition me-or-my-encapsulation)
   (declare (ignore me-or-my-encapsulation))
-  (inform (if (typep condition 'warning)
-              :warning
-              :error)
-          "[~S] ~A~%" (type-of condition) condition)
-  (abort))
+  (cond ((typep condition 'warning)
+         (inform :warning "[~S] ~A~%" (type-of condition) condition)
+         (muffle-warning))
+        (t
+         (inform :error "[~S] ~A~%" (type-of condition) condition)
+         (abort))))
 
 (defun shell-debugger-hook (condition me-or-my-encapsulation)
   (declare (ignore me-or-my-encapsulation))
-  (let ((stream (if (typep condition 'warning)
-                    *standard-output*
-                    *error-output*)))
-    (format stream "[~S] ~A~%" (type-of condition) condition)
-    (finish-output stream)
-    (abort)))
+  (cond ((typep condition 'warning)
+         (format *standard-output* "[~S] ~A~%" (type-of condition) condition)
+         (finish-output *standard-output*)
+         (muffle-warning))
+        (t
+         (let ((env (dissect:capture-environment condition)))
+           (format *error-output* "[~S] ~A~%" (type-of condition) condition)
+           (finish-output *error-output*)
+           (throw 'debug-error
+             (make-eval-error condition (format nil "~A" condition)
+                              (mapcar (lambda (frame)
+                                        (dissect:present frame nil))
+                                      (dissect:environment-stack env))))))))
 
 (defun debugger-type ()
   (cond ((or (not *enable-debugger*)
@@ -709,39 +717,40 @@
   (let ((debugger-hook (if control
                            'control-debugger-hook
                            'shell-debugger-hook)))
-  `(flet ((body-func ()
-           (with-simple-restart
-               (abort "Exit debugger, returning to top level.")
-             ,@body)))
-     (case (debugger-type)
-       (:external
-        (body-func))
-       ,@(when internal
-           #+clasp
-           `((:internal
-              (catch sys::*quit-tag*
+    `(flet ((body-func ()
+              (catch 'debug-error
+                (with-simple-restart
+                    (abort "Exit debugger, returning to top level.")
+                  ,@body))))
+       (case (debugger-type)
+         (:external
+          (body-func))
+         ,@(when internal
+             #+clasp
+             `((:internal
+                (catch sys::*quit-tag*
+                  (body-func))))
+             #-clasp
+             `((:internal
                 (body-func))))
-           #-clasp
-           `((:internal
-              (body-func))))
-       (otherwise
-        (let ((*debugger-hook* ',debugger-hook)
-              #+sbcl      (sb-ext:*invoke-debugger-hook* ',debugger-hook)
-              #+ccl       (ccl:*break-hook* ',debugger-hook)
-              #+ecl       (ext:*invoke-debugger-hook* ',debugger-hook)
-              #+clasp     (ext:*invoke-debugger-hook* ',debugger-hook)
-              #+abcl      (sys::*invoke-debugger-hook* ',debugger-hook)
-              #+clisp     (sys::*break-driver* (lambda (continuable &optional condition print)
-                                                 (declare (ignore continuable print))
-                                                 (,debugger-hook condition nil)))
-              #+allegro   (excl::*break-hook* (lambda (&rest args)
-                                                (,debugger-hook (fifth args))))
-              #+lispworks (dbg::*debugger-wrapper-list* (lambda (function condition)
-                                                          (declare (ignore function))
-                                                          (,debugger-hook condition nil)))
-              #+mezzano   (mezzano.debug:*global-debugger* (lambda (condition)
-                                                             (,debugger-hook condition nil))))
-          (body-func)))))))
+         (otherwise
+          (let ((*debugger-hook* ',debugger-hook)
+                #+sbcl      (sb-ext:*invoke-debugger-hook* ',debugger-hook)
+                #+ccl       (ccl:*break-hook* ',debugger-hook)
+                #+ecl       (ext:*invoke-debugger-hook* ',debugger-hook)
+                #+clasp     (ext:*invoke-debugger-hook* ',debugger-hook)
+                #+abcl      (sys::*invoke-debugger-hook* ',debugger-hook)
+                #+clisp     (sys::*break-driver* (lambda (continuable &optional condition print)
+                                                   (declare (ignore continuable print))
+                                                   (,debugger-hook condition nil)))
+                #+allegro   (excl::*break-hook* (lambda (&rest args)
+                                                  (,debugger-hook (fifth args))))
+                #+lispworks (dbg::*debugger-wrapper-list* (lambda (function condition)
+                                                            (declare (ignore function))
+                                                            (,debugger-hook condition nil)))
+                #+mezzano   (mezzano.debug:*global-debugger* (lambda (condition)
+                                                               (,debugger-hook condition nil))))
+            (body-func)))))))
 
 (defun debug-enter-loop ()
   "Re-enter the debug loop after a restart which implements a debugger command."
