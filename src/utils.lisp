@@ -162,3 +162,11 @@
                                   (equal ,ev-form ,(first clause)))
                               ,@(cdr clause)))))
                       clauses))))))
+
+#+ccl
+(defmethod ccl::input-stream-shared-resource ((s synonym-stream))
+  (ccl::input-stream-shared-resource (symbol-value (synonym-stream-symbol s))))
+
+#+ccl
+(defmethod (setf ccl::input-stream-shared-resource) (new (s synonym-stream))
+  (setf (ccl::input-stream-shared-resource (symbol-value (synonym-stream-symbol s))) new))

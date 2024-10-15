@@ -191,6 +191,7 @@ def test_execute_error(jupyter_kernel):
     jupyter_kernel.execute_read_reply(
         "(/ 1 0)",
         timeout=10,
+        stop_on_error=False,
         expected_reply=[{"content": {"status": "error", "ename": "DIVISION-BY-ZERO"}}],
     )
 
@@ -203,6 +204,7 @@ def test_execute_result_error(jupyter_kernel):
              (error "qux"))
            (print (make-instance 'fu))""",
         timeout=10,
+        stop_on_error=False,
         expected_reply=[
             {"content": {"status": "error", "ename": "SIMPLE-ERROR", "evalue": "qux"}}
         ],

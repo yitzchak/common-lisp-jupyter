@@ -1,6 +1,10 @@
 (in-package #:jupyter)
 
-(defvar *enable-debugger* nil)
+(defvar *stdout* nil)
+(defvar *stdin* nil)
+(defvar *stderr* nil)
+(defvar *enable-debugger* t)
+(defvar *enable-internal-debugger* t)
 (defvar *payload* nil)
 (defvar *markdown-output* nil)
 (defvar *html-output* nil)
@@ -711,7 +715,8 @@
         (mezzano.debug:*global-debugger* :external)
         #+sbcl
         (sb-ext:*invoke-debugger-hook* :external)
-        (t :internal)))
+        (*enable-internal-debugger* :internal)
+        (t :none)))
 
 (defmacro with-debugger ((&key control internal) &body body)
   (let ((debugger-hook (if control
@@ -942,9 +947,12 @@
       (prog* ((shell (kernel-shell kernel))
               (iopub (kernel-iopub kernel))
               (*thread-id* (add-thread kernel))
-              (*standard-input* (kernel-standard-input kernel))
-              (*error-output* (kernel-error-output kernel))
-              (*standard-output* (kernel-standard-output kernel))
+              (*stdin* (kernel-standard-input kernel))
+              (*stdout* (kernel-standard-output kernel))
+              (*stderr* (kernel-error-output kernel))
+              (*standard-input* (make-synonym-stream '*stdin*))
+              (*standard-output* (make-synonym-stream '*stdout*))
+              (*error-output* (make-synonym-stream '*stderr*))
               (*debug-io* (make-two-way-stream *standard-input* *standard-output*))
               (*query-io* *debug-io*)
               (*terminal-io* *debug-io*)
@@ -1495,13 +1503,25 @@
   (inform :info *kernel* "Handling execute_request message")
   (with-slots (execution-count history iopub package readtable input-queue breakpoints)
               *kernel*
-    (let ((code (gethash "code" (message-content *message*)))
-          (ename "interrupt")
-          (evalue "Execution interrupted")
-          traceback
-          (*payload* (make-array 16 :adjustable t :fill-pointer 0))
-          (*page-output* (make-string-output-stream))
-          (*enable-debugger* (gethash "stop_on_error" (message-content *message*))))
+    (let* ((code (gethash "code" (message-content *message*)))
+           (silent (gethash "silent" (message-content *message*)))
+           (allow-stdin (gethash "allow_stdin" (message-content *message*)))
+           (ename "interrupt")
+           (evalue "Execution interrupted")
+           traceback
+           (*payload* (make-array 16 :adjustable t :fill-pointer 0))
+           (*page-output* (make-string-output-stream))
+           (*enable-debugger* (and (gethash "stop_on_error" (message-content *message*))
+                                   *enable-debugger*))
+           (*stderr* (if silent
+                         (make-broadcast-stream)
+                         *stderr*))
+           (*stdout* (if silent
+                         (make-broadcast-stream)
+                         *stdout*))
+           (*enable-internal-debugger* (and (not silent)
+                                            allow-stdin
+                                            *enable-internal-debugger*)))
       (incf execution-count)
       (add-cell history execution-count code)
       (unwind-protect
