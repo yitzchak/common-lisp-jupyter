@@ -363,6 +363,7 @@
   (:documentation "Save the code to the provided source-path.")
   (:method (kernel code source-path)
     (declare (ignore kernel))
+    (ensure-directories-exist source-path)
     (with-open-file (stream source-path :direction :output :if-exists :supersede)
       (write-string code stream))))
 
