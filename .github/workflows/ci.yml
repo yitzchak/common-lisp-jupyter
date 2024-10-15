@@ -12,52 +12,38 @@ jobs:
     defaults:
       run:
         shell: bash -l {0}
-
     strategy:
       fail-fast: false
-
+    matrix:
+      lisp:
+        - abcl
+        - ccl
+        - clasp
+        - ecl
+        - sbcl
     runs-on: ubuntu-latest
-    
     container:
       image: ghcr.io/yitzchak/archlinux-cl:latest
       options: --security-opt seccomp:unconfined
-      
     steps:
     - name: Install dependencies
       run: |
         pacman -Syu --noconfirm jupyterlab python-build python-pip
-
     - name: Install pytest-jupyter_kernel
       run: |
         git clone https://github.com/yitzchak/pytest-jupyter_kernel.git
         cd pytest-jupyter_kernel
         pyproject-build
         pip install --break-system-packages --user dist/pytest_jupyter_kernel-0.1.0-py3-none-any.whl
-
     - name: Checkout repository
       uses: actions/checkout@v4
-
     - name: Setup Lisp Environment
       run: |
         make-rc
         asdf-add
-
-    - name: Install CCL kernel
+    - name: Install kernel
       run: |
-        ccl --batch --load scripts/usr-install.lisp
-
-    - name: Install CLASP kernel
-      run: |
-        clasp --non-interactive --load scripts/usr-install.lisp
-
-    - name: Install ECL kernel
-      run: |
-        ecl --load scripts/usr-install.lisp --eval '(ext:quit)'
-
-    - name: Install SBCL kernel
-      run: |
-        sbcl --non-interactive --load scripts/usr-install.lisp sbcl
-
+        lisp -i ${{ matrix.lisp }} -e "(ql:quickload :common-lisp-jupyter)" -e "(clj:install)" -q
     - name: Run kernel tests
       run: |
         pytest --verbose
