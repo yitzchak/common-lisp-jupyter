@@ -28,7 +28,7 @@ jobs:
     steps:
     - name: Install dependencies
       run: |
-        pacman -Syu --noconfirm jupyterlab python-build python-pip
+        pacman -Syu --noconfirm jupyterlab python-build python-pip python-pytest
     - name: Install pytest-jupyter_kernel
       run: |
         git clone https://github.com/yitzchak/pytest-jupyter_kernel.git
