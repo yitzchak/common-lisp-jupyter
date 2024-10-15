@@ -280,8 +280,11 @@
   with `execute-result`. Errors should be returned as `(values ename evalue traceback)`")
   (:method (kernel code &optional source-path breakpoints)
     (declare (ignore kernel code source-path breakpoints))
-    (values)))
-
+    (values))
+  (:method :after (kernel code &optional source-path breakpoints)
+    (declare (ignore kernel code source-path breakpoints))
+    (finish-output *stdout*)
+    (finish-output *stderr*)))
 
 (defgeneric evaluate-form (kernel stream source-path breakpoints &optional line column))
 
