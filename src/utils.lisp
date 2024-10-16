@@ -170,3 +170,22 @@
 #+ccl
 (defmethod (setf ccl::input-stream-shared-resource) (new (s synonym-stream))
   (setf (ccl::input-stream-shared-resource (symbol-value (synonym-stream-symbol s))) new))
+
+(define-condition closed-stream (stream-error)
+  ())
+
+(defclass closed-input-stream (ngray:fundamental-character-input-stream)
+  ())
+
+(defmethod ngray:stream-clear-input ((stream closed-input-stream))
+  (error 'closed-stream :stream stream))
+
+(defmethod ngray:stream-read-char ((stream closed-input-stream))
+  (error 'closed-stream :stream stream))
+
+(defmethod ngray:open-stream-p ((stream closed-input-stream))
+  nil)
+
+(defmethod close ((stream closed-input-stream) &key abort)
+  (declare (ignore abort))
+  nil)

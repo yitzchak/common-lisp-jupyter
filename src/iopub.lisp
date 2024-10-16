@@ -142,8 +142,7 @@
           (write-string (subseq value
                                 (+ start (length prompt-prefix))
                                 (- (length value) (length prompt-suffix)))
-                        *query-io*)
-          (finish-output *query-io*)
+                        *stdin*)
           (adjust-array value (array-total-size value)
                         :fill-pointer 0))))))
 

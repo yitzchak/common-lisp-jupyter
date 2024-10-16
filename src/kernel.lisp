@@ -1519,6 +1519,9 @@
            (*page-output* (make-string-output-stream))
            (*enable-debugger* (and (gethash "stop_on_error" (message-content *message*))
                                    *enable-debugger*))
+           (*stdin* (if allow-stdin
+                        *stdin*
+                        (make-instance 'closed-input-stream)))
            (*stderr* (if silent
                          (make-broadcast-stream)
                          *stderr*))

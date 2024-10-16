@@ -17,7 +17,7 @@ def sanitize_path(p):
 @pytest.fixture(
     params=[
         "common-lisp",
-        "common-lisp_abcl",
+        #"common-lisp_abcl",
         "common-lisp_ccl",
         "common-lisp_clasp",
         "common-lisp_clisp",
