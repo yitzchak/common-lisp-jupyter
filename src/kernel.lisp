@@ -363,9 +363,10 @@
   (:documentation "Save the code to the provided source-path.")
   (:method (kernel code source-path)
     (declare (ignore kernel))
-    (ensure-directories-exist source-path)
-    (with-open-file (stream source-path :direction :output :if-exists :supersede)
-      (write-string code stream))))
+    (let ((path (translate-logical-pathname source-path)))
+      (ensure-directories-exist path)
+      (with-open-file (stream path :direction :output :if-exists :supersede)
+        (write-string code stream)))))
 
 
 (defgeneric debug-evaluate-code (kernel environment code frame context)
