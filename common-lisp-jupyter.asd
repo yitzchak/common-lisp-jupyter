@@ -21,9 +21,9 @@
      "pzmq"
      "puri"
      "shasht"
-     (:feature (:or :abcl :allegro :ccl :clasp :cmu :ecl :lispworks :sbcl) "static-vectors")
+     #+(or)(:feature (:or :abcl :allegro :ccl :clasp :cmu :ecl :lispworks :sbcl) "static-vectors")
      "trivial-do"
-     "trivial-garbage"
+     #+(or)"trivial-garbage"
      "trivial-mimes"
      "trivial-features")
   :components
