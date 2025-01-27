@@ -22,5 +22,5 @@ RUN git clone https://github.com/yitzchak/delta-vega.git ~/quicklisp/local-proje
       --eval "(clj:install :implementation t)"; \
     ecl \
       --eval "(ql:quickload '(:common-lisp-jupyter :cytoscape-clj :kekule-clj :resizable-box-clj :ngl-clj :delta-vega))" \
-      --eval "(clj:install :implementation t)"; \
+      --eval "(clj:install :implementation t)" \
       --eval "(uiop:quit)"

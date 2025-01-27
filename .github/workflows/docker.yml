@@ -3,7 +3,7 @@ name: Publish Docker image
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [master]
   schedule:
     - cron: '0 0 * * 1'
 
