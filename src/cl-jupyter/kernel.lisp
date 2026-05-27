@@ -570,7 +570,7 @@
   (setf common-lisp-user::- form)
   (let* ((results (multiple-value-list
                     #+ccl   (ccl::cheap-eval-in-environment form (kernel-environment jupyter:*kernel*))
-                    #+clasp (funcall (clasp-cleavir::bir-compile-cst
+                    #+(or)  (funcall (clasp-cleavir::bir-compile-cst
                                       (cst:list (cst:cst-from-expression 'lambda)
                                                 (cst:cst-from-expression nil)
                                                 aux-form)
@@ -593,7 +593,7 @@
                                           (sb-di::deactivate-breakpoint
                                             (jupyter:debug-breakpoint-data breakpoint))))))
                                   (funcall fun))))
-                    #-(or ccl clasp sbcl)
+                    #-(or ccl sbcl)
                             (eval form))))
     (setf common-lisp-user::*** common-lisp-user::**
           common-lisp-user::** common-lisp-user::*
@@ -624,7 +624,7 @@
           (setf ccl::*loading-toplevel-location* location)
           (eval-and-print form nil breakpoints)
           t)))
-    #+clasp
+    #+(or);clasp
     (source-path
       (let ((cst (eclector.concrete-syntax-tree:read stream nil stream)))
         (unless (eq cst stream)
@@ -686,7 +686,7 @@
                                      jupyter:*kernel* stream source-path breakpoints
                                      (source-line-column source-path 0))
             (go next))))
-      #+clasp
+      #+(or);clasp
       (with-open-file (stream source-path)
         (prog* ((eclector.reader:*client* cmp::*cst-client*)
                 (eclector.readtable:*readtable* cl:*readtable*)
@@ -720,7 +720,7 @@
           (when (jupyter:evaluate-form jupyter:*kernel* stream source-path breakpoints
                                        (car pos) (cdr pos))
             (go repeat))))
-      #-(or ccl clasp sbcl)
+      #-(or ccl sbcl)
       (with-tracking-stream (stream source-path)
         (prog* ((*load-truename* (truename source-path))
                 (*load-pathname* source-path)
