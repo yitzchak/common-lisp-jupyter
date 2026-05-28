@@ -626,7 +626,8 @@
          (ext:read-source stream nil stream nil
                           (kernel-environment kernel))
        (unless (eq form stream)
-         (eval-and-print form source breakpoints))))
+         (eval-and-print form source breakpoints)
+         t)))
     #+sbcl
     (source-path
       (with-accessors ((forms sb-c::file-info-forms)
@@ -686,16 +687,15 @@
       #+clasp
       (with-open-file (stream source-path)
         (ext:with-source-tracking (stream :pathname source-path)
-          (let ((*load-truename* (truename source-path))
-                (*load-pathname* source-path))
-            (tagbody
-             repeat
-               (ext:with-source-location
-                   ((ext:stream-source-location stream))
-                 (when (jupyter:evaluate-form jupyter:*kernel* stream source-path breakpoints
-                                              (ext:source-location-lineno (ext:current-source-location))
-                                              (1+ (ext:source-location-column (ext:current-source-location))))
-                   (go repeat)))))))
+          (prog ((*load-truename* (truename source-path))
+                 (*load-pathname* source-path))
+           repeat
+             (ext:with-source-location
+                 ((ext:stream-source-location stream))
+               (when (jupyter:evaluate-form jupyter:*kernel* stream source-path breakpoints
+                                            (ext:source-location-lineno (ext:current-source-location))
+                                            (1+ (ext:source-location-column (ext:current-source-location))))
+                 (go repeat))))))
       #+sbcl
       (sb-c::with-compiler-error-resignalling
         (prog* ((sb-c::*last-message-count* (list* 0 nil nil))
