@@ -569,28 +569,32 @@
 (defun eval-and-print (form aux-form breakpoints)
   (setf common-lisp-user::- form)
   (let* ((results (multiple-value-list
-                   #+ccl   (ccl::cheap-eval-in-environment form (kernel-environment jupyter:*kernel*))
-                   #+clasp (ext:eval-source form aux-form (kernel-environment jupyter:*kernel*))
-                    #+sbcl  (handler-bind ((sb-c::compiler-note #'muffle-warning))
-                              (let* ((sb-c::*source-paths* (make-hash-table :test 'eq))
-                                     (lambda (sb-impl::make-eval-lambda form))
-                                     (sb-c::*source-form-context-alist*
-                                       (acons lambda form
-                                              sb-c::*source-form-context-alist*)))
-                                (sb-c::find-source-paths form aux-form)
-                                (let ((fun (sb-c:compile-in-lexenv lambda (kernel-environment jupyter:*kernel*)
-                                                                   nil sb-c::*source-info*
-                                                                   aux-form nil nil)))
-                                  (trivial-do:dohash (source config (jupyter::kernel-breakpoints jupyter:*kernel*))
-                                    (declare (ignore source))
-                                    (dolist (breakpoint (jupyter::debug-configuration-breakpoints config))
-                                      (when (jupyter:debug-breakpoint-data breakpoint)
-                                        (sb-di::activate-breakpoint
-                                          (sb-di::deactivate-breakpoint
-                                            (jupyter:debug-breakpoint-data breakpoint))))))
-                                  (funcall fun))))
-                    #-(or ccl clasp sbcl)
-                            (eval form))))
+                   #+ccl
+                   (let ((ccl::*loading-toplevel-location* aux-form))
+                     (ccl::cheap-eval-in-environment form (kernel-environment jupyter:*kernel*)))
+                   #+clasp
+                   (ext:eval-source form aux-form (kernel-environment jupyter:*kernel*))
+                   #+sbcl
+                   (handler-bind ((sb-c::compiler-note #'muffle-warning))
+                     (let* ((sb-c::*source-paths* (make-hash-table :test 'eq))
+                            (lambda (sb-impl::make-eval-lambda form))
+                            (sb-c::*source-form-context-alist*
+                              (acons lambda form
+                                     sb-c::*source-form-context-alist*)))
+                       (sb-c::find-source-paths form aux-form)
+                       (let ((fun (sb-c:compile-in-lexenv lambda (kernel-environment jupyter:*kernel*)
+                                                          nil sb-c::*source-info*
+                                                          aux-form nil nil)))
+                         (trivial-do:dohash (source config (jupyter::kernel-breakpoints jupyter:*kernel*))
+                                            (declare (ignore source))
+                                            (dolist (breakpoint (jupyter::debug-configuration-breakpoints config))
+                                              (when (jupyter:debug-breakpoint-data breakpoint)
+                                                (sb-di::activate-breakpoint
+                                                 (sb-di::deactivate-breakpoint
+                                                  (jupyter:debug-breakpoint-data breakpoint))))))
+                         (funcall fun))))
+                   #-(or ccl clasp sbcl)
+                   (eval form))))
     (setf common-lisp-user::*** common-lisp-user::**
           common-lisp-user::** common-lisp-user::*
           common-lisp-user::* (car results)
@@ -618,13 +622,11 @@
                                                        :map ccl::*nx-source-note-map*
                                                        :save-source-text t)
         (unless (eq form stream)
-          (setf ccl::*loading-toplevel-location* location)
-          (eval-and-print form nil breakpoints)
+          (eval-and-print form location breakpoints)
           t)))
     #+clasp
     (source-path
-     (ext:with-source-location
-         ((ext:stream-source-location stream))
+     (ext:with-source-location ((ext:stream-source-location stream))
        (multiple-value-bind (form source)
            (ext:read-source stream nil stream nil
                             (kernel-environment kernel))
