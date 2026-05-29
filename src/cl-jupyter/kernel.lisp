@@ -626,13 +626,12 @@
           t)))
     #+clasp
     (source-path
-     (ext:with-source-location ((ext:stream-source-location stream))
-       (multiple-value-bind (form source)
-           (ext:read-source stream nil stream nil
-                            (kernel-environment kernel))
-         (unless (eq form stream)
-           (eval-and-print form source breakpoints)
-           t))))
+     (multiple-value-bind (form source)
+         (ext:read-source stream nil stream nil
+                          (kernel-environment kernel))
+       (unless (eq form stream)
+         (eval-and-print form source breakpoints)
+         t)))
     #+sbcl
     (source-path
       (with-accessors ((forms sb-c::file-info-forms)
