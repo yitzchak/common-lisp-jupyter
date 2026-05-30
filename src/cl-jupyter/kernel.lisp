@@ -140,6 +140,7 @@
 
 
 (defun trim-frame-list (frames condition)
+  #+ecl (setf frames (remove-if-not #'frame-function-name frames))
   #+sbcl
   (when (typep condition 'sb-impl::step-condition)
     (setf frames (or (cdr (member-if (lambda (frame)
@@ -159,7 +160,6 @@
                                 :test #'equal)))
                  frames)
       frames))
-
 
 (defun frame-list ()
   #+ccl   (let (frames)
@@ -221,7 +221,7 @@
                                        (declare (ignore condition)))))))
   #+ecl   (multiple-value-bind (pathname position)
                                (system::bc-file (car frame))
-            (when file
+            (when pathname
               (multiple-value-call #'values pathname (source-line-column pathname position))))
   #+sbcl  (let* ((code-location (sb-di:frame-code-location frame))
                  (pathname (ignore-errors
@@ -244,12 +244,15 @@
                                                        :name (frame-name frame)
                                                        :data frame)))
             (multiple-value-bind (pathname line column)
-                                 (frame-source frame)
-              (when pathname
-                (setf (jupyter:debug-object-source instance)
-                      (make-instance 'jupyter:debug-source
-                                     :name (file-namestring pathname)
-                                     :path pathname)))
+                (frame-source frame)
+              (setf (jupyter:debug-object-source instance)
+                    (if pathname
+                        (make-instance 'jupyter:debug-source
+                                       :name (file-namestring pathname)
+                                       :path pathname)
+                        (make-instance 'jupyter:debug-source
+                                       :name ""
+                                       :path "")))
               (when line
                 (setf (jupyter:debug-object-line instance) line))
               (when column
@@ -574,6 +577,9 @@
                      (ccl::cheap-eval-in-environment form (kernel-environment jupyter:*kernel*)))
                    #+clasp
                    (ext:eval-source form aux-form (kernel-environment jupyter:*kernel*))
+                   #+ecl
+                   (let ((ext:*source-location* aux-form))
+                     (eval form))
                    #+sbcl
                    (handler-bind ((sb-c::compiler-note #'muffle-warning))
                      (let* ((sb-c::*source-paths* (make-hash-table :test 'eq))
@@ -593,7 +599,7 @@
                                                  (sb-di::deactivate-breakpoint
                                                   (jupyter:debug-breakpoint-data breakpoint))))))
                          (funcall fun))))
-                   #-(or ccl clasp sbcl)
+                   #-(or ccl clasp ecl sbcl)
                    (eval form))))
     (setf common-lisp-user::*** common-lisp-user::**
           common-lisp-user::** common-lisp-user::*
@@ -631,6 +637,13 @@
                           (kernel-environment kernel))
        (unless (eq form stream)
          (eval-and-print form source breakpoints)
+         t)))
+    #+ecl
+    (source-path
+     (let ((pos (file-position stream))
+           (form (read stream nil stream)))
+       (unless (eq form stream)
+         (eval-and-print form (cons source-path pos) breakpoints)
          t)))
     #+sbcl
     (source-path
@@ -716,12 +729,11 @@
       #-(or ccl clasp sbcl)
       (with-tracking-stream (stream source-path)
         (prog* ((*load-truename* (truename source-path))
-                (*load-pathname* source-path)
-                #+ecl ext:*source-location*)
+                (*load-pathname* source-path))
          repeat
-          #+ecl (setf ext:*source-location* (cons source-path (file-position stream)))
           (when (jupyter:evaluate-form jupyter:*kernel* stream source-path breakpoints
-                                       (tracking-stream-line stream) (tracking-stream-column stream))
+                                       (tracking-stream-line stream)
+                                       (tracking-stream-column stream))
             (go repeat)))))
     (t ; Fallback REPL
       (with-input-from-string (stream code)
