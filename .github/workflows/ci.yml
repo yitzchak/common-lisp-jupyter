@@ -43,7 +43,7 @@ jobs:
         asdf-add
     - name: Install kernel
       run: |
-        lisp -i ${{ matrix.lisp }} -e "(ql:quickload :common-lisp-jupyter)" -e "(clj:install)" -q
+        lisp -i ${{ matrix.lisp }} -e "(asdf:load-system :common-lisp-jupyter)" -e "(clj:install)" -q
     - name: Run kernel tests
       run: |
         pytest --verbose
