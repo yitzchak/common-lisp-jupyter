@@ -599,8 +599,7 @@
                 "Generic Function")
               (t
                 "Function"))
-            (or (documentation sym 'function)
-                #+clasp (sys:get-annotation sym 'documentation 'method))
+            (documentation sym 'function)
             (cons sym (lambda-list sym)))))
 
 
